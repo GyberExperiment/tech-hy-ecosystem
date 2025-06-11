@@ -60,7 +60,7 @@ i18n
     
     // React specific
     react: {
-      useSuspense: false, // Disable suspense for better error handling
+      useSuspense: true, // Enable suspense for proper loading
       bindI18n: 'languageChanged',
       bindI18nStore: '',
       transEmptyNodeValue: '',

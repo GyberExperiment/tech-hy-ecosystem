@@ -201,6 +201,135 @@ describe("LPLocker", () => {
     });
   });
 
+  describe("lockLPTokens", () => {
+    const LP_AMOUNT = ethers.parseEther("10");
+    const VG_REWARD = LP_AMOUNT * 10n; // 10 VG за 1 LP (lpToVgRatio = 10)
+
+    beforeEach(async () => {
+      // Подготовка LP токенов для пользователя
+      await lpToken.mint(await user.getAddress(), LP_AMOUNT * 10n);
+      await lpToken.connect(user).approve(await lpLocker.getAddress(), LP_AMOUNT * 10n);
+      
+      // Подготовка VG токенов в vault
+      await vgToken.mint(await owner.getAddress(), VG_REWARD * 1000n);
+      await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
+    });
+
+    it("Успешно блокирует LP токены и выдает VG награды", async () => {
+      const initialLpBalance = await lpToken.balanceOf(await user.getAddress());
+      const initialVgBalance = await vgToken.balanceOf(await user.getAddress());
+      
+      const tx = await lpLocker.connect(user).lockLPTokens(LP_AMOUNT);
+      
+      await expect(tx)
+        .to.emit(lpLocker, "LPTokensLocked")
+        .withArgs(
+          await user.getAddress(),
+          LP_AMOUNT,
+          VG_REWARD,
+          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+        );
+
+      // Проверяем что LP токены переведены к контракту
+      expect(await lpToken.balanceOf(await user.getAddress())).to.eq(initialLpBalance - LP_AMOUNT);
+      expect(await lpToken.balanceOf(await lpLocker.getAddress())).to.eq(LP_AMOUNT);
+      
+      // Проверяем что пользователь получил VG награды
+      expect(await vgToken.balanceOf(await user.getAddress())).to.eq(initialVgBalance + VG_REWARD);
+      
+      // Проверяем обновление статистики
+      const config = await lpLocker.config();
+      expect(config.totalLockedLp).to.eq(LP_AMOUNT);
+      expect(config.totalVgIssued).to.eq(VG_REWARD);
+    });
+
+    it("Блокирует нулевое количество LP токенов", async () => {
+      await expect(
+        lpLocker.connect(user).lockLPTokens(0)
+      ).to.be.revertedWith("LP amount must be positive");
+    });
+
+    it("Блокирует если недостаточно LP токенов у пользователя", async () => {
+      const excessiveAmount = LP_AMOUNT * 20n;
+      await expect(
+        lpLocker.connect(user).lockLPTokens(excessiveAmount)
+      ).to.be.revertedWith("Insufficient LP balance");
+    });
+
+    it("Блокирует если недостаточно allowance для LP токенов", async () => {
+      await lpToken.connect(user).approve(await lpLocker.getAddress(), LP_AMOUNT - 1n);
+      await expect(
+        lpLocker.connect(user).lockLPTokens(LP_AMOUNT)
+      ).to.be.revertedWith("Insufficient LP allowance");
+    });
+
+    it("Блокирует если недостаточно VG токенов в vault", async () => {
+      // Переводим все VG токены от owner к user, оставляя vault пустым
+      await vgToken.connect(owner).transfer(await user.getAddress(), await vgToken.balanceOf(await owner.getAddress()));
+      
+      await expect(
+        lpLocker.connect(user).lockLPTokens(LP_AMOUNT)
+      ).to.be.revertedWith("Insufficient VG tokens in vault");
+    });
+
+    it("Применяет MEV защиту", async () => {
+      // Первая транзакция должна пройти
+      await lpLocker.connect(user).lockLPTokens(LP_AMOUNT);
+      
+      // Вторая транзакция срабатывает time-based защита
+      await expect(
+        lpLocker.connect(user).lockLPTokens(LP_AMOUNT)
+      ).to.be.revertedWith("Too frequent transactions");
+
+      // После продвижения времени транзакция должна пройти
+      await network.provider.send("evm_increaseTime", [61]);
+      await network.provider.send("evm_mine");
+      await expect(
+        lpLocker.connect(user).lockLPTokens(LP_AMOUNT)
+      ).to.not.be.reverted;
+    });
+
+    it("Корректно обновляет статистику при множественных блокировках", async () => {
+      // Первая блокировка
+      await lpLocker.connect(user).lockLPTokens(LP_AMOUNT);
+      
+      let config = await lpLocker.config();
+      expect(config.totalLockedLp).to.eq(LP_AMOUNT);
+      expect(config.totalVgIssued).to.eq(VG_REWARD);
+      
+      // Продвигаем время для MEV защиты
+      await network.provider.send("evm_increaseTime", [61]);
+      await network.provider.send("evm_mine");
+      
+      // Вторая блокировка
+      await lpLocker.connect(user).lockLPTokens(LP_AMOUNT);
+      
+      config = await lpLocker.config();
+      expect(config.totalLockedLp).to.eq(LP_AMOUNT * 2n);
+      expect(config.totalVgIssued).to.eq(VG_REWARD * 2n);
+    });
+
+    it("Работает с разными соотношениями LP к VG", async () => {
+      // Изменяем соотношение на 15:1
+      await lpLocker.updateRates(15, LP_DIVISOR);
+      
+      const newVgReward = LP_AMOUNT * 15n;
+      
+      const tx = await lpLocker.connect(user).lockLPTokens(LP_AMOUNT);
+      
+      await expect(tx)
+        .to.emit(lpLocker, "LPTokensLocked")
+        .withArgs(
+          await user.getAddress(),
+          LP_AMOUNT,
+          newVgReward,
+          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+        );
+        
+      expect(await vgToken.balanceOf(await user.getAddress())).to.eq(newVgReward);
+    });
+  });
+
   describe("depositVGTokens", () => {
     const DEPOSIT_AMOUNT = ethers.parseUnits("1000", 18);
 

@@ -25,6 +25,7 @@ const LPTOKEN_ABI = [
 const LPLOCKER_ABI = [
   // Real LPLocker functions from the deployed contract
   "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
+  "function lockLPTokens(uint256 lpAmount) external",
   "function depositVGTokens(uint256 amount) external",
   "function updateRates(uint256 newLpToVgRatio, uint256 newLpDivisor) external",
   "function updatePancakeConfig(address newRouter, address newLpToken) external",

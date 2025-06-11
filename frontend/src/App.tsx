@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
@@ -23,55 +23,67 @@ const queryClient = new QueryClient({
   },
 });
 
+// Loading component for i18n
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+      <p className="text-gray-300">Loading translations...</p>
+    </div>
+  </div>
+);
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Web3Provider>
-          <Router
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-              <Header />
-              
-              <main className="container mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/tokens" element={<Tokens />} />
-                  <Route path="/staking" element={<LPLocking />} />
-                  <Route path="/governance" element={<Governance />} />
-                </Routes>
-              </main>
-              
-              {/* Toast notifications */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#1f2937',
-                    color: '#f9fafb',
-                    border: '1px solid #374151',
-                  },
-                  success: {
-                    iconTheme: {
-                      primary: '#10b981',
-                      secondary: '#f9fafb',
+          <Suspense fallback={<LoadingFallback />}>
+            <Router
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+                <Header />
+                
+                <main className="container mx-auto px-4 py-8">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/tokens" element={<Tokens />} />
+                    <Route path="/staking" element={<LPLocking />} />
+                    <Route path="/governance" element={<Governance />} />
+                  </Routes>
+                </main>
+                
+                {/* Toast notifications */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#1f2937',
+                      color: '#f9fafb',
+                      border: '1px solid #374151',
                     },
-                  },
-                  error: {
-                    iconTheme: {
-                      primary: '#ef4444',
-                      secondary: '#f9fafb',
+                    success: {
+                      iconTheme: {
+                        primary: '#10b981',
+                        secondary: '#f9fafb',
+                      },
                     },
-                  },
-                }}
-              />
-            </div>
-          </Router>
+                    error: {
+                      iconTheme: {
+                        primary: '#ef4444',
+                        secondary: '#f9fafb',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </Router>
+          </Suspense>
         </Web3Provider>
       </QueryClientProvider>
     </ErrorBoundary>

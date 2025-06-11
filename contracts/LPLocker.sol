@@ -64,6 +64,12 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         uint256 vcAmount,
         uint256 timestamp
     );
+    event LPTokensLocked(
+        address indexed user,
+        uint256 lpAmount,
+        uint256 vgAmount,
+        uint256 timestamp
+    );
     event VGTokensDeposited(
         address indexed depositor,
         uint256 amount,
@@ -190,6 +196,46 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         config.totalVgIssued += vgReward;
 
         emit VGTokensEarned(msg.sender, liquidity, vgReward, bnbAmount, vcAmount, block.timestamp);
+    }
+
+    /**
+     * @notice Блокирует готовые LP токены VC/BNB и выдает VG награды
+     * @param lpAmount Количество LP токенов для блокировки
+     * @dev Пользователь должен предварительно одобрить LP токены для этого контракта
+     */
+    function lockLPTokens(uint256 lpAmount) external mevProtection nonReentrant {
+        require(lpAmount > 0, "LP amount must be positive");
+        
+        IERC20 lpToken = IERC20(config.lpTokenAddress);
+        
+        // Проверяем баланс пользователя
+        require(lpToken.balanceOf(msg.sender) >= lpAmount, "Insufficient LP balance");
+        
+        // Проверяем allowance
+        require(lpToken.allowance(msg.sender, address(this)) >= lpAmount, "Insufficient LP allowance");
+        
+        // Переводим LP токены от пользователя к контракту (permanent lock)
+        lpToken.transferFrom(msg.sender, address(this), lpAmount);
+        
+        // Обновляем статистику заблокированных LP
+        config.totalLockedLp += lpAmount;
+        
+        // Рассчитываем VG награду (такое же соотношение как в earnVG)
+        uint256 vgReward = lpAmount * config.lpToVgRatio;
+        
+        IERC20 vgToken = IERC20(config.vgTokenAddress);
+        
+        // Проверяем достаточность VG токенов в vault
+        require(
+            vgToken.balanceOf(config.stakingVaultAddress) >= vgReward,
+            "Insufficient VG tokens in vault"
+        );
+        
+        // Переводим VG награду пользователю
+        vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
+        config.totalVgIssued += vgReward;
+        
+        emit LPTokensLocked(msg.sender, lpAmount, vgReward, block.timestamp);
     }
 
     function depositVGTokens(uint256 amount) external onlyAuthority {
