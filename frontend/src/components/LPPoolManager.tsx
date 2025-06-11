@@ -4,6 +4,7 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS, LP_POOL_CONFIG, TOKEN_INFO } from '../constants/contracts';
 import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PoolInfoSkeleton, InputFormSkeleton } from './LoadingSkeleton';
 
 interface PoolInfo {
   reserve0: string;
@@ -90,17 +91,18 @@ const LPPoolManager: React.FC = () => {
       const userVCBalance = await vcContract.balanceOf(account);
       const userBNBBalance = await provider.getBalance(account);
 
-      // Calculate prices (simplified)
+      // Calculate accurate prices accounting for token order
       const reserve0 = ethers.formatEther(reserves[0]);
       const reserve1 = ethers.formatEther(reserves[1]);
       
-      // Determine which is VC and which is BNB
+      // Determine which token is which based on contract addresses
       const isVC0 = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
-      const vcReserve = isVC0 ? reserve0 : reserve1;
-      const bnbReserve = isVC0 ? reserve1 : reserve0;
+      const vcReserve = parseFloat(isVC0 ? reserve0 : reserve1);
+      const bnbReserve = parseFloat(isVC0 ? reserve1 : reserve0);
       
-      const vcPrice = parseFloat(bnbReserve) / parseFloat(vcReserve);
-      const bnbPrice = parseFloat(vcReserve) / parseFloat(bnbReserve);
+      // Calculate exact prices: VC price = BNB_reserve / VC_reserve, BNB price = VC_reserve / BNB_reserve
+      const vcPriceInBNB = bnbReserve / vcReserve;
+      const bnbPriceInVC = vcReserve / bnbReserve;
 
       setPoolInfo({
         reserve0,
@@ -111,8 +113,8 @@ const LPPoolManager: React.FC = () => {
         userLPBalance: ethers.formatEther(userLPBalance),
         userVCBalance: ethers.formatEther(userVCBalance),
         userBNBBalance: ethers.formatEther(userBNBBalance),
-        vcPrice: vcPrice.toFixed(6),
-        bnbPrice: bnbPrice.toFixed(6),
+        vcPrice: vcPriceInBNB.toFixed(8),
+        bnbPrice: bnbPriceInVC.toFixed(8),
       });
     } catch (error) {
       console.error('Error fetching pool info:', error);
@@ -132,37 +134,50 @@ const LPPoolManager: React.FC = () => {
       const vcAmount = vcInput || '0';
       const bnbAmount = bnbInput || '0';
       
-      // If user entered VC amount, calculate required BNB
-      if (vcInput && !bnbInput) {
-        const requiredBNB = parseFloat(vcAmount) * parseFloat(poolInfo.vcPrice);
-        setBnbInput(requiredBNB.toFixed(6));
-      }
-      
-      // If user entered BNB amount, calculate required VC
-      if (bnbInput && !vcInput) {
-        const requiredVC = parseFloat(bnbAmount) * parseFloat(poolInfo.bnbPrice);
-        setVcInput(requiredVC.toFixed(6));
-      }
-
-      // Calculate LP tokens to receive (simplified)
-      const vcReserve = parseFloat(poolInfo.reserve0);
-      const bnbReserve = parseFloat(poolInfo.reserve1);
+      // Get current reserves (accounting for token order)
+      const isVC0 = poolInfo.token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
+      const vcReserve = parseFloat(isVC0 ? poolInfo.reserve0 : poolInfo.reserve1);
+      const bnbReserve = parseFloat(isVC0 ? poolInfo.reserve1 : poolInfo.reserve0);
       const totalSupply = parseFloat(poolInfo.totalSupply);
       
-      const vcShare = parseFloat(vcAmount) / vcReserve;
-      const bnbShare = parseFloat(bnbAmount) / bnbReserve;
+      let finalVcAmount = parseFloat(vcAmount);
+      let finalBnbAmount = parseFloat(bnbAmount);
+      
+      // If user entered VC amount, calculate required BNB using exact reserve ratio
+      if (vcInput && !bnbInput) {
+        finalBnbAmount = (finalVcAmount * bnbReserve) / vcReserve;
+        setBnbInput(finalBnbAmount.toFixed(8));
+      }
+      
+      // If user entered BNB amount, calculate required VC using exact reserve ratio
+      if (bnbInput && !vcInput) {
+        finalVcAmount = (finalBnbAmount * vcReserve) / bnbReserve;
+        setVcInput(finalVcAmount.toFixed(8));
+      }
+
+      // Calculate LP tokens using PancakeSwap formula: min(vcAmount/vcReserve, bnbAmount/bnbReserve) * totalSupply
+      const vcShare = finalVcAmount / vcReserve;
+      const bnbShare = finalBnbAmount / bnbReserve;
       const minShare = Math.min(vcShare, bnbShare);
       
       const lpTokensToReceive = minShare * totalSupply;
-      const shareOfPool = (lpTokensToReceive / (totalSupply + lpTokensToReceive)) * 100;
       
-      // Calculate price impact (simplified)
-      const priceImpact = Math.abs(vcShare - bnbShare) * 100;
+      // Calculate share of pool after deposit
+      const newTotalSupply = totalSupply + lpTokensToReceive;
+      const shareOfPool = (lpTokensToReceive / newTotalSupply) * 100;
+      
+      // Calculate price impact using constant product formula
+      // Price impact = |1 - (new_price / old_price)| * 100
+      const oldPrice = bnbReserve / vcReserve;
+      const newVcReserve = vcReserve + finalVcAmount;
+      const newBnbReserve = bnbReserve + finalBnbAmount;
+      const newPrice = newBnbReserve / newVcReserve;
+      const priceImpact = Math.abs(1 - (newPrice / oldPrice)) * 100;
 
       setCalculation({
-        vcAmount,
-        bnbAmount: bnbInput || (parseFloat(vcAmount) * parseFloat(poolInfo.vcPrice)).toFixed(6),
-        lpTokensToReceive: lpTokensToReceive.toFixed(6),
+        vcAmount: finalVcAmount.toFixed(8),
+        bnbAmount: finalBnbAmount.toFixed(8),
+        lpTokensToReceive: lpTokensToReceive.toFixed(8),
         priceImpact,
         shareOfPool,
       });
@@ -367,30 +382,76 @@ const LPPoolManager: React.FC = () => {
           </button>
         </div>
 
-        {/* Pool Info */}
-        {poolInfo && (
-          <div className="bg-white/5 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold mb-3">Информация о пуле VC/BNB</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <div className="text-gray-400">VC Reserve</div>
-                <div className="font-semibold">{parseFloat(poolInfo.reserve0).toLocaleString()}</div>
+        {/* Pool Information */}
+        <div className="mb-8">
+          {loading && !poolInfo ? (
+            <PoolInfoSkeleton />
+          ) : poolInfo ? (
+            <div className="card">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold">Информация о пуле</h3>
+                <button
+                  onClick={fetchPoolInfo}
+                  className="btn-secondary p-2"
+                  disabled={loading}
+                >
+                  <RefreshCw className={`${loading ? 'animate-spin' : ''}`} size={16} />
+                </button>
               </div>
-              <div>
-                <div className="text-gray-400">BNB Reserve</div>
-                <div className="font-semibold">{parseFloat(poolInfo.reserve1).toLocaleString()}</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">VC Резерв:</span>
+                    <span className="font-mono">{parseFloat(poolInfo.reserve0).toLocaleString()} VC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">BNB Резерв:</span>
+                    <span className="font-mono">{parseFloat(poolInfo.reserve1).toLocaleString()} BNB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Общее предложение LP:</span>
+                    <span className="font-mono">{parseFloat(poolInfo.totalSupply).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Цена VC:</span>
+                    <span className="font-mono">{poolInfo.vcPrice} BNB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Цена BNB:</span>
+                    <span className="font-mono">{poolInfo.bnbPrice} VC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Ваши LP токены:</span>
+                    <span className="font-mono">{parseFloat(poolInfo.userLPBalance).toFixed(6)}</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-gray-400">VC Price</div>
-                <div className="font-semibold">{poolInfo.vcPrice} BNB</div>
-              </div>
-              <div>
-                <div className="text-gray-400">Your LP Balance</div>
-                <div className="font-semibold">{parseFloat(poolInfo.userLPBalance).toFixed(4)}</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                  <span className="text-blue-400 font-semibold">Ваш VC баланс:</span>
+                  <div className="font-mono">{parseFloat(poolInfo.userVCBalance).toLocaleString()} VC</div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                  <span className="text-green-400 font-semibold">Ваш BNB баланс:</span>
+                  <div className="font-mono">{parseFloat(poolInfo.userBNBBalance).toFixed(6)} BNB</div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="card text-center text-gray-400">
+              <AlertTriangle className="mx-auto mb-2" size={48} />
+              <p>Не удалось загрузить информацию о пуле</p>
+              <button onClick={fetchPoolInfo} className="btn-primary mt-4">
+                Попробовать снова
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Tabs */}
         <div className="flex space-x-4 mb-6">

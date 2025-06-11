@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import { Activity, Coins, TrendingUp, Users, ExternalLink, Wallet, Lock, AlertTriangle } from 'lucide-react';
+import { Activity, Coins, TrendingUp, Users, ExternalLink, Wallet, Lock, AlertTriangle, BarChart3 } from 'lucide-react';
 import WalletTroubleshoot from '../components/WalletTroubleshoot';
+import StakingStats from '../components/StakingStats';
+import TransactionHistory from '../components/TransactionHistory';
 
 interface TokenBalance {
   symbol: string;
@@ -341,6 +343,12 @@ const Dashboard: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Staking Stats */}
+      <StakingStats />
+
+      {/* Transaction History */}
+      <TransactionHistory />
     </div>
   );
 };
