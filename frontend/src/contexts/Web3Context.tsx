@@ -23,17 +23,23 @@ const LPTOKEN_ABI = [
 ];
 
 const LPLOCKER_ABI = [
-  "function earnVG(address user, uint256 lpAmount) external",
-  "function calculateVGReward(uint256 lpAmount) view returns (uint256)",
-  "function getUserRewards(address user) view returns (uint256)",
-  "function claimRewards() external",
+  // Real LPLocker functions from the deployed contract
+  "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
+  "function depositVGTokens(uint256 amount) external",
+  "function updateRates(uint256 newLpToVgRatio, uint256 newLpDivisor) external",
+  "function updatePancakeConfig(address newRouter, address newLpToken) external",
+  "function updateMevProtection(bool enabled, uint256 minTimeBetweenTxs, uint8 maxTxPerBlock) external",
+  "function getPoolInfo() external view returns (uint256 totalLocked, uint256 totalIssued, uint256 totalDeposited, uint256 availableVG)",
+  "function transferAuthority(address newAuthority) external",
+  "function config() external view returns (tuple(address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint256 maxSlippageBps, uint256 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited))",
+  "function lastUserTxTimestamp(address user) external view returns (uint256)",
+  "function lastUserTxBlock(address user) external view returns (uint256)",
+  "function userTxCountInBlock(address user) external view returns (uint8)",
   "function owner() view returns (address)",
-  "function stakingEnabled() view returns (bool)",
-  "function rewardRate() view returns (uint256)",
-  "function totalStaked() view returns (uint256)",
-  "function maxTxPerUserPerBlock() view returns (uint256)",
-  "function slippageProtection() view returns (uint256)",
-  "function maxSlippage() view returns (uint256)",
+  "function proxiableUUID() view returns (bytes32)",
+  "function supportsInterface(bytes4 interfaceId) view returns (bool)",
+  "function upgradeTo(address newImplementation) external",
+  "function upgradeToAndCall(address newImplementation, bytes memory data) payable external"
 ];
 
 const VGVOTES_ABI = [
@@ -321,36 +327,44 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   };
 
   const switchToTestnet = async () => {
-    try {
-      const detectedProvider = detectWeb3Provider();
-      if (!detectedProvider) return;
+    const ethereum = detectWeb3Provider();
+    if (!ethereum) {
+      toast.error('MetaMask не найден');
+      return;
+    }
 
-      await safeProviderRequest(detectedProvider, 'wallet_switchEthereumChain', [
-        { chainId: `0x${BSC_TESTNET.chainId.toString(16)}` }
-      ]);
+    try {
+      // Try to switch to BSC Testnet
+      await ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${BSC_TESTNET.chainId.toString(16)}` }],
+      });
     } catch (switchError: any) {
-      // Если сеть не добавлена, добавляем её
+      // This error code indicates that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
         try {
-          const detectedProvider = detectWeb3Provider();
-          await safeProviderRequest(detectedProvider, 'wallet_addEthereumChain', [{
-            chainId: `0x${BSC_TESTNET.chainId.toString(16)}`,
-            chainName: BSC_TESTNET.name,
-            nativeCurrency: {
-              name: BSC_TESTNET.currency,
-              symbol: BSC_TESTNET.currency,
-              decimals: 18,
-            },
-            rpcUrls: [BSC_TESTNET.rpcUrl],
-            blockExplorerUrls: [BSC_TESTNET.blockExplorer],
-          }]);
-          toast.success('BSC Testnet добавлена!');
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: `0x${BSC_TESTNET.chainId.toString(16)}`,
+                chainName: BSC_TESTNET.name,
+                nativeCurrency: {
+                  name: BSC_TESTNET.currency,
+                  symbol: BSC_TESTNET.currency,
+                  decimals: 18,
+                },
+                rpcUrls: [BSC_TESTNET.rpcUrl, ...BSC_TESTNET.fallbackRpcUrls],
+                blockExplorerUrls: [BSC_TESTNET.blockExplorer],
+              },
+            ],
+          });
         } catch (addError) {
-          console.error('Ошибка добавления сети:', addError);
-          toast.error('Ошибка добавления BSC Testnet');
+          console.error('Error adding BSC Testnet:', addError);
+          toast.error('Ошибка добавления BSC Testnet в MetaMask');
         }
       } else {
-        console.error('Ошибка переключения сети:', switchError);
+        console.error('Error switching to BSC Testnet:', switchError);
         toast.error('Ошибка переключения на BSC Testnet');
       }
     }

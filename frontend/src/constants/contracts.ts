@@ -3,7 +3,13 @@ export const BSC_TESTNET = {
   chainId: 97,
   name: 'BSC Testnet',
   currency: 'tBNB',
-  rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+  rpcUrl: 'https://bsc-testnet.bnb.org/v1/',
+  fallbackRpcUrls: [
+    'https://data-seed-prebsc-1-s1.binance.org:8545/',
+    'https://data-seed-prebsc-2-s1.binance.org:8545/',
+    'https://data-seed-prebsc-1-s2.binance.org:8545/',
+    'https://data-seed-prebsc-2-s2.binance.org:8545/',
+  ],
   blockExplorer: 'https://testnet.bscscan.com',
 };
 
@@ -14,8 +20,8 @@ export const CONTRACTS = {
   VG_TOKEN: "0xe87c0Ff36084033FfB56aCf68F2dD5857C65342d", 
   VG_TOKEN_VOTES: "0xA2aFF77bBaD0Fc5039698D9dc695bDE32A25CBeA",
   
-  // LP and Staking
-  LP_TOKEN: "0x77DedB52EC6260daC4011313DBEE09616d30d122", // VC/TBNB LP
+  // LP and Staking - ИСПРАВЛЕНО: РЕАЛЬНЫЙ LP токен с ликвидностью
+  LP_TOKEN: "0xA221093a37396c6301db4B24D55E1C871DF31d13", // ПРАВИЛЬНЫЙ VC/WBNB LP с 0.2 WBNB + 2000 VC резервами
   LP_LOCKER: "0x9269baba99cE0388Daf814E351b4d556fA728D32",
   
   // Governance
@@ -23,10 +29,10 @@ export const CONTRACTS = {
   TIMELOCK: "0x06EEB4c972c05BBEbf960Fec99f483dC95768e39",
   STAKING_DAO: "0x2269D0D279345526C30d694db1d94075450b6A99",
   
-  // External
-  PANCAKE_ROUTER: "0xD99D1c33F9fC3444f8101754aBC46c52416550D1", // PancakeSwap Router V2 BSC Testnet
-  PANCAKE_FACTORY: "0x6725F303b657a9451d2eF8B23F85c53aE4bb6b59", // PancakeSwap Factory V2 BSC Testnet
-  WBNB: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd", // Wrapped BNB BSC Testnet
+  // External - ИСПРАВЛЕНЫ: правильный router и factory
+  PANCAKE_ROUTER: "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3", // Реальный router из развертывания
+  PANCAKE_FACTORY: "0xB7926C0430Afb07AA7DEfDE6DA862aE0Bde767bc", // ПРАВИЛЬНЫЙ Factory с активным пулом
+  WBNB: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
 } as const;
 
 // Token Information
