@@ -7,9 +7,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import Tokens from './pages/Tokens';
-import LPStaking from './pages/LPStaking';
+import LPLocking from './pages/LPStaking';
 import Governance from './pages/Governance';
 import './index.css';
+
+// Initialize i18n
+import './i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,7 +41,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/tokens" element={<Tokens />} />
-                  <Route path="/staking" element={<LPStaking />} />
+                  <Route path="/staking" element={<LPLocking />} />
                   <Route path="/governance" element={<Governance />} />
                 </Routes>
               </main>

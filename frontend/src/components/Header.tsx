@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useWeb3 } from '../contexts/Web3Context';
-import { Wallet, AlertTriangle } from 'lucide-react';
+import { Wallet, AlertTriangle, BarChart3, Coins, Rocket, Vote } from 'lucide-react';
 import { BSC_TESTNET } from '../constants/contracts';
 
 const Header: React.FC = () => {
@@ -17,10 +17,10 @@ const Header: React.FC = () => {
   } = useWeb3();
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: '📊' },
-    { name: 'Tokens', href: '/tokens', icon: '🪙' },
-    { name: 'LP Staking', href: '/staking', icon: '🚀' },
-    { name: 'Governance', href: '/governance', icon: '🗳️' },
+    { name: 'Dashboard', href: '/', icon: BarChart3 },
+    { name: 'Tokens', href: '/tokens', icon: Coins },
+    { name: 'LP Locking', href: '/staking', icon: Rocket },
+    { name: 'Governance', href: '/governance', icon: Vote },
   ];
 
   const formatAddress = (address: string) => {
@@ -34,7 +34,7 @@ const Header: React.FC = () => {
           {/* Logo & Title */}
           <div className="flex items-center space-x-4">
             <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              Tech-HY Ecosystem
+              TECH HY Ecosystem
             </div>
             <div className="hidden md:block text-sm text-gray-400">
               BSC Testnet DApp
@@ -45,18 +45,19 @@ const Header: React.FC = () => {
           <nav className="hidden md:flex items-center space-x-1">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
+              const IconComponent = item.icon;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     isActive
                       ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <span className="mr-2">{item.icon}</span>
-                  {item.name}
+                  <IconComponent className="w-4 h-4" />
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
@@ -121,6 +122,7 @@ const Header: React.FC = () => {
           <nav className="flex justify-around">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
+              const IconComponent = item.icon;
               return (
                 <Link
                   key={item.name}
@@ -131,7 +133,7 @@ const Header: React.FC = () => {
                       : 'text-gray-300 hover:text-white'
                   }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  <IconComponent className="w-5 h-5" />
                   <span className="text-xs font-medium">{item.name}</span>
                 </Link>
               );

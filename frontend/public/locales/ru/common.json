@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "dashboard": "Панель управления",
+    "tokens": "Токены",
+    "locking": "LP Блокировка",
+    "governance": "Управление"
+  },
+  "buttons": {
+    "connect": "Подключить кошелёк",
+    "disconnect": "Отключить",
+    "approve": "Одобрить",
+    "confirm": "Подтвердить",
+    "cancel": "Отменить",
+    "submit": "Отправить",
+    "refresh": "Обновить",
+    "copy": "Копировать",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "save": "Сохранить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "view": "Просмотр",
+    "download": "Скачать"
+  },
+  "labels": {
+    "balance": "Баланс",
+    "amount": "Количество",
+    "address": "Адрес",
+    "transaction": "Транзакция",
+    "status": "Статус",
+    "loading": "Загрузка",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "warning": "Предупреждение",
+    "info": "Информация",
+    "total": "Всего",
+    "available": "Доступно",
+    "locked": "Заблокировано",
+    "pending": "В ожидании",
+    "completed": "Завершено",
+    "failed": "Неудачно"
+  },
+  "messages": {
+    "connectWallet": "Пожалуйста, подключите кошелёк для продолжения",
+    "wrongNetwork": "Пожалуйста, переключитесь на BSC Testnet для использования DApp",
+    "transactionPending": "Транзакция в обработке...",
+    "transactionSuccess": "Транзакция успешно завершена",
+    "transactionFailed": "Транзакция не удалась",
+    "insufficientBalance": "Недостаточно средств",
+    "approvalRequired": "Требуется одобрение токена",
+    "noDataAvailable": "Данные недоступны",
+    "comingSoon": "Скоро будет доступно"
+  },
+  "time": {
+    "seconds": "секунд",
+    "minutes": "минут",
+    "hours": "часов",
+    "days": "дней",
+    "weeks": "недель",
+    "months": "месяцев",
+    "years": "лет",
+    "ago": "назад",
+    "remaining": "осталось"
+  },
+  "format": {
+    "currency": "₽",
+    "percentage": "%",
+    "decimal": ",",
+    "thousand": "тыс",
+    "million": "млн",
+    "billion": "млрд"
+  }
+} 

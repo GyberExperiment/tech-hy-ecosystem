@@ -1,0 +1,35 @@
+{
+  "title": "DAO Governance",
+  "subtitle": "Participate in ecosystem governance with your VG voting power",
+  "voting": {
+    "power": "Voting Power",
+    "proposals": "Proposals",
+    "active": "Active",
+    "closed": "Closed",
+    "pending": "Pending"
+  },
+  "proposal": {
+    "title": "Proposal Title",
+    "description": "Description",
+    "votes": "Votes",
+    "timeLeft": "Time Left",
+    "quorum": "Quorum",
+    "threshold": "Threshold"
+  },
+  "actions": {
+    "vote": "Vote",
+    "delegate": "Delegate",
+    "propose": "Create Proposal",
+    "execute": "Execute"
+  },
+  "status": {
+    "pending": "Pending",
+    "active": "Active",
+    "succeeded": "Succeeded",
+    "defeated": "Defeated",
+    "queued": "Queued",
+    "executed": "Executed",
+    "canceled": "Canceled",
+    "expired": "Expired"
+  }
+} 

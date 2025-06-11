@@ -1,0 +1,44 @@
+{
+  "title": "Ecosystem Dashboard",
+  "subtitle": "LP Ecosystem with governance functions",
+  "welcome": "Welcome to Ecosystem",
+  "stats": {
+    "bnbBalance": "Your BNB Balance",
+    "totalTokens": "Total Tokens",
+    "lpLocking": "LP Locking",
+    "governancePower": "Governance Power",
+    "active": "Active",
+    "inactive": "Inactive",
+    "types": "types",
+    "votes": "votes"
+  },
+  "sections": {
+    "tokenBalances": "Token Balances",
+    "quickActions": "Quick Actions",
+    "contractAddresses": "Contract Addresses",
+    "stakingStats": "Locking Stats",
+    "transactionHistory": "Transaction History"
+  },
+  "actions": {
+    "manageTokens": {
+      "title": "Manage Tokens",
+      "description": "Transfer, approve, and manage your tokens",
+      "button": "Go to Tokens"
+    },
+    "lpLocking": {
+      "title": "LP Locking",
+      "description": "Lock LP tokens and get VG instantly",
+      "button": "Start Locking"
+    },
+    "governance": {
+      "title": "Governance",
+      "description": "Vote on proposals and shape the ecosystem",
+      "button": "Participate"
+    }
+  },
+  "errors": {
+    "notConnected": "Please connect your wallet to continue",
+    "wrongNetwork": "Wrong Network Detected",
+    "loadingFailed": "Failed to load dashboard data"
+  }
+} 

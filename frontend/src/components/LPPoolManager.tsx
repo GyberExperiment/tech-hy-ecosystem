@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS, LP_POOL_CONFIG, TOKEN_INFO } from '../constants/contracts';
-import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap } from 'lucide-react';
+import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap, BarChart3, TrendingUp, DollarSign, Droplets, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PoolInfoSkeleton, InputFormSkeleton } from './LoadingSkeleton';
 import { ContractStatus } from './ContractStatus';
@@ -574,8 +574,11 @@ const LPPoolManager: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pool Information */}
-        <div className="card">
-          <h3 className="text-xl font-bold mb-4">📊 Pool Information</h3>
+        <div className="glass-panel p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <BarChart3 className="w-5 h-5 text-blue-400" />
+            <h3 className="text-xl font-bold">Pool Information</h3>
+          </div>
           {loading ? (
             <PoolInfoSkeleton />
           ) : poolInfo ? (

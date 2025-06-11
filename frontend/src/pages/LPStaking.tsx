@@ -1,120 +1,71 @@
 import React from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import EarnVGWidget from '../components/EarnVGWidget';
+import VGConverter from '../components/VGConverter';
 import LPPoolManager from '../components/LPPoolManager';
+import { Rocket, Gift, Vote } from 'lucide-react';
 
-const LPStaking: React.FC = () => {
+const LPLocking: React.FC = () => {
   const { isConnected } = useWeb3();
 
   return (
-    <div className="min-h-screen gradient-bg pt-20">
-      <div className="container mx-auto px-4 py-8">
-        
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            🚀 LP Staking
+    <div className="animate-fade-in space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center space-x-3">
+          <Rocket className="w-8 h-8 text-blue-400" />
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            LP Locking
           </h1>
-          <p className="text-xl text-gray-300">
-            Создавайте LP позиции и получайте VG токены
+        </div>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          Блокируйте LP позиции навсегда и получайте VG токены мгновенно для governance
+        </p>
+      </div>
+
+      {isConnected ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Main Locking Widget */}
+          <div className="space-y-6">
+            <EarnVGWidget />
+            
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass-panel p-4 text-center">
+                <Gift className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
+                <p className="text-sm text-gray-400">VG Earned</p>
+                <p className="text-xl font-bold text-white">0.00</p>
+              </div>
+              
+              <div className="glass-panel p-4 text-center">
+                <Vote className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+                <p className="text-sm text-gray-400">Voting Power</p>
+                <p className="text-xl font-bold text-white">0.00</p>
+              </div>
+            </div>
+          </div>
+
+          {/* VG Converter */}
+          <div>
+            <VGConverter />
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-400">
+            Подключите кошелёк для доступа к LP Locking
           </p>
         </div>
+      )}
 
-        {!isConnected ? (
-          <div className="glass-panel p-8 max-w-md mx-auto text-center">
-            <h3 className="text-xl font-bold text-white mb-4">Подключите кошелёк</h3>
-            <p className="text-gray-300 mb-4">
-              Для участия в LP Staking необходимо подключить MetaMask
-            </p>
-            <button 
-              onClick={() => window.ethereum?.request({ method: 'eth_requestAccounts' })}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-200"
-            >
-              🦊 Connect MetaMask
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            
-            {/* Main Content */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              
-              {/* LP Pool Manager */}
-              <div>
-                <LPPoolManager />
-              </div>
-
-              {/* Earn VG Widget */}
-              <div>
-                <EarnVGWidget />
-              </div>
-
-            </div>
-
-            {/* Info Section */}
-            <div className="glass-panel p-8">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">📚 Как работает LP Staking</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">💰</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">1. Подготовьте токены</h3>
-                  <p className="text-gray-300 text-sm">
-                    Получите VC токены и BNB для создания LP позиции
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🏊‍♂️</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">2. Создайте LP</h3>
-                  <p className="text-gray-300 text-sm">
-                    Автоматически создайте LP позицию в PancakeSwap пуле
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">💎</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">3. Получите VG</h3>
-                  <p className="text-gray-300 text-sm">
-                    LP токены автоматически обмениваются на VG награды
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🗳️</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">4. Участвуйте в DAO</h3>
-                  <p className="text-gray-300 text-sm">
-                    Используйте VG токены для голосования в governance
-                  </p>
-                </div>
-
-              </div>
-
-              <div className="mt-8 text-center">
-                <div className="inline-flex items-center space-x-4 px-6 py-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                  <span className="text-blue-400">💡</span>
-                  <p className="text-blue-400 font-medium">
-                    LP токены автоматически заперты навсегда для обеспечения ликвидности
-                  </p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-      </div>
+      {/* LP Pool Manager */}
+      {isConnected && (
+        <div className="mt-12">
+          <LPPoolManager />
+        </div>
+      )}
     </div>
   );
 };
 
-export default LPStaking; 
+export default LPLocking; 

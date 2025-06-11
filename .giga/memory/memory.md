@@ -1,13 +1,13 @@
 # Память проекта
 
 ## Цель проекта
-LP Staking система для BSC с интеграцией PancakeSwap для автоматического создания LP позиций
+LP LOCKING система для BSC с интеграцией PancakeSwap для permanent liquidity locking
 
 ## Ключевая архитектура
 - Основной контракт: LPLocker (upgradeable UUPS proxy)
 - DAO Governance: LockerDAO + LPLockerGovernor
 - Интеграция: PancakeSwap V2 Router
-- Tokens: VC + BNB -> LP tokens -> VG rewards -> VGVotes voting
+- **LP LOCKING FLOW**: VC + BNB → LP tokens → **PERMANENT LOCK** → **INSTANT VG rewards** → VGVotes voting
 - Timelock: LPLockerTimelock для защиты критических операций
 
 ## 🪙 Token Architecture (Wrapper Pattern):

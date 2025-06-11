@@ -1,0 +1,36 @@
+{
+  "title": "LP Locking",
+  "subtitle": "Lock LP tokens permanently and earn VG rewards instantly",
+  "description": "Our LP Locking system allows you to permanently lock your LP tokens in exchange for instant VG token rewards.",
+  "process": {
+    "createLP": {
+      "title": "Create LP",
+      "description": "Add VC and BNB tokens to PancakeSwap liquidity pool"
+    },
+    "lockLP": {
+      "title": "Lock Forever",
+      "description": "Lock LP tokens permanently through LPLocker and get VG instantly"
+    },
+    "earnVG": {
+      "title": "Earn VG",
+      "description": "Receive VG tokens instantly (15:1 ratio) for governance participation"
+    }
+  },
+  "info": {
+    "permanent": "LP tokens are locked permanently (permanent lock)",
+    "instant": "Get 15 VG for every 1 LP token (instantly)",
+    "ratio": "15:1 VG to LP ratio",
+    "governance": "VG tokens can be used for governance",
+    "notStaking": "This is NOT staking - LP cannot be retrieved"
+  },
+  "forms": {
+    "lpAmount": "LP Amount to Lock",
+    "expectedVG": "Expected VG Tokens",
+    "lockForever": "Lock Forever"
+  },
+  "warnings": {
+    "permanentLock": "⚠️ WARNING: This is a permanent lock",
+    "noReturn": "LP tokens cannot be retrieved once locked",
+    "understand": "I understand this is permanent"
+  }
+} 

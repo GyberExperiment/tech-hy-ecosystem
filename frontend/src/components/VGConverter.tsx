@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
+import { RefreshCw, Vote, Gem, Lightbulb, ArrowRightLeft, Clock } from 'lucide-react';
 
 interface VGConverterProps {
   className?: string;
@@ -154,9 +155,12 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
   return (
     <div className={`glass-panel p-6 ${className}`}>
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-white mb-2">🔄 VG ↔ VGVotes</h3>
+        <div className="flex items-center justify-center space-x-2 mb-2">
+          <RefreshCw className="w-6 h-6 text-blue-400" />
+          <h3 className="text-2xl font-bold text-white">VG ↔ VGVotes</h3>
+        </div>
         <p className="text-gray-300">
-          Конвертируйте VG токены в VGVotes для участия в голосовании
+          Конвертируйте VG токены в VGVotes для участия в голосовании DAO
         </p>
       </div>
 
@@ -223,22 +227,45 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
         <button
           onClick={mode === 'deposit' ? handleDeposit : handleWithdraw}
           disabled={loading || !amount || parseFloat(amount) <= 0}
-          className={`w-full py-4 font-bold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full py-4 font-bold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
             mode === 'deposit'
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
               : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
           }`}
         >
-          {loading ? '⏳ Processing...' : 
-           mode === 'deposit' ? '🗳️ Convert to VGVotes' : '💎 Convert to VG'}
+          {loading ? (
+            <>
+              <Clock className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : mode === 'deposit' ? (
+            <>
+              <Vote className="w-4 h-4" />
+              <span>Convert to VGVotes</span>
+            </>
+          ) : (
+            <>
+              <Gem className="w-4 h-4" />
+              <span>Convert to VG</span>
+            </>
+          )}
         </button>
       </div>
 
       {/* Информация */}
-      <div className="mt-6 text-center text-sm text-gray-400">
-        <p>💡 Соотношение конвертации: 1:1</p>
-        <p>🗳️ VGVotes нужны для участия в голосовании DAO</p>
-        <p>🔄 Конвертация в обе стороны доступна в любое время</p>
+      <div className="mt-6 space-y-2 text-center text-sm text-gray-400">
+        <div className="flex items-center justify-center space-x-2">
+          <ArrowRightLeft className="w-4 h-4" />
+          <span>Соотношение конвертации: 1:1</span>
+        </div>
+        <div className="flex items-center justify-center space-x-2">
+          <Vote className="w-4 h-4" />
+          <span>VGVotes нужны для участия в голосовании DAO</span>
+        </div>
+        <div className="flex items-center justify-center space-x-2">
+          <RefreshCw className="w-4 h-4" />
+          <span>Конвертация в обе стороны доступна в любое время</span>
+        </div>
       </div>
     </div>
   );

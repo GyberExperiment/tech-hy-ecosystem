@@ -1,31 +1,61 @@
-# Tech-HY Ecosystem: Enterprise LP Staking & Governance Platform
+# TECH HY Ecosystem: Enterprise LP Locking & Governance Platform
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.22-blue.svg)](https://soliditylang.org/)
-[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue.svg)](https://www.typescriptlang.org/)
-[![BSC Testnet](https://img.shields.io/badge/BSC-Testnet-yellow.svg)](https://testnet.bscscan.com/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.22-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org/)
+[![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Binance Smart Chain](https://img.shields.io/badge/BSC-Testnet-F3BA2F?style=for-the-badge&logo=binance)](https://www.binance.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## 📋 Executive Summary
+## 🚀 Executive Summary
 
-Tech-HY Ecosystem - это enterprise-уровень DeFi платформа для автоматизированного LP staking с интегрированной DAO governance системой на Binance Smart Chain. Платформа реализует инновационную модель "permanent liquidity mining", где пользователи обменивают VC + BNB токены на постоянные LP позиции в обмен на VG governance токены.
+TECH HY Ecosystem - это enterprise-уровень DeFi платформа для **permanent LP locking** с интегрированной DAO governance системой на Binance Smart Chain. Система использует **burn-to-earn механизм**: LP токены блокируются навсегда в обмен на мгновенные VG rewards для участия в governance.
 
-### 🎯 Ключевые Особенности
+### 🔥 **Ключевые особенности**:
+- **🔒 Permanent LP Locking**: LP токены заблокированы навсегда для обеспечения постоянной ликвидности
+- **⚡ Instant VG Rewards**: Мгновенное получение VG токенов (15:1 ratio) при lock операции
+- **🗳️ DAO Governance**: VG → VGVotes для голосования в децентрализованном управлении
+- **🛡️ Enterprise Security**: Timelock защита + MEV protection + slippage control
 
-- **Permanent Liquidity Mining**: LP токены блокируются навсегда, обеспечивая стабильную ликвидность
-- **Automated LP Creation**: Интеграция с PancakeSwap V2 для автоматического создания ликвидности
-- **DAO Governance**: Полноценная система голосования с VG → VGVotes wrapper токенами
-- **MEV Protection**: Продвинутая защита от MEV атак с time-based и block-based ограничениями
-- **UUPS Upgradeable**: Модульная архитектура с возможностью безопасных обновлений
-- **Enterprise Security**: Comprehensive аудит безопасности с OpenZeppelin стандартами
+## 🏗️ Архитектура системы
 
-## 🏗️ Architecture Overview
+### 🔄 **LP LOCKING FLOW** (НЕ Staking):
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TECH HY Ecosystem                           │
+│                  BSC DeFi LP Locking Platform                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. LP Creation    2. Permanent Lock    3. Instant Rewards     │
+│  VC + BNB     →    LP → LPLocker    →    LP → VG (15:1)        │
+│  PancakeSwap       (НАВСЕГДА)           (МГНОВЕННО)             │
+│                                                                 │
+│  4. Governance                                                  │
+│  VG → VGVotes → DAO Voting                                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 🚫 **Что НЕТ в системе**:
+- ❌ **Стейкинг пулы** с APY/rewards rate
+- ❌ **Unstaking функции** - LP токены нельзя забрать обратно
+- ❌ **Накопление rewards** со временем
+- ❌ **Классические staking pool** операции
+
+### ✅ **Реальная архитектура**:
+- ✅ **BURN-TO-EARN система**: LP токены уничтожаются навсегда в обмен на VG
+- ✅ **Instant rewards**: VG токены получаются сразу при lock операции
+- ✅ **Permanent liquidity**: LP остаются в протоколе навсегда для стабильности
+- ✅ **One-time operation**: `earnVG()` - единоразовая операция lock + reward
+
+## 🛠️ Architecture Overview
 
 ### High-Level System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Tech-HY Ecosystem                            │
+│                    TECH HY Ecosystem                           │
+│                  BSC DeFi LP Locking Platform                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  Frontend DApp (React + TypeScript + ethers.js)                │
 ├─────────────────────────────────────────────────────────────────┤
@@ -814,6 +844,6 @@ For technical support and questions:
 
 ---
 
-**Built with ❤️ by the Tech-HY Team**
+**Built with ❤️ by the TECH HY Team**
 
 *Last Updated: January 2025*

@@ -312,7 +312,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           Earn VG Tokens
         </CardTitle>
         <CardDescription>
-          Создайте LP позицию и получите VG токены в награду (15:1 ratio)
+          Создайте LP позицию и получите VG токены в награду (15:1 ratio). LP токены блокируются навсегда.
         </CardDescription>
       </CardHeader>
 
@@ -395,14 +395,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           className="w-full"
           leftIcon={!loading ? <Zap className="h-4 w-4" /> : undefined}
         >
-          {loading ? 'Processing...' : '🚀 Create LP + Earn VG (One Click)'}
+          {loading ? 'Processing...' : 'Create LP + Earn VG (One Click)'}
         </Button>
 
         {/* Info */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• LP токены блокируются навсегда</p>
-          <p>• Получаете 15 VG за каждый 1 LP токен</p>
+          <p>• LP токены блокируются навсегда (permanent lock)</p>
+          <p>• Получаете 15 VG за каждый 1 LP токен (мгновенно)</p>
           <p>• VG токены можно использовать для governance</p>
+          <p>• Это НЕ стейкинг - LP нельзя забрать обратно</p>
         </div>
       </CardContent>
     </Card>

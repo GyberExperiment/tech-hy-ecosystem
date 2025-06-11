@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
+import { CONTRACTS, TOKEN_INFO } from '../constants/contracts';
+import { Send, CheckCircle, Copy, ExternalLink, RefreshCw, Gift, Vote } from 'lucide-react';
+import toast from 'react-hot-toast';
 import VGConverter from '../components/VGConverter';
 import EarnVGWidget from '../components/EarnVGWidget';
 
@@ -158,9 +162,9 @@ const TokenManagement: React.FC = () => {
                   <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">💎</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">3. Earn VG</h3>
+                  <h3 className="text-lg font-bold text-white mb-2">3. Lock Forever</h3>
                   <p className="text-gray-300 text-sm">
-                    Обменяйте LP токены на VG через LPLocker
+                    Заблокируйте LP токены навсегда через LPLocker и получите VG мгновенно
                   </p>
                 </div>
 
@@ -174,6 +178,26 @@ const TokenManagement: React.FC = () => {
                   </p>
                 </div>
 
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="card text-center group hover:scale-105 transition-transform duration-200">
+                <Gift className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
+                <h3 className="text-xl font-bold mb-2">VG Management</h3>
+                <p className="text-gray-400 mb-4">Manage your VG tokens and rewards</p>
+                <button className="btn-primary">
+                  Manage VG
+                </button>
+              </div>
+              
+              <div className="card text-center group hover:scale-105 transition-transform duration-200">
+                <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+                <h3 className="text-xl font-bold mb-2">Governance</h3>
+                <p className="text-gray-400 mb-4">Convert VG to VGVotes for voting</p>
+                <button className="btn-primary">
+                  Go to Governance
+                </button>
               </div>
             </div>
 

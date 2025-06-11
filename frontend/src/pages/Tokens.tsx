@@ -2,7 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import { Send, CheckCircle, Copy, ExternalLink, RefreshCw } from 'lucide-react';
+import { 
+  Send, 
+  CheckCircle, 
+  ExternalLink, 
+  Copy, 
+  RefreshCw, 
+  AlertTriangle, 
+  Lock,
+  CreditCard,
+  Gift,
+  Vote,
+  Rocket,
+  Coins
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface TokenData {
@@ -13,7 +26,7 @@ interface TokenData {
   decimals: number;
   totalSupply: string;
   contract: any;
-  icon: string;
+  icon: React.ReactNode;
   color: string;
 }
 
@@ -38,38 +51,38 @@ const Tokens: React.FC = () => {
   const [approveAmount, setApproveAmount] = useState('');
   const [activeTab, setActiveTab] = useState<'transfer' | 'approve'>('transfer');
 
-  const tokenContracts = [
+  const tokenCards = [
     {
       symbol: 'VC',
       name: TOKEN_INFO.VC.name,
-      address: CONTRACTS.VC_TOKEN,
-      contract: vcContract,
-      icon: '🪙',
+      icon: <CreditCard className="w-6 h-6" />,
       color: 'from-blue-500 to-cyan-500',
+      balance: balances.VC || '0',
+      address: CONTRACTS.VC_TOKEN,
     },
     {
       symbol: 'VG',
       name: TOKEN_INFO.VG.name,
-      address: CONTRACTS.VG_TOKEN,
-      contract: vgContract,
-      icon: '💰',
+      icon: <Gift className="w-6 h-6" />,
       color: 'from-yellow-500 to-orange-500',
+      balance: balances.VG || '0',
+      address: CONTRACTS.VG_TOKEN,
     },
     {
       symbol: 'VGV',
       name: TOKEN_INFO.VG_VOTES.name,
-      address: CONTRACTS.VG_TOKEN_VOTES,
-      contract: vgVotesContract,
-      icon: '🗳️',
+      icon: <Vote className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-500',
+      balance: balances.VGV || '0',
+      address: CONTRACTS.VG_TOKEN_VOTES,
     },
     {
       symbol: 'LP',
       name: TOKEN_INFO.LP.name,
-      address: CONTRACTS.LP_TOKEN,
-      contract: lpContract,
-      icon: '🚀',
+      icon: <Rocket className="w-6 h-6" />,
       color: 'from-green-500 to-emerald-500',
+      balance: balances.LP || '0',
+      address: CONTRACTS.LP_TOKEN,
     },
   ];
 
@@ -80,7 +93,7 @@ const Tokens: React.FC = () => {
     try {
       const tokenData: TokenData[] = [];
 
-      for (const tokenInfo of tokenContracts) {
+      for (const tokenInfo of tokenCards) {
         if (!tokenInfo.contract) continue;
 
         try {
@@ -219,20 +232,32 @@ const Tokens: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in text-center py-12">
-        <div className="text-6xl mb-4">🔐</div>
-        <h2 className="text-3xl font-bold mb-4">Подключите кошелёк</h2>
-        <p className="text-gray-400">Для управления токенами необходимо подключить кошелёк</p>
+      <div className="animate-fade-in">
+        <div className="text-center py-12">
+          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Connect Your Wallet
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Please connect your wallet to manage tokens
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in text-center py-12">
-        <div className="text-6xl mb-4">⚠️</div>
-        <h2 className="text-3xl font-bold mb-4 text-red-400">Неверная сеть</h2>
-        <p className="text-gray-400">Переключитесь на BSC Testnet</p>
+      <div className="animate-fade-in">
+        <div className="text-center py-12">
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
+          <h2 className="text-3xl font-bold mb-4 text-red-400">
+            Wrong Network Detected
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Please switch to BSC Testnet to manage tokens
+          </p>
+        </div>
       </div>
     );
   }
@@ -489,6 +514,17 @@ const Tokens: React.FC = () => {
               </p>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card text-center group hover:scale-105 transition-transform duration-200">
+          <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
+          <h3 className="text-xl font-bold mb-2">Token Operations</h3>
+          <p className="text-gray-400 mb-4">Transfer and approve tokens</p>
+          <button className="btn-primary">
+            Manage Tokens
+          </button>
         </div>
       </div>
     </div>

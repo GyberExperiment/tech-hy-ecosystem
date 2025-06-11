@@ -2,7 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import { Activity, Coins, TrendingUp, Users, ExternalLink, Wallet, Lock, AlertTriangle, BarChart3 } from 'lucide-react';
+import { 
+  Activity, 
+  Coins, 
+  TrendingUp, 
+  Users, 
+  ExternalLink, 
+  Wallet, 
+  Lock, 
+  AlertTriangle, 
+  BarChart3,
+  CreditCard,
+  Gift,
+  Vote,
+  Rocket,
+  Shield
+} from 'lucide-react';
 import WalletTroubleshoot from '../components/WalletTroubleshoot';
 import StakingStats from '../components/StakingStats';
 import TransactionHistory from '../components/TransactionHistory';
@@ -109,7 +124,7 @@ const Dashboard: React.FC = () => {
     {
       symbol: 'VC',
       name: TOKEN_INFO.VC.name,
-      icon: '🪙',
+      icon: <CreditCard className="w-6 h-6" />,
       color: 'from-blue-500 to-cyan-500',
       balance: balances.VC || '0',
       address: CONTRACTS.VC_TOKEN,
@@ -117,7 +132,7 @@ const Dashboard: React.FC = () => {
     {
       symbol: 'VG',
       name: TOKEN_INFO.VG.name,
-      icon: '💰',
+      icon: <Gift className="w-6 h-6" />,
       color: 'from-yellow-500 to-orange-500',
       balance: balances.VG || '0',
       address: CONTRACTS.VG_TOKEN,
@@ -125,7 +140,7 @@ const Dashboard: React.FC = () => {
     {
       symbol: 'VGV',
       name: TOKEN_INFO.VG_VOTES.name,
-      icon: '🗳️',
+      icon: <Vote className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-500',
       balance: balances.VGV || '0',
       address: CONTRACTS.VG_TOKEN_VOTES,
@@ -133,7 +148,7 @@ const Dashboard: React.FC = () => {
     {
       symbol: 'LP',
       name: TOKEN_INFO.LP.name,
-      icon: '🚀',
+      icon: <Rocket className="w-6 h-6" />,
       color: 'from-green-500 to-emerald-500',
       balance: balances.LP || '0',
       address: CONTRACTS.LP_TOKEN,
@@ -156,7 +171,7 @@ const Dashboard: React.FC = () => {
       color: 'text-green-400',
     },
     {
-      title: 'LP Staking',
+      title: 'LP Locking',
       value: parseFloat(balances.LP || '0') > 0 ? 'Active' : 'Inactive',
       unit: '',
       icon: TrendingUp,
@@ -173,11 +188,11 @@ const Dashboard: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔐</div>
+          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            Welcome to Tech-HY Ecosystem
+            Welcome to Ecosystem
           </h2>
           <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
             Comprehensive DApp for LP Staking, Governance, and Token Management on BSC Testnet
@@ -192,9 +207,9 @@ const Dashboard: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">⚠️</div>
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
           <h2 className="text-3xl font-bold mb-4 text-red-400">
             Wrong Network Detected
           </h2>
@@ -207,14 +222,14 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          Tech-HY Ecosystem Dashboard
+          Ecosystem Dashboard
         </h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-          Полноценная экосистема LP стейкинга на BSC Testnet с governance функциями
+          Экосистема LP с governance функциями
         </p>
       </div>
 
@@ -295,7 +310,7 @@ const Dashboard: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <div className="text-4xl mb-4">🪙</div>
+            <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
             <h3 className="text-xl font-bold mb-2">Manage Tokens</h3>
             <p className="text-gray-400 mb-4">Transfer, approve, and manage your tokens</p>
             <a href="/tokens" className="btn-primary inline-block">
@@ -304,16 +319,16 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <div className="text-4xl mb-4">🚀</div>
-            <h3 className="text-xl font-bold mb-2">LP Staking</h3>
-            <p className="text-gray-400 mb-4">Stake LP tokens and earn VG rewards</p>
+            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
+            <h3 className="text-xl font-bold mb-2">LP Locking</h3>
+            <p className="text-gray-400 mb-4">Блокируйте LP токены и получайте VG мгновенно</p>
             <a href="/staking" className="btn-primary inline-block">
-              Start Staking
+              Start Locking
             </a>
           </div>
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <div className="text-4xl mb-4">🗳️</div>
+            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
             <h3 className="text-xl font-bold mb-2">Governance</h3>
             <p className="text-gray-400 mb-4">Vote on proposals and shape the ecosystem</p>
             <a href="/governance" className="btn-primary inline-block">

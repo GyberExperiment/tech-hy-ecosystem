@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "tokens": "Tokens",
+    "locking": "LP Locking",
+    "governance": "Governance"
+  },
+  "buttons": {
+    "connect": "Connect Wallet",
+    "disconnect": "Disconnect",
+    "approve": "Approve",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "download": "Download"
+  },
+  "labels": {
+    "balance": "Balance",
+    "amount": "Amount",
+    "address": "Address",
+    "transaction": "Transaction",
+    "status": "Status",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "total": "Total",
+    "available": "Available",
+    "locked": "Locked",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "messages": {
+    "connectWallet": "Please connect your wallet to continue",
+    "wrongNetwork": "Please switch to BSC Testnet to use this DApp",
+    "transactionPending": "Transaction is pending...",
+    "transactionSuccess": "Transaction completed successfully",
+    "transactionFailed": "Transaction failed",
+    "insufficientBalance": "Insufficient balance",
+    "approvalRequired": "Token approval required",
+    "noDataAvailable": "No data available",
+    "comingSoon": "Coming soon"
+  },
+  "time": {
+    "seconds": "seconds",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years",
+    "ago": "ago",
+    "remaining": "remaining"
+  },
+  "format": {
+    "currency": "$",
+    "percentage": "%",
+    "decimal": ".",
+    "thousand": "K",
+    "million": "M",
+    "billion": "B"
+  }
+} 

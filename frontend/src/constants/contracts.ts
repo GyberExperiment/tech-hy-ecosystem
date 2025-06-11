@@ -38,17 +38,17 @@ export const CONTRACTS = {
 // Token Information
 export const TOKEN_INFO = {
   VC: {
-    name: "Value Coin",
+    name: "Venture Card",
     symbol: "VC",
     decimals: 18,
   },
   VG: {
-    name: "Value Gold",
+    name: "Venture Gift",
     symbol: "VG", 
     decimals: 18,
   },
   VG_VOTES: {
-    name: "Value Gold Votes",
+    name: "Venture Gift Votes",
     symbol: "VGV",
     decimals: 18,
   },
