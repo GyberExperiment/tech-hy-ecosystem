@@ -32,7 +32,10 @@ contract StakingDAO is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         governor = address(new LPLockerGovernor(IVotes(_token), address(this)));
     }
     function upgradeLPLocker(address newImplementation) external onlyGovernor {
+        require(newImplementation != address(0), "Implementation address zero");
         require(newImplementation.code.length > 0, "Not a contract");
+        require(newImplementation != lpLocker, "Same implementation");
+        
         UUPSUpgradeable(lpLocker).upgradeToAndCall(newImplementation, "");
         emit LPLockertUpgraded(newImplementation);
     }

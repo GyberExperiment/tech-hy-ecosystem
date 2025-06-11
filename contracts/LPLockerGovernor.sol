@@ -21,10 +21,15 @@ contract LPLockerGovernor is
         address _dao
     )
         Governor("LPLockerGovernor")
-        GovernorSettings(1, 50400, 1000e18)
+        GovernorSettings(
+            6575,        // Voting delay: ~1 день (BSC ~3 sec blocks)
+            201600,      // Voting period: ~1 неделя 
+            10000e18     // Proposal threshold: 10,000 токенов
+        )
         GovernorVotes(_token)
-        GovernorVotesQuorumFraction(4) // 4% quorum
+        GovernorVotesQuorumFraction(10) // 10% quorum (было 4%)
     {
+        require(_dao != address(0), "DAO address zero");
         dao = _dao;
     }
 
@@ -36,7 +41,7 @@ contract LPLockerGovernor is
         values[0] = 0;
 
         bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = abi.encodeWithSignature("upgradeUnitManager(address)", newImplementation);
+        calldatas[0] = abi.encodeWithSignature("upgradeLPLocker(address)", newImplementation);
 
         return propose(targets, values, calldatas, "Upgrade LPLocker");
     }

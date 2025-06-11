@@ -54,6 +54,7 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
     StakingConfig public config;
     mapping(address => uint256) public lastUserTxBlock;
     mapping(address => uint8) public userTxCountInBlock;
+    mapping(address => uint256) public lastUserTxTimestamp;
 
     event VGTokensEarned(
         address indexed user,
@@ -84,12 +85,22 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
 
     modifier mevProtection() {
         if (config.mevProtectionEnabled) {
+            // Time-based protection
+            require(
+                block.timestamp >= lastUserTxTimestamp[msg.sender] + config.minTimeBetweenTxs,
+                "Too frequent transactions"
+            );
+            
+            // Block-based protection
             require(
                 block.number > lastUserTxBlock[msg.sender] ||
                     userTxCountInBlock[msg.sender] < config.maxTxPerUserPerBlock,
                 "MEV protection violated"
             );
 
+            // Update timestamps and counters
+            lastUserTxTimestamp[msg.sender] = block.timestamp;
+            
             if (block.number > lastUserTxBlock[msg.sender]) {
                 lastUserTxBlock[msg.sender] = block.number;
                 userTxCountInBlock[msg.sender] = 1;
@@ -110,7 +121,18 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
 
-        config.authority = IVGToken(initConfig.vgTokenAddress)._OWNER_();
+        // Валидация zero address для всех критических адресов
+        require(initConfig.vgTokenAddress != address(0), "VG token address zero");
+        require(initConfig.vcTokenAddress != address(0), "VC token address zero");
+        require(initConfig.pancakeRouter != address(0), "PancakeRouter address zero");
+        require(initConfig.lpTokenAddress != address(0), "LP token address zero");
+        require(initConfig.stakingVaultAddress != address(0), "Staking vault address zero");
+        
+        // Валидация authority address
+        address authority = IVGToken(initConfig.vgTokenAddress)._OWNER_();
+        require(authority != address(0), "Authority address zero");
+
+        config.authority = authority;
         config.vgTokenAddress = initConfig.vgTokenAddress;
         config.vcTokenAddress = initConfig.vcTokenAddress;
         config.pancakeRouter = initConfig.pancakeRouter;
@@ -140,6 +162,10 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         IERC20 vcToken = IERC20(config.vcTokenAddress);
         vcToken.transferFrom(msg.sender, address(this), vcAmount);
 
+        // Расчет минимальных amounts с учетом slippage
+        uint256 minVcAmount = (vcAmount * (10000 - slippageBps)) / 10000;
+        uint256 minBnbAmount = (bnbAmount * (10000 - slippageBps)) / 10000;
+        
         uint256 expectedLp = (vcAmount * bnbAmount) / config.lpDivisor;
         uint256 minLpAmount = (expectedLp * (10000 - slippageBps)) / 10000;
 
@@ -147,7 +173,8 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
 
         (, , uint liquidity) = IPancakeRouter02(config.pancakeRouter).addLiquidityETH{
             value: bnbAmount
-        }(config.vcTokenAddress, vcAmount, 0, 0, address(this), block.timestamp + 300);
+        }(config.vcTokenAddress, vcAmount, minVcAmount, minBnbAmount, address(this), block.timestamp + 300);
+        
         require(liquidity >= minLpAmount, "Slippage exceeded");
         config.totalLockedLp += liquidity;
 
@@ -174,12 +201,20 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
     }
 
     function updateRates(uint256 newLpToVgRatio, uint256 newLpDivisor) external onlyAuthority {
+        require(newLpToVgRatio > 0, "LP to VG ratio must be positive");
+        require(newLpDivisor > 0, "LP divisor must be positive");
+        require(newLpDivisor >= 1000, "LP divisor too small");
+        
         config.lpToVgRatio = newLpToVgRatio;
         config.lpDivisor = newLpDivisor;
         emit ConfigurationUpdated(msg.sender, "Rates", block.timestamp);
     }
 
     function updatePancakeConfig(address newRouter, address newLpToken) external onlyAuthority {
+        require(newRouter != address(0), "Router address zero");
+        require(newLpToken != address(0), "LP token address zero");
+        require(newRouter.code.length > 0, "Router not a contract");
+        
         config.pancakeRouter = newRouter;
         config.lpTokenAddress = newLpToken;
         emit ConfigurationUpdated(msg.sender, "PancakeConfig", block.timestamp);

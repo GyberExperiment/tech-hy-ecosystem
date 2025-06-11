@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-06-11T08:56:11.074Z",
+  "totalTests": 87,
+  "totalPassed": 86,
+  "totalFailed": 1,
+  "successRate": 98.85057471264368,
+  "duration": 18258,
+  "results": [
+    {
+      "name": "VGToken",
+      "passed": 20,
+      "failed": 0,
+      "duration": 3566,
+      "errors": []
+    },
+    {
+      "name": "VGTokenVotes",
+      "passed": 23,
+      "failed": 0,
+      "duration": 3297,
+      "errors": []
+    },
+    {
+      "name": "VCToken",
+      "passed": 18,
+      "failed": 0,
+      "duration": 3048,
+      "errors": []
+    },
+    {
+      "name": "LPLocker",
+      "passed": 25,
+      "failed": 0,
+      "duration": 4376,
+      "errors": []
+    },
+    {
+      "name": "FullEcosystem",
+      "passed": 0,
+      "failed": 1,
+      "duration": 3966,
+      "errors": [
+        "Command failed: npx hardhat test test/integration/FullEcosystem.test.ts"
+      ]
+    }
+  ],
+  "readyForDeploy": false
+}
