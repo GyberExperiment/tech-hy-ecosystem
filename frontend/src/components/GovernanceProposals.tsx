@@ -69,9 +69,10 @@ const GovernanceProposals: React.FC = () => {
     try {
       const currentBlock = await provider.getBlockNumber();
       const power = await vgVotesContract.getPastVotes(account, currentBlock - 1);
-      setVotingPower(ethers.formatEther(power));
+      setVotingPower(power ? ethers.formatEther(power) : '0');
     } catch (error) {
       console.error('Error fetching voting power:', error);
+      setVotingPower('0'); // Fallback значение при ошибке
     }
   };
 

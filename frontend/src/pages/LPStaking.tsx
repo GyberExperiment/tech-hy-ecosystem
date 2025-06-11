@@ -62,24 +62,44 @@ const LPLocking: React.FC = () => {
       for (const { contract, symbol } of contracts) {
         if (contract) {
           balancePromises.push(
-            contract.balanceOf(account).then((balance: any) => ({
-              symbol,
-              balance: ethers.formatEther(balance)
-            }))
+            contract.balanceOf(account)
+              .then((balance: any) => ({
+                symbol,
+                balance: balance ? ethers.formatEther(balance) : '0'
+              }))
+              .catch((error: any) => {
+                console.warn(`Error fetching ${symbol} balance:`, error);
+                return { symbol, balance: '0' };
+              })
           );
         }
       }
 
-      const results = await Promise.all(balancePromises);
+      const results = await Promise.allSettled(balancePromises);
       const newBalances: Record<string, string> = {};
       
-      results.forEach(result => {
-        newBalances[result.symbol] = result.balance;
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          newBalances[result.value.symbol] = result.value.balance;
+        } else {
+          // Fallback для неудачных запросов
+          const symbol = contracts[index]?.symbol;
+          if (symbol) {
+            newBalances[symbol] = '0';
+          }
+        }
       });
 
       setBalances(newBalances);
     } catch (error) {
       console.error('Error fetching balances:', error);
+      // Устанавливаем fallback значения при критической ошибке
+      setBalances({
+        VC: '0',
+        VG: '0',
+        VGV: '0',
+        LP: '0',
+      });
     } finally {
       setLoading(false);
     }
@@ -95,13 +115,19 @@ const LPLocking: React.FC = () => {
       ]);
 
       setLpLockerStats({
-        totalLockedLp: ethers.formatEther(poolInfo.totalLockedLp),
-        totalVgIssued: ethers.formatEther(poolInfo.totalVgIssued),
-        lpToVgRatio: config.lpToVgRatio.toString(),
-        lpDivisor: config.lpDivisor.toString(),
+        totalLockedLp: poolInfo.totalLockedLp ? ethers.formatEther(poolInfo.totalLockedLp) : '0',
+        totalVgIssued: poolInfo.totalVgIssued ? ethers.formatEther(poolInfo.totalVgIssued) : '0',
+        lpToVgRatio: config.lpToVgRatio ? config.lpToVgRatio.toString() : '0',
+        lpDivisor: config.lpDivisor ? config.lpDivisor.toString() : '0',
       });
     } catch (error) {
       console.error('Error fetching LP Locker stats:', error);
+      setLpLockerStats({
+        totalLockedLp: '0',
+        totalVgIssued: '0',
+        lpToVgRatio: '0',
+        lpDivisor: '0',
+      });
     }
   };
 

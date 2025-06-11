@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
-import { CONTRACTS, LP_POOL_CONFIG, TOKEN_INFO } from '../constants/contracts';
-import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap, BarChart3, TrendingUp, DollarSign, Droplets, ExternalLink } from 'lucide-react';
+import { CONTRACTS, LP_POOL_CONFIG, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
+import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap, BarChart3, TrendingUp, DollarSign, Droplets, ExternalLink, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PoolInfoSkeleton, InputFormSkeleton } from './LoadingSkeleton';
 import { ContractStatus } from './ContractStatus';
@@ -549,20 +549,107 @@ const LPPoolManager: React.FC = () => {
 
   // Debug panel для диагностики проблем
   const DebugPanel = () => (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-6">
-      <h3 className="text-lg font-bold text-yellow-400 mb-3">🔧 Debug Info</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-gray-400">Factory: <span className="text-blue-400">{CONTRACTS.PANCAKE_FACTORY}</span></p>
-          <p className="text-gray-400">Router: <span className="text-blue-400">{CONTRACTS.PANCAKE_ROUTER}</span></p>
-          <p className="text-gray-400">VC Token: <span className="text-blue-400">{CONTRACTS.VC_TOKEN}</span></p>
-          <p className="text-gray-400">WBNB: <span className="text-blue-400">{CONTRACTS.WBNB}</span></p>
+    <div className="card">
+      <h3 className="text-lg font-bold text-yellow-400 mb-4 flex items-center">
+        <Settings className="mr-2" size={20} />
+        🔧 Debug Info
+      </h3>
+      <div className="space-y-3 text-sm">
+        <div className="grid grid-cols-1 gap-3">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-gray-300">Factory</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.PANCAKE_FACTORY}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.PANCAKE_FACTORY.slice(0, 6)}...${CONTRACTS.PANCAKE_FACTORY.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-gray-300">Router</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.PANCAKE_ROUTER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.PANCAKE_ROUTER.slice(0, 6)}...${CONTRACTS.PANCAKE_ROUTER.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-gray-300">VC Token</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VC_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.VC_TOKEN.slice(0, 6)}...${CONTRACTS.VC_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-gray-300">WBNB</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.WBNB}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.WBNB.slice(0, 6)}...${CONTRACTS.WBNB.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-gray-300">LP Token</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
-        <div>
-          <p className="text-gray-400">LP Token: <span className="text-blue-400">{CONTRACTS.LP_TOKEN}</span></p>
-          <p className="text-gray-400">Network: <span className="text-green-400">BSC Testnet (97)</span></p>
-          <p className="text-gray-400">Account: <span className="text-purple-400">{account?.slice(0, 8)}...{account?.slice(-6)}</span></p>
-          <p className="text-gray-400">Status: <span className={loading ? "text-yellow-400" : "text-green-400"}>{loading ? "Loading..." : "Ready"}</span></p>
+        
+        <div className="pt-3 border-t border-gray-700">
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-gray-400">Network:</span>
+              <span className="text-green-400 ml-2">BSC Testnet (97)</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Account:</span>
+              <span className="text-purple-400 ml-2">{account?.slice(0, 6)}...{account?.slice(-4)}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Status:</span>
+              <span className={`ml-2 ${loading ? "text-yellow-400" : "text-green-400"}`}>
+                {loading ? "Loading..." : "Ready"}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-400">Explorer:</span>
+              <a 
+                href={BSC_TESTNET.blockExplorer} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 ml-2 text-xs"
+              >
+                BSCScan
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

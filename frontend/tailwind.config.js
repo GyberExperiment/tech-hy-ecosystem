@@ -97,6 +97,10 @@ export default {
           "0%, 100%": { boxShadow: "0 0 5px rgba(59, 130, 246, 0.5)" },
           "50%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.8)" },
         },
+        "scale-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -108,6 +112,7 @@ export default {
         "slide-in-from-left": "slide-in-from-left 0.3s ease-out",
         "slide-in-from-right": "slide-in-from-right 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "scale-in": "scale-in 0.2s ease-out",
       },
       backdropBlur: {
         xs: "2px",
