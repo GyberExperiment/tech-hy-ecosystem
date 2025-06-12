@@ -257,7 +257,7 @@ const LPLocking: React.FC = () => {
           <Rocket className="w-8 h-8 text-blue-400" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('locking:title')}
-          </h1>
+        </h1>
         </div>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
           {t('locking:subtitle')}
@@ -271,23 +271,23 @@ const LPLocking: React.FC = () => {
           Ваша статистика
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
             <div key={index} className="card">
-              <div className="flex items-center justify-between">
-                <div>
+          <div className="flex items-center justify-between">
+            <div>
                   <p className="text-sm text-gray-400">{stat.title}</p>
                   <div className="flex items-baseline space-x-2">
-                    <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-white">
                       {loading ? 'Загрузка...' : stat.value}
                     </p>
                     {stat.unit && (
                       <p className="text-sm text-gray-400">{stat.unit}</p>
                     )}
-                  </div>
-                </div>
+          </div>
+        </div>
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
-              </div>
+        </div>
             </div>
           ))}
         </div>
@@ -305,17 +305,17 @@ const LPLocking: React.FC = () => {
         </div>
 
         {/* VG Converter */}
-        <div className="space-y-6">
+            <div className="space-y-6">
           <h2 className="text-2xl font-bold flex items-center">
             <Vote className="mr-3 text-purple-400" />
             VG ↔ VGVotes Converter
           </h2>
           <VGConverter />
-        </div>
-      </div>
+                </div>
+              </div>
 
       {/* Protocol Statistics */}
-      <div>
+                <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           <BarChart3 className="mr-3 text-green-400" />
           Статистика протокола
@@ -337,20 +337,20 @@ const LPLocking: React.FC = () => {
                   </div>
                 </div>
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
-              </div>
+                </div>
             </div>
           ))}
         </div>
-      </div>
+        </div>
 
       {/* How it Works */}
       <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           <Target className="mr-3 text-blue-400" />
           Как работает LP Locking
-        </h2>
-        
-        <div className="card">
+          </h2>
+
+          <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -360,7 +360,7 @@ const LPLocking: React.FC = () => {
               <p className="text-gray-300 text-sm">
                 Добавьте VC и BNB токены в пул ликвидности PancakeSwap или используйте готовые LP токены
               </p>
-            </div>
+              </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -370,7 +370,7 @@ const LPLocking: React.FC = () => {
               <p className="text-gray-300 text-sm">
                 LP токены блокируются навсегда в обмен на VG токены по курсу {lpLockerStats.lpToVgRatio || '15'}:1
               </p>
-            </div>
+                </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -382,11 +382,11 @@ const LPLocking: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
-      </div>
+                </div>
+              </div>
 
       {/* Quick Actions */}
-      <div>
+                <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center">
           <Zap className="mr-3 text-yellow-400" />
           Быстрые действия
@@ -400,7 +400,7 @@ const LPLocking: React.FC = () => {
             <a href="/tokens" className="btn-primary inline-block">
               Перейти к токенам
             </a>
-          </div>
+                </div>
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
@@ -409,8 +409,8 @@ const LPLocking: React.FC = () => {
             <a href="/governance" className="btn-primary inline-block">
               Перейти к Governance
             </a>
-          </div>
-          
+              </div>
+
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-green-400" />
             <h3 className="text-xl font-bold mb-2">Analytics</h3>
@@ -418,9 +418,9 @@ const LPLocking: React.FC = () => {
             <a href="/" className="btn-primary inline-block">
               Перейти к Dashboard
             </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
       {/* LP Pool Manager */}
       <div>
@@ -438,7 +438,7 @@ const LPLocking: React.FC = () => {
           Информация о контрактах
         </h2>
         
-        <div className="card">
+          <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium">LP Locker</span>

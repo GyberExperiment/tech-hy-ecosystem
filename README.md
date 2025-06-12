@@ -36,7 +36,7 @@ TECH HY Ecosystem - это enterprise-уровень DeFi платформа д�
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 🚫 **Что НЕТ в системе**:
+### 🚫 **Особенности системы**:
 - ❌ **Стейкинг пулы** с APY/rewards rate
 - ❌ **Unstaking функции** - LP токены нельзя забрать обратно
 - ❌ **Накопление rewards** со временем
@@ -156,7 +156,7 @@ function earnVG(
 
 #### Configuration Structure
 
-```solidity
+   ```solidity
 struct StakingConfig {
     address authority;           // Администратор контракта
     address vgTokenAddress;      // VG токен для наград
@@ -258,7 +258,7 @@ const mode = hasLPTokens ? 'earn' : 'create';
 // One-click LP creation + VG earning
 const handleEarnVG = async () => {
   const tx = await lpLockerContract.earnVG(
-    vcAmount,
+           vcAmount,
     bnbAmount,
     slippageBps,
     { value: bnbAmount, gasLimit: 500000 }

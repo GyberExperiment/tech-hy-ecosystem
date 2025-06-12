@@ -79,6 +79,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     if (!provider || !account || !getContract) return;
 
     try {
+      console.log('Loading user data for account:', account);
+      
       const vcContract = getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
       const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
       const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
@@ -103,6 +105,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         vg: vgBalance.status === 'fulfilled' ? ethers.formatEther(vgBalance.value) : '0'
       };
 
+      console.log('Updated balances:', newBalances);
       setBalances(newBalances);
 
       if (poolData.status === 'fulfilled') {
@@ -230,6 +233,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         toast.success('VG токены успешно получены!');
         console.log('Transaction successful:', receipt.hash);
 
+        // Принудительное обновление балансов с задержкой
+        setTimeout(async () => {
+          await loadUserData();
+          console.log('Balances updated after transaction');
+        }, 2000); // 2 секунды задержка для BSC
+
         await loadUserData();
 
         setVcAmount('');
@@ -347,6 +356,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       if (receipt.status === 1) {
         toast.success('LP токены заблокированы, VG награды получены!');
         console.log('LP Lock transaction successful:', receipt.hash);
+
+        // Принудительное обновление балансов с задержкой
+        setTimeout(async () => {
+          await loadUserData();
+          console.log('Balances updated after LP lock transaction');
+        }, 2000); // 2 секунды задержка для BSC
 
         await loadUserData();
 

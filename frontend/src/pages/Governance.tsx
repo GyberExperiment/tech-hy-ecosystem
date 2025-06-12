@@ -699,7 +699,7 @@ const Governance: React.FC = () => {
           <FileText className="mr-3 text-green-400" />
           Дополнительные предложения
         </h2>
-        <GovernanceProposals />
+      <GovernanceProposals />
       </div>
 
       {/* Transaction History */}
