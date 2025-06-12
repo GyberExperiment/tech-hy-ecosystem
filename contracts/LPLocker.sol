@@ -192,7 +192,15 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
             "Insufficient VG tokens"
         );
 
-        vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
+        // Используем transfer если vault = сам контракт, transferFrom если внешний vault
+        if (config.stakingVaultAddress == address(this)) {
+            // Контракт владеет токенами - используем обычный transfer
+            vgToken.transfer(msg.sender, vgReward);
+        } else {
+            // Внешний vault - используем transferFrom
+            vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
+        }
+        
         config.totalVgIssued += vgReward;
 
         emit VGTokensEarned(msg.sender, liquidity, vgReward, bnbAmount, vcAmount, block.timestamp);
@@ -231,8 +239,15 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
             "Insufficient VG tokens in vault"
         );
         
-        // Переводим VG награду пользователю
-        vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
+        // Используем transfer если vault = сам контракт, transferFrom если внешний vault
+        if (config.stakingVaultAddress == address(this)) {
+            // Контракт владеет токенами - используем обычный transfer
+            vgToken.transfer(msg.sender, vgReward);
+        } else {
+            // Внешний vault - используем transferFrom
+            vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
+        }
+        
         config.totalVgIssued += vgReward;
         
         emit LPTokensLocked(msg.sender, lpAmount, vgReward, block.timestamp);
@@ -275,6 +290,23 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         config.minTimeBetweenTxs = minTimeBetweenTxs;
         config.maxTxPerUserPerBlock = maxTxPerBlock;
         emit ConfigurationUpdated(msg.sender, "MEVProtection", block.timestamp);
+    }
+
+    /**
+     * @notice Обновляет адрес vault для хранения VG токенов
+     * @param newVault Новый адрес vault (может быть контракт или EOA)
+     * @dev Только authority может изменить vault адрес
+     */
+    function updateStakingVault(address newVault) external onlyAuthority {
+        require(newVault != address(0), "Invalid vault address");
+        
+        address oldVault = config.stakingVaultAddress;
+        config.stakingVaultAddress = newVault;
+        
+        emit ConfigurationUpdated(msg.sender, "StakingVault", block.timestamp);
+        
+        // Логируем изменение для удобства
+        console.log("Staking vault updated from %s to %s", oldVault, newVault);
     }
 
     function getPoolInfo()
