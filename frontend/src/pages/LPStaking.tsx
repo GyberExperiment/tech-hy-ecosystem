@@ -340,7 +340,7 @@ const LPLocking: React.FC = () => {
                 </div>
             </div>
           ))}
-        </div>
+          </div>
         </div>
 
       {/* How it Works */}

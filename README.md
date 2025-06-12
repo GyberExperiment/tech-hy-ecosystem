@@ -8,17 +8,17 @@
 
 ## 🚀 Executive Summary
 
-TECH HY Ecosystem - это enterprise-уровень DeFi платформа для **permanent LP locking** с интегрированной DAO governance системой на Binance Smart Chain. Система использует **burn-to-earn механизм**: LP токены блокируются навсегда в обмен на мгновенные VG rewards для участия в governance.
+TECH HY Ecosystem is an enterprise-grade DeFi platform for **permanent LP locking** with integrated DAO governance on Binance Smart Chain. The system uses a **burn-to-earn mechanism**: LP tokens are locked forever in exchange for instant VG rewards, which are used for governance.
 
-### 🔥 **Ключевые особенности**:
-- **🔒 Permanent LP Locking**: LP токены заблокированы навсегда для обеспечения постоянной ликвидности
-- **⚡ Instant VG Rewards**: Мгновенное получение VG токенов (15:1 ratio) при lock операции
-- **🗳️ DAO Governance**: VG → VGVotes для голосования в децентрализованном управлении
-- **🛡️ Enterprise Security**: Timelock защита + MEV protection + slippage control
+### 🔥 **Key Features**:
+- **🔒 Permanent LP Locking**: LP tokens are locked forever to guarantee protocol liquidity
+- **⚡ Instant VG Rewards**: Immediate VG token rewards (15:1 ratio) for every lock operation
+- **🗳️ DAO Governance**: VG → VGVotes for decentralized voting
+- **🛡️ Enterprise Security**: Timelock, MEV protection, and slippage control
 
-## 🏗️ Архитектура системы
+## 🏗️ System Architecture
 
-### 🔄 **LP LOCKING FLOW** (НЕ Staking):
+### 🔄 **LP LOCKING FLOW** (Not Staking):
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@ TECH HY Ecosystem - это enterprise-уровень DeFi платформа д�
 │                                                                 │
 │  1. LP Creation    2. Permanent Lock    3. Instant Rewards     │
 │  VC + BNB     →    LP → LPLocker    →    LP → VG (15:1)        │
-│  PancakeSwap       (НАВСЕГДА)           (МГНОВЕННО)             │
+│  PancakeSwap       (FOREVER)              (INSTANT)             │
 │                                                                 │
 │  4. Governance                                                  │
 │  VG → VGVotes → DAO Voting                                      │
@@ -36,17 +36,17 @@ TECH HY Ecosystem - это enterprise-уровень DeFi платформа д�
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 🚫 **Особенности системы**:
-- ❌ **Стейкинг пулы** с APY/rewards rate
-- ❌ **Unstaking функции** - LP токены нельзя забрать обратно
-- ❌ **Накопление rewards** со временем
-- ❌ **Классические staking pool** операции
+### 🚫 **What the System is NOT**:
+- ❌ **Staking pools** with APY/rewards rate
+- ❌ **Unstaking** — LP tokens cannot be withdrawn
+- ❌ **Time-based rewards accumulation**
+- ❌ **Classic staking pool operations**
 
-### ✅ **Реальная архитектура**:
-- ✅ **BURN-TO-EARN система**: LP токены уничтожаются навсегда в обмен на VG
-- ✅ **Instant rewards**: VG токены получаются сразу при lock операции
-- ✅ **Permanent liquidity**: LP остаются в протоколе навсегда для стабильности
-- ✅ **One-time operation**: `earnVG()` - единоразовая операция lock + reward
+### ✅ **Actual Architecture**:
+- ✅ **BURN-TO-EARN**: LP tokens are burned forever for VG
+- ✅ **Instant rewards**: VG tokens are minted instantly on lock
+- ✅ **Permanent liquidity**: LP tokens remain in protocol forever
+- ✅ **One-time operation**: `earnVG()` = lock + reward in one call
 
 ## 🛠️ Architecture Overview
 
@@ -99,7 +99,7 @@ VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
 - **Security**: OpenZeppelin Contracts v5.3.0 (Upgradeable)
 
 ### Smart Contract Architecture
-- **LPLocker.sol**: Core staking logic with UUPS upgradeability
+- **LPLocker.sol**: Core LP locking logic (UUPS upgradeable)
 - **VCToken.sol**: ERC20 staking token (1B max supply)
 - **VGToken.sol**: ERC20 reward token (100M max supply)
 - **VGTokenVotes.sol**: ERC20Votes wrapper for governance
@@ -110,7 +110,7 @@ VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
 - **Framework**: React 18.2.0 + TypeScript 5.2.2
 - **Build Tool**: Vite 4.5.0 with HMR
 - **Web3 Library**: ethers.js v6.8.0
-- **UI Framework**: Tailwind CSS 3.3.5 with glassmorphism design
+- **UI Framework**: Tailwind CSS 3.3.5 (glassmorphism design)
 - **State Management**: React Query 5.8.4 + React Context
 - **Routing**: React Router DOM 6.18.0
 - **Notifications**: React Hot Toast 2.4.1
@@ -118,9 +118,9 @@ VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
 ### Development Tools
 - **Testing**: Hardhat Toolbox with Mocha/Chai
 - **Code Quality**: ESLint + Prettier + Solhint
-- **Type Safety**: TypeChain for contract type generation
+- **Type Safety**: TypeChain for contract types
 - **Coverage**: Hardhat Coverage plugin
-- **Deployment**: Custom deployment scripts with verification
+- **Deployment**: Custom scripts with verification
 
 ## 📊 Smart Contracts Documentation
 
@@ -138,44 +138,44 @@ function earnVG(
 ) external payable mevProtection nonReentrant
 ```
 
-**Purpose**: Основная функция для создания LP позиций и получения VG наград
+**Purpose**: Main function for creating LP positions and earning VG rewards
 
 **Parameters**:
-- `vcAmount`: Количество VC токенов для стейкинга
-- `bnbAmount`: Количество BNB для создания LP (должно равняться msg.value)
-- `slippageBps`: Slippage tolerance в basis points (max 1000 = 10%)
+- `vcAmount`: Amount of VC tokens to stake
+- `bnbAmount`: Amount of BNB to add as liquidity (must equal msg.value)
+- `slippageBps`: Slippage tolerance in basis points (max 1000 = 10%)
 
 **Process Flow**:
-1. Валидация входных параметров и MEV protection
-2. Transfer VC токенов от пользователя
-3. Approve VC токенов для PancakeSwap Router
-4. Создание LP через `addLiquidityETH()`
-5. Расчет VG наград (15 VG за 1 LP токен)
-6. Transfer VG токенов пользователю
-7. LP токены остаются заблокированными в контракте навсегда
+1. Validate input and MEV protection
+2. Transfer VC tokens from user
+3. Approve VC tokens for PancakeSwap Router
+4. Create LP via `addLiquidityETH()`
+5. Calculate VG rewards (15 VG per 1 LP token)
+6. Transfer VG tokens to user
+7. LP tokens are locked in the contract forever
 
 #### Configuration Structure
 
    ```solidity
 struct StakingConfig {
-    address authority;           // Администратор контракта
-    address vgTokenAddress;      // VG токен для наград
-    address vcTokenAddress;      // VC токен для стейкинга
+    address authority;           // Contract admin
+    address vgTokenAddress;      // VG token for rewards
+    address vcTokenAddress;      // VC token for staking
     address pancakeRouter;       // PancakeSwap V2 Router
-    address lpTokenAddress;      // LP токен VC/WBNB
-    address stakingVaultAddress; // Хранилище VG токенов
-    uint256 lpDivisor;          // Делитель для расчета LP (1,000,000)
-    uint256 lpToVgRatio;        // Соотношение LP к VG (15:1)
-    uint256 minBnbAmount;       // Минимум BNB (0.01 BNB)
-    uint256 minVcAmount;        // Минимум VC (1 VC)
-    uint16 maxSlippageBps;      // Максимальный slippage (1000 = 10%)
-    uint16 defaultSlippageBps;  // По умолчанию (200 = 2%)
-    bool mevProtectionEnabled;   // MEV защита
-    uint256 minTimeBetweenTxs;  // Минимум между транзакциями (секунды)
-    uint8 maxTxPerUserPerBlock; // Максимум транзакций на блок
-    uint256 totalLockedLp;      // Общее количество заблокированных LP
-    uint256 totalVgIssued;      // Всего выдано VG токенов
-    uint256 totalVgDeposited;   // Всего депонировано VG токенов
+    address lpTokenAddress;      // VC/WBNB LP token
+    address stakingVaultAddress; // VG token vault
+    uint256 lpDivisor;          // LP calculation divisor (1,000,000)
+    uint256 lpToVgRatio;        // LP to VG ratio (15:1)
+    uint256 minBnbAmount;       // Minimum BNB (0.01 BNB)
+    uint256 minVcAmount;        // Minimum VC (1 VC)
+    uint16 maxSlippageBps;      // Max slippage (1000 = 10%)
+    uint16 defaultSlippageBps;  // Default (200 = 2%)
+    bool mevProtectionEnabled;   // MEV protection
+    uint256 minTimeBetweenTxs;  // Min time between txs (seconds)
+    uint8 maxTxPerUserPerBlock; // Max txs per block per user
+    uint256 totalLockedLp;      // Total locked LP
+    uint256 totalVgIssued;      // Total VG issued
+    uint256 totalVgDeposited;   // Total VG deposited
 }
 ```
 
@@ -186,19 +186,19 @@ struct StakingConfig {
 - **Type**: Standard ERC20 token
 - **Max Supply**: 1,000,000,000 VC
 - **Decimals**: 18
-- **Purpose**: Staking token для создания LP позиций
+- **Purpose**: Staking token for LP creation
 
 #### VGToken.sol (Value Gold)
 - **Address**: `0xe87c0Ff36084033FfB56aCf68F2dD5857C65342d`
 - **Type**: ERC20 with owner-controlled minting
 - **Max Supply**: 100,000,000 VG
 - **Decimals**: 18
-- **Purpose**: Reward token за LP staking
+- **Purpose**: Reward token for LP staking
 
 #### VGTokenVotes.sol (Value Gold Votes)
 - **Address**: `0xA2aFF77bBaD0Fc5039698D9dc695bDE32A25CBeA`
 - **Type**: ERC20Votes wrapper
-- **Ratio**: 1:1 с VGToken
+- **Ratio**: 1:1 with VGToken
 - **Purpose**: Governance voting power
 
 ### Governance System
@@ -222,36 +222,36 @@ struct StakingConfig {
 ```
 frontend/
 ├── src/
-│   ├── components/          # React компоненты
-│   │   ├── EarnVGWidget.tsx    # Основной компонент для earnVG
-│   │   ├── VGConverter.tsx     # VG ↔ VGVotes конвертер
-│   │   ├── LPPoolManager.tsx   # Управление ликвидностью
-│   │   └── TokenBalance.tsx    # Отображение балансов
-│   ├── contexts/            # React контексты
-│   │   ├── Web3Context.tsx     # Web3 интеграция
+│   ├── components/          # React components
+│   │   ├── EarnVGWidget.tsx    # Main earnVG component
+│   │   ├── VGConverter.tsx     # VG ↔ VGVotes converter
+│   │   ├── LPPoolManager.tsx   # Liquidity management
+│   │   └── TokenBalance.tsx    # Token balances
+│   ├── contexts/            # React contexts
+│   │   ├── Web3Context.tsx     # Web3 integration
 │   │   └── ContractContext.tsx # Contract instances
 │   ├── hooks/               # Custom React hooks
 │   │   ├── useContract.ts      # Contract interaction
 │   │   └── useTokenBalance.ts  # Token balance tracking
-│   ├── pages/               # Страницы приложения
-│   │   ├── Home.tsx           # Главная страница
-│   │   ├── TokenManagement.tsx # Управление токенами
+│   ├── pages/               # App pages
+│   │   ├── Home.tsx           # Home page
+│   │   ├── TokenManagement.tsx # Token management
 │   │   └── Governance.tsx     # DAO governance
-│   ├── constants/           # Конфигурация
-│   │   ├── contracts.ts       # Адреса контрактов
+│   ├── constants/           # Config
+│   │   ├── contracts.ts       # Contract addresses
 │   │   └── abi.ts            # Contract ABIs
-│   └── utils/               # Утилиты
-│       ├── formatters.ts      # Форматирование данных
-│       └── validators.ts      # Валидация входных данных
+│   └── utils/               # Utilities
+│       ├── formatters.ts      # Data formatting
+│       └── validators.ts      # Input validation
 ```
 
 ### Key Components
 
 #### EarnVGWidget.tsx
-Основной компонент для взаимодействия с LPLocker контрактом:
+Main component for LPLocker contract interaction:
 
 ```typescript
-// Автоматическое определение режима работы
+// Auto mode detection
 const hasLPTokens = lpBalance > 0n;
 const mode = hasLPTokens ? 'earn' : 'create';
 
@@ -267,7 +267,7 @@ const handleEarnVG = async () => {
 ```
 
 #### Web3Context.tsx
-Централизованное управление Web3 подключением:
+Centralized Web3 connection management:
 
 ```typescript
 const Web3Context = createContext({
@@ -282,23 +282,23 @@ const Web3Context = createContext({
 
 ### User Experience Features
 
-1. **One-Click Operations**: Минимальное количество кликов для основных операций
-2. **Automatic Network Switching**: Автоматическое переключение на BSC Testnet
-3. **Real-time Data**: Обновление балансов и статистики каждые 30 секунд
-4. **Responsive Design**: Полная поддержка мобильных устройств
-5. **Error Handling**: Детальные сообщения об ошибках с предложениями решений
-6. **Transaction Tracking**: Отслеживание статуса транзакций с ссылками на BSCScan
+1. **One-Click Operations**: Minimal clicks for all main actions
+2. **Automatic Network Switching**: Auto switch to BSC Testnet
+3. **Real-time Data**: Balances and stats update every 30s
+4. **Responsive Design**: Full mobile support
+5. **Error Handling**: Detailed error messages with suggestions
+6. **Transaction Tracking**: Status with BSCScan links
 
 ## 🚀 Deployment Guide
 
 ### Prerequisites
 
 ```bash
-# Node.js 18+ и npm
+# Node.js 18+ and npm
 node --version  # v18.0.0+
 npm --version   # 9.0.0+
 
-# Git для клонирования репозитория
+# Git for repo cloning
 git --version
 ```
 
@@ -321,10 +321,10 @@ cd frontend && npm install && cd ..
 
 3. **Environment Configuration**
 ```bash
-# Создать .env файл из примера
+# Create .env from example
 cp deploy.env.example .env
 
-# Настроить переменные окружения
+# Set environment variables
 PRIVATE_KEY=your_private_key_here
 BSCSCAN_API_KEY=your_bscscan_api_key
 ```
@@ -336,7 +336,7 @@ BSCSCAN_API_KEY=your_bscscan_api_key
 npm run deploy:tokens
 ```
 
-Развертывает:
+Deploys:
 - VCToken (Value Coin)
 - VGToken (Value Gold) 
 - VGTokenVotes (Governance wrapper)
@@ -346,7 +346,7 @@ npm run deploy:tokens
 npm run deploy:ecosystem
 ```
 
-Развертывает:
+Deploys:
 - LPLocker (UUPS Proxy)
 - LockerDAO
 - LPLockerGovernor
@@ -357,7 +357,7 @@ npm run deploy:ecosystem
 npm run deploy:test
 ```
 
-Проверяет корректность развертывания и конфигурации.
+Checks deployment and config correctness.
 
 ### Frontend Deployment
 
@@ -367,7 +367,7 @@ cd frontend
 npm run dev
 ```
 
-Запускает development server на `http://localhost:5174`
+Runs dev server at `http://localhost:5174`
 
 #### Production Build
 ```bash
@@ -376,7 +376,7 @@ npm run build
 npm run preview
 ```
 
-Создает production build в `frontend/dist/`
+Builds production app in `frontend/dist/`
 
 ### Deployed Addresses (BSC Testnet)
 
@@ -408,36 +408,36 @@ const CONTRACTS = {
 #### Read Functions
 
 ```solidity
-// Получить полную конфигурацию контракта
+// Get full contract configuration
 function config() external view returns (StakingConfig memory)
 
-// Проверить последний блок транзакции пользователя
+// Check last transaction block for user
 function lastUserTxBlock(address user) external view returns (uint256)
 
-// Получить timestamp последней транзакции пользователя
+// Get last transaction timestamp for user
 function lastUserTxTimestamp(address user) external view returns (uint256)
 
-// Получить количество транзакций пользователя в текущем блоке
+// Get user transaction count in current block
 function userTxCountInBlock(address user) external view returns (uint8)
 ```
 
 #### Write Functions
 
 ```solidity
-// Основная функция для получения VG токенов
+// Main function to get VG tokens
 function earnVG(
     uint256 vcAmount,
     uint256 bnbAmount,
     uint16 slippageBps
 ) external payable
 
-// Депозит VG токенов в vault (только authority)
+// Deposit VG tokens to vault (only authority)
 function depositVGTokens(uint256 amount) external onlyAuthority
 
-// Обновление конфигурации (только authority)
+// Update configuration (only authority)
 function updateConfig(/* parameters */) external onlyAuthority
 
-// Включение/выключение MEV защиты
+// Enable/disable MEV protection
 function setMevProtection(bool enabled) external onlyAuthority
 ```
 
@@ -446,16 +446,16 @@ function setMevProtection(bool enabled) external onlyAuthority
 #### VGTokenVotes (Governance)
 
 ```solidity
-// Конвертация VG → VGVotes для голосования
+// Convert VG → VGVotes for voting
 function deposit(uint256 amount) external
 
-// Конвертация VGVotes → VG
+// Convert VGVotes → VG
 function withdraw(uint256 amount) external
 
-// Получить voting power пользователя
+// Get voting power for user
 function getVotes(address account) external view returns (uint256)
 
-// Делегирование voting power
+// Delegate voting power
 function delegate(address delegatee) external
 ```
 
@@ -468,14 +468,14 @@ import { ethers } from 'ethers';
 import { CONTRACTS } from './constants/contracts';
 import { LP_LOCKER_ABI } from './constants/abi';
 
-// Инициализация контракта
+// Initialize contract
 const lpLockerContract = new ethers.Contract(
   CONTRACTS.LP_LOCKER,
   LP_LOCKER_ABI,
   signer
 );
 
-// Вызов earnVG функции
+// Call earnVG function
 const earnVGTokens = async (vcAmount: string, bnbAmount: string) => {
   const vcAmountWei = ethers.parseEther(vcAmount);
   const bnbAmountWei = ethers.parseEther(bnbAmount);
@@ -500,10 +500,10 @@ const earnVGTokens = async (vcAmount: string, bnbAmount: string) => {
 ### Smart Contract Security
 
 #### 1. OpenZeppelin Standards
-- **ReentrancyGuard**: Защита от reentrancy атак
-- **Ownable**: Контроль доступа к административным функциям
-- **UUPS Upgradeable**: Безопасные обновления контрактов
-- **ERC20Votes**: Стандартизированная система голосования
+- **ReentrancyGuard**: Protection against reentrancy attacks
+- **Ownable**: Access control to administrative functions
+- **UUPS Upgradeable**: Safe contract upgrades
+- **ERC20Votes**: Standardized governance system
 
 #### 2. MEV Protection
 ```solidity
@@ -528,8 +528,8 @@ modifier mevProtection() {
 
 #### 3. Slippage Protection
 - **Maximum Slippage**: 10% (1000 basis points)
-- **Dynamic Calculation**: Автоматический расчет минимальных amounts
-- **User Control**: Пользователь может установить slippage от 0.1% до 10%
+- **Dynamic Calculation**: Automatic minimum amounts calculation
+- **User Control**: User can set slippage from 0.1% to 10%
 
 #### 4. Input Validation
 ```solidity
@@ -542,9 +542,9 @@ require(slippageBps <= config.maxSlippageBps, "Slippage too high");
 ### Frontend Security
 
 #### 1. Web3 Security
-- **Network Validation**: Автоматическая проверка подключения к BSC Testnet
-- **Contract Verification**: Проверка адресов контрактов перед взаимодействием
-- **Transaction Simulation**: Предварительная проверка транзакций
+- **Network Validation**: Automatic BSC Testnet connection check
+- **Contract Verification**: Contract address verification before interaction
+- **Transaction Simulation**: Transaction pre-check
 
 #### 2. Input Sanitization
 ```typescript
@@ -560,9 +560,9 @@ const validateBNBAmount = (amount: string): boolean => {
 ```
 
 #### 3. Error Handling
-- **Comprehensive Error Messages**: Детальные сообщения для каждого типа ошибки
-- **Fallback Mechanisms**: Резервные RPC endpoints для BSC
-- **Transaction Recovery**: Возможность повторной отправки failed транзакций
+- **Comprehensive Error Messages**: Detailed error messages for each error type
+- **Fallback Mechanisms**: Backup RPC endpoints for BSC
+- **Transaction Recovery**: Ability to retry failed transactions
 
 ## 🧪 Testing
 
@@ -571,10 +571,10 @@ const validateBNBAmount = (amount: string): boolean => {
 #### Test Coverage: 100% (86/86 tests passed)
 
 ```bash
-# Запуск всех тестов
+# Run all tests
 npm run test:full
 
-# Тестирование отдельных компонентов
+# Test individual components
 npm run test:tokens      # Token contracts
 npm run test:lpLocker    # LPLocker contract
 npm run test:integration # Integration tests
@@ -607,13 +607,13 @@ npm run test:components
 ### Integration Testing
 
 ```bash
-# Тестирование deployed контрактов
+# Test deployed contracts
 npm run deploy:test
 
-# Проверка LP pool functionality
+# Check LP pool functionality
 node scripts/test-lp-pool.js
 
-# Проверка governance system
+# Check governance system
 node scripts/test-governance.js
 ```
 
@@ -622,39 +622,39 @@ node scripts/test-governance.js
 ### Common Issues & Solutions
 
 #### 1. "Internal JSON-RPC error"
-**Причина**: Нестабильность BSC Testnet RPC или неправильные параметры транзакции
+**Cause**: Unstable BSC Testnet RPC or incorrect transaction parameters
 
-**Решение**:
+**Solution**:
 ```typescript
-// Использовать fallback RPC endpoints
+// Use fallback RPC endpoints
 const fallbackRpcs = [
   'https://data-seed-prebsc-1-s1.binance.org:8545/',
   'https://data-seed-prebsc-2-s1.binance.org:8545/',
 ];
 
-// Увеличить gas limit
+// Increase gas limit
 const tx = await contract.earnVG(vcAmount, bnbAmount, slippage, {
-  gasLimit: 500000, // Увеличенный gas limit
+  gasLimit: 500000, // Increased gas limit
   gasPrice: ethers.parseUnits('20', 'gwei')
 });
 ```
 
 #### 2. "Slippage exceeded"
-**Причина**: Slippage превышает максимально допустимый (10%) или недостаточная ликвидность
+**Cause**: Slippage exceeds maximum allowed (10%) or insufficient liquidity
 
-**Решение**:
+**Solution**:
 ```typescript
-// Автоматическая адаптация slippage
+// Automatic slippage adjustment
 const maxSlippage = await lpLockerContract.config().maxSlippageBps;
 const adjustedSlippage = Math.min(requestedSlippage, maxSlippage);
 ```
 
 #### 3. "MEV protection violated"
-**Причина**: Слишком частые транзакции (менее 300 секунд между попытками)
+**Cause**: Too frequent transactions (less than 300 seconds between attempts)
 
-**Решение**:
+**Solution**:
 ```typescript
-// Проверка времени последней транзакции
+// Check last transaction time
 const lastTxTime = await lpLockerContract.lastUserTxTimestamp(userAddress);
 const currentTime = Math.floor(Date.now() / 1000);
 const timeDiff = currentTime - lastTxTime;
@@ -666,30 +666,30 @@ if (timeDiff < 300) {
 ```
 
 #### 4. "Cannot convert 1e+30 to a BigInt"
-**Причина**: Математический overflow при работе с большими числами
+**Cause**: Mathematical overflow when working with large numbers
 
-**Решение**:
+**Solution**:
 ```typescript
-// Использовать BigInt арифметику
+// Use BigInt arithmetic
 const calculateVGReward = (lpAmount: bigint): bigint => {
-  return lpAmount * 15n; // Используем BigInt literals
+  return lpAmount * 15n; // Use BigInt literals
 };
 
-// Избегать Number() конвертации больших BigInt
+// Avoid Number() conversion for large BigInts
 const formatAmount = (amount: bigint): string => {
-  return ethers.formatEther(amount); // Прямая конвертация
+  return ethers.formatEther(amount); // Direct conversion
 };
 ```
 
-#### 5. Pool Information показывает нули
-**Причина**: Неправильный LP token address или пустой пул
+#### 5. Pool Information shows zeros
+**Cause**: Incorrect LP token address or empty pool
 
-**Решение**:
+**Solution**:
 ```typescript
-// Проверить правильность LP token address
-const LP_TOKEN = "0xA221093a37396c6301db4B24D55E1C871DF31d13"; // Правильный адрес
+// Check LP token address correctness
+const LP_TOKEN = "0xA221093a37396c6301db4B24D55E1C871DF31d13"; // Correct address
 
-// Проверить ликвидность пула
+// Check pool liquidity
 const reserves = await lpPairContract.getReserves();
 if (reserves[0] === 0n && reserves[1] === 0n) {
   console.log("Pool has no liquidity");
@@ -703,10 +703,10 @@ if (reserves[0] === 0n && reserves[1] === 0n) {
 node scripts/debug-contract-config.js
 ```
 
-Выводит:
-- Текущую конфигурацию LPLocker
-- Статус MEV protection
-- Доступные VG токены в vault
+Outputs:
+- Current LPLocker configuration
+- MEV protection status
+- Available VG tokens in vault
 - LP pool reserves
 
 #### Transaction Parameter Logging
@@ -725,12 +725,12 @@ console.log('Transaction Parameters:', {
 ### Smart Contract Optimizations
 
 1. **Gas Optimization**
-   - Использование `viaIR: true` для оптимизации компилятора
-   - Efficient storage layout в structs
+   - Use `viaIR: true` for compiler optimization
+   - Efficient storage layout in structs
    - Minimal external calls
 
 2. **Batch Operations**
-   - Группировка multiple updates в одну транзакцию
+   - Group multiple updates into one transaction
    - Efficient event emission
 
 ### Frontend Optimizations

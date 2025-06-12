@@ -526,7 +526,7 @@ const LPPoolManager: React.FC = () => {
   }
 
   if (!isCorrectNetwork) {
-    return (
+  return (
       <div className="animate-fade-in">
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔗</div>
@@ -549,7 +549,7 @@ const LPPoolManager: React.FC = () => {
 
   // Debug panel для диагностики проблем
   const DebugPanel = () => (
-    <div className="card">
+            <div className="card">
       <h3 className="text-lg font-bold text-yellow-400 mb-4 flex items-center">
         <Settings className="mr-2" size={20} />
         🔧 Debug Info
@@ -567,8 +567,8 @@ const LPPoolManager: React.FC = () => {
               <span>{`${CONTRACTS.PANCAKE_FACTORY.slice(0, 6)}...${CONTRACTS.PANCAKE_FACTORY.slice(-4)}`}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
-          
+              </div>
+
           <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-gray-300">Router</span>
             <a
@@ -580,7 +580,7 @@ const LPPoolManager: React.FC = () => {
               <span>{`${CONTRACTS.PANCAKE_ROUTER.slice(0, 6)}...${CONTRACTS.PANCAKE_ROUTER.slice(-4)}`}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
+                  </div>
           
           <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-gray-300">VC Token</span>
@@ -593,7 +593,7 @@ const LPPoolManager: React.FC = () => {
               <span>{`${CONTRACTS.VC_TOKEN.slice(0, 6)}...${CONTRACTS.VC_TOKEN.slice(-4)}`}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
+                  </div>
           
           <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-gray-300">WBNB</span>
@@ -619,25 +619,25 @@ const LPPoolManager: React.FC = () => {
               <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
-        </div>
-        
+                  </div>
+                </div>
+
         <div className="pt-3 border-t border-gray-700">
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <span className="text-gray-400">Network:</span>
               <span className="text-green-400 ml-2">BSC Testnet (97)</span>
-            </div>
+                  </div>
             <div>
               <span className="text-gray-400">Account:</span>
               <span className="text-purple-400 ml-2">{account?.slice(0, 6)}...{account?.slice(-4)}</span>
-            </div>
+                  </div>
             <div>
               <span className="text-gray-400">Status:</span>
               <span className={`ml-2 ${loading ? "text-yellow-400" : "text-green-400"}`}>
                 {loading ? "Loading..." : "Ready"}
               </span>
-            </div>
+                  </div>
             <div>
               <span className="text-gray-400">Explorer:</span>
               <a 
@@ -648,8 +648,8 @@ const LPPoolManager: React.FC = () => {
               >
                 BSCScan
               </a>
-            </div>
-          </div>
+                </div>
+              </div>
         </div>
       </div>
     </div>
@@ -665,7 +665,7 @@ const LPPoolManager: React.FC = () => {
           <div className="flex items-center space-x-2 mb-4">
             <BarChart3 className="w-5 h-5 text-blue-400" />
             <h3 className="text-xl font-bold">Pool Information</h3>
-          </div>
+                </div>
           {loading ? (
             <PoolInfoSkeleton />
           ) : poolInfo ? (
@@ -678,15 +678,15 @@ const LPPoolManager: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-400">BNB Reserve</p>
                   <p className="font-bold">{poolInfo.reserve1} BNB</p>
-                </div>
+              </div>
                 <div>
                   <p className="text-sm text-gray-400">VC Price</p>
                   <p className="font-bold">{poolInfo.vcPrice} BNB</p>
-                </div>
+            </div>
                 <div>
                   <p className="text-sm text-gray-400">BNB Price</p>
                   <p className="font-bold">{poolInfo.bnbPrice} VC</p>
-                </div>
+            </div>
                 <div>
                   <p className="text-sm text-gray-400">Your LP Balance</p>
                   <p className="font-bold">{parseFloat(poolInfo.userLPBalance).toFixed(6)} LP</p>
@@ -728,224 +728,224 @@ const LPPoolManager: React.FC = () => {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Обновить</span>
             </button>
-          </div>
+        </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => setActiveTab('add')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
-                activeTab === 'add'
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Plus size={16} />
-              <span>Добавить ликвидность</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('remove')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
-                activeTab === 'remove'
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Minus size={16} />
-              <span>Удалить ликвидность</span>
-            </button>
-          </div>
+        {/* Tabs */}
+        <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => setActiveTab('add')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              activeTab === 'add'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Plus size={16} />
+            <span>Добавить ликвидность</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('remove')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              activeTab === 'remove'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Minus size={16} />
+            <span>Удалить ликвидность</span>
+          </button>
+        </div>
 
-          {/* Add Liquidity Tab */}
-          {activeTab === 'add' && (
-            <div className="space-y-4">
-              {/* Input Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">VC Amount</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={vcInput}
-                      onChange={(e) => setVcInput(e.target.value)}
-                      placeholder="0.0"
-                      className="input-field pr-16"
-                    />
-                    <button
-                      onClick={setMaxVC}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
-                    >
-                      MAX
-                    </button>
-                  </div>
-                  {poolInfo && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      Balance: {parseFloat(poolInfo.userVCBalance).toFixed(4)} VC
-                    </div>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">BNB Amount</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={bnbInput}
-                      onChange={(e) => setBnbInput(e.target.value)}
-                      placeholder="0.0"
-                      className="input-field pr-16"
-                    />
-                    <button
-                      onClick={setMaxBNB}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
-                    >
-                      MAX
-                    </button>
-                  </div>
-                  {poolInfo && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      Balance: {parseFloat(poolInfo.userBNBBalance).toFixed(4)} BNB
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Slippage Settings */}
+        {/* Add Liquidity Tab */}
+        {activeTab === 'add' && (
+          <div className="space-y-4">
+            {/* Input Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Slippage Tolerance</label>
-                <div className="flex space-x-2">
-                  {[0.1, 0.5, 1.0].map((value) => (
-                    <button
-                      key={value}
-                      onClick={() => setSlippage(value)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        slippage === value
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                          : 'bg-white/5 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {value}%
-                    </button>
-                  ))}
+                <label className="block text-sm font-medium mb-2">VC Amount</label>
+                <div className="relative">
                   <input
                     type="number"
-                    value={slippage}
-                    onChange={(e) => setSlippage(parseFloat(e.target.value))}
-                    step="0.1"
-                    min="0.1"
-                    max="50"
-                    className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-sm"
+                    value={vcInput}
+                    onChange={(e) => setVcInput(e.target.value)}
+                    placeholder="0.0"
+                    className="input-field pr-16"
                   />
-                </div>
-              </div>
-
-              {/* Calculation Preview */}
-              {calculation && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                  <h5 className="font-semibold mb-2 flex items-center">
-                    <Info className="mr-2" size={16} />
-                    Preview
-                  </h5>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>LP Tokens to receive:</span>
-                      <span className="font-semibold">{calculation.lpTokensToReceive}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Share of pool:</span>
-                      <span className="font-semibold">{calculation.shareOfPool.toFixed(4)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Price impact:</span>
-                      <span className={`font-semibold ${calculation.priceImpact > 2 ? 'text-red-400' : 'text-green-400'}`}>
-                        {calculation.priceImpact.toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-                  {calculation.priceImpact > 2 && (
-                    <div className="flex items-center mt-2 text-red-400 text-xs">
-                      <AlertTriangle size={12} className="mr-1" />
-                      High price impact
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                {!vcApproved && vcInput && parseFloat(vcInput) > 0 && (
-                  <button onClick={approveVC} className="btn-secondary w-full">
-                    Approve VC Tokens
+                  <button
+                    onClick={setMaxVC}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
+                  >
+                    MAX
                   </button>
-                )}
-                
-                <button
-                  onClick={addLiquidity}
-                  disabled={!calculation || !vcApproved || parseFloat(vcInput) === 0 || parseFloat(bnbInput) === 0}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  <Plus size={18} />
-                  <span>Add Liquidity</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Remove Liquidity Tab */}
-          {activeTab === 'remove' && (
-            <div className="space-y-4">
-              {/* Percentage Buttons */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Remove Amount</label>
-                <div className="flex space-x-2 mb-3">
-                  {[25, 50, 75, 100].map((percentage) => (
-                    <button
-                      key={percentage}
-                      onClick={() => setRemovePercentageAmount(percentage)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        removePercentage === percentage
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : 'bg-white/5 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {percentage}%
-                    </button>
-                  ))}
                 </div>
-                
-                <input
-                  type="number"
-                  value={lpTokensInput}
-                  onChange={(e) => setLpTokensInput(e.target.value)}
-                  placeholder="0.0"
-                  className="input-field"
-                />
                 {poolInfo && (
                   <div className="text-xs text-gray-400 mt-1">
-                    Available: {parseFloat(poolInfo.userLPBalance).toFixed(4)} LP Tokens
+                    Balance: {parseFloat(poolInfo.userVCBalance).toFixed(4)} VC
                   </div>
                 )}
               </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                {!lpApproved && lpTokensInput && parseFloat(lpTokensInput) > 0 && (
-                  <button onClick={approveLP} className="btn-secondary w-full">
-                    Approve LP Tokens
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">BNB Amount</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={bnbInput}
+                    onChange={(e) => setBnbInput(e.target.value)}
+                    placeholder="0.0"
+                    className="input-field pr-16"
+                  />
+                  <button
+                    onClick={setMaxBNB}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
+                  >
+                    MAX
                   </button>
+                </div>
+                {poolInfo && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    Balance: {parseFloat(poolInfo.userBNBBalance).toFixed(4)} BNB
+                  </div>
                 )}
-                
-                <button
-                  onClick={removeLiquidity}
-                  disabled={!lpApproved || parseFloat(lpTokensInput) === 0}
-                  className="btn-danger w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  <Minus size={18} />
-                  <span>Remove Liquidity</span>
-                </button>
               </div>
             </div>
-          )}
+
+            {/* Slippage Settings */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Slippage Tolerance</label>
+              <div className="flex space-x-2">
+                {[0.1, 0.5, 1.0].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => setSlippage(value)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      slippage === value
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-white/5 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {value}%
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  value={slippage}
+                  onChange={(e) => setSlippage(parseFloat(e.target.value))}
+                  step="0.1"
+                  min="0.1"
+                  max="50"
+                  className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Calculation Preview */}
+            {calculation && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <h5 className="font-semibold mb-2 flex items-center">
+                  <Info className="mr-2" size={16} />
+                  Preview
+                </h5>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>LP Tokens to receive:</span>
+                    <span className="font-semibold">{calculation.lpTokensToReceive}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Share of pool:</span>
+                    <span className="font-semibold">{calculation.shareOfPool.toFixed(4)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Price impact:</span>
+                    <span className={`font-semibold ${calculation.priceImpact > 2 ? 'text-red-400' : 'text-green-400'}`}>
+                      {calculation.priceImpact.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+                {calculation.priceImpact > 2 && (
+                  <div className="flex items-center mt-2 text-red-400 text-xs">
+                    <AlertTriangle size={12} className="mr-1" />
+                    High price impact
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {!vcApproved && vcInput && parseFloat(vcInput) > 0 && (
+                <button onClick={approveVC} className="btn-secondary w-full">
+                  Approve VC Tokens
+                </button>
+              )}
+              
+              <button
+                onClick={addLiquidity}
+                disabled={!calculation || !vcApproved || parseFloat(vcInput) === 0 || parseFloat(bnbInput) === 0}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <Plus size={18} />
+                <span>Add Liquidity</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Remove Liquidity Tab */}
+        {activeTab === 'remove' && (
+          <div className="space-y-4">
+            {/* Percentage Buttons */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Remove Amount</label>
+              <div className="flex space-x-2 mb-3">
+                {[25, 50, 75, 100].map((percentage) => (
+                  <button
+                    key={percentage}
+                    onClick={() => setRemovePercentageAmount(percentage)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      removePercentage === percentage
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-white/5 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {percentage}%
+                  </button>
+                ))}
+              </div>
+              
+              <input
+                type="number"
+                value={lpTokensInput}
+                onChange={(e) => setLpTokensInput(e.target.value)}
+                placeholder="0.0"
+                className="input-field"
+              />
+              {poolInfo && (
+                <div className="text-xs text-gray-400 mt-1">
+                  Available: {parseFloat(poolInfo.userLPBalance).toFixed(4)} LP Tokens
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {!lpApproved && lpTokensInput && parseFloat(lpTokensInput) > 0 && (
+                <button onClick={approveLP} className="btn-secondary w-full">
+                  Approve LP Tokens
+                </button>
+              )}
+              
+              <button
+                onClick={removeLiquidity}
+                disabled={!lpApproved || parseFloat(lpTokensInput) === 0}
+                className="btn-danger w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <Minus size={18} />
+                <span>Remove Liquidity</span>
+              </button>
+            </div>
+          </div>
+        )}
         </div>
 
         <DebugPanel />
