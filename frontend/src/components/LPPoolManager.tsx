@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useWeb3, PANCAKE_PAIR_ABI } from '../contexts/Web3Context';
 import { CONTRACTS, LP_POOL_CONFIG, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
 import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap, BarChart3, TrendingUp, DollarSign, Droplets, ExternalLink, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -132,12 +132,6 @@ const LPPoolManager: React.FC = () => {
       }
       
       // Create LP pair contract for getReserves calls
-      const PANCAKE_PAIR_ABI = [
-        "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
-        "function token0() external view returns (address)",
-        "function token1() external view returns (address)",
-        "function totalSupply() external view returns (uint256)",
-      ];
       const lpPairContract = new ethers.Contract(pairAddress, PANCAKE_PAIR_ABI, provider);
       
       // Get pool data with enhanced error handling and retries
