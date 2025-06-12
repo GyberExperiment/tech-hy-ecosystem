@@ -9,25 +9,16 @@ import {
   TrendingUp, 
   Users, 
   ExternalLink, 
-  Wallet, 
   Lock, 
   AlertTriangle, 
-  BarChart3,
   CreditCard,
   Gift,
   Vote,
-  Rocket,
-  Shield
+  Rocket
 } from 'lucide-react';
 import WalletTroubleshoot from '../components/WalletTroubleshoot';
 import StakingStats from '../components/StakingStats';
 import TransactionHistory from '../components/TransactionHistory';
-
-interface TokenBalance {
-  symbol: string;
-  balance: string;
-  name: string;
-}
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -39,7 +30,6 @@ const Dashboard: React.FC = () => {
     vgContract, 
     vgVotesContract, 
     lpContract,
-    lpLockerContract,
     provider 
   } = useWeb3();
 
@@ -73,7 +63,7 @@ const Dashboard: React.FC = () => {
       ];
 
       for (const { contract, symbol } of contracts) {
-        if (contract) {
+        if (contract && contract.balanceOf) {
           balancePromises.push(
             contract.balanceOf(account).then((balance: any) => ({
               symbol,
@@ -107,12 +97,15 @@ const Dashboard: React.FC = () => {
       fetchBalances();
       
       // Refresh every 30 seconds
-      const interval = setInterval(fetchBalances, 30000);
+      const interval = setInterval(() => {
+        fetchBalances();
+      }, 30000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [account, isConnected, isCorrectNetwork]);
 
-  const formatBalance = (balance: string) => {
+  const formatBalance = (balance: string): string => {
     const num = parseFloat(balance);
     if (num === 0) return '0';
     if (num < 0.0001) return '< 0.0001';

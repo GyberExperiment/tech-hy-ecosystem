@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { ethers, BrowserProvider, Contract } from 'ethers';
 import { CONTRACTS, BSC_TESTNET } from '../constants/contracts';
 import toast from 'react-hot-toast';
@@ -13,13 +13,6 @@ const ERC20_ABI = [
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
   "function totalSupply() view returns (uint256)",
-];
-
-const LPTOKEN_ABI = [
-  ...ERC20_ABI,
-  "function token0() view returns (address)",
-  "function token1() view returns (address)",
-  "function getReserves() view returns (uint112, uint112, uint32)"
 ];
 
 const LPLOCKER_ABI = [
@@ -380,8 +373,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       if (accounts.length === 0) {
         disconnectWallet();
       } else if (accounts[0] !== account) {
-        setAccount(accounts[0]);
-        toast.info('Аккаунт изменён');
+        setAccount(accounts[0] || null);
+        toast.success('Аккаунт изменён');
       }
     };
 
@@ -392,7 +385,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       if (newChainId === BSC_TESTNET.chainId) {
         toast.success('Переключено на BSC Testnet!');
       } else {
-        toast.warning('Сеть изменена. Рекомендуется BSC Testnet.');
+        toast.error('Сеть изменена. Рекомендуется BSC Testnet.');
       }
     };
 
