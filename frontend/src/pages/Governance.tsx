@@ -72,7 +72,7 @@ const Governance: React.FC = () => {
       id: 1,
       title: 'Увеличение LP-to-VG коэффициента',
       description: 'Предложение увеличить коэффициент обмена LP токенов на VG с 15:1 до 20:1 для стимулирования большего участия в LP locking.',
-      proposer: '0x742d35Cc6634C0532925a3b8D4C9db96',
+      proposer: '0x742d35Cc6634C0532925a3b8D4C9db9612345678',
       status: 'Active',
       votesFor: '125000',
       votesAgainst: '45000',
@@ -85,7 +85,7 @@ const Governance: React.FC = () => {
       id: 2,
       title: 'Добавление нового токена в экосистему',
       description: 'Предложение добавить поддержку USDT в качестве альтернативы BNB для создания LP позиций.',
-      proposer: '0x8ba1f109551bD432803012645Hac136c',
+      proposer: '0x8ba1f109551bD432803012645Hac136c87654321',
       status: 'Pending',
       votesFor: '0',
       votesAgainst: '0',
@@ -98,7 +98,7 @@ const Governance: React.FC = () => {
       id: 3,
       title: 'Обновление timelock задержки',
       description: 'Предложение изменить задержку timelock с 2 дней на 3 дня для повышения безопасности критических изменений.',
-      proposer: '0x1234567890abcdef1234567890abcdef',
+      proposer: '0x1234567890abcdef1234567890abcdef12345678',
       status: 'Succeeded',
       votesFor: '200000',
       votesAgainst: '50000',
@@ -472,7 +472,7 @@ const Governance: React.FC = () => {
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <div className="flex items-center space-x-4">
-                      <span>Proposer: {`${proposal.proposer.slice(0, 6)}...${proposal.proposer.slice(-4)}`}</span>
+                      <span>Proposer: {proposal.proposer ? `${proposal.proposer.slice(0, 6)}...${proposal.proposer.slice(-4)}` : 'Unknown'}</span>
                       <span>Кворум: {formatBalance(proposal.quorum)} VGV</span>
                     </div>
                     <div className="flex items-center space-x-1">
