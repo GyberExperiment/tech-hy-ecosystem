@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap } from 'lucide-react';
 import { CardSkeleton } from './LoadingSkeleton';
+import { useTranslation } from 'react-i18next';
 
 interface PoolData {
   totalLockedLP: string;
@@ -16,6 +17,7 @@ interface PoolData {
 }
 
 const StakingStats: React.FC = () => {
+  const { t } = useTranslation(['common']);
   const { 
     account, 
     isConnected, 
@@ -26,14 +28,57 @@ const StakingStats: React.FC = () => {
   } = useWeb3();
 
   const [poolData, setPoolData] = useState<PoolData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true); // Первая загрузка
+  const [refreshing, setRefreshing] = useState(false); // Обновление данных
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  
+  // Refs для cleanup и cancellation
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
-  const fetchPoolStats = async () => {
-    if (!account || !isConnected || !isCorrectNetwork || !lpLockerContract || !vcContract || !provider) return;
+  // Cleanup function
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const fetchPoolStats = useCallback(async (isRefresh = false) => {
+    // Prevent multiple simultaneous requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Cache check - не запрашиваем чаще чем раз в 10 секунд
+    const now = Date.now();
+    if (!isRefresh && now - lastFetchTime < 10000) {
+      console.log('StakingStats: Skipping fetch - cached data is fresh');
+      return;
+    }
+    
+    if (!account || !isConnected || !isCorrectNetwork || !lpLockerContract || !vcContract || !provider) {
+      console.log('StakingStats: Skipping fetch - not ready');
+      return;
+    }
+
+    console.log('StakingStats: Starting pool stats fetch for account:', account);
+    
+    // Set loading states
+    if (!poolData) {
+      setInitialLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    
+    // Create new AbortController
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     try {
-      setLoading(true);
-
       // Параллельные запросы для оптимизации
       const [
         poolInfoRaw,
@@ -59,7 +104,7 @@ const StakingStats: React.FC = () => {
         ? ethers.formatEther(userBNBBalanceRaw.value) 
         : '0';
 
-      setPoolData({
+      const newPoolData = {
         totalLockedLP: ethers.formatEther(poolInfo[0] || 0),
         totalVGIssued: ethers.formatEther(poolInfo[1] || 0),
         totalVGDeposited: ethers.formatEther(poolInfo[2] || 0),
@@ -68,35 +113,60 @@ const StakingStats: React.FC = () => {
         userBNBBalance,
         lpToVgRatio: config.lpToVgRatio?.toString() || '10',
         lpDivisor: config.lpDivisor?.toString() || '1000000',
-      });
+      };
 
-    } catch (error) {
-      console.error('Error fetching pool stats:', error);
-      // Устанавливаем данные по умолчанию при ошибке
-      setPoolData({
-        totalLockedLP: '0',
-        totalVGIssued: '0',
-        totalVGDeposited: '0',
-        availableVG: '0',
-        userVCBalance: '0',
-        userBNBBalance: '0',
-        lpToVgRatio: '10',
-        lpDivisor: '1000000',
-      });
+      // Update state only if component is still mounted
+      if (isMountedRef.current && !signal.aborted) {
+        setPoolData(newPoolData);
+        setLastFetchTime(now);
+        console.log('StakingStats: Pool data updated:', newPoolData);
+      }
+
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('StakingStats: Fetch aborted');
+        return;
+      }
+      console.error('StakingStats: Error fetching pool stats:', error);
+      
+      // Устанавливаем данные по умолчанию при ошибке только если нет данных
+      if (isMountedRef.current && !poolData) {
+        setPoolData({
+          totalLockedLP: '0',
+          totalVGIssued: '0',
+          totalVGDeposited: '0',
+          availableVG: '0',
+          userVCBalance: '0',
+          userBNBBalance: '0',
+          lpToVgRatio: '10',
+          lpDivisor: '1000000',
+        });
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setInitialLoading(false);
+        setRefreshing(false);
+        setLastFetchTime(Date.now());
+      }
     }
-  };
+  }, [account, isConnected, isCorrectNetwork, lpLockerContract, vcContract, provider, poolData, lastFetchTime]);
 
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {
-      fetchPoolStats();
+      fetchPoolStats(false); // Initial fetch
       
-      // Обновляем каждые 30 секунд
-      const interval = setInterval(fetchPoolStats, 30000);
+      // Обновляем каждые 60 секунд
+      const interval = setInterval(() => {
+        fetchPoolStats(true); // Refresh fetch
+      }, 60000);
+      
       return () => clearInterval(interval);
+    } else {
+      // Reset loading states when not connected
+      setInitialLoading(false);
+      setRefreshing(false);
     }
-  }, [account, isConnected, isCorrectNetwork]);
+  }, [account, isConnected, isCorrectNetwork, fetchPoolStats]);
 
   const formatNumber = (value: string | number, decimals: number = 2) => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -127,7 +197,7 @@ const StakingStats: React.FC = () => {
     );
   }
 
-  if (loading && !poolData) {
+  if (initialLoading && !poolData) {
     return <CardSkeleton />;
   }
 
@@ -189,16 +259,24 @@ const StakingStats: React.FC = () => {
     <div className="space-y-6">
       <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold flex items-center">
-            <TrendingUp className="mr-3 text-blue-400" />
-            Статистика LP → VG экосистемы
-          </h3>
+          <div className="flex items-center space-x-4">
+            <h3 className="text-xl font-semibold flex items-center">
+              <TrendingUp className="mr-3 text-blue-400" />
+              Статистика LP → VG экосистемы
+            </h3>
+            {refreshing && (
+              <div className="flex items-center space-x-2 text-blue-400">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                <span className="text-sm">{t('common:labels.refreshing')}</span>
+              </div>
+            )}
+          </div>
           <button
-            onClick={fetchPoolStats}
-            disabled={loading}
+            onClick={() => fetchPoolStats(true)}
+            disabled={refreshing}
             className="btn-secondary p-2"
           >
-            <RefreshCw className={`${loading ? 'animate-spin' : ''}`} size={16} />
+            <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
           </button>
         </div>
 

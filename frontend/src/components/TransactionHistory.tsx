@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Clock, 
   CheckCircle, 
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { TableSkeleton } from './LoadingSkeleton';
+import { useTranslation } from 'react-i18next';
 
 interface Transaction {
   id: string;
@@ -31,17 +32,32 @@ interface Transaction {
 }
 
 const TransactionHistory: React.FC = () => {
+  const { t } = useTranslation(['common']);
   const { account, provider } = useWeb3();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
-  // Load transactions from localStorage and fetch new ones
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (account) {
       loadStoredTransactions();
-      fetchRecentTransactions();
+      fetchRecentTransactions(false);
     }
   }, [account]);
 
@@ -49,7 +65,11 @@ const TransactionHistory: React.FC = () => {
     try {
       const stored = localStorage.getItem(`transactions_${account}`);
       if (stored) {
-        setTransactions(JSON.parse(stored));
+        const storedTxs = JSON.parse(stored);
+        setTransactions(storedTxs);
+        if (storedTxs.length > 0) {
+          setInitialLoading(false);
+        }
       }
     } catch (error) {
       console.error('Error loading stored transactions:', error);
@@ -64,13 +84,34 @@ const TransactionHistory: React.FC = () => {
     }
   };
 
-  const fetchRecentTransactions = async () => {
-    if (!account || !provider) return;
+  const fetchRecentTransactions = useCallback(async (isRefresh = false) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     
-    setLoading(true);
+    const now = Date.now();
+    if (!isRefresh && now - lastFetchTime < 10000) {
+      console.log('TransactionHistory: Skipping fetch - cached data is fresh');
+      return;
+    }
+    
+    if (!account || !provider) {
+      console.log('TransactionHistory: Skipping fetch', { account: !!account, provider: !!provider });
+      return;
+    }
+    
+    console.log('TransactionHistory: Starting transaction fetch for account:', account);
+    
+    if (transactions.length === 0) {
+      setInitialLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     try {
-      // This is a simplified version - in production you'd use a subgraph or event logs
-      // Here we simulate fetching recent transactions
       const mockTransactions: Transaction[] = [
         {
           id: '1',
@@ -96,20 +137,32 @@ const TransactionHistory: React.FC = () => {
         }
       ];
       
-      setTransactions(prev => {
-        const combined = [...mockTransactions, ...prev];
-        const unique = combined.filter((tx, index, self) => 
-          index === self.findIndex(t => t.hash === tx.hash)
-        );
-        saveTransactions(unique);
-        return unique;
-      });
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
+      if (isMountedRef.current && !signal.aborted) {
+        setTransactions(prev => {
+          const combined = [...mockTransactions, ...prev];
+          const unique = combined.filter((tx, index, self) => 
+            index === self.findIndex(t => t.hash === tx.hash)
+          );
+          saveTransactions(unique);
+          return unique;
+        });
+        setLastFetchTime(now);
+        console.log('TransactionHistory: Transactions updated');
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('TransactionHistory: Fetch aborted');
+        return;
+      }
+      console.error('TransactionHistory: Error fetching transactions:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setInitialLoading(false);
+        setRefreshing(false);
+        setLastFetchTime(Date.now());
+      }
     }
-  };
+  }, [account, provider, transactions.length, lastFetchTime]);
 
   const addTransaction = (tx: Omit<Transaction, 'id' | 'timestamp'>) => {
     const newTx: Transaction = {
@@ -212,17 +265,24 @@ const TransactionHistory: React.FC = () => {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold">История транзакций</h3>
+        <div className="flex items-center space-x-4">
+          <h3 className="text-xl font-semibold">История транзакций</h3>
+          {refreshing && (
+            <div className="flex items-center space-x-2 text-blue-400">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+              <span className="text-sm">{t('common:labels.refreshing')}</span>
+            </div>
+          )}
+        </div>
         <button
-          onClick={fetchRecentTransactions}
+          onClick={() => fetchRecentTransactions(true)}
           className="btn-secondary p-2"
-          disabled={loading}
+          disabled={refreshing}
         >
-          <RefreshCw className={`${loading ? 'animate-spin' : ''}`} size={16} />
+          <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex items-center space-x-2">
           <Filter size={16} className="text-gray-400" />
@@ -251,8 +311,7 @@ const TransactionHistory: React.FC = () => {
         </div>
       </div>
 
-      {/* Transactions List */}
-      {loading && transactions.length === 0 ? (
+      {initialLoading && transactions.length === 0 ? (
         <TableSkeleton rows={5} />
       ) : filteredTransactions.length === 0 ? (
         <div className="text-center text-gray-400 py-8">
@@ -319,7 +378,6 @@ const TransactionHistory: React.FC = () => {
   );
 };
 
-// Export the transaction management functions for use in other components
 export const useTransactionHistory = () => {
   const { account } = useWeb3();
   
