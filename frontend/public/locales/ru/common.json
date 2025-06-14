@@ -30,6 +30,7 @@
     "transaction": "Транзакция",
     "status": "Статус",
     "loading": "Загрузка",
+    "refreshing": "Обновление...",
     "error": "Ошибка",
     "success": "Успешно",
     "warning": "Предупреждение",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
@@ -38,19 +38,56 @@ const Dashboard: React.FC = () => {
 
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [bnbBalance, setBnbBalance] = useState<string>('0');
-  const [loading, setLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true); // Первая загрузка
+  const [refreshing, setRefreshing] = useState(false); // Обновление данных
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  
+  // Refs для cleanup и cancellation
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
-  const fetchBalances = async () => {
-    if (!account || !isCorrectNetwork || isFetching) {
-      console.log('Dashboard: Skipping balance fetch', { account, isCorrectNetwork, isFetching });
+  // Cleanup function
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const fetchBalances = useCallback(async (isRefresh = false) => {
+    // Prevent multiple simultaneous requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Cache check - не запрашиваем чаще чем раз в 10 секунд
+    const now = Date.now();
+    if (!isRefresh && now - lastFetchTime < 10000) {
+      console.log('Dashboard: Skipping fetch - cached data is fresh');
+      return;
+    }
+    
+    if (!account || !isCorrectNetwork) {
+      console.log('Dashboard: Skipping balance fetch', { account, isCorrectNetwork });
       return;
     }
     
     console.log('Dashboard: Starting balance fetch for account:', account);
-    setLoading(true);
-    setIsFetching(true);
     
+    // Set loading states
+    if (balances.VC === undefined) {
+      setInitialLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    
+    // Create new AbortController
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     try {
       const newBalances: Record<string, string> = {};
       let newBnbBalance = '0';
@@ -165,40 +202,58 @@ const Dashboard: React.FC = () => {
         console.error('Dashboard: Error fetching LP info:', error);
       }
 
-      // Update state
-      setBalances(newBalances);
-      setBnbBalance(newBnbBalance);
-      console.log('Dashboard: All balances updated:', { bnb: newBnbBalance, tokens: newBalances });
+      // Update state only if component is still mounted
+      if (isMountedRef.current && !signal.aborted) {
+        setBalances(newBalances);
+        setBnbBalance(newBnbBalance);
+        setLastFetchTime(now);
+        console.log('Dashboard: All balances updated:', { bnb: newBnbBalance, tokens: newBalances });
+      }
       
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Dashboard: Fetch aborted');
+        return;
+      }
       console.error('Dashboard: Critical error in fetchBalances:', error);
-      toast.error('Ошибка загрузки данных. Проверьте подключение.');
+      if (isMountedRef.current) {
+        toast.error('Ошибка загрузки данных. Проверьте подключение.');
+      }
     } finally {
-      setLoading(false);
-      setIsFetching(false);
+      if (isMountedRef.current) {
+        setInitialLoading(false);
+        setRefreshing(false);
+        setLastFetchTime(Date.now());
+      }
     }
-  };
+  }, [account, isCorrectNetwork, provider, vcContract, vgContract, vgVotesContract, lpContract, lpPairContract]);
 
   useEffect(() => {
-    // Only log when connection state actually changes
+    // Only fetch when connection state is ready
     if (isConnected && isCorrectNetwork && account) {
       console.log('Dashboard: Fetching balances for connected account:', account);
-      fetchBalances();
+      fetchBalances(false); // Initial fetch
       
-      // Refresh every 30 seconds
+      // Refresh every 60 seconds (увеличил интервал)
       const interval = setInterval(() => {
-        fetchBalances();
-      }, 30000);
-      return () => clearInterval(interval);
+        fetchBalances(true); // Refresh fetch
+      }, 60000);
+      
+      return () => {
+        clearInterval(interval);
+      };
     } else {
       console.log('Dashboard: Skipping balance fetch - not ready', { 
         isConnected, 
         isCorrectNetwork, 
         hasAccount: !!account 
       });
+      // Reset loading states when not connected
+      setInitialLoading(false);
+      setRefreshing(false);
     }
     return undefined;
-  }, [account, isConnected, isCorrectNetwork]); // Removed contract dependencies to prevent loops
+  }, [account, isConnected, isCorrectNetwork, fetchBalances]);
 
   const formatBalance = (balance: string): string => {
     const num = parseFloat(balance);
@@ -321,6 +376,12 @@ const Dashboard: React.FC = () => {
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
           {t('dashboard:subtitle')}
         </p>
+        {refreshing && (
+          <div className="flex items-center justify-center space-x-2 text-blue-400">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+            <span className="text-sm">{t('common:labels.refreshing')}</span>
+          </div>
+        )}
       </div>
 
       {/* Debug Info */}
@@ -340,7 +401,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-sm text-gray-400">{stat.title}</p>
                 <div className="flex items-baseline space-x-2">
                   <p className="text-2xl font-bold text-white">
-                    {loading ? t('common:labels.loading') : stat.value}
+                    {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : stat.value}
                   </p>
                   {stat.unit && (
                     <p className="text-sm text-gray-400">{stat.unit}</p>
@@ -385,7 +446,7 @@ const Dashboard: React.FC = () => {
               
               <div className="text-right">
                 <p className="text-2xl font-bold">
-                  {loading ? t('common:labels.loading') : formatBalance(token.balance)}
+                  {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : formatBalance(token.balance)}
                 </p>
                 <p className="text-sm text-gray-400">{token.symbol}</p>
               </div>

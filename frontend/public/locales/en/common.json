@@ -30,6 +30,7 @@
     "transaction": "Transaction",
     "status": "Status",
     "loading": "Loading",
+    "refreshing": "Refreshing...",
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
