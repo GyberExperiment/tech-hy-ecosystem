@@ -366,7 +366,7 @@ const Governance: React.FC = () => {
 
       {/* Personal Stats */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Activity className="mr-3 text-purple-400" />
           Ваша статистика
         </h2>
@@ -395,7 +395,7 @@ const Governance: React.FC = () => {
 
       {/* Protocol Statistics */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <BarChart3 className="mr-3 text-blue-400" />
           Статистика governance
         </h2>
@@ -427,7 +427,7 @@ const Governance: React.FC = () => {
         {/* Proposals List */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold flex items-center">
+            <h2 className="text-2xl font-bold flex items-center text-slate-100">
               <FileText className="mr-3 text-blue-400" />
               Предложения ({filteredProposals.length})
             </h2>
@@ -526,7 +526,7 @@ const Governance: React.FC = () => {
 
         {/* Voting Panel */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center">
+          <h2 className="text-2xl font-bold flex items-center text-slate-100">
             <Settings className="mr-3 text-purple-400" />
             Голосование
           </h2>
@@ -541,11 +541,11 @@ const Governance: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="bg-white/5 rounded p-3">
                       <p className="text-gray-400">Статус</p>
-                      <p className="font-medium">{selectedProposal.status}</p>
+                      <p className="font-medium text-slate-200">{selectedProposal.status}</p>
                     </div>
                     <div className="bg-white/5 rounded p-3">
                       <p className="text-gray-400">Категория</p>
-                      <p className="font-medium">{selectedProposal.category}</p>
+                      <p className="font-medium text-slate-200">{selectedProposal.category}</p>
                     </div>
                   </div>
                 </div>
@@ -553,7 +553,7 @@ const Governance: React.FC = () => {
                 {selectedProposal.status === 'Active' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-slate-200">
                         Количество VGV для голосования
                         <span className="text-xs text-gray-400 ml-2">
                           (Доступно: {formatBalance(balances.VGV || '0')} VGV)
@@ -617,7 +617,7 @@ const Governance: React.FC = () => {
           ) : (
             <div className="card text-center py-12">
               <div className="text-4xl mb-4">🗳️</div>
-              <h3 className="text-xl font-bold mb-2">Выберите предложение</h3>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите предложение</h3>
               <p className="text-gray-400">
                 Выберите предложение из списка для голосования
               </p>
@@ -628,7 +628,7 @@ const Governance: React.FC = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Zap className="mr-3 text-yellow-400" />
           Быстрые действия
         </h2>
@@ -636,7 +636,7 @@ const Governance: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Coins className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
-            <h3 className="text-xl font-bold mb-2">Получить VG</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Получить VG</h3>
             <p className="text-gray-400 mb-4">Заблокируйте LP токены для получения VG</p>
             <a href="/staking" className="btn-primary inline-block">
               Перейти к LP Locking
@@ -645,7 +645,7 @@ const Governance: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2">Конвертировать VG</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Конвертировать VG</h3>
             <p className="text-gray-400 mb-4">Обменяйте VG на VGVotes для голосования</p>
             <a href="/staking" className="btn-primary inline-block">
               Конвертировать
@@ -654,7 +654,7 @@ const Governance: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2">Аналитика</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Аналитика</h3>
             <p className="text-gray-400 mb-4">Просмотрите статистику governance</p>
             <a href="/" className="btn-primary inline-block">
               Перейти к Dashboard
@@ -665,7 +665,7 @@ const Governance: React.FC = () => {
 
       {/* Contract Information */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Shield className="mr-3 text-blue-400" />
           Информация о контрактах
         </h2>
@@ -673,7 +673,7 @@ const Governance: React.FC = () => {
         <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">VG Token</span>
+              <span className="font-medium text-slate-200">VG Token</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
                 target="_blank"
@@ -685,7 +685,7 @@ const Governance: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">VG Votes</span>
+              <span className="font-medium text-slate-200">VG Votes</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
                 target="_blank"
@@ -697,7 +697,7 @@ const Governance: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">Timelock</span>
+              <span className="font-medium text-slate-200">Timelock</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.TIMELOCK}`}
                 target="_blank"
@@ -709,7 +709,7 @@ const Governance: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">Governor</span>
+              <span className="font-medium text-slate-200">Governor</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.GOVERNOR}`}
                 target="_blank"
@@ -726,7 +726,7 @@ const Governance: React.FC = () => {
 
       {/* Legacy Governance Component */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <FileText className="mr-3 text-green-400" />
           Дополнительные предложения
         </h2>

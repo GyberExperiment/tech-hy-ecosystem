@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Coins, Zap, TrendingUp, Wallet } from 'lucide-react';
+import { Coins, Zap, TrendingUp, Wallet, Info } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 interface EarnVGWidgetProps {
@@ -444,48 +444,45 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
         <div className="grid grid-cols-2 gap-4">
           {mode === 'create' ? (
-            <>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">VC Balance</p>
-                <p className="text-lg font-semibold">{formatBalance(balances.vc)}</p>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="text-center">
+                <p className="text-sm text-gray-400">VC Balance</p>
+                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.vc)}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">BNB Balance</p>
-                <p className="text-lg font-semibold">{formatBalance(balances.bnb)}</p>
+              <div className="text-center">
+                <p className="text-sm text-gray-400">BNB Balance</p>
+                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.bnb)}</p>
               </div>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">LP Balance</p>
-                <p className="text-lg font-semibold">{formatBalance(balances.lpTokens)}</p>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="text-center">
+                <p className="text-sm text-gray-400">LP Balance</p>
+                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.lpTokens)}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">VG Balance</p>
-                <p className="text-lg font-semibold">{formatBalance(balances.vg)}</p>
+              <div className="text-center">
+                <p className="text-sm text-gray-400">VG Balance</p>
+                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.vg)}</p>
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {mode === 'create' && (
-          <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Pool Information</span>
+          <div className="bg-slate-800/30 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-200">Pool Information</span>
+              <Info className="w-4 h-4 text-gray-400" />
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">VC Reserve</p>
-                <p className="font-medium">{formatBalance(poolInfo.vcReserve)}</p>
+                <p className="text-gray-400">VC Reserve</p>
+                <p className="font-medium text-slate-100">{formatBalance(poolInfo.vcReserve)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">BNB Reserve</p>
-                <p className="font-medium">{formatBalance(poolInfo.bnbReserve)}</p>
+                <p className="text-gray-400">BNB Reserve</p>
+                <p className="font-medium text-slate-100">{formatBalance(poolInfo.bnbReserve)}</p>
               </div>
-            </div>
-            <div className="pt-2 border-t border-border">
-              <p className="text-muted-foreground text-sm">Price: 1 VC = {poolInfo.price} BNB</p>
             </div>
           </div>
         )}

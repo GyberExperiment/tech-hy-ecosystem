@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
-import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap } from 'lucide-react';
+import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap, BarChart3 } from 'lucide-react';
 import { CardSkeleton } from './LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
 import { CONTRACTS } from '../constants/contracts';
@@ -351,7 +351,7 @@ const StakingStats: React.FC = () => {
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-          <h3 className="text-xl font-semibold flex items-center">
+          <h3 className="text-xl font-semibold flex items-center text-slate-100">
             <TrendingUp className="mr-3 text-blue-400" />
             Статистика LP → VG экосистемы
           </h3>
@@ -382,7 +382,7 @@ const StakingStats: React.FC = () => {
                 <stat.icon className={`${stat.color}`} size={20} />
                 <span className="text-xs text-gray-400">{stat.unit}</span>
               </div>
-              <div className="text-2xl font-bold text-white mb-1">
+              <div className="text-2xl font-bold text-slate-100 mb-1">
                 {stat.value}
               </div>
               <div className="text-sm text-gray-400">
@@ -399,7 +399,7 @@ const StakingStats: React.FC = () => {
               <DollarSign className="text-blue-400" size={16} />
               <span className="text-sm text-gray-400">Ваш VC баланс</span>
             </div>
-            <div className="text-xl font-bold">{formatNumber(poolData.userVCBalance)} VC</div>
+            <div className="text-xl font-bold text-slate-100">{formatNumber(poolData.userVCBalance)} VC</div>
             <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
 
@@ -408,14 +408,14 @@ const StakingStats: React.FC = () => {
               <Zap className="text-green-400" size={16} />
               <span className="text-sm text-gray-400">Ваш BNB баланс</span>
             </div>
-            <div className="text-xl font-bold">{formatNumber(poolData.userBNBBalance)} BNB</div>
+            <div className="text-xl font-bold text-slate-100">{formatNumber(poolData.userBNBBalance)} BNB</div>
             <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
         </div>
 
         {/* Potential Rewards Calculator */}
         <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-6">
-          <h4 className="text-lg font-semibold mb-4 flex items-center">
+          <h4 className="text-lg font-semibold mb-4 flex items-center text-slate-100">
             <Zap className="mr-2 text-yellow-400" size={18} />
             Калькулятор потенциальных VG наград
           </h4>

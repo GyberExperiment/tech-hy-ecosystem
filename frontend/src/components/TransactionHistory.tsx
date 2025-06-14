@@ -482,7 +482,7 @@ const TransactionHistory: React.FC = () => {
     <div className="card">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-        <h3 className="text-xl font-semibold">История транзакций</h3>
+        <h3 className="text-xl font-semibold text-slate-100">История транзакций</h3>
           {refreshing && (
             <div className="flex items-center space-x-2 text-blue-400">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
@@ -586,7 +586,7 @@ const TransactionHistory: React.FC = () => {
                 </div>
                 
                 <div>
-                  <div className="font-semibold">{getTypeLabel(tx.type)}</div>
+                  <div className="font-semibold text-slate-100">{getTypeLabel(tx.type)}</div>
                   <div className="text-sm text-gray-400">
                     {tx.value || (tx.amount && tx.token && `${tx.amount} ${tx.token}`)}
                   </div>

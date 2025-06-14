@@ -404,7 +404,7 @@ const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-400">{stat.title}</p>
                 <div className="flex items-baseline space-x-2">
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-slate-100">
                     {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : stat.value}
                   </p>
                   {stat.unit && (
@@ -420,7 +420,7 @@ const Dashboard: React.FC = () => {
 
       {/* Token Balances */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Coins className="mr-3 text-blue-400" />
           {t('dashboard:sections.tokenBalances')}
         </h2>
@@ -434,7 +434,7 @@ const Dashboard: React.FC = () => {
                     {token.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">{token.symbol}</h3>
+                    <h3 className="font-bold text-lg text-slate-100">{token.symbol}</h3>
                     <p className="text-sm text-gray-400">{token.name}</p>
                   </div>
                 </div>
@@ -449,7 +449,7 @@ const Dashboard: React.FC = () => {
               </div>
               
               <div className="text-right">
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-slate-100">
                   {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : formatBalance(token.balance)}
                 </p>
                 <p className="text-sm text-gray-400">{token.symbol}</p>
@@ -461,7 +461,7 @@ const Dashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Activity className="mr-3 text-green-400" />
           {t('dashboard:sections.quickActions')}
         </h2>
@@ -469,7 +469,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2">{t('dashboard:actions.manageTokens.title')}</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.manageTokens.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.manageTokens.description')}</p>
             <a href="/tokens" className="btn-primary inline-block">
               {t('dashboard:actions.manageTokens.button')}
@@ -478,7 +478,7 @@ const Dashboard: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-xl font-bold mb-2">{t('dashboard:actions.lpLocking.title')}</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.lpLocking.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.lpLocking.description')}</p>
             <a href="/staking" className="btn-primary inline-block">
               {t('dashboard:actions.lpLocking.button')}
@@ -487,7 +487,7 @@ const Dashboard: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2">{t('dashboard:actions.governance.title')}</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.governance.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.governance.description')}</p>
             <a href="/governance" className="btn-primary inline-block">
               {t('dashboard:actions.governance.button')}
@@ -498,11 +498,11 @@ const Dashboard: React.FC = () => {
 
       {/* Contract Addresses */}
       <div className="card">
-        <h3 className="text-lg font-bold mb-4">{t('dashboard:sections.contractAddresses')}</h3>
+        <h3 className="text-lg font-bold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           {Object.entries(CONTRACTS).map(([name, address]) => (
             <div key={name} className="flex justify-between items-center p-2 rounded bg-white/5">
-              <span className="font-medium">{name.replace(/_/g, ' ')}</span>
+              <span className="font-medium text-slate-200">{name.replace(/_/g, ' ')}</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/address/${address}`}
                 target="_blank"
