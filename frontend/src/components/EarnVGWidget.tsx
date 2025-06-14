@@ -1,302 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { Coins, Zap, TrendingUp, Wallet, Info } from 'lucide-react';
+import { Coins, Zap, TrendingUp, Wallet, Info, RefreshCw, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useTokenData } from '../hooks/useTokenData';
+import { usePoolInfo } from '../hooks/usePoolInfo';
 
 interface EarnVGWidgetProps {
   className?: string;
 }
 
-interface UserBalances {
-  vc: string;
-  bnb: string;
-  lpTokens: string;
-  vg: string;
-}
-
-interface PoolInfo {
-  vcReserve: string;
-  bnbReserve: string;
-  price: string;
-}
-
-const ERC20_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function approve(address, uint256) returns (bool)",
-  "function allowance(address, address) view returns (uint256)"
-];
-
-const PAIR_ABI = [
-  "function getReserves() view returns (uint112, uint112, uint32)",
-  "function token0() view returns (address)",
-  "function token1() view returns (address)",
-  "function totalSupply() view returns (uint256)"
-];
-
-const ROUTER_ABI = [
-  "function addLiquidityETH(address, uint256, uint256, uint256, address, uint256) payable returns (uint256, uint256, uint256)"
-];
-
-const LPLOCKER_ABI = [
-  "function earnVG(uint256, uint256, uint16) payable",
-  "function lockLPTokens(uint256) external",
-  "function getPoolInfo() view returns (uint256, uint256, uint256, uint256)",
-  "function config() view returns (address, address, address, address, address, address, uint256, uint256, uint256, uint256, uint16, uint16, bool, uint256, uint8, uint256, uint256, uint256)"
-];
-
-// Fallback RPC providers для надёжности
-const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://data-seed-prebsc-1-s1.binance.org:8545',
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
-];
-
-const createFallbackProvider = () => {
-  try {
-    return new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[0]);
-  } catch (error) {
-    console.error('Failed to create fallback provider:', error);
-    return null;
-  }
-};
-
-// Utility function для retry логики
-const withRetry = async <T,>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
-): Promise<T> => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await operation();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-    }
-  }
-  throw new Error('Max retries exceeded');
-};
-
-// Utility function для timeout
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
-    )
-  ]);
-};
-
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, provider, signer, isConnected, isCorrectNetwork, getContract, vcContract, vgContract, lpLockerContract } = useWeb3();
+  const { account, signer, isConnected, vcContract, lpLockerContract, lpContract } = useWeb3();
+  
+  // Use centralized hooks
+  const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
+  const { poolInfo, loading: poolLoading, refreshPoolInfo } = usePoolInfo();
+  
+  // State management
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'create' | 'lock'>('create');
   const [vcAmount, setVcAmount] = useState('');
   const [bnbAmount, setBnbAmount] = useState('');
   const [lpAmount, setLpAmount] = useState('');
-  const [balances, setBalances] = useState<UserBalances>({
-    vc: '0',
-    bnb: '0', 
-    lpTokens: '0',
-    vg: '0'
-  });
-  const [poolInfo, setPoolInfo] = useState<PoolInfo>({
-    vcReserve: '0',
-    bnbReserve: '0',
-    price: '0'
-  });
-
-  // Добавляем ref для предотвращения множественных вызовов
-  const loadingRef = React.useRef(false);
-
-  useEffect(() => {
-    if (isConnected && account && isCorrectNetwork) {
-      console.log('EarnVGWidget: Main useEffect triggered');
-      loadUserData();
-      // Загружаем информацию о пуле
-      loadPoolInfo().then(setPoolInfo).catch((error) => {
-        console.error('EarnVGWidget: Pool info error:', error);
-        // Устанавливаем fallback значения при ошибке
-        setPoolInfo({
-          vcReserve: '0',
-          bnbReserve: '0',
-          price: '0'
-        });
-      });
+  
+  // Memoized calculations
+  const calculatedBnbAmount = useMemo(() => {
+    if (!vcAmount || !poolInfo.isLoaded || poolInfo.vcReserve === '0' || poolInfo.bnbReserve === '0') {
+      return '';
     }
-  }, [isConnected, account, isCorrectNetwork]);
-
-  // Дополнительный useEffect для отслеживания готовности контрактов
-  useEffect(() => {
-    if (isConnected && account && isCorrectNetwork && vcContract && vgContract && lpLockerContract && !loadingRef.current) {
-      console.log('EarnVGWidget: Contracts are now ready, loading user data...');
-      loadUserData();
-    }
-  }, [vcContract, vgContract, lpLockerContract, isConnected, account, isCorrectNetwork]);
-
-  const loadUserData = async () => {
-    if (!account || !isCorrectNetwork) {
-      console.log('EarnVGWidget: Skipping loadUserData - not connected or wrong network');
-      return;
-    }
-
-    // Защита от множественных вызовов
-    if (loadingRef.current) {
-      console.log('EarnVGWidget: loadUserData already in progress, skipping...');
-      return;
-    }
-
-    console.log('EarnVGWidget: Starting loadUserData...');
-    loadingRef.current = true;
-    setLoading(true);
     
     try {
-      // Проверяем готовность контрактов
-      if (!vcContract || !vgContract || !lpLockerContract) {
-        console.log('EarnVGWidget: Contracts not ready yet, skipping...');
-        return;
-      }
-
-      console.log('EarnVGWidget: Contracts ready, fetching balances...');
-      
-      const newBalances: UserBalances = {
-        vc: '0',
-        vg: '0',
-        bnb: '0',
-        lpTokens: '0'
-      };
-
-      // Используем Promise.allSettled для параллельного выполнения
-      const balancePromises = [
-        vcContract.balanceOf(account).then(balance => {
-          newBalances.vc = ethers.formatEther(balance);
-          console.log('EarnVGWidget: VC balance:', newBalances.vc);
-        }).catch(error => {
-          console.warn('EarnVGWidget: Error fetching VC balance:', error);
-        }),
-
-        vgContract.balanceOf(account).then(balance => {
-          newBalances.vg = ethers.formatEther(balance);
-          console.log('EarnVGWidget: VG balance:', newBalances.vg);
-        }).catch(error => {
-          console.warn('EarnVGWidget: Error fetching VG balance:', error);
-        }),
-
-        provider.getBalance(account).then(balance => {
-          newBalances.bnb = ethers.formatEther(balance);
-          console.log('EarnVGWidget: BNB balance:', newBalances.bnb);
-        }).catch(error => {
-          console.warn('EarnVGWidget: Error fetching BNB balance:', error);
-        })
-      ];
-
-      // Добавляем получение LP токенов
-      const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-      if (lpContract) {
-        balancePromises.push(
-          lpContract.balanceOf(account).then(balance => {
-            newBalances.lpTokens = ethers.formatEther(balance);
-            console.log('EarnVGWidget: LP balance:', newBalances.lpTokens);
-          }).catch(error => {
-            console.warn('EarnVGWidget: Error fetching LP balance:', error);
-          })
-        );
-      }
-
-      // Ждем завершения всех запросов
-      await Promise.allSettled(balancePromises);
-
-      setBalances(newBalances);
-      console.log('EarnVGWidget: Balances updated successfully');
-    } catch (error) {
-      console.error('EarnVGWidget: Error loading user data:', error);
-    } finally {
-      loadingRef.current = false;
-      setLoading(false);
-      console.log('EarnVGWidget: loadUserData completed');
-    }
-  };
-
-  const loadPoolInfo = async (): Promise<PoolInfo> => {
-    console.log('EarnVGWidget: Starting loadPoolInfo...');
-    
-    // Используем fallback provider если основной недоступен
-    let currentProvider = provider;
-    if (!currentProvider) {
-      console.warn('EarnVGWidget: Main provider not available, using fallback');
-      currentProvider = createFallbackProvider();
-      if (!currentProvider) {
-        console.error('EarnVGWidget: No provider available for pool info');
-        throw new Error('No provider available');
-      }
-    }
-
-    try {
-      return await withTimeout(
-        withRetry(async () => {
-          console.log('EarnVGWidget: Creating LP pair contract...');
-          const lpPairContract = new ethers.Contract(
-            CONTRACTS.LP_TOKEN, 
-            PAIR_ABI, 
-            currentProvider
-          );
-
-          console.log('EarnVGWidget: Fetching pool data...');
-          const [reserves, token0, token1] = await Promise.all([
-            lpPairContract.getReserves(),
-            lpPairContract.token0(),
-            lpPairContract.token1()
-          ]);
-
-          const isVCToken0 = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
-          const vcReserve = isVCToken0 ? reserves[0] : reserves[1];
-          const bnbReserve = isVCToken0 ? reserves[1] : reserves[0];
-
-          const price = vcReserve > 0n ? (Number(bnbReserve) / Number(vcReserve)) : 0;
-
-          const result = {
-            vcReserve: ethers.formatEther(vcReserve),
-            bnbReserve: ethers.formatEther(bnbReserve),
-            price: price.toFixed(8)
-          };
-
-          console.log('EarnVGWidget: Pool info loaded successfully:', result);
-          return result;
-        }),
-        5000 // Уменьшаем timeout до 5 секунд
-      );
-    } catch (error) {
-      console.error('EarnVGWidget: Error loading pool info:', error);
-      // Возвращаем fallback значения
-      const fallbackResult = {
-        vcReserve: '0',
-        bnbReserve: '0',
-        price: '0'
-      };
-      console.log('EarnVGWidget: Using fallback pool info:', fallbackResult);
-      return fallbackResult;
-    }
-  };
-
-  useEffect(() => {
-    if (vcAmount && poolInfo.vcReserve !== '0' && poolInfo.bnbReserve !== '0') {
       const vcValue = parseFloat(vcAmount);
+      if (isNaN(vcValue) || vcValue <= 0) return '';
+      
       const ratio = parseFloat(poolInfo.bnbReserve) / parseFloat(poolInfo.vcReserve);
       const calculatedBnb = (vcValue * ratio).toFixed(6);
-      setBnbAmount(calculatedBnb);
+      
+      console.log(`EarnVGWidget: Auto-calc BNB: ${vcValue} VC * ${ratio.toFixed(8)} = ${calculatedBnb} BNB`);
+      return calculatedBnb;
+    } catch (error) {
+      console.error('EarnVGWidget: Error calculating BNB amount:', error);
+      return '';
     }
   }, [vcAmount, poolInfo]);
 
+  // Auto-update BNB amount when VC changes
+  useEffect(() => {
+    if (calculatedBnbAmount && calculatedBnbAmount !== bnbAmount) {
+      setBnbAmount(calculatedBnbAmount);
+    }
+  }, [calculatedBnbAmount]);
+
+  // Transaction handlers
   const handleEarnVG = async () => {
-    if (!signer || !account || !getContract) {
+    if (!signer || !account || !vcContract || !lpLockerContract) {
       toast.error('Подключите кошелёк');
       return;
     }
@@ -309,53 +69,45 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     const vcAmountWei = ethers.parseEther(vcAmount);
     const bnbAmountWei = ethers.parseEther(bnbAmount);
 
-    if (parseFloat(balances.vc) < parseFloat(vcAmount)) {
+    if (parseFloat(balances.VC || '0') < parseFloat(vcAmount)) {
       toast.error('Недостаточно VC токенов');
       return;
     }
 
-    if (parseFloat(balances.bnb) < parseFloat(bnbAmount)) {
+    if (parseFloat(balances.BNB || '0') < parseFloat(bnbAmount)) {
       toast.error('Недостаточно BNB');
       return;
     }
 
     setLoading(true);
     
-    let finalSlippage = 1500;
-    let maxAllowedSlippage = 1500;
-
     try {
-      const vcContract = getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
-      if (!vcContract) throw new Error('Failed to create VC contract');
-
       const vcContractWithSigner = vcContract.connect(signer);
 
-      toast.loading('Approving VC tokens...');
-      const allowance = await vcContractWithSigner.allowance(account, CONTRACTS.LP_LOCKER);
+      // Check and approve VC tokens
+      const allowance = await (vcContractWithSigner as any).allowance(account, CONTRACTS.LP_LOCKER);
       if (allowance < vcAmountWei) {
-        const approveTx = await vcContractWithSigner.approve(CONTRACTS.LP_LOCKER, vcAmountWei);
+        toast.loading('Подтверждение VC токенов...');
+        const approveTx = await (vcContractWithSigner as any).approve(CONTRACTS.LP_LOCKER, vcAmountWei);
         await approveTx.wait();
       }
 
-      const lpLocker = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
-      if (!lpLocker) throw new Error('Failed to create LPLocker contract');
-
-      const lpLockerWithSigner = lpLocker.connect(signer);
+      const lpLockerWithSigner = lpLockerContract.connect(signer);
 
       toast.loading('Создание LP позиции и получение VG токенов...');
       
+      let finalSlippage = 1500; // 15%
       try {
-        const config = await lpLockerWithSigner.config();
-        maxAllowedSlippage = config[11];
-
+        const config = await (lpLockerWithSigner as any).config();
+        const maxAllowedSlippage = config[11];
         if (finalSlippage > maxAllowedSlippage) {
           finalSlippage = maxAllowedSlippage;
         }
-      } catch (configError) {
-        // Используем дефолтный slippage если не можем получить из контракта
+      } catch {
+        // Use default slippage
       }
 
-      const tx = await lpLockerWithSigner.earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
+      const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
         value: bnbAmountWei,
         gasLimit: 500000,
       });
@@ -365,13 +117,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       if (receipt.status === 1) {
         toast.success('VG токены успешно получены!');
-
-        // Принудительное обновление балансов с задержкой
-        setTimeout(async () => {
-          await loadUserData();
-        }, 2000); // 2 секунды задержка для BSC
-
-        await loadUserData();
+        
+        // Refresh data
+        setTimeout(() => {
+          fetchTokenData(true);
+          refreshPoolInfo();
+        }, 2000);
 
         setVcAmount('');
         setBnbAmount('');
@@ -380,17 +131,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
     } catch (error: any) {
       console.error('EarnVG Error:', error);
-
+      
       if (error.message?.includes('Too frequent transactions')) {
         toast.error('MEV Protection: Подождите 5 минут между транзакциями');
       } else if (error.message?.includes('Slippage exceeded')) {
-        toast.error(`Slippage превышен. Попробуйте с ${finalSlippage / 100}% или меньше`);
+        toast.error('Slippage превышен. Попробуйте позже');
       } else if (error.message?.includes('insufficient funds')) {
         toast.error('Недостаточно средств для транзакции');
       } else if (error.message?.includes('user rejected')) {
         toast.error('Транзакция отклонена пользователем');
-      } else if (error.message?.includes('Internal JSON-RPC error')) {
-        toast.error('Ошибка сети BSC. Попробуйте позже');
       } else {
         toast.error(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
       }
@@ -399,6 +148,79 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     }
   };
 
+  const handleLockLP = async () => {
+    if (!signer || !account || !lpContract || !lpLockerContract) {
+      toast.error('Подключите кошелёк');
+      return;
+    }
+
+    if (!lpAmount) {
+      toast.error('Введите количество LP токенов');
+      return;
+    }
+
+    const lpAmountWei = ethers.parseEther(lpAmount);
+
+    if (parseFloat(balances.LP || '0') < parseFloat(lpAmount)) {
+      toast.error('Недостаточно LP токенов');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const lpContractWithSigner = lpContract.connect(signer);
+
+      // Check and approve LP tokens
+      const allowance = await (lpContractWithSigner as any).allowance(account, CONTRACTS.LP_LOCKER);
+      if (allowance < lpAmountWei) {
+        toast.loading('Подтверждение LP токенов...');
+        const approveTx = await (lpContractWithSigner as any).approve(CONTRACTS.LP_LOCKER, lpAmountWei);
+        await approveTx.wait();
+      }
+
+      const lpLockerWithSigner = lpLockerContract.connect(signer);
+
+      toast.loading('Блокировка LP токенов и получение VG наград...');
+      
+      const tx = await (lpLockerWithSigner as any).lockLPTokens(lpAmountWei, {
+        gasLimit: 300000,
+      });
+      
+      toast.loading('Ожидание подтверждения транзакции...');
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        toast.success('LP токены заблокированы, VG награды получены!');
+        
+        // Refresh data
+        setTimeout(() => {
+          fetchTokenData(true);
+          refreshPoolInfo();
+        }, 2000);
+
+        setLpAmount('');
+      } else {
+        throw new Error('Transaction failed');
+      }
+    } catch (error: any) {
+      console.error('LockLP Error:', error);
+      
+      if (error.message?.includes('Too frequent transactions')) {
+        toast.error('MEV Protection: Подождите 5 минут между транзакциями');
+      } else if (error.message?.includes('insufficient funds')) {
+        toast.error('Недостаточно средств для транзакции');
+      } else if (error.message?.includes('user rejected')) {
+        toast.error('Транзакция отклонена пользователем');
+      } else {
+        toast.error(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Utility functions
   const formatBalance = (balance: string): string => {
     const num = parseFloat(balance);
     if (num === 0) return '0';
@@ -433,267 +255,293 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     }
   };
 
-  const handleLockLP = async () => {
-    if (!signer || !account || !getContract) {
-      toast.error('Подключите кошелёк');
-      return;
-    }
-
-    if (!lpAmount) {
-      toast.error('Введите количество LP токенов');
-      return;
-    }
-
-    const lpAmountWei = ethers.parseEther(lpAmount);
-
-    if (parseFloat(balances.lpTokens) < parseFloat(lpAmount)) {
-      toast.error('Недостаточно LP токенов');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-      if (!lpContract) throw new Error('Failed to create LP contract');
-
-      const lpContractWithSigner = lpContract.connect(signer);
-
-      toast.loading('Approving LP tokens...');
-      const allowance = await lpContractWithSigner.allowance(account, CONTRACTS.LP_LOCKER);
-      if (allowance < lpAmountWei) {
-        const approveTx = await lpContractWithSigner.approve(CONTRACTS.LP_LOCKER, lpAmountWei);
-        await approveTx.wait();
-      }
-
-      const lpLocker = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
-      if (!lpLocker) throw new Error('Failed to create LPLocker contract');
-
-      const lpLockerWithSigner = lpLocker.connect(signer);
-
-      toast.loading('Блокировка LP токенов и получение VG наград...');
-      
-      const tx = await lpLockerWithSigner.lockLPTokens(lpAmountWei, {
-        gasLimit: 300000,
-      });
-      
-      toast.loading('Ожидание подтверждения транзакции...');
-      const receipt = await tx.wait();
-
-      if (receipt.status === 1) {
-        toast.success('LP токены заблокированы, VG награды получены!');
-
-        // Принудительное обновление балансов с задержкой
-        setTimeout(async () => {
-          await loadUserData();
-        }, 2000); // 2 секунды задержка для BSC
-
-        await loadUserData();
-
-        setLpAmount('');
-      } else {
-        throw new Error('Transaction failed');
-      }
-    } catch (error: any) {
-      console.error('LockLP Error:', error);
-
-      if (error.message?.includes('Too frequent transactions')) {
-        toast.error('MEV Protection: Подождите 5 минут между транзакциями');
-      } else if (error.message?.includes('Insufficient LP balance')) {
-        toast.error('Недостаточно LP токенов');
-      } else if (error.message?.includes('Insufficient LP allowance')) {
-        toast.error('Недостаточно разрешений для LP токенов');
-      } else if (error.message?.includes('user rejected')) {
-        toast.error('Транзакция отклонена пользователем');
-      } else if (error.message?.includes('Internal JSON-RPC error')) {
-        toast.error('Ошибка сети BSC. Попробуйте позже');
-      } else {
-        toast.error(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const refreshAllData = async () => {
+    console.log('EarnVGWidget: Manual refresh triggered');
+    await fetchTokenData(true);
+    await refreshPoolInfo();
   };
 
   if (!isConnected) {
     return (
-      <Card variant="glass" className={cn('w-full max-w-md mx-auto', className)}>
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
-          <CardTitle className="text-center mb-2">Подключите кошелёк</CardTitle>
-          <CardDescription className="text-center">
+      <div className={`bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6 shadow-xl ${className}`}>
+        <div className="text-center">
+          <Wallet className="h-16 w-16 text-blue-400 mb-6 mx-auto" />
+          <h3 className="text-xl font-bold text-white mb-3">Подключите кошелёк</h3>
+          <p className="text-gray-300">
             Для использования LP Staking необходимо подключить MetaMask
-          </CardDescription>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card variant="glass" className={cn('w-full max-w-md mx-auto', className)}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
-          Earn VG Tokens
-        </CardTitle>
-        <CardDescription>
-          {mode === 'create' 
-            ? 'Создайте LP позицию из VC + BNB и получите VG токены (15:1 ratio)'
-            : 'Заблокируйте готовые LP токены VC/BNB и получите VG награды (15:1 ratio)'
-          }
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        <div className="flex rounded-lg bg-muted p-1">
-          <button
-            onClick={() => setMode('create')}
-            className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all text-slate-200',
-              mode === 'create'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Create LP
-          </button>
-          <button
-            onClick={() => setMode('lock')}
-            className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all text-slate-200',
-              mode === 'lock'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Lock LP Tokens
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {mode === 'create' ? (
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="text-center">
-                <p className="text-sm text-gray-400">VC Balance</p>
-                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.vc)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-400">BNB Balance</p>
-                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.bnb)}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="text-center">
-                <p className="text-sm text-gray-400">LP Balance</p>
-                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.lpTokens)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-400">VG Balance</p>
-                <p className="text-lg font-semibold text-slate-100">{formatBalance(balances.vg)}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {mode === 'create' && (
-          <div className="bg-slate-800/30 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-200">Pool Information</span>
-              <Info className="w-4 h-4 text-gray-400" />
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-400">VC Reserve</p>
-                <p className="font-medium text-slate-100">{formatBalance(poolInfo.vcReserve)}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">BNB Reserve</p>
-                <p className="font-medium text-slate-100">{formatBalance(poolInfo.bnbReserve)}</p>
-              </div>
-            </div>
+    <div className={`bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6 shadow-xl ${className}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500/30 to-purple-500/30">
+            <Zap className="h-6 w-6 text-blue-400" />
           </div>
-        )}
-
-        <div className="space-y-4">
-          {mode === 'create' ? (
-            <>
-              <Input
-                label="VC Amount"
-                type="number"
-                placeholder="Enter VC amount"
-                value={vcAmount}
-                onChange={(e) => setVcAmount(e.target.value)}
-                leftIcon={<Coins className="h-4 w-4" />}
-                disabled={loading}
-              />
-
-              <Input
-                label="BNB Amount (Auto-calculated)"
-                type="number"
-                placeholder="Auto-calculated from VC"
-                value={bnbAmount}
-                onChange={(e) => setBnbAmount(e.target.value)}
-                leftIcon={<Coins className="h-4 w-4" />}
-                disabled={loading}
-              />
-            </>
-          ) : (
-            <Input
-              label="LP Token Amount"
-              type="number"
-              placeholder="Enter LP token amount"
-              value={lpAmount}
-              onChange={(e) => setLpAmount(e.target.value)}
-              leftIcon={<Coins className="h-4 w-4" />}
-              disabled={loading}
-            />
-          )}
-        </div>
-
-        {((mode === 'create' && vcAmount && bnbAmount) || (mode === 'lock' && lpAmount)) && (
-          <div className="rounded-lg bg-primary/10 border border-primary/20 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Expected VG Reward:</span>
-              <span className="text-lg font-semibold text-primary">
-                {calculateVGReward()} VG
-              </span>
-            </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">⚡ Получить VG токены</h3>
+            <p className="text-gray-300 text-sm">
+              {mode === 'create' 
+                ? 'Создайте LP позицию и получите VG (15:1)'
+                : 'Заблокируйте LP токены и получите VG (15:1)'
+              }
+            </p>
           </div>
-        )}
-
-        <Button
-          onClick={mode === 'create' ? handleEarnVG : handleLockLP}
-          disabled={
-            loading || 
-            (mode === 'create' && (!vcAmount || !bnbAmount)) ||
-            (mode === 'lock' && !lpAmount)
-          }
-          loading={loading}
-          variant="gradient"
-          size="lg"
-          className="w-full"
-          leftIcon={!loading ? <Zap className="h-4 w-4" /> : undefined}
+        </div>
+        <button
+          onClick={refreshAllData}
+          disabled={poolLoading}
+          className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
         >
-          {loading 
-            ? 'Processing...' 
-            : mode === 'create' 
-              ? 'Create LP + Earn VG (One Click)'
-              : 'Lock LP Tokens + Earn VG'
-          }
-        </Button>
+          <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
+        </button>
+      </div>
 
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• LP токены блокируются навсегда (permanent lock)</p>
-          <p>• Получаете 15 VG за каждый 1 LP токен (мгновенно)</p>
-          <p>• VG токены можно использовать для governance</p>
-          <p>• Это НЕ стейкинг - LP нельзя забрать обратно</p>
+      {/* Mode Switcher */}
+      <div className="flex rounded-xl bg-black/40 p-1 border border-gray-600/50 mb-6">
+        <button
+          onClick={() => setMode('create')}
+          className={cn(
+            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            mode === 'create'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+              : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+          )}
+        >
+          Create LP
+        </button>
+        <button
+          onClick={() => setMode('lock')}
+          className={cn(
+            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            mode === 'lock'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+              : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+          )}
+        >
+          Lock LP Tokens
+        </button>
+      </div>
+
+      {/* Balances */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {mode === 'create' ? (
+          <>
+            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-sm text-gray-400 mb-1">VC Balance</div>
+              <div className="text-xl font-bold text-blue-400">
+                {balancesLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                ) : (
+                  formatBalance(balances.VC || '0')
+                )}
+              </div>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-sm text-gray-400 mb-1">BNB Balance</div>
+              <div className="text-xl font-bold text-amber-400">
+                {balancesLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                ) : (
+                  formatBalance(balances.BNB || '0')
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-sm text-gray-400 mb-1">LP Balance</div>
+              <div className="text-xl font-bold text-purple-400">
+                {balancesLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                ) : (
+                  formatBalance(balances.LP || '0')
+                )}
+              </div>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-sm text-gray-400 mb-1">VG Balance</div>
+              <div className="text-xl font-bold text-green-400">
+                {balancesLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                ) : (
+                  formatBalance(balances.VG || '0')
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Pool Information */}
+      {mode === 'create' && (
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-blue-500/30 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white flex items-center gap-2">
+              <Info className="w-4 h-4 text-blue-400" />
+              Pool Information
+            </span>
+            {!poolInfo.isLoaded && (
+              <div className="flex items-center gap-1 text-xs text-amber-400">
+                <AlertCircle className="w-3 h-3" />
+                Fallback
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-gray-400 mb-1">VC Reserve</div>
+              <div className="font-medium text-white">
+                {poolLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-4 w-16 rounded"></div>
+                ) : (
+                  formatBalance(poolInfo.vcReserve)
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-1">BNB Reserve</div>
+              <div className="font-medium text-white">
+                {poolLoading ? (
+                  <div className="animate-pulse bg-gray-600 h-4 w-16 rounded"></div>
+                ) : (
+                  formatBalance(poolInfo.bnbReserve)
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-blue-500/30">
+            <div className="text-xs text-gray-400">Current Price</div>
+            <div className="text-sm font-medium text-green-400">
+              {poolLoading ? (
+                <div className="animate-pulse bg-gray-600 h-4 w-24 rounded"></div>
+              ) : (
+                `1 VC = ${poolInfo.price} BNB`
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Input Fields */}
+      <div className="space-y-4 mb-6">
+        {mode === 'create' ? (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">VC Amount</label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <Coins className="h-4 w-4 text-blue-400" />
+                </div>
+                <input
+                  type="number"
+                  placeholder="Enter VC amount"
+                  value={vcAmount}
+                  onChange={(e) => setVcAmount(e.target.value)}
+                  disabled={loading}
+                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <Coins className="h-4 w-4 text-amber-400" />
+                </div>
+                <input
+                  type="number"
+                  placeholder={poolInfo.isLoaded ? "Auto-calculated from VC" : "Using fallback ratio"}
+                  value={bnbAmount}
+                  onChange={(e) => setBnbAmount(e.target.value)}
+                  disabled={loading}
+                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">LP Token Amount</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <Coins className="h-4 w-4 text-purple-400" />
+              </div>
+              <input
+                type="number"
+                placeholder="Enter LP token amount"
+                value={lpAmount}
+                onChange={(e) => setLpAmount(e.target.value)}
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* VG Reward Preview */}
+      {((mode === 'create' && vcAmount && bnbAmount) || (mode === 'lock' && lpAmount)) && (
+        <div className="rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-white flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-green-400" />
+              Expected VG Reward:
+            </span>
+            <span className="text-xl font-bold text-green-400">
+              {calculateVGReward()} VG
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Action Button */}
+      <button
+        onClick={mode === 'create' ? handleEarnVG : handleLockLP}
+        disabled={
+          loading || 
+          (mode === 'create' && (!vcAmount || !bnbAmount)) ||
+          (mode === 'lock' && !lpAmount)
+        }
+        className={cn(
+          "w-full h-12 text-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2",
+          "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+        )}
+      >
+        {loading ? (
+          <>
+            <RefreshCw className="h-5 w-5 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <Zap className="h-5 w-5" />
+            {mode === 'create' ? 'Create LP + Earn VG' : 'Lock LP + Earn VG'}
+          </>
+        )}
+      </button>
+
+      {/* Information */}
+      <div className="mt-6 space-y-2 bg-black/20 rounded-lg p-4 border border-gray-600/30">
+        <div className="font-medium text-white mb-3">Important Information:</div>
+        <div className="text-sm text-gray-300 space-y-1">
+          <div>• LP токены блокируются навсегда (permanent lock)</div>
+          <div>• Получаете 15 VG за каждый 1 LP токен (мгновенно)</div>
+          <div>• VG токены можно использовать для governance</div>
+          <div>• Это НЕ стейкинг - LP нельзя забрать обратно</div>
           {mode === 'lock' && (
-            <p>• Убедитесь, что у вас есть готовые LP токены VC/BNB</p>
+            <div>• Убедитесь, что у вас есть готовые LP токены VC/BNB</div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

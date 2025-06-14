@@ -3,63 +3,25 @@ import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
-import { RefreshCw, Vote, Gem, Lightbulb, ArrowRightLeft, Clock } from 'lucide-react';
+import { RefreshCw, Vote, Gem, ArrowRightLeft, Clock } from 'lucide-react';
+import { useTokenData } from '../hooks/useTokenData';
 
 interface VGConverterProps {
   className?: string;
 }
 
-const ERC20_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function approve(address, uint256) returns (bool)",
-  "function allowance(address, address) view returns (uint256)"
-];
-
-const VGVOTES_ABI = [
-  "function deposit(uint256) external",
-  "function withdraw(uint256) external",
-  "function balanceOf(address) view returns (uint256)",
-  "function underlying() view returns (address)"
-];
-
 const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
-  const { account, signer, isConnected, getContract } = useWeb3();
-  const [vgBalance, setVgBalance] = useState('0');
-  const [vgVotesBalance, setVgVotesBalance] = useState('0');
+  const { account, signer, isConnected, vgContract, vgVotesContract } = useWeb3();
+  
+  // Use centralized token data hook
+  const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
+  
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit');
 
-  useEffect(() => {
-    if (isConnected && account) {
-      loadBalances();
-    }
-  }, [isConnected, account]);
-
-  const loadBalances = async () => {
-    if (!account || !getContract) return;
-
-    try {
-      const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-      const vgVotesContract = getContract(CONTRACTS.VG_TOKEN_VOTES, ERC20_ABI);
-
-      if (!vgContract || !vgVotesContract) return;
-
-      const [vgBal, vgVotesBal] = await Promise.allSettled([
-        vgContract.balanceOf(account),
-        vgVotesContract.balanceOf(account)
-      ]);
-
-      setVgBalance(vgBal.status === 'fulfilled' ? ethers.formatEther(vgBal.value) : '0');
-      setVgVotesBalance(vgVotesBal.status === 'fulfilled' ? ethers.formatEther(vgVotesBal.value) : '0');
-
-    } catch (error) {
-      console.error('Error loading balances:', error);
-    }
-  };
-
   const handleDeposit = async () => {
-    if (!signer || !account || !getContract || !amount) {
+    if (!signer || !account || !vgContract || !vgVotesContract || !amount) {
       toast.error('Проверьте подключение и введите количество');
       return;
     }
@@ -70,26 +32,20 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       const amountWei = ethers.parseEther(amount);
 
       // 1. Approve VG токены
-      const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-      if (!vgContract) throw new Error('Failed to create VG contract');
-
       const vgContractWithSigner = vgContract.connect(signer);
 
-      const allowance = await vgContractWithSigner.allowance(account, CONTRACTS.VG_TOKEN_VOTES);
+      const allowance = await (vgContractWithSigner as any).allowance(account, CONTRACTS.VG_TOKEN_VOTES);
       if (allowance < amountWei) {
         toast.loading('Approving VG tokens...');
-        const approveTx = await vgContractWithSigner.approve(CONTRACTS.VG_TOKEN_VOTES, amountWei);
+        const approveTx = await (vgContractWithSigner as any).approve(CONTRACTS.VG_TOKEN_VOTES, amountWei);
         await approveTx.wait();
       }
 
       // 2. Deposit to VGVotes
-      const vgVotesContract = getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
-      if (!vgVotesContract) throw new Error('Failed to create VGVotes contract');
-
       const vgVotesWithSigner = vgVotesContract.connect(signer);
 
       toast.loading('Converting to VGVotes...');
-      const depositTx = await vgVotesWithSigner.deposit(amountWei);
+      const depositTx = await (vgVotesWithSigner as any).deposit(amountWei);
       await depositTx.wait();
 
       toast.success('🎉 VG токены конвертированы в VGVotes!');
@@ -100,12 +56,15 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       toast.error(error.message || 'Ошибка при конвертации');
     } finally {
       setLoading(false);
-      loadBalances();
+      // Refresh balances after transaction
+      setTimeout(() => {
+        fetchTokenData(true);
+      }, 2000);
     }
   };
 
   const handleWithdraw = async () => {
-    if (!signer || !account || !getContract || !amount) {
+    if (!signer || !account || !vgVotesContract || !amount) {
       toast.error('Проверьте подключение и введите количество');
       return;
     }
@@ -115,13 +74,10 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
     try {
       const amountWei = ethers.parseEther(amount);
 
-      const vgVotesContract = getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
-      if (!vgVotesContract) throw new Error('Failed to create VGVotes contract');
-
       const vgVotesWithSigner = vgVotesContract.connect(signer);
 
       toast.loading('Converting back to VG...');
-      const withdrawTx = await vgVotesWithSigner.withdraw(amountWei);
+      const withdrawTx = await (vgVotesWithSigner as any).withdraw(amountWei);
       await withdrawTx.wait();
 
       toast.success('🎉 VGVotes конвертированы обратно в VG!');
@@ -132,13 +88,26 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       toast.error(error.message || 'Ошибка при конвертации');
     } finally {
       setLoading(false);
-      loadBalances();
+      // Refresh balances after transaction
+      setTimeout(() => {
+        fetchTokenData(true);
+      }, 2000);
     }
   };
 
   const setMaxAmount = () => {
-    const maxAmount = mode === 'deposit' ? vgBalance : vgVotesBalance;
+    const maxAmount = mode === 'deposit' ? balances.VG : balances.VGVotes;
     setAmount(maxAmount);
+  };
+
+  const formatBalance = (balance: string): string => {
+    const num = parseFloat(balance);
+    if (num === 0) return '0.00';
+    if (num < 0.001) return '<0.001';
+    if (num < 1) return num.toFixed(4);
+    if (num < 1000) return num.toFixed(2);
+    if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
+    return `${(num / 1000000).toFixed(1)}M`;
   };
 
   if (!isConnected) {
@@ -168,11 +137,23 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center">
           <p className="text-sm text-gray-400">VG Balance</p>
-          <p className="text-xl font-bold text-purple-400">{parseFloat(vgBalance).toFixed(2)}</p>
+          <p className="text-xl font-bold text-purple-400">
+            {balancesLoading ? (
+              <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+            ) : (
+              formatBalance(balances.VG || '0')
+            )}
+          </p>
         </div>
         <div className="text-center">
           <p className="text-sm text-gray-400">VGVotes Balance</p>
-          <p className="text-xl font-bold text-green-400">{parseFloat(vgVotesBalance).toFixed(2)}</p>
+          <p className="text-xl font-bold text-green-400">
+            {balancesLoading ? (
+              <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+            ) : (
+              formatBalance(balances.VGVotes || '0')
+            )}
+          </p>
         </div>
       </div>
 

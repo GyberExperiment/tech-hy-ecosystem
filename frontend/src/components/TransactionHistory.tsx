@@ -500,13 +500,13 @@ const TransactionHistory: React.FC = () => {
             <option value="bscscan">🌐 BSCScan</option>
             <option value="rpc">⚡ RPC</option>
           </select>
-          <button
+        <button
             onClick={() => fetchRecentTransactions(true)}
-            className="btn-secondary p-2"
+          className="btn-secondary p-2"
             disabled={refreshing}
-          >
+        >
             <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
-          </button>
+        </button>
         </div>
       </div>
 
@@ -560,14 +560,14 @@ const TransactionHistory: React.FC = () => {
             </>
           ) : (
             <>
-              <p>Транзакций не найдено</p>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="btn-secondary mt-4"
-                >
-                  Очистить поиск
-                </button>
+          <p>Транзакций не найдено</p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="btn-secondary mt-4"
+            >
+              Очистить поиск
+            </button>
               )}
             </>
           )}
