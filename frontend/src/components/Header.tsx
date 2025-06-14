@@ -90,7 +90,7 @@ const Header: React.FC = () => {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="font-medium">{item.name}</span>
+                  <span className="font-medium text-slate-200">{item.name}</span>
                 </Link>
               );
             })}
@@ -195,7 +195,7 @@ const Header: React.FC = () => {
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.name}</span>
+                    <span className="font-medium text-slate-200">{item.name}</span>
                   </Link>
                 );
               })}

@@ -282,7 +282,7 @@ const StakingStats: React.FC = () => {
     return (
       <div className="card text-center text-gray-400">
         <TrendingUp className="mx-auto mb-4" size={48} />
-        <h3 className="text-lg font-semibold mb-2">Статистика экосистемы</h3>
+        <h3 className="text-lg font-semibold mb-2 text-slate-100">Статистика экосистемы</h3>
         <p>Подключите кошелёк для просмотра статистики</p>
       </div>
     );
@@ -296,7 +296,7 @@ const StakingStats: React.FC = () => {
     return (
       <div className="card text-center text-gray-400">
         <TrendingUp className="mx-auto mb-4" size={48} />
-        <h3 className="text-lg font-semibold mb-2">Ошибка загрузки</h3>
+        <h3 className="text-lg font-semibold mb-2 text-slate-100">Ошибка загрузки</h3>
         <button onClick={fetchPoolStats} className="btn-primary mt-4">
           Попробовать снова
         </button>

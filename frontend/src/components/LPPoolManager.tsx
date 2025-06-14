@@ -661,7 +661,7 @@ const LPPoolManager: React.FC = () => {
         <div className="glass-panel p-6">
           <div className="flex items-center space-x-2 mb-4">
             <BarChart3 className="w-5 h-5 text-blue-400" />
-            <h3 className="text-xl font-bold">Pool Information</h3>
+            <h3 className="text-xl font-bold text-slate-100">Pool Information</h3>
                 </div>
           {loading ? (
             <PoolInfoSkeleton />
@@ -670,27 +670,27 @@ const LPPoolManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-400">VC Reserve</p>
-                  <p className="font-bold">{poolInfo.reserve0} VC</p>
+                  <p className="font-bold text-slate-100">{poolInfo.reserve0} VC</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">BNB Reserve</p>
-                  <p className="font-bold">{poolInfo.reserve1} BNB</p>
+                  <p className="font-bold text-slate-100">{poolInfo.reserve1} BNB</p>
               </div>
                 <div>
                   <p className="text-sm text-gray-400">VC Price</p>
-                  <p className="font-bold">{poolInfo.vcPrice} BNB</p>
+                  <p className="font-bold text-slate-100">{poolInfo.vcPrice} BNB</p>
             </div>
                 <div>
                   <p className="text-sm text-gray-400">BNB Price</p>
-                  <p className="font-bold">{poolInfo.bnbPrice} VC</p>
+                  <p className="font-bold text-slate-100">{poolInfo.bnbPrice} VC</p>
             </div>
                 <div>
                   <p className="text-sm text-gray-400">Your LP Balance</p>
-                  <p className="font-bold">{parseFloat(poolInfo.userLPBalance).toFixed(6)} LP</p>
+                  <p className="font-bold text-slate-100">{parseFloat(poolInfo.userLPBalance).toFixed(6)} LP</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Total LP Supply</p>
-                  <p className="font-bold">{parseFloat(poolInfo.totalSupply).toFixed(2)} LP</p>
+                  <p className="font-bold text-slate-100">{parseFloat(poolInfo.totalSupply).toFixed(2)} LP</p>
                 </div>
               </div>
               <div className="pt-4 border-t border-gray-700">
@@ -713,7 +713,7 @@ const LPPoolManager: React.FC = () => {
 
         <div className="card">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold flex items-center">
+            <h3 className="text-xl font-bold flex items-center text-slate-100">
               <Calculator className="mr-3 text-blue-400" />
               LP Pool Management
             </h3>
@@ -759,7 +759,7 @@ const LPPoolManager: React.FC = () => {
             {/* Input Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">VC Amount</label>
+                <label className="block text-sm font-medium mb-2 text-slate-200">VC Amount</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -783,7 +783,7 @@ const LPPoolManager: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">BNB Amount</label>
+                <label className="block text-sm font-medium mb-2 text-slate-200">BNB Amount</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -809,7 +809,7 @@ const LPPoolManager: React.FC = () => {
 
             {/* Slippage Settings */}
             <div>
-              <label className="block text-sm font-medium mb-2">Slippage Tolerance</label>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Slippage Tolerance</label>
               <div className="flex space-x-2">
                 {[0.1, 0.5, 1.0].map((value) => (
                   <button
@@ -839,18 +839,18 @@ const LPPoolManager: React.FC = () => {
             {/* Calculation Preview */}
             {calculation && (
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                <h5 className="font-semibold mb-2 flex items-center">
+                <h5 className="font-semibold mb-2 flex items-center text-slate-100">
                   <Info className="mr-2" size={16} />
                   Preview
                 </h5>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>LP Tokens to receive:</span>
-                    <span className="font-semibold">{calculation.lpTokensToReceive}</span>
+                    <span className="font-semibold text-slate-100">{calculation.lpTokensToReceive}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Share of pool:</span>
-                    <span className="font-semibold">{calculation.shareOfPool.toFixed(4)}%</span>
+                    <span className="font-semibold text-slate-100">{calculation.shareOfPool.toFixed(4)}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Price impact:</span>
@@ -893,7 +893,7 @@ const LPPoolManager: React.FC = () => {
           <div className="space-y-4">
             {/* Percentage Buttons */}
             <div>
-              <label className="block text-sm font-medium mb-2">Remove Amount</label>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Remove Amount</label>
               <div className="flex space-x-2 mb-3">
                 {[25, 50, 75, 100].map((percentage) => (
                   <button

@@ -274,7 +274,7 @@ const GovernanceProposals: React.FC = () => {
     return (
       <div className="card text-center text-gray-400">
         <Vote className="mx-auto mb-4" size={48} />
-        <h3 className="text-lg font-semibold mb-2">Управление протоколом</h3>
+        <h3 className="text-lg font-semibold mb-2 text-slate-100">Управление протоколом</h3>
         <p>Подключите кошелёк для участия в голосованиях</p>
       </div>
     );
@@ -286,7 +286,7 @@ const GovernanceProposals: React.FC = () => {
       <div className="card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Управление протоколом</h2>
+            <h2 className="text-2xl font-bold mb-2 text-slate-100">Управление протоколом</h2>
             <p className="text-gray-400">Участвуйте в развитии экосистемы через голосования</p>
           </div>
           
@@ -356,11 +356,11 @@ const GovernanceProposals: React.FC = () => {
       {showCreateProposal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-6">Создать предложение</h3>
+            <h3 className="text-xl font-bold mb-6 text-slate-100">Создать предложение</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Название *</label>
+                <label className="block text-sm font-medium mb-2 text-slate-200">Название *</label>
                 <input
                   type="text"
                   value={newProposal.title}
@@ -371,7 +371,7 @@ const GovernanceProposals: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Категория</label>
+                <label className="block text-sm font-medium mb-2 text-slate-200">Категория</label>
                 <select
                   value={newProposal.category}
                   onChange={(e) => setNewProposal({...newProposal, category: e.target.value as Proposal['category']})}
@@ -385,7 +385,7 @@ const GovernanceProposals: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Описание *</label>
+                <label className="block text-sm font-medium mb-2 text-slate-200">Описание *</label>
                 <textarea
                   value={newProposal.description}
                   onChange={(e) => setNewProposal({...newProposal, description: e.target.value})}
@@ -419,7 +419,7 @@ const GovernanceProposals: React.FC = () => {
       ) : filteredProposals.length === 0 ? (
         <div className="card text-center text-gray-400 py-12">
           <Vote className="mx-auto mb-4" size={48} />
-          <h3 className="text-lg font-semibold mb-2">Предложений не найдено</h3>
+          <h3 className="text-lg font-semibold mb-2 text-slate-100">Предложений не найдено</h3>
           <p>Пока нет активных предложений для голосования</p>
         </div>
       ) : (
@@ -433,7 +433,7 @@ const GovernanceProposals: React.FC = () => {
                   <div className="flex items-start space-x-3">
                     {getCategoryIcon(proposal.category)}
                     <div>
-                      <h3 className="text-lg font-semibold">{proposal.title}</h3>
+                      <h3 className="text-lg font-semibold text-slate-100">{proposal.title}</h3>
                       <p className="text-gray-400 text-sm">Предложил: {proposal.proposer}</p>
                     </div>
                   </div>

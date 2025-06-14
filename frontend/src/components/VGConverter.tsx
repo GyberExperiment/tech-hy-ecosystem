@@ -180,7 +180,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       <div className="flex rounded-lg bg-black/30 p-1 mb-4">
         <button
           onClick={() => setMode('deposit')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-slate-200 ${
             mode === 'deposit'
               ? 'bg-purple-600 text-white'
               : 'text-gray-400 hover:text-white'
@@ -190,7 +190,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
         </button>
         <button
           onClick={() => setMode('withdraw')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-slate-200 ${
             mode === 'withdraw'
               ? 'bg-green-600 text-white'
               : 'text-gray-400 hover:text-white'

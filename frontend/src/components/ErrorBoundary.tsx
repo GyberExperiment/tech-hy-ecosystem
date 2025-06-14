@@ -81,7 +81,7 @@ class ErrorBoundary extends Component<Props, State> {
                     Показать детали ошибки (режим разработки)
                   </summary>
                   <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-sm">
-                    <div className="text-red-400 font-semibold mb-2">
+                    <div className="text-red-400 font-semibold mb-2 text-slate-100">
                       {this.state.error.name}: {this.state.error.message}
                     </div>
                     <pre className="text-gray-400 text-xs overflow-auto max-h-40">
@@ -127,7 +127,7 @@ class ErrorBoundary extends Component<Props, State> {
               <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm">
                 <div className="flex items-center justify-center space-x-2 text-blue-400 mb-2">
                   <AlertTriangle size={16} />
-                  <span className="font-semibold">Что можно сделать:</span>
+                  <span className="font-semibold text-slate-200">Что можно сделать:</span>
                 </div>
                 <ul className="text-gray-400 space-y-1">
                   <li>• Перезагрузите страницу</li>

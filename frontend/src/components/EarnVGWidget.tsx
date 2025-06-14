@@ -421,7 +421,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={() => setMode('create')}
             className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all',
+              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all text-slate-200',
               mode === 'create'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -432,7 +432,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={() => setMode('lock')}
             className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all',
+              'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all text-slate-200',
               mode === 'lock'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'

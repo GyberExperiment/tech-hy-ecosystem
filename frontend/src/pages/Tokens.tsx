@@ -25,22 +25,15 @@ import {
   Users,
   Eye,
   Settings,
-  Zap
+  Zap,
+  Clock,
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TransactionHistory from '../components/TransactionHistory';
-
-interface TokenData {
-  symbol: string;
-  name: string;
-  address: string;
-  balance: string;
-  decimals: number;
-  totalSupply: string;
-  contract: any;
-  icon: React.ReactNode;
-  color: string;
-}
+import { ContractStatus } from '../components/ContractStatus';
+import TokenStats from '../components/TokenStats';
+import { useTokenData, TokenData } from '../hooks/useTokenData';
 
 interface TokenAllowance {
   spender: string;
@@ -48,6 +41,49 @@ interface TokenAllowance {
   amount: string;
   token: string;
 }
+
+// Fallback RPC providers для надёжности
+const FALLBACK_PROVIDERS = [
+  'https://bsc-testnet-rpc.publicnode.com',
+  'https://bsc-testnet.blockpi.network/v1/rpc/public',
+  'https://bsc-testnet.public.blastapi.io',
+];
+
+const createFallbackProvider = () => {
+  try {
+    return new ethers.JsonRpcProvider(FALLBACK_PROVIDERS[0]);
+  } catch (error) {
+    console.error('Failed to create fallback provider:', error);
+    return null;
+  }
+};
+
+// Utility function для retry логики
+const withRetry = async <T,>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+// Utility function для timeout
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
+    )
+  ]);
+};
 
 const Tokens: React.FC = () => {
   const { t } = useTranslation(['tokens', 'common']);
@@ -59,12 +95,20 @@ const Tokens: React.FC = () => {
     vgContract, 
     vgVotesContract, 
     lpContract,
-    provider 
+    provider,
+    signer 
   } = useWeb3();
 
-  const [tokens, setTokens] = useState<TokenData[]>([]);
+  // Use shared token data hook
+  const { 
+    tokens, 
+    loading, 
+    refreshing, 
+    refreshData, 
+    formatBalance 
+  } = useTokenData();
+
   const [allowances, setAllowances] = useState<TokenAllowance[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [transferTo, setTransferTo] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
@@ -73,90 +117,26 @@ const Tokens: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'transfer' | 'approve' | 'allowances'>('transfer');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'withBalance' | 'governance'>('all');
+  const [transactionLoading, setTransactionLoading] = useState(false);
 
-  const tokenCards = [
-    {
-      symbol: 'VC',
-      name: TOKEN_INFO.VC.name,
-      icon: <CreditCard className="w-6 h-6" />,
-      color: 'from-blue-500 to-cyan-500',
-      balance: '0',
-      address: CONTRACTS.VC_TOKEN,
-      contract: vcContract,
-    },
-    {
-      symbol: 'VG',
-      name: TOKEN_INFO.VG.name,
-      icon: <Gift className="w-6 h-6" />,
-      color: 'from-yellow-500 to-orange-500',
-      balance: '0',
-      address: CONTRACTS.VG_TOKEN,
-      contract: vgContract,
-    },
-    {
-      symbol: 'VGV',
-      name: TOKEN_INFO.VG_VOTES.name,
-      icon: <Vote className="w-6 h-6" />,
-      color: 'from-purple-500 to-pink-500',
-      balance: '0',
-      address: CONTRACTS.VG_TOKEN_VOTES,
-      contract: vgVotesContract,
-    },
-    {
-      symbol: 'LP',
-      name: TOKEN_INFO.LP.name,
-      icon: <Rocket className="w-6 h-6" />,
-      color: 'from-green-500 to-emerald-500',
-      balance: '0',
-      address: CONTRACTS.LP_TOKEN,
-      contract: lpContract,
-    },
-  ];
+  // Add icons to tokens from hook
+  const tokensWithIcons = tokens.map(token => ({
+    ...token,
+    icon: getTokenIcon(token.symbol)
+  }));
 
-  const fetchTokenData = async () => {
-    if (!account || !isCorrectNetwork) return;
-    
-    setLoading(true);
-    try {
-      const tokenData: TokenData[] = [];
-
-      for (const tokenInfo of tokenCards) {
-        if (!tokenInfo.contract) continue;
-
-        try {
-          const [balance, decimals, totalSupply] = await Promise.all([
-            tokenInfo.contract.balanceOf(account),
-            tokenInfo.contract.decimals(),
-            tokenInfo.contract.totalSupply(),
-          ]);
-
-          tokenData.push({
-            symbol: tokenInfo.symbol,
-            name: tokenInfo.name,
-            address: tokenInfo.address,
-            balance: ethers.formatUnits(balance, decimals),
-            decimals: Number(decimals),
-            totalSupply: ethers.formatUnits(totalSupply, decimals),
-            contract: tokenInfo.contract,
-            icon: tokenInfo.icon,
-            color: tokenInfo.color,
-          });
-        } catch (error) {
-          console.error(`Error fetching ${tokenInfo.symbol} data:`, error);
-        }
-      }
-
-      setTokens(tokenData);
-    } catch (error) {
-      console.error('Error fetching token data:', error);
-      toast.error('Ошибка загрузки данных токенов');
-    } finally {
-      setLoading(false);
+  function getTokenIcon(symbol: string) {
+    switch (symbol) {
+      case 'VC': return <CreditCard className="w-6 h-6" />;
+      case 'VG': return <Gift className="w-6 h-6" />;
+      case 'VGVotes': return <Vote className="w-6 h-6" />;
+      case 'LP': return <Rocket className="w-6 h-6" />;
+      default: return <Coins className="w-6 h-6" />;
     }
-  };
+  }
 
   const fetchAllowances = async () => {
-    if (!account || !isCorrectNetwork) return;
+    if (!account || !isConnected || !isCorrectNetwork || tokens.length === 0) return;
     
     try {
       const allowanceData: TokenAllowance[] = [];
@@ -171,7 +151,11 @@ const Tokens: React.FC = () => {
         
         for (const spender of spenders) {
           try {
-            const allowance = await token.contract.allowance(account, spender.address);
+            const allowance = await withTimeout(
+              withRetry(() => token.contract.allowance(account, spender.address)),
+              5000
+            );
+            
             const allowanceFormatted = ethers.formatUnits(allowance, token.decimals);
             
             if (parseFloat(allowanceFormatted) > 0) {
@@ -183,7 +167,7 @@ const Tokens: React.FC = () => {
               });
             }
           } catch (error) {
-            console.error(`Error fetching allowance for ${token.symbol} -> ${spender.name}:`, error);
+            console.warn(`Error fetching allowance for ${token.symbol} -> ${spender.name}:`, error);
           }
         }
       }
@@ -196,15 +180,9 @@ const Tokens: React.FC = () => {
 
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {
-      fetchTokenData();
-    }
-  }, [account, isConnected, isCorrectNetwork]);
-
-  useEffect(() => {
-    if (tokens.length > 0) {
       fetchAllowances();
     }
-  }, [tokens]);
+  }, [account, isConnected, isCorrectNetwork]);
 
   // Filter tokens based on search and filter criteria
   const filteredTokens = tokens.filter(token => {
@@ -224,23 +202,24 @@ const Tokens: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const formatBalance = (balance: string) => {
-    const num = parseFloat(balance);
-    if (num === 0) return '0';
-    if (num < 0.0001) return '< 0.0001';
-    if (num < 1) return num.toFixed(4);
-    if (num < 1000) return num.toFixed(2);
-    if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
-    return `${(num / 1000000).toFixed(1)}M`;
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Адрес скопирован!');
   };
 
+  const estimateGas = async (contract: any, method: string, args: any[]) => {
+    try {
+      const gasEstimate = await contract[method].estimateGas(...args);
+      // Добавляем 20% буфер для безопасности
+      return gasEstimate * 120n / 100n;
+    } catch (error) {
+      console.warn('Gas estimation failed, using default:', error);
+      return 100000n; // Fallback gas limit
+    }
+  };
+
   const handleTransfer = async () => {
-    if (!selectedToken || !transferTo || !transferAmount) {
+    if (!selectedToken || !transferTo || !transferAmount || !signer) {
       toast.error('Заполните все поля');
       return;
     }
@@ -250,34 +229,73 @@ const Tokens: React.FC = () => {
       return;
     }
 
+    if (!selectedToken.contract) {
+      toast.error('Контракт токена недоступен');
+      return;
+    }
+
+    setTransactionLoading(true);
+
     try {
       const amount = ethers.parseUnits(transferAmount, selectedToken.decimals);
+      const contractWithSigner = selectedToken.contract.connect(signer);
+      
+      // Проверяем баланс
+      const balance = await selectedToken.contract.balanceOf(account);
+      if (balance < amount) {
+        throw new Error('Недостаточно токенов для перевода');
+      }
+      
+      // Оцениваем gas
+      const gasLimit = await estimateGas(contractWithSigner, 'transfer', [transferTo, amount]);
       
       toast.loading('Отправка транзакции...', { id: 'transfer' });
       
-      const tx = await selectedToken.contract.transfer(transferTo, amount);
+      const tx = await contractWithSigner.transfer(transferTo, amount, {
+        gasLimit,
+        // MEV protection: добавляем случайный nonce offset
+        nonce: await signer.getNonce() + Math.floor(Math.random() * 3)
+      });
       
       toast.loading('Ожидание подтверждения...', { id: 'transfer' });
       
-      await tx.wait();
+      const receipt = await tx.wait();
       
-      toast.success('Перевод выполнен успешно!', { id: 'transfer' });
-      
-      // Обновляем балансы
-      fetchTokenData();
-      
-      // Очищаем форму
-      setTransferTo('');
-      setTransferAmount('');
+      if (receipt.status === 1) {
+        toast.success(`Перевод ${transferAmount} ${selectedToken.symbol} выполнен успешно!`, { id: 'transfer' });
+        
+        // Обновляем балансы
+        await refreshData();
+        
+        // Очищаем форму
+        setTransferTo('');
+        setTransferAmount('');
+      } else {
+        throw new Error('Транзакция не удалась');
+      }
       
     } catch (error: any) {
       console.error('Transfer error:', error);
-      toast.error(`Ошибка перевода: ${error.message}`, { id: 'transfer' });
+      let errorMessage = 'Ошибка перевода';
+      
+      if (error.message?.includes('insufficient funds')) {
+        errorMessage = 'Недостаточно BNB для оплаты gas';
+      } else if (error.message?.includes('transfer amount exceeds balance')) {
+        errorMessage = 'Недостаточно токенов для перевода';
+      } else if (error.message?.includes('user rejected')) {
+        errorMessage = 'Транзакция отклонена пользователем';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { id: 'transfer' });
+    } finally {
+      setTransactionLoading(false);
     }
   };
 
   const handleApprove = async () => {
-    if (!selectedToken || !approveTo || !approveAmount) {
+    if (!selectedToken || !approveTo || !approveAmount || !signer) {
       toast.error('Заполните все поля');
       return;
     }
@@ -287,29 +305,68 @@ const Tokens: React.FC = () => {
       return;
     }
 
+    if (!selectedToken.contract) {
+      toast.error('Контракт токена недоступен');
+      return;
+    }
+
+    setTransactionLoading(true);
+
     try {
-      const amount = ethers.parseUnits(approveAmount, selectedToken.decimals);
+      let amount: bigint;
+      
+      // Обрабатываем MAX значение
+      if (approveAmount === ethers.MaxUint256.toString()) {
+        amount = ethers.MaxUint256;
+      } else {
+        amount = ethers.parseUnits(approveAmount, selectedToken.decimals);
+      }
+      
+      const contractWithSigner = selectedToken.contract.connect(signer);
+      
+      // Оцениваем gas
+      const gasLimit = await estimateGas(contractWithSigner, 'approve', [approveTo, amount]);
       
       toast.loading('Отправка транзакции...', { id: 'approve' });
       
-      const tx = await selectedToken.contract.approve(approveTo, amount);
+      const tx = await contractWithSigner.approve(approveTo, amount, {
+        gasLimit,
+        // MEV protection
+        nonce: await signer.getNonce() + Math.floor(Math.random() * 3)
+      });
       
       toast.loading('Ожидание подтверждения...', { id: 'approve' });
       
-      await tx.wait();
+      const receipt = await tx.wait();
       
-      toast.success('Approve выполнен успешно!', { id: 'approve' });
-      
-      // Обновляем allowances
-      fetchAllowances();
-      
-      // Очищаем форму
-      setApproveTo('');
-      setApproveAmount('');
+      if (receipt.status === 1) {
+        toast.success(`Approve для ${selectedToken.symbol} выполнен успешно!`, { id: 'approve' });
+        
+        // Обновляем allowances
+        await fetchAllowances();
+        
+        // Очищаем форму
+        setApproveTo('');
+        setApproveAmount('');
+      } else {
+        throw new Error('Транзакция не удалась');
+      }
       
     } catch (error: any) {
       console.error('Approve error:', error);
-      toast.error(`Ошибка approve: ${error.message}`, { id: 'approve' });
+      let errorMessage = 'Ошибка approve';
+      
+      if (error.message?.includes('insufficient funds')) {
+        errorMessage = 'Недостаточно BNB для оплаты gas';
+      } else if (error.message?.includes('user rejected')) {
+        errorMessage = 'Транзакция отклонена пользователем';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { id: 'approve' });
+    } finally {
+      setTransactionLoading(false);
     }
   };
 
@@ -323,15 +380,19 @@ const Tokens: React.FC = () => {
     }
   };
 
+  const handleRefresh = () => {
+    refreshData();
+  };
+
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-responsive">
+      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
         <div className="text-center py-12">
           <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-responsive-xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('common:messages.connectWallet')}
           </h2>
-          <p className="text-responsive-base text-gray-400 mb-8">
+          <p className="text-xl text-gray-400 mb-8">
             Подключите кошелек для управления токенами
           </p>
         </div>
@@ -341,13 +402,13 @@ const Tokens: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-responsive">
+      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
         <div className="text-center py-12">
           <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-responsive-xl font-bold mb-4 text-red-400">
+          <h2 className="text-3xl font-bold mb-4 text-red-400">
             Неправильная сеть
           </h2>
-          <p className="text-responsive-base text-gray-400 mb-8">
+          <p className="text-xl text-gray-400 mb-8">
             {t('common:messages.wrongNetwork')}
           </p>
         </div>
@@ -356,71 +417,25 @@ const Tokens: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-responsive px-responsive">
+    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+      {/* Contract Status */}
+      <ContractStatus />
+
       {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-3">
           <Coins className="w-8 h-8 text-blue-400" />
-          <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('tokens:title')}
           </h1>
         </div>
-        <p className="text-responsive-base text-gray-300 max-w-2xl mx-auto">
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
           {t('tokens:subtitle')}
         </p>
       </div>
 
-      {/* Token Statistics */}
-      <div>
-        <h2 className="text-responsive-lg font-bold mb-6 flex items-center">
-          <BarChart3 className="mr-3 text-blue-400" />
-          Статистика токенов
-        </h2>
-        
-        <div className="grid-responsive-1-2-4">
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-responsive-xs text-gray-400">Всего токенов</p>
-                <p className="text-responsive-lg font-bold text-white">{tokens.length}</p>
-              </div>
-              <Coins className="w-8 h-8 text-blue-400" />
-            </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-responsive-xs text-gray-400">С балансом</p>
-                <p className="text-responsive-lg font-bold text-white">
-                  {tokens.filter(token => parseFloat(token.balance) > 0).length}
-                </p>
-              </div>
-              <Activity className="w-8 h-8 text-green-400" />
-            </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-responsive-xs text-gray-400">USD стоимость</p>
-                <p className="text-responsive-lg font-bold text-white">$0.00</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-yellow-400" />
-            </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-responsive-xs text-gray-400">Активных разрешений</p>
-                <p className="text-responsive-lg font-bold text-white">{allowances.length}</p>
-              </div>
-              <Shield className="w-8 h-8 text-purple-400" />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Token Statistics - Reusable Component */}
+      <TokenStats />
 
       {/* Search and Filter */}
       <div className="card">
@@ -453,11 +468,11 @@ const Tokens: React.FC = () => {
             </div>
             
             <button
-              onClick={fetchTokenData}
-              disabled={loading}
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
               className="btn-secondary p-2"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -467,7 +482,7 @@ const Tokens: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Token List */}
         <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-responsive-lg font-bold flex items-center">
+          <h2 className="text-2xl font-bold flex items-center text-slate-100">
             <Coins className="mr-3 text-blue-400" />
             Ваши токены ({filteredTokens.length})
           </h2>
@@ -505,9 +520,9 @@ const Tokens: React.FC = () => {
                         {token.icon}
                       </div>
                       <div>
-                        <h3 className="font-bold text-white text-responsive-base">{token.name}</h3>
+                        <h3 className="font-bold text-slate-100 text-lg">{token.name}</h3>
                         <div className="flex items-center space-x-2">
-                          <p className="text-responsive-xs text-gray-400">{token.symbol}</p>
+                          <p className="text-sm text-gray-400">{token.symbol}</p>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -531,24 +546,24 @@ const Tokens: React.FC = () => {
                     </div>
                     
                     <div className="text-right">
-                      <p className="font-bold text-white text-responsive-base">
+                      <p className="font-bold text-slate-100 text-lg">
                         {formatBalance(token.balance)}
                       </p>
-                      <p className="text-responsive-xs text-gray-400">
+                      <p className="text-sm text-gray-400">
                         {token.symbol}
                       </p>
                     </div>
                   </div>
                   
                   <div className="mt-4 pt-4 border-t border-gray-700">
-                    <div className="grid grid-cols-2 gap-4 text-responsive-xs">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-400">Total Supply</p>
-                        <p className="text-white font-medium">{formatBalance(token.totalSupply)}</p>
+                        <p className="text-slate-200 font-medium">{formatBalance(token.totalSupply)}</p>
                       </div>
                       <div>
                         <p className="text-gray-400">Decimals</p>
-                        <p className="text-white font-medium">{token.decimals}</p>
+                        <p className="text-slate-200 font-medium">{token.decimals}</p>
                       </div>
                     </div>
                   </div>
@@ -560,7 +575,7 @@ const Tokens: React.FC = () => {
 
         {/* Action Panel */}
         <div className="space-y-6">
-          <h2 className="text-responsive-lg font-bold flex items-center">
+          <h2 className="text-2xl font-bold flex items-center text-slate-100">
             <Settings className="mr-3 text-purple-400" />
             Действия с токенами
           </h2>
@@ -572,18 +587,23 @@ const Tokens: React.FC = () => {
                   <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3`}>
                     {selectedToken.icon}
                   </div>
-                  <h3 className="font-bold text-white text-responsive-base">{selectedToken.name}</h3>
-                  <p className="text-responsive-xs text-gray-400">{selectedToken.symbol}</p>
-                  <p className="text-responsive-lg font-bold text-white mt-2">
+                  <h3 className="font-bold text-slate-100 text-lg">{selectedToken.name}</h3>
+                  <p className="text-sm text-gray-400">{selectedToken.symbol}</p>
+                  <p className="text-xl font-bold text-slate-100 mt-2">
                     {formatBalance(selectedToken.balance)} {selectedToken.symbol}
                   </p>
+                  {!selectedToken.contract && (
+                    <div className="mt-2 text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded px-2 py-1">
+                      Контракт недоступен
+                    </div>
+                  )}
                 </div>
 
                 {/* Tab Navigation */}
                 <div className="flex space-x-1 bg-white/5 rounded-lg p-1">
                   <button
                     onClick={() => setActiveTab('transfer')}
-                    className={`flex-1 py-2 px-3 rounded-md text-responsive-xs font-medium transition-all ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
                       activeTab === 'transfer'
                         ? 'bg-blue-500 text-white'
                         : 'text-gray-400 hover:text-white'
@@ -593,7 +613,7 @@ const Tokens: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab('approve')}
-                    className={`flex-1 py-2 px-3 rounded-md text-responsive-xs font-medium transition-all ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
                       activeTab === 'approve'
                         ? 'bg-blue-500 text-white'
                         : 'text-gray-400 hover:text-white'
@@ -603,7 +623,7 @@ const Tokens: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab('allowances')}
-                    className={`flex-1 py-2 px-3 rounded-md text-responsive-xs font-medium transition-all ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
                       activeTab === 'allowances'
                         ? 'bg-blue-500 text-white'
                         : 'text-gray-400 hover:text-white'
@@ -617,7 +637,7 @@ const Tokens: React.FC = () => {
                 {activeTab === 'transfer' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-responsive-xs font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-slate-200">
                         Адрес получателя
                       </label>
                       <div className="space-y-2">
@@ -626,18 +646,18 @@ const Tokens: React.FC = () => {
                           value={transferTo}
                           onChange={(e) => setTransferTo(e.target.value)}
                           placeholder="0x..."
-                          className="input-field w-full address-display"
+                          className="input-field w-full font-mono text-sm"
                         />
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setTransferTo(CONTRACTS.LP_LOCKER)}
-                            className="btn-secondary text-responsive-xs py-1 px-2"
+                            className="btn-secondary text-xs py-1 px-2"
                           >
                             LP Locker
                           </button>
                           <button
                             onClick={() => setTransferTo(CONTRACTS.VG_TOKEN_VOTES)}
-                            className="btn-secondary text-responsive-xs py-1 px-2"
+                            className="btn-secondary text-xs py-1 px-2"
                           >
                             VG Votes
                           </button>
@@ -646,7 +666,7 @@ const Tokens: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-responsive-xs font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-slate-200">
                         Количество
                         <span className="text-gray-400 ml-2">
                           (Доступно: {formatBalance(selectedToken.balance)})
@@ -663,7 +683,7 @@ const Tokens: React.FC = () => {
                         />
                         <button
                           onClick={setMaxAmount}
-                          className="btn-secondary text-responsive-xs px-3"
+                          className="btn-secondary text-sm px-3"
                         >
                           MAX
                         </button>
@@ -672,11 +692,20 @@ const Tokens: React.FC = () => {
 
                     <button
                       onClick={handleTransfer}
-                      disabled={!transferTo || !transferAmount}
-                      className="btn-primary w-full flex items-center justify-center space-x-2"
+                      disabled={!transferTo || !transferAmount || !selectedToken.contract || transactionLoading}
+                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
-                      <Send className="w-4 h-4" />
-                      <span>Отправить</span>
+                      {transactionLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Отправка...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Отправить</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -684,7 +713,7 @@ const Tokens: React.FC = () => {
                 {activeTab === 'approve' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-responsive-xs font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-slate-200">
                         Spender адрес
                       </label>
                       <div className="space-y-2">
@@ -693,18 +722,18 @@ const Tokens: React.FC = () => {
                           value={approveTo}
                           onChange={(e) => setApproveTo(e.target.value)}
                           placeholder="0x..."
-                          className="input-field w-full address-display"
+                          className="input-field w-full font-mono text-sm"
                         />
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setApproveTo(CONTRACTS.LP_LOCKER)}
-                            className="btn-secondary text-responsive-xs py-1 px-2"
+                            className="btn-secondary text-xs py-1 px-2"
                           >
                             LP Locker
                           </button>
                           <button
                             onClick={() => setApproveTo(CONTRACTS.PANCAKE_ROUTER)}
-                            className="btn-secondary text-responsive-xs py-1 px-2"
+                            className="btn-secondary text-xs py-1 px-2"
                           >
                             PancakeSwap
                           </button>
@@ -713,7 +742,7 @@ const Tokens: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-responsive-xs font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-slate-200">
                         Количество для approve
                       </label>
                       <div className="flex space-x-2">
@@ -727,7 +756,7 @@ const Tokens: React.FC = () => {
                         />
                         <button
                           onClick={() => setApproveAmount(ethers.MaxUint256.toString())}
-                          className="btn-secondary text-responsive-xs px-3"
+                          className="btn-secondary text-xs px-3"
                         >
                           MAX
                         </button>
@@ -736,18 +765,27 @@ const Tokens: React.FC = () => {
 
                     <button
                       onClick={handleApprove}
-                      disabled={!approveTo || !approveAmount}
-                      className="btn-primary w-full flex items-center justify-center space-x-2"
+                      disabled={!approveTo || !approveAmount || !selectedToken.contract || transactionLoading}
+                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Approve</span>
+                      {transactionLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Подтверждение...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Approve</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
 
                 {activeTab === 'allowances' && (
                   <div className="space-y-4">
-                    <h4 className="font-medium text-white">Активные Allowances</h4>
+                    <h4 className="font-medium text-slate-100">Активные Allowances</h4>
                     {allowances.filter(allowance => allowance.token === selectedToken.symbol).length > 0 ? (
                       <div className="space-y-3">
                         {allowances
@@ -756,11 +794,11 @@ const Tokens: React.FC = () => {
                             <div key={index} className="bg-white/5 rounded-lg p-3">
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <p className="font-medium text-white text-responsive-xs">{allowance.spenderName}</p>
-                                  <p className="text-gray-400 text-xs address-display">{allowance.spender}</p>
+                                  <p className="font-medium text-slate-200 text-sm">{allowance.spenderName}</p>
+                                  <p className="text-gray-400 text-xs font-mono">{allowance.spender}</p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-bold text-white text-responsive-xs">
+                                  <p className="font-bold text-slate-100 text-sm">
                                     {formatBalance(allowance.amount)}
                                   </p>
                                   <p className="text-gray-400 text-xs">{allowance.token}</p>
@@ -782,8 +820,8 @@ const Tokens: React.FC = () => {
           ) : (
             <div className="card text-center py-12">
               <div className="text-4xl mb-4">🪙</div>
-              <h3 className="text-responsive-base font-bold mb-2">Выберите токен</h3>
-              <p className="text-gray-400 text-responsive-xs">
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите токен</h3>
+              <p className="text-gray-400">
                 Выберите токен из списка для выполнения операций
               </p>
             </div>
@@ -793,16 +831,16 @@ const Tokens: React.FC = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-responsive-lg font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Zap className="mr-3 text-yellow-400" />
           Быстрые действия
         </h2>
         
-        <div className="grid-responsive-1-2-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-responsive-base font-bold mb-2">LP Locking</h3>
-            <p className="text-gray-400 text-responsive-xs mb-4">Заблокируйте LP токены и получите VG</p>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
+            <p className="text-gray-400 mb-4">Заблокируйте LP токены и получите VG</p>
             <a href="/staking" className="btn-primary inline-block">
               Перейти к LP Locking
             </a>
@@ -810,8 +848,8 @@ const Tokens: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-responsive-base font-bold mb-2">Governance</h3>
-            <p className="text-gray-400 text-responsive-xs mb-4">Участвуйте в голосовании и управлении</p>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
+            <p className="text-gray-400 mb-4">Участвуйте в голосовании и управлении</p>
             <a href="/governance" className="btn-primary inline-block">
               Перейти к Governance
             </a>
@@ -819,8 +857,8 @@ const Tokens: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-responsive-base font-bold mb-2">Analytics</h3>
-            <p className="text-gray-400 text-responsive-xs mb-4">Статистика и аналитика экосистемы</p>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
+            <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
             <a href="/" className="btn-primary inline-block">
               Перейти к Dashboard
             </a>
@@ -830,16 +868,16 @@ const Tokens: React.FC = () => {
 
       {/* Contract Information */}
       <div>
-        <h2 className="text-responsive-lg font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Shield className="mr-3 text-blue-400" />
           Информация о контрактах
         </h2>
         
         <div className="card">
-          <div className="grid-responsive-1-2 text-responsive-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {tokens.map((token) => (
               <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
-                <span className="font-medium">{token.name}</span>
+                <span className="font-medium text-slate-200">{token.name}</span>
                 <a
                   href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                   target="_blank"

@@ -16,7 +16,7 @@ const ConnectionDebug: React.FC = () => {
 
   return (
     <div className="bg-gray-800 p-4 rounded-lg text-sm font-mono">
-      <h3 className="text-white font-bold mb-2">🔍 Web3 Debug Info:</h3>
+      <h3 className="text-white font-bold mb-2 text-slate-100">🔍 Web3 Debug Info:</h3>
       <div className="space-y-1 text-gray-300">
         <div>Provider: {provider ? '✅ Connected' : '❌ Not connected'}</div>
         <div>Signer: {signer ? '✅ Available' : '❌ Not available'}</div>

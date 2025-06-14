@@ -296,7 +296,7 @@ const LPLocking: React.FC = () => {
 
       {/* Personal Stats */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Activity className="mr-3 text-blue-400" />
           Ваша статистика
         </h2>
@@ -327,7 +327,7 @@ const LPLocking: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LP Locking Widget */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center">
+          <h2 className="text-2xl font-bold flex items-center text-slate-100">
             <Zap className="mr-3 text-yellow-400" />
             LP Locking & Earn VG
           </h2>
@@ -336,7 +336,7 @@ const LPLocking: React.FC = () => {
 
         {/* VG Converter */}
             <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center">
+          <h2 className="text-2xl font-bold flex items-center text-slate-100">
             <Vote className="mr-3 text-purple-400" />
             VG ↔ VGVotes Converter
           </h2>
@@ -346,7 +346,7 @@ const LPLocking: React.FC = () => {
 
       {/* Protocol Statistics */}
                 <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <BarChart3 className="mr-3 text-green-400" />
           Статистика протокола
         </h2>
@@ -417,7 +417,7 @@ const LPLocking: React.FC = () => {
 
       {/* Quick Actions */}
                 <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Zap className="mr-3 text-yellow-400" />
           Быстрые действия
         </h2>
@@ -425,7 +425,7 @@ const LPLocking: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2">Управление токенами</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Управление токенами</h3>
             <p className="text-gray-400 mb-4">Переводы, approve и управление балансами</p>
             <a href="/tokens" className="btn-primary inline-block">
               Перейти к токенам
@@ -434,7 +434,7 @@ const LPLocking: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2">Governance</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-400 mb-4">Голосование и участие в управлении</p>
             <a href="/governance" className="btn-primary inline-block">
               Перейти к Governance
@@ -443,7 +443,7 @@ const LPLocking: React.FC = () => {
 
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-xl font-bold mb-2">Analytics</h3>
+            <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
             <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
             <a href="/" className="btn-primary inline-block">
               Перейти к Dashboard
@@ -454,7 +454,7 @@ const LPLocking: React.FC = () => {
 
       {/* LP Pool Manager */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <DollarSign className="mr-3 text-green-400" />
           Управление ликвидностью
         </h2>
@@ -463,7 +463,7 @@ const LPLocking: React.FC = () => {
 
       {/* Contract Information */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
+        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Shield className="mr-3 text-blue-400" />
           Информация о контрактах
         </h2>
@@ -471,7 +471,7 @@ const LPLocking: React.FC = () => {
           <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">LP Locker</span>
+              <span className="font-medium text-slate-200">LP Locker</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
                 target="_blank"
@@ -483,7 +483,7 @@ const LPLocking: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">LP Token</span>
+              <span className="font-medium text-slate-200">LP Token</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
                 target="_blank"
@@ -495,7 +495,7 @@ const LPLocking: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">VG Token</span>
+              <span className="font-medium text-slate-200">VG Token</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
                 target="_blank"
@@ -507,7 +507,7 @@ const LPLocking: React.FC = () => {
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium">VG Votes</span>
+              <span className="font-medium text-slate-200">VG Votes</span>
               <a
                 href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
                 target="_blank"

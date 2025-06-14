@@ -75,7 +75,7 @@ const LanguageSwitcher: React.FC = () => {
                   }`}
                   role="menuitem"
                 >
-                  <span className="font-medium">{name}</span>
+                  <span className="font-medium text-slate-200">{name}</span>
                   {isSelected && (
                     <Check className="w-4 h-4 text-white" />
                   )}

@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
-import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
 import { 
   Activity, 
@@ -20,254 +19,34 @@ import WalletTroubleshoot from '../components/WalletTroubleshoot';
 import StakingStats from '../components/StakingStats';
 import TransactionHistory from '../components/TransactionHistory';
 import ConnectionDebug from '../components/ConnectionDebug';
-import { toast } from 'react-hot-toast';
+import TokenStats from '../components/TokenStats';
+import { useTokenData } from '../hooks/useTokenData';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const { 
     account, 
     isConnected, 
-    isCorrectNetwork, 
-    vcContract, 
-    vgContract, 
-    vgVotesContract, 
-    lpContract,
-    provider,
-    lpPairContract
+    isCorrectNetwork
   } = useWeb3();
 
-  const [balances, setBalances] = useState<Record<string, string>>({});
-  const [bnbBalance, setBnbBalance] = useState<string>('0');
-  const [initialLoading, setInitialLoading] = useState(true); // Первая загрузка
-  const [refreshing, setRefreshing] = useState(false); // Обновление данных
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
-  
-  // Refs для cleanup и cancellation
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const isMountedRef = useRef(true);
+  // Use the shared token data hook
+  const { 
+    balances, 
+    tokens,
+    loading: tokenLoading, 
+    refreshing,
+    formatBalance 
+  } = useTokenData();
 
-  // Cleanup function
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Set initial loading to false when token data is loaded
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
-
-  const fetchBalances = useCallback(async (isRefresh = false) => {
-    // Prevent multiple simultaneous requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    // Cache check - не запрашиваем чаще чем раз в 10 секунд
-    const now = Date.now();
-    if (!isRefresh && now - lastFetchTime < 10000) {
-      console.log('Dashboard: Skipping fetch - cached data is fresh');
-      return;
-    }
-    
-    if (!account || !isCorrectNetwork) {
-      console.log('Dashboard: Skipping balance fetch', { account, isCorrectNetwork });
-      return;
-    }
-    
-    console.log('Dashboard: Starting balance fetch for account:', account);
-    
-    // Set loading states
-    if (balances.VC === undefined) {
-      setInitialLoading(true);
-    } else {
-      setRefreshing(true);
-    }
-    
-    // Create new AbortController
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
-    try {
-      const newBalances: Record<string, string> = {};
-      let newBnbBalance = '0';
-
-      // Create fallback provider with multiple RPC endpoints
-      const fallbackRpcUrls = [
-        'https://bsc-testnet-rpc.publicnode.com',
-        'https://data-seed-prebsc-1-s1.binance.org:8545',
-        'https://data-seed-prebsc-2-s1.binance.org:8545',
-        'https://bsc-testnet.public.blastapi.io',
-        'https://endpoints.omniatech.io/v1/bsc/testnet/public'
-      ];
-      
-      const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
-      const activeProvider = provider || fallbackProvider;
-
-      // Helper function for timeout
-      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-        return Promise.race([
-          promise,
-          new Promise<T>((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-          )
-        ]);
-      };
-
-      // Helper function to try multiple RPC endpoints
-      const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-        let lastError: Error | null = null;
-        
-        for (const rpcUrl of fallbackRpcUrls) {
-          try {
-            console.log(`Dashboard: Trying RPC ${rpcUrl}...`);
-            const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-            const result = await withTimeout(operation(rpcProvider), 15000); // Увеличил до 15 секунд
-            console.log(`Dashboard: RPC success with ${rpcUrl}`);
-            return result;
-          } catch (error: any) {
-            console.warn(`Dashboard: RPC failed for ${rpcUrl}:`, error.message);
-            lastError = error;
-            continue;
-          }
-        }
-        
-        throw lastError || new Error('All RPC endpoints failed');
-      };
-
-      // BNB balance with multiple RPC fallback
-      try {
-        console.log('Dashboard: Fetching BNB balance...');
-        const balance = await tryMultipleRpc(async (rpcProvider) => {
-          return await rpcProvider.getBalance(account);
-        });
-        newBnbBalance = ethers.formatEther(balance);
-        console.log('Dashboard: BNB balance fetched:', newBnbBalance);
-      } catch (error: any) {
-        console.error('Dashboard: Error fetching BNB balance:', error.message);
-        newBnbBalance = '0';
-      }
-
-      // Token balances with fallback contracts
-      const tokenContracts = [
-        { name: 'VC', contract: vcContract, address: CONTRACTS.VC_TOKEN },
-        { name: 'VG', contract: vgContract, address: CONTRACTS.VG_TOKEN },
-        { name: 'VGVotes', contract: vgVotesContract, address: CONTRACTS.VG_TOKEN_VOTES },
-        { name: 'LP', contract: lpContract, address: CONTRACTS.LP_TOKEN }
-      ];
-
-      const ERC20_ABI = [
-        "function balanceOf(address) view returns (uint256)",
-        "function name() view returns (string)",
-        "function symbol() view returns (string)"
-      ];
-
-      for (const { name, contract, address } of tokenContracts) {
-        try {
-          console.log(`Dashboard: Fetching ${name} balance...`);
-          
-          let balance = '0';
-          
-          // Сразу используем fallback RPC - Web3Context контракты зависают
-          console.log(`Dashboard: Using direct RPC for ${name} (Web3Context contracts timeout)`);
-          const bal = await tryMultipleRpc(async (rpcProvider) => {
-            const fallbackContract = new ethers.Contract(address, ERC20_ABI, rpcProvider);
-            return await (fallbackContract.balanceOf as any)(account);
-          });
-          balance = ethers.formatEther(bal);
-          console.log(`Dashboard: ${name} balance (direct RPC):`, balance);
-          
-          newBalances[name] = balance;
-          console.log(`Dashboard: Added ${name} balance to newBalances:`, newBalances[name]);
-        } catch (error: any) {
-          console.error(`Dashboard: Error fetching ${name} balance:`, error);
-          newBalances[name] = '0';
-        }
-      }
-
-      // LP Pool info with fallback
-      try {
-        console.log('Dashboard: Fetching LP pool info...');
-        
-        // Используем tryMultipleRpc для LP reserves
-        const reserves = await tryMultipleRpc(async (rpcProvider) => {
-          const lpPairContract = new ethers.Contract(CONTRACTS.LP_TOKEN, [
-            "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)"
-          ], rpcProvider);
-          return await (lpPairContract.getReserves as any)();
-        });
-        console.log('Dashboard: LP reserves fetched:', reserves);
-      } catch (error: any) {
-        console.warn('Dashboard: LP reserves failed (non-critical):', error.message);
-      }
-
-      // Update state only if component is still mounted
-      if (isMountedRef.current && !signal.aborted) {
-        setBalances(newBalances);
-        setBnbBalance(newBnbBalance);
-        setLastFetchTime(now);
-        console.log('Dashboard: All balances updated:', { bnb: newBnbBalance, tokens: newBalances });
-      }
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Dashboard: Fetch aborted');
-        return;
-      }
-      console.error('Dashboard: Critical error in fetchBalances:', error);
-      if (isMountedRef.current) {
-        toast.error('Ошибка загрузки данных. Проверьте подключение.');
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setInitialLoading(false);
-        setRefreshing(false);
-        setLastFetchTime(Date.now());
-      }
-    }
-  }, [account, isCorrectNetwork, provider, vcContract, vgContract, vgVotesContract, lpContract, lpPairContract]);
-
-  useEffect(() => {
-    // Only fetch when connection state is ready
-    if (isConnected && isCorrectNetwork && account) {
-      console.log('Dashboard: Fetching balances for connected account:', account);
-      
-      // Add small delay to ensure Web3Context is fully initialized
-      const timer = setTimeout(() => {
-        fetchBalances(false); // Initial fetch
-      }, 500); // 500ms delay for Web3Context initialization
-      
-      // Refresh every 60 seconds (увеличил интервал)
-      const interval = setInterval(() => {
-        fetchBalances(true); // Refresh fetch
-      }, 60000);
-      
-      return () => {
-        clearTimeout(timer);
-        clearInterval(interval);
-      };
-    } else {
-      console.log('Dashboard: Skipping balance fetch - not ready', { 
-        isConnected, 
-        isCorrectNetwork, 
-        hasAccount: !!account 
-      });
-      // Reset loading states when not connected
+    if (!tokenLoading && (balances.VC !== '0' || balances.VG !== '0' || balances.BNB !== '0')) {
       setInitialLoading(false);
-      setRefreshing(false);
     }
-    return undefined;
-  }, [account, isConnected, isCorrectNetwork, fetchBalances]);
-
-  const formatBalance = (balance: string): string => {
-    const num = parseFloat(balance);
-    if (num === 0) return '0';
-    if (num < 0.0001) return '< 0.0001';
-    if (num < 1) return num.toFixed(4);
-    if (num < 1000) return num.toFixed(2);
-    if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
-    return `${(num / 1000000).toFixed(1)}M`;
-  };
+  }, [tokenLoading, balances]);
 
   const tokenCards = [
     {
@@ -287,7 +66,7 @@ const Dashboard: React.FC = () => {
       address: CONTRACTS.VG_TOKEN,
     },
     {
-      symbol: 'VGVotes',
+      symbol: 'VGV',
       name: TOKEN_INFO.VG_VOTES.name,
       icon: <Vote className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-500',
@@ -307,7 +86,7 @@ const Dashboard: React.FC = () => {
   const stats = [
     {
       title: t('dashboard:stats.bnbBalance'),
-      value: formatBalance(bnbBalance),
+      value: formatBalance(balances.BNB || '0'),
       unit: 'tBNB',
       icon: Activity,
       color: 'text-blue-400',
@@ -395,6 +174,9 @@ const Dashboard: React.FC = () => {
       {!isConnected && (
         <WalletTroubleshoot />
       )}
+
+      {/* Token Statistics - Reusable Component */}
+      <TokenStats />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -498,18 +280,18 @@ const Dashboard: React.FC = () => {
 
       {/* Contract Addresses */}
       <div className="card">
-        <h3 className="text-lg font-bold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
+        <h3 className="text-xl font-bold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          {Object.entries(CONTRACTS).map(([name, address]) => (
-            <div key={name} className="flex justify-between items-center p-2 rounded bg-white/5">
-              <span className="font-medium text-slate-200">{name.replace(/_/g, ' ')}</span>
+          {tokenCards.map((token) => (
+            <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
+              <span className="font-medium text-slate-200">{token.name}</span>
               <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${address}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
               >
-                <span>{`${address.slice(0, 6)}...${address.slice(-4)}`}</span>
+                <span>{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
