@@ -309,4 +309,7 @@ export const useTokenData = () => {
     totalTokens: tokens.length,
     hasAnyBalance: tokens.some(token => parseFloat(token.balance) > 0)
   };
-}; 
+};
+
+// Re-export types for better TypeScript compatibility
+export type { TokenData, TokenBalances }; 

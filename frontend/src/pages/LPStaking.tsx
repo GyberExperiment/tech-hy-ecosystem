@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
@@ -7,6 +7,7 @@ import EarnVGWidget from '../components/EarnVGWidget';
 import VGConverter from '../components/VGConverter';
 import LPPoolManager from '../components/LPPoolManager';
 import TransactionHistory from '../components/TransactionHistory';
+import { ContractStatus } from '../components/ContractStatus';
 import { 
   Rocket, 
   Gift, 
@@ -23,8 +24,103 @@ import {
   RefreshCw,
   Zap,
   Target,
-  DollarSign
+  DollarSign,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Info
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+// Fallback RPC providers для надёжности
+const FALLBACK_RPC_URLS = [
+  'https://bsc-testnet-rpc.publicnode.com',
+  'https://data-seed-prebsc-1-s1.binance.org:8545',
+  'https://data-seed-prebsc-2-s1.binance.org:8545',
+  'https://bsc-testnet.public.blastapi.io',
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+];
+
+const ERC20_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function totalSupply() view returns (uint256)",
+  "function name() view returns (string)",
+  "function symbol() view returns (string)"
+];
+
+const LPLOCKER_ABI = [
+  "function getPoolInfo() view returns (uint256, uint256, uint256, uint256)",
+  "function config() view returns (address, address, address, address, address, address, uint256, uint256, uint256, uint256, uint16, uint16, bool, uint256, uint8, uint256, uint256, uint256)",
+  "function totalUsers() view returns (uint256)",
+  "function userInfo(address) view returns (uint256, uint256, uint256)",
+  "event VGTokensEarned(address indexed user, uint256 vcAmount, uint256 bnbAmount, uint256 lpAmount, uint256 vgAmount, uint256 timestamp)",
+  "event LPTokensLocked(address indexed user, uint256 lpAmount, uint256 vgAmount, uint256 timestamp)"
+];
+
+interface LPLockerStats {
+  totalLockedLp: string;
+  totalVgIssued: string;
+  totalVgDeposited: string;
+  availableVG: string;
+  lpToVgRatio: string;
+  totalUsers: string;
+  activeUsers: string;
+}
+
+interface UserBalances {
+  VC: string;
+  VG: string;
+  VGVotes: string;
+  LP: string;
+  BNB: string;
+}
+
+// Utility functions
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
+const withRetry = async <T,>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
+  let lastError: Error | null = null;
+  
+  for (const rpcUrl of FALLBACK_RPC_URLS) {
+    try {
+      console.log(`LPStaking: Trying RPC ${rpcUrl}...`);
+      const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+      const result = await withTimeout(operation(rpcProvider), 15000);
+      console.log(`LPStaking: RPC success with ${rpcUrl}`);
+      return result;
+    } catch (error: any) {
+      console.warn(`LPStaking: RPC failed for ${rpcUrl}:`, error.message);
+      lastError = error;
+      continue;
+    }
+  }
+  
+  throw lastError || new Error('All RPC endpoints failed');
+};
 
 const LPLocking: React.FC = () => {
   const { t } = useTranslation(['locking', 'common']);
@@ -32,150 +128,254 @@ const LPLocking: React.FC = () => {
     account, 
     isConnected, 
     isCorrectNetwork, 
-    vcContract, 
-    vgContract, 
-    vgVotesContract, 
-    lpContract,
-    lpLockerContract,
-    provider 
+    provider,
+    signer
   } = useWeb3();
 
-  const [balances, setBalances] = useState<Record<string, string>>({});
-  const [lpLockerStats, setLpLockerStats] = useState<any>({});
+  const [balances, setBalances] = useState<UserBalances>({
+    VC: '0',
+    VG: '0',
+    VGVotes: '0',
+    LP: '0',
+    BNB: '0'
+  });
+  
+  const [lpLockerStats, setLpLockerStats] = useState<LPLockerStats>({
+    totalLockedLp: '0',
+    totalVgIssued: '0',
+    totalVgDeposited: '0',
+    availableVG: '0',
+    lpToVgRatio: '10',
+    totalUsers: '0',
+    activeUsers: '0'
+  });
+  
   const [loading, setLoading] = useState(false);
-  const [activeUsers, setActiveUsers] = useState('0');
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
-  const fetchBalances = async () => {
-    if (!account || !isCorrectNetwork) return;
+  // Cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const fetchBalances = useCallback(async (showRefreshToast: boolean = false) => {
+    // Prevent multiple simultaneous requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     
-    setLoading(true);
-    try {
-      const balancePromises = [];
+    // Cache check - не запрашиваем чаще чем раз в 10 секунд
+    const now = Date.now();
+    if (!showRefreshToast && now - lastFetchTime < 10000) {
+      console.log('LPStaking: Skipping fetch - cached data is fresh');
+      return;
+    }
+    
+    if (!account || !isConnected || !isCorrectNetwork) {
+      console.log('LPStaking: Skipping fetch', { account, isConnected, isCorrectNetwork });
+      return;
+    }
+    
+    console.log('LPStaking: Starting balance fetch for account:', account);
+    
+    if (showRefreshToast) {
+      setRefreshing(true);
+      toast.loading('Обновление данных...', { id: 'refresh-balances' });
+    } else {
+      setLoading(true);
+    }
+    
+    // Create new AbortController
+    abortControllerRef.current = new AbortController();
 
-      // Token balances
-      const contracts = [
-        { contract: vcContract, symbol: 'VC' },
-        { contract: vgContract, symbol: 'VG' },
-        { contract: vgVotesContract, symbol: 'VGV' },
-        { contract: lpContract, symbol: 'LP' },
+    try {
+      const newBalances: UserBalances = {
+        VC: '0',
+        VG: '0',
+        VGVotes: '0',
+        LP: '0',
+        BNB: '0'
+      };
+
+      // BNB balance
+      try {
+        console.log('LPStaking: Fetching BNB balance...');
+        const balance = await tryMultipleRpc(async (rpcProvider) => {
+          return await rpcProvider.getBalance(account);
+        });
+        newBalances.BNB = ethers.formatEther(balance);
+        console.log('LPStaking: BNB balance fetched:', newBalances.BNB);
+      } catch (error: any) {
+        console.error('LPStaking: Error fetching BNB balance:', error.message);
+        newBalances.BNB = '0';
+      }
+
+      // Token contracts info
+      const tokenContracts = [
+        { symbol: 'VC', address: CONTRACTS.VC_TOKEN },
+        { symbol: 'VG', address: CONTRACTS.VG_TOKEN },
+        { symbol: 'VGVotes', address: CONTRACTS.VG_TOKEN_VOTES },
+        { symbol: 'LP', address: CONTRACTS.LP_TOKEN }
       ];
 
-      for (const { contract, symbol } of contracts) {
-        if (contract) {
-          balancePromises.push(
-            contract.balanceOf(account)
-              .then((balance: any) => ({
-                symbol,
-                balance: balance ? ethers.formatEther(balance) : '0'
-              }))
-              .catch((error: any) => {
-                console.warn(`Error fetching ${symbol} balance:`, error);
-                return { symbol, balance: '0' };
-              })
-          );
+      // Fetch all token balances
+      for (const tokenInfo of tokenContracts) {
+        try {
+          console.log(`LPStaking: Fetching ${tokenInfo.symbol} balance...`);
+          
+          const balance = await tryMultipleRpc(async (rpcProvider) => {
+            const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
+            return await contract.balanceOf(account);
+          });
+
+          const decimals = await tryMultipleRpc(async (rpcProvider) => {
+            const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
+            return await contract.decimals();
+          });
+
+          const formattedBalance = ethers.formatUnits(balance, decimals);
+          newBalances[tokenInfo.symbol as keyof UserBalances] = formattedBalance;
+          
+          console.log(`LPStaking: ${tokenInfo.symbol} balance:`, formattedBalance);
+        } catch (error) {
+          console.error(`LPStaking: Error fetching ${tokenInfo.symbol} balance:`, error);
+          newBalances[tokenInfo.symbol as keyof UserBalances] = '0';
         }
       }
 
-      const results = await Promise.allSettled(balancePromises);
-      const newBalances: Record<string, string> = {};
-      
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value) {
-          newBalances[result.value.symbol] = result.value.balance;
-        } else {
-          // Fallback для неудачных запросов
-          const symbol = contracts[index]?.symbol;
-          if (symbol) {
-            newBalances[symbol] = '0';
-          }
+      // Update state only if component is still mounted
+      if (isMountedRef.current) {
+        setBalances(newBalances);
+        setLastFetchTime(now);
+        
+        console.log('LPStaking: Updated balances:', newBalances);
+        
+        if (showRefreshToast) {
+          toast.success('Данные обновлены!', { id: 'refresh-balances' });
         }
-      });
-
-      setBalances(newBalances);
+      }
     } catch (error) {
-      console.error('Error fetching balances:', error);
-      // Устанавливаем fallback значения при критической ошибке
-      setBalances({
-        VC: '0',
-        VG: '0',
-        VGV: '0',
-        LP: '0',
-      });
+      console.error('LPStaking: Error fetching balances:', error);
+      const errorMessage = 'Ошибка загрузки балансов';
+      
+      if (showRefreshToast) {
+        toast.error(errorMessage, { id: 'refresh-balances' });
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  };
+  }, [account, isConnected, isCorrectNetwork, lastFetchTime]);
 
-  const fetchLPLockerStats = async () => {
-    if (!lpLockerContract) return;
+  const fetchLPLockerStats = useCallback(async () => {
+    if (!account || !isConnected || !isCorrectNetwork) return;
 
     try {
-      const poolInfo = await lpLockerContract.getPoolInfo();
+      console.log('LPStaking: Fetching LP Locker stats...');
       
-      setLpLockerStats({
-        totalLockedLp: ethers.formatEther(poolInfo.totalLocked),
-        totalVgIssued: ethers.formatEther(poolInfo.totalIssued),
-        totalVgDeposited: ethers.formatEther(poolInfo.totalDeposited),
-        availableVG: ethers.formatEther(poolInfo.availableVG),
-        lpToVgRatio: '10', // Можно получить из config контракта
+      const stats = await tryMultipleRpc(async (rpcProvider) => {
+        const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
+        
+        const [poolInfo, config, totalUsers] = await Promise.all([
+          lpLockerContract.getPoolInfo(),
+          lpLockerContract.config(),
+          lpLockerContract.totalUsers().catch(() => 0n) // Fallback if function doesn't exist
+        ]);
+        
+        return {
+          poolInfo,
+          config,
+          totalUsers
+        };
       });
+
+      // Fetch active users from events (last 30 days)
+      let activeUsersCount = '0';
+      try {
+        const currentBlock = await tryMultipleRpc(async (rpcProvider) => {
+          return await rpcProvider.getBlockNumber();
+        });
+        
+        const blocksPerDay = 28800; // ~28800 blocks per day on BSC (3 sec per block)
+        const fromBlock = Math.max(0, currentBlock - (30 * blocksPerDay)); // 30 days ago
+        
+        const uniqueUsers = await tryMultipleRpc(async (rpcProvider) => {
+          const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
+          
+          const [vgEvents, lpEvents] = await Promise.all([
+            lpLockerContract.queryFilter(
+              lpLockerContract.filters.VGTokensEarned(),
+              fromBlock
+            ).catch(() => []),
+            lpLockerContract.queryFilter(
+              lpLockerContract.filters.LPTokensLocked(),
+              fromBlock
+            ).catch(() => [])
+          ]);
+          
+          const users = new Set<string>();
+          
+          [...vgEvents, ...lpEvents].forEach(event => {
+            if (event.args?.user) {
+              users.add(event.args.user.toLowerCase());
+            }
+          });
+          
+          return users.size;
+        });
+        
+        activeUsersCount = uniqueUsers.toString();
+      } catch (error) {
+        console.warn('LPStaking: Error fetching active users:', error);
+      }
+
+      if (isMountedRef.current) {
+        setLpLockerStats({
+          totalLockedLp: ethers.formatEther(stats.poolInfo[0] || 0n),
+          totalVgIssued: ethers.formatEther(stats.poolInfo[1] || 0n),
+          totalVgDeposited: ethers.formatEther(stats.poolInfo[2] || 0n),
+          availableVG: ethers.formatEther(stats.poolInfo[3] || 0n),
+          lpToVgRatio: stats.config[14]?.toString() || '10',
+          totalUsers: stats.totalUsers.toString(),
+          activeUsers: activeUsersCount
+        });
+        
+        console.log('LPStaking: LP Locker stats updated');
+      }
     } catch (error) {
-      console.error('Error fetching LP locker stats:', error);
+      console.error('LPStaking: Error fetching LP locker stats:', error);
+      // Keep existing stats on error
     }
-  };
+  }, [account, isConnected, isCorrectNetwork]);
 
-  const fetchActiveUsers = async () => {
-    if (!lpLockerContract || !provider) {
-      setActiveUsers('0');
-      return;
-    }
-
-    try {
-      // ✅ Получаем события LPTokensLocked и VGTokensEarned за последние 30 дней
-      const currentBlock = await provider.getBlockNumber();
-      const blocksPerDay = 28800; // Примерно 28800 блоков в день на BSC (3 сек на блок)
-      const fromBlock = currentBlock - (30 * blocksPerDay); // 30 дней назад
-      
-      // Получаем события блокировки LP токенов
-      const lpLockedFilter = lpLockerContract.filters.LPTokensLocked();
-      const vgEarnedFilter = lpLockerContract.filters.VGTokensEarned();
-      
-      const [lpEvents, vgEvents] = await Promise.all([
-        lpLockerContract.queryFilter(lpLockedFilter, fromBlock),
-        lpLockerContract.queryFilter(vgEarnedFilter, fromBlock)
-      ]);
-      
-      // Собираем уникальных пользователей
-      const uniqueUsers = new Set<string>();
-      
-      lpEvents.forEach(event => {
-        if (event.args?.user) {
-          uniqueUsers.add(event.args.user.toLowerCase());
-        }
-      });
-      
-      vgEvents.forEach(event => {
-        if (event.args?.user) {
-          uniqueUsers.add(event.args.user.toLowerCase());
-        }
-      });
-      
-      setActiveUsers(uniqueUsers.size.toString());
-    } catch (error) {
-      console.error('Error fetching active users:', error);
-      setActiveUsers('0');
-    }
-  };
-
+  // Auto-fetch on mount and account change
   useEffect(() => {
-    if (isConnected && isCorrectNetwork) {
+    if (isConnected && isCorrectNetwork && account) {
       fetchBalances();
       fetchLPLockerStats();
-      fetchActiveUsers();
     }
-  }, [account, isConnected, isCorrectNetwork, lpLockerContract]);
+  }, [account, isConnected, isCorrectNetwork, fetchBalances, fetchLPLockerStats]);
 
-  const formatBalance = (balance: string) => {
+  const refreshData = useCallback(() => {
+    fetchBalances(true);
+    fetchLPLockerStats();
+  }, [fetchBalances, fetchLPLockerStats]);
+
+  const formatBalance = useCallback((balance: string): string => {
     const num = parseFloat(balance);
     if (num === 0) return '0';
     if (num < 0.0001) return '< 0.0001';
@@ -183,68 +383,76 @@ const LPLocking: React.FC = () => {
     if (num < 1000) return num.toFixed(2);
     if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
     return `${(num / 1000000).toFixed(1)}M`;
-  };
+  }, []);
 
   const stats = [
     {
       title: 'Ваши VG токены',
-      value: formatBalance(balances.VG || '0'),
+      value: formatBalance(balances.VG),
       unit: 'VG',
       icon: Gift,
       color: 'text-yellow-400',
+      description: 'Награды за блокировку LP'
     },
     {
       title: 'Voting Power',
-      value: formatBalance(balances.VGV || '0'),
+      value: formatBalance(balances.VGVotes),
       unit: 'VGV',
       icon: Vote,
       color: 'text-purple-400',
+      description: 'Сила голоса в DAO'
     },
     {
       title: 'LP токены',
-      value: formatBalance(balances.LP || '0'),
+      value: formatBalance(balances.LP),
       unit: 'LP',
       icon: Rocket,
       color: 'text-green-400',
+      description: 'Доступно для блокировки'
     },
     {
-      title: 'Всего заблокировано',
-      value: formatBalance(lpLockerStats.totalLockedLp || '0'),
-      unit: 'LP',
-      icon: Lock,
+      title: 'VC токены',
+      value: formatBalance(balances.VC),
+      unit: 'VC',
+      icon: Coins,
       color: 'text-blue-400',
-    },
+      description: 'Для создания LP'
+    }
   ];
 
-  const protocolStats = [
+  const ecosystemStats = [
     {
-      title: 'Общий объем LP',
-      value: formatBalance(lpLockerStats.totalLockedLp || '0'),
-      unit: 'LP заблокировано',
+      title: 'Всего заблокировано LP',
+      value: formatBalance(lpLockerStats.totalLockedLp),
+      unit: 'LP',
       icon: Lock,
-      color: 'text-blue-400',
+      color: 'text-red-400',
+      description: 'Навсегда заблокированные LP токены'
     },
     {
-      title: 'VG выпущено',
-      value: formatBalance(lpLockerStats.totalVgIssued || '0'),
-      unit: 'VG токенов',
+      title: 'VG токенов выдано',
+      value: formatBalance(lpLockerStats.totalVgIssued),
+      unit: 'VG',
       icon: Gift,
       color: 'text-yellow-400',
+      description: 'Общие награды пользователям'
     },
     {
-      title: 'Курс обмена',
-      value: lpLockerStats.lpToVgRatio || '0',
-      unit: 'VG за LP',
-      icon: TrendingUp,
-      color: 'text-green-400',
-    },
-    {
-      title: 'Активные пользователи',
-      value: activeUsers,
-      unit: 'участников',
+      title: 'Активных пользователей',
+      value: lpLockerStats.activeUsers,
+      unit: 'за 30 дней',
       icon: Users,
-      color: 'text-purple-400',
+      color: 'text-green-400',
+      description: 'Уникальные пользователи'
     },
+    {
+      title: 'Доступно VG наград',
+      value: formatBalance(lpLockerStats.availableVG),
+      unit: 'VG',
+      icon: Target,
+      color: 'text-blue-400',
+      description: 'В vault для новых наград'
+    }
   ];
 
   if (!isConnected) {
@@ -253,11 +461,14 @@ const LPLocking: React.FC = () => {
         <div className="text-center py-12">
           <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {t('common:messages.connectWallet')}
+            {t('locking:title')}
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
-            Подключите кошелек для доступа к LP Locking
+          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+            {t('locking:subtitle')}
           </p>
+          <div className="text-lg text-gray-300">
+            {t('common:messages.connectWallet')}
+          </div>
         </div>
       </div>
     );
@@ -281,243 +492,228 @@ const LPLocking: React.FC = () => {
 
   return (
     <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+      {/* Contract Status */}
+      <ContractStatus />
+
       {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-3">
-          <Rocket className="w-8 h-8 text-blue-400" />
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <Rocket className="w-8 h-8 text-green-400" />
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             {t('locking:title')}
-        </h1>
+          </h1>
         </div>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
           {t('locking:subtitle')}
         </p>
+        {refreshing && (
+          <div className="flex items-center justify-center space-x-2 text-blue-400">
+            <Loader2 className="animate-spin h-4 w-4" />
+            <span className="text-sm">{t('common:labels.refreshing')}</span>
+          </div>
+        )}
+        <button
+          onClick={refreshData}
+          disabled={loading || refreshing}
+          className="btn-secondary p-2"
+          title="Обновить данные"
+        >
+          <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
-      {/* Personal Stats */}
+      {/* Your Stats */}
       <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Activity className="mr-3 text-blue-400" />
-          Ваша статистика
-        </h2>
-        
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <div key={index} className="card">
-          <div className="flex items-center justify-between">
-            <div>
-                  <p className="text-sm text-gray-400">{stat.title}</p>
-                  <div className="flex items-baseline space-x-2">
-              <p className="text-2xl font-bold text-white">
-                      {loading ? 'Загрузка...' : stat.value}
-                    </p>
-                    {stat.unit && (
-                      <p className="text-sm text-gray-400">{stat.unit}</p>
-                    )}
-          </div>
-        </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
-        </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LP Locking Widget */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center text-slate-100">
-            <Zap className="mr-3 text-yellow-400" />
-            LP Locking & Earn VG
-          </h2>
-          <EarnVGWidget />
-        </div>
-
-        {/* VG Converter */}
-            <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center text-slate-100">
-            <Vote className="mr-3 text-purple-400" />
-            VG ↔ VGVotes Converter
-          </h2>
-          <VGConverter />
-                </div>
-              </div>
-
-      {/* Protocol Statistics */}
-                <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <BarChart3 className="mr-3 text-green-400" />
-          Статистика протокола
+          <BarChart3 className="mr-3 text-blue-400" />
+          Ваши активы
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {protocolStats.map((stat, index) => (
-            <div key={index} className="card">
-              <div className="flex items-center justify-between">
-                <div>
+          {stats.map((stat, index) => (
+            <div key={index} className="card group hover:scale-105 transition-transform duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1">
                   <p className="text-sm text-gray-400">{stat.title}</p>
                   <div className="flex items-baseline space-x-2">
-                    <p className="text-2xl font-bold text-white">
-                      {loading ? 'Загрузка...' : stat.value}
+                    <p className="text-2xl font-bold text-slate-100">
+                      {loading ? (
+                        <div className="animate-pulse bg-gray-600 h-6 w-16 rounded"></div>
+                      ) : (
+                        stat.value
+                      )}
                     </p>
                     {stat.unit && (
                       <p className="text-sm text-gray-400">{stat.unit}</p>
                     )}
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                 </div>
                 <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                </div>
+              </div>
             </div>
           ))}
-          </div>
         </div>
+      </div>
 
-      {/* How it Works */}
+      {/* Ecosystem Stats */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center">
-          <Target className="mr-3 text-blue-400" />
-          Как работает LP Locking
-          </h2>
-
-          <div className="card">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-lg">1</span>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Создайте LP</h3>
-              <p className="text-gray-300 text-sm">
-                Добавьте VC и BNB токены в пул ликвидности PancakeSwap или используйте готовые LP токены
-              </p>
-              </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-lg">2</span>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Заблокируйте навсегда</h3>
-              <p className="text-gray-300 text-sm">
-                LP токены блокируются навсегда в обмен на VG токены по курсу {lpLockerStats.lpToVgRatio || '15'}:1
-              </p>
-                </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-lg">3</span>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Участвуйте в DAO</h3>
-              <p className="text-gray-300 text-sm">
-                Конвертируйте VG в VGVotes и голосуйте в governance за развитие экосистемы
-              </p>
-            </div>
-          </div>
-                </div>
-              </div>
-
-      {/* Quick Actions */}
-                <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Zap className="mr-3 text-yellow-400" />
-          Быстрые действия
+          <Shield className="mr-3 text-purple-400" />
+          Статистика экосистемы
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Управление токенами</h3>
-            <p className="text-gray-400 mb-4">Переводы, approve и управление балансами</p>
-            <a href="/tokens" className="btn-primary inline-block">
-              Перейти к токенам
-            </a>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {ecosystemStats.map((stat, index) => (
+            <div key={index} className="card group hover:scale-105 transition-transform duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400">{stat.title}</p>
+                  <div className="flex items-baseline space-x-2">
+                    <p className="text-2xl font-bold text-slate-100">
+                      {loading ? (
+                        <div className="animate-pulse bg-gray-600 h-6 w-16 rounded"></div>
+                      ) : (
+                        stat.value
+                      )}
+                    </p>
+                    {stat.unit && (
+                      <p className="text-sm text-gray-400">{stat.unit}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                 </div>
-          
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
-            <p className="text-gray-400 mb-4">Голосование и участие в управлении</p>
-            <a href="/governance" className="btn-primary inline-block">
-              Перейти к Governance
-            </a>
-              </div>
-
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
-            <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
-            <a href="/" className="btn-primary inline-block">
-              Перейти к Dashboard
-            </a>
+                <stat.icon className={`w-8 h-8 ${stat.color}`} />
               </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Earn VG Widget */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+            <Zap className="mr-3 text-yellow-400" />
+            Получить VG токены
+          </h2>
+          <EarnVGWidget className="h-full" />
+        </div>
+
+        {/* VG Converter */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+            <Vote className="mr-3 text-purple-400" />
+            Governance токены
+          </h2>
+          <VGConverter className="h-full" />
+        </div>
+      </div>
 
       {/* LP Pool Manager */}
       <div>
         <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <DollarSign className="mr-3 text-green-400" />
+          <Activity className="mr-3 text-green-400" />
           Управление ликвидностью
         </h2>
         <LPPoolManager />
       </div>
 
-      {/* Contract Information */}
-      <div>
+      {/* How it Works */}
+      <div className="card">
         <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-blue-400" />
-          Информация о контрактах
+          <Info className="mr-3 text-blue-400" />
+          Как это работает
         </h2>
         
-          <div className="card">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">LP Locker</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.LP_LOCKER.slice(0, 6)}...${CONTRACTS.LP_LOCKER.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Coins className="w-8 h-8 text-white" />
             </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">LP Token</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <h3 className="text-lg font-bold mb-2 text-slate-100">1. Создайте LP</h3>
+            <p className="text-gray-400 text-sm">
+              Добавьте VC + BNB в пул ликвидности PancakeSwap или используйте готовые LP токены
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-white" />
             </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">VG Token</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN.slice(0, 6)}...${CONTRACTS.VG_TOKEN.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <h3 className="text-lg font-bold mb-2 text-slate-100">2. Заблокируйте навсегда</h3>
+            <p className="text-gray-400 text-sm">
+              LP токены блокируются навсегда в контракте - это обеспечивает постоянную ликвидность
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Gift className="w-8 h-8 text-white" />
             </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">VG Votes</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN_VOTES.slice(0, 6)}...${CONTRACTS.VG_TOKEN_VOTES.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+            <h3 className="text-lg font-bold mb-2 text-slate-100">3. Получите VG</h3>
+            <p className="text-gray-400 text-sm">
+              Мгновенно получите VG токены как награду. Используйте их для governance или конвертируйте в VGVotes
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Contract Information */}
+      <div className="card">
+        <h3 className="text-xl font-bold mb-4 text-slate-100">Информация о контрактах</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-slate-200">LP Locker</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.LP_LOCKER.slice(0, 6)}...${CONTRACTS.LP_LOCKER.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-slate-200">LP Token (VC/BNB)</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-slate-200">VG Token</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.VG_TOKEN.slice(0, 6)}...${CONTRACTS.VG_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
+            <span className="font-medium text-slate-200">VG Votes</span>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.VG_TOKEN_VOTES.slice(0, 6)}...${CONTRACTS.VG_TOKEN_VOTES.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         </div>
       </div>

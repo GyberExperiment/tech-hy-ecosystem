@@ -50,6 +50,51 @@ const LPLOCKER_ABI = [
   "function config() view returns (address, address, address, address, address, address, uint256, uint256, uint256, uint256, uint16, uint16, bool, uint256, uint8, uint256, uint256, uint256)"
 ];
 
+// Fallback RPC providers для надёжности
+const FALLBACK_RPC_URLS = [
+  'https://bsc-testnet-rpc.publicnode.com',
+  'https://data-seed-prebsc-1-s1.binance.org:8545',
+  'https://data-seed-prebsc-2-s1.binance.org:8545',
+  'https://bsc-testnet.public.blastapi.io',
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+];
+
+const createFallbackProvider = () => {
+  try {
+    return new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[0]);
+  } catch (error) {
+    console.error('Failed to create fallback provider:', error);
+    return null;
+  }
+};
+
+// Utility function для retry логики
+const withRetry = async <T,>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+// Utility function для timeout
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
+    )
+  ]);
+};
+
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   const { account, provider, signer, isConnected, isCorrectNetwork, getContract, vcContract, vgContract, lpLockerContract } = useWeb3();
   const [loading, setLoading] = useState(false);
@@ -69,23 +114,59 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     price: '0'
   });
 
+  // Добавляем ref для предотвращения множественных вызовов
+  const loadingRef = React.useRef(false);
+
   useEffect(() => {
-    if (isConnected && account) {
+    if (isConnected && account && isCorrectNetwork) {
+      console.log('EarnVGWidget: Main useEffect triggered');
       loadUserData();
       // Загружаем информацию о пуле
-      loadPoolInfo().then(setPoolInfo).catch(console.error);
+      loadPoolInfo().then(setPoolInfo).catch((error) => {
+        console.error('EarnVGWidget: Pool info error:', error);
+        // Устанавливаем fallback значения при ошибке
+        setPoolInfo({
+          vcReserve: '0',
+          bnbReserve: '0',
+          price: '0'
+        });
+      });
     }
-  }, [isConnected, account]);
+  }, [isConnected, account, isCorrectNetwork]);
+
+  // Дополнительный useEffect для отслеживания готовности контрактов
+  useEffect(() => {
+    if (isConnected && account && isCorrectNetwork && vcContract && vgContract && lpLockerContract && !loadingRef.current) {
+      console.log('EarnVGWidget: Contracts are now ready, loading user data...');
+      loadUserData();
+    }
+  }, [vcContract, vgContract, lpLockerContract, isConnected, account, isCorrectNetwork]);
 
   const loadUserData = async () => {
-    if (!account || !isCorrectNetwork) return;
+    if (!account || !isCorrectNetwork) {
+      console.log('EarnVGWidget: Skipping loadUserData - not connected or wrong network');
+      return;
+    }
 
+    // Защита от множественных вызовов
+    if (loadingRef.current) {
+      console.log('EarnVGWidget: loadUserData already in progress, skipping...');
+      return;
+    }
+
+    console.log('EarnVGWidget: Starting loadUserData...');
+    loadingRef.current = true;
     setLoading(true);
+    
     try {
+      // Проверяем готовность контрактов
       if (!vcContract || !vgContract || !lpLockerContract) {
+        console.log('EarnVGWidget: Contracts not ready yet, skipping...');
         return;
       }
 
+      console.log('EarnVGWidget: Contracts ready, fetching balances...');
+      
       const newBalances: UserBalances = {
         vc: '0',
         vg: '0',
@@ -93,69 +174,116 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         lpTokens: '0'
       };
 
-      try {
-        const vcBalance = await vcContract.balanceOf(account);
-        newBalances.vc = ethers.formatEther(vcBalance);
-      } catch (error) {
-        // Игнорируем ошибки баланса
-      }
+      // Используем Promise.allSettled для параллельного выполнения
+      const balancePromises = [
+        vcContract.balanceOf(account).then(balance => {
+          newBalances.vc = ethers.formatEther(balance);
+          console.log('EarnVGWidget: VC balance:', newBalances.vc);
+        }).catch(error => {
+          console.warn('EarnVGWidget: Error fetching VC balance:', error);
+        }),
 
-      try {
-        const vgBalance = await vgContract.balanceOf(account);
-        newBalances.vg = ethers.formatEther(vgBalance);
-      } catch (error) {
-        // Игнорируем ошибки баланса
-      }
+        vgContract.balanceOf(account).then(balance => {
+          newBalances.vg = ethers.formatEther(balance);
+          console.log('EarnVGWidget: VG balance:', newBalances.vg);
+        }).catch(error => {
+          console.warn('EarnVGWidget: Error fetching VG balance:', error);
+        }),
 
-      try {
-        const bnbBalance = await provider.getBalance(account);
-        newBalances.bnb = ethers.formatEther(bnbBalance);
-      } catch (error) {
-        // Игнорируем ошибки баланса
-      }
+        provider.getBalance(account).then(balance => {
+          newBalances.bnb = ethers.formatEther(balance);
+          console.log('EarnVGWidget: BNB balance:', newBalances.bnb);
+        }).catch(error => {
+          console.warn('EarnVGWidget: Error fetching BNB balance:', error);
+        })
+      ];
 
       // Добавляем получение LP токенов
-      try {
-        const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-        if (lpContract) {
-          const lpBalance = await lpContract.balanceOf(account);
-          newBalances.lpTokens = ethers.formatEther(lpBalance);
-        }
-      } catch (error) {
-        // Игнорируем ошибки баланса
+      const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
+      if (lpContract) {
+        balancePromises.push(
+          lpContract.balanceOf(account).then(balance => {
+            newBalances.lpTokens = ethers.formatEther(balance);
+            console.log('EarnVGWidget: LP balance:', newBalances.lpTokens);
+          }).catch(error => {
+            console.warn('EarnVGWidget: Error fetching LP balance:', error);
+          })
+        );
       }
 
+      // Ждем завершения всех запросов
+      await Promise.allSettled(balancePromises);
+
       setBalances(newBalances);
+      console.log('EarnVGWidget: Balances updated successfully');
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('EarnVGWidget: Error loading user data:', error);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
+      console.log('EarnVGWidget: loadUserData completed');
     }
   };
 
   const loadPoolInfo = async (): Promise<PoolInfo> => {
-    if (!provider || !getContract) throw new Error('No provider');
+    console.log('EarnVGWidget: Starting loadPoolInfo...');
+    
+    // Используем fallback provider если основной недоступен
+    let currentProvider = provider;
+    if (!currentProvider) {
+      console.warn('EarnVGWidget: Main provider not available, using fallback');
+      currentProvider = createFallbackProvider();
+      if (!currentProvider) {
+        console.error('EarnVGWidget: No provider available for pool info');
+        throw new Error('No provider available');
+      }
+    }
 
-    const lpPairContract = getContract(CONTRACTS.LP_TOKEN, PAIR_ABI);
-    if (!lpPairContract) throw new Error('Failed to create LP pair contract');
+    try {
+      return await withTimeout(
+        withRetry(async () => {
+          console.log('EarnVGWidget: Creating LP pair contract...');
+          const lpPairContract = new ethers.Contract(
+            CONTRACTS.LP_TOKEN, 
+            PAIR_ABI, 
+            currentProvider
+          );
 
-    const [reserves, token0, token1] = await Promise.all([
-      lpPairContract.getReserves(),
-      lpPairContract.token0(),
-      lpPairContract.token1()
-    ]);
+          console.log('EarnVGWidget: Fetching pool data...');
+          const [reserves, token0, token1] = await Promise.all([
+            lpPairContract.getReserves(),
+            lpPairContract.token0(),
+            lpPairContract.token1()
+          ]);
 
-    const isVCToken0 = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
-    const vcReserve = isVCToken0 ? reserves[0] : reserves[1];
-    const bnbReserve = isVCToken0 ? reserves[1] : reserves[0];
+          const isVCToken0 = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
+          const vcReserve = isVCToken0 ? reserves[0] : reserves[1];
+          const bnbReserve = isVCToken0 ? reserves[1] : reserves[0];
 
-    const price = vcReserve > 0n ? (Number(bnbReserve) / Number(vcReserve)) : 0;
+          const price = vcReserve > 0n ? (Number(bnbReserve) / Number(vcReserve)) : 0;
 
-    return {
-      vcReserve: ethers.formatEther(vcReserve),
-      bnbReserve: ethers.formatEther(bnbReserve),
-      price: price.toFixed(8)
-    };
+          const result = {
+            vcReserve: ethers.formatEther(vcReserve),
+            bnbReserve: ethers.formatEther(bnbReserve),
+            price: price.toFixed(8)
+          };
+
+          console.log('EarnVGWidget: Pool info loaded successfully:', result);
+          return result;
+        }),
+        5000 // Уменьшаем timeout до 5 секунд
+      );
+    } catch (error) {
+      console.error('EarnVGWidget: Error loading pool info:', error);
+      // Возвращаем fallback значения
+      const fallbackResult = {
+        vcReserve: '0',
+        bnbReserve: '0',
+        price: '0'
+      };
+      console.log('EarnVGWidget: Using fallback pool info:', fallbackResult);
+      return fallbackResult;
+    }
   };
 
   useEffect(() => {

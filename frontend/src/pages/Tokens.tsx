@@ -33,7 +33,8 @@ import toast from 'react-hot-toast';
 import TransactionHistory from '../components/TransactionHistory';
 import { ContractStatus } from '../components/ContractStatus';
 import TokenStats from '../components/TokenStats';
-import { useTokenData, TokenData } from '../hooks/useTokenData';
+import { useTokenData } from '../hooks/useTokenData';
+import type { TokenData } from '../hooks/useTokenData';
 
 interface TokenAllowance {
   spender: string;
