@@ -13,7 +13,7 @@ interface EarnVGWidgetProps {
 }
 
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, signer, isConnected, vcContract, lpLockerContract, lpContract } = useWeb3();
+  const { account, signer, isConnected, vcContract, lpLockerContract, vgContract } = useWeb3();
   
   // Use centralized hooks
   const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
@@ -56,12 +56,22 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
   // Transaction handlers
   const handleEarnVG = async () => {
+    console.log('🎯 EarnVG: Начало операции');
+    
     if (!signer || !account || !vcContract || !lpLockerContract) {
+      const missingItems = [];
+      if (!signer) missingItems.push('signer');
+      if (!account) missingItems.push('account');
+      if (!vcContract) missingItems.push('vcContract');
+      if (!lpLockerContract) missingItems.push('lpLockerContract');
+      
+      console.error('❌ EarnVG: Отсутствуют компоненты:', missingItems.join(', '));
       toast.error('Подключите кошелёк');
       return;
     }
 
     if (!vcAmount || !bnbAmount) {
+      console.error('❌ EarnVG: Не указаны суммы', { vcAmount, bnbAmount });
       toast.error('Введите количество VC и BNB');
       return;
     }
@@ -69,12 +79,18 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     const vcAmountWei = ethers.parseEther(vcAmount);
     const bnbAmountWei = ethers.parseEther(bnbAmount);
 
+    console.log('💰 EarnVG: Проверка балансов пользователя');
+    console.log(`Требуется VC: ${vcAmount}, доступно: ${balances.VC || '0'}`);
+    console.log(`Требуется BNB: ${bnbAmount}, доступно: ${balances.BNB || '0'}`);
+
     if (parseFloat(balances.VC || '0') < parseFloat(vcAmount)) {
+      console.error('❌ EarnVG: Недостаточно VC токенов');
       toast.error('Недостаточно VC токенов');
       return;
     }
 
     if (parseFloat(balances.BNB || '0') < parseFloat(bnbAmount)) {
+      console.error('❌ EarnVG: Недостаточно BNB');
       toast.error('Недостаточно BNB');
       return;
     }
@@ -82,14 +98,63 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     setLoading(true);
     
     try {
+      console.log('🔍 EarnVG: Проверка конфигурации контракта');
+      
+      // Проверяем конфигурацию LPLocker
+      const config = await (lpLockerContract as any).config();
+      const stakingVault = config[5];
+      const maxSlippageBps = config[10];
+      const mevEnabled = config[12];
+      
+      console.log(`Staking Vault: ${stakingVault}`);
+      console.log(`Max Slippage: ${maxSlippageBps} BPS (${(Number(maxSlippageBps) / 100).toFixed(1)}%)`);
+      console.log(`MEV Protection: ${mevEnabled}`);
+      
+      // Проверяем VG баланс vault'а
+      if (!vgContract) {
+        console.error('❌ EarnVG: VG контракт недоступен');
+        toast.error('VG контракт недоступен');
+        return;
+      }
+      
+      const vaultVGBalance = await (vgContract as any).balanceOf(stakingVault);
+      
+      console.log(`VG баланс vault'а: ${ethers.formatEther(vaultVGBalance)} VG`);
+      
+      if (vaultVGBalance === 0n) {
+        console.error('❌ EarnVG: VG vault пустой - нет токенов для наград');
+        toast.error('VG vault пустой - обратитесь к администратору');
+        return;
+      }
+      
+      // Рассчитываем ожидаемую награду
+      const lpDivisor = config[6];
+      const lpToVgRatio = config[7];
+      const expectedLp = (vcAmountWei * bnbAmountWei) / lpDivisor;
+      const expectedVGReward = expectedLp * BigInt(lpToVgRatio);
+      
+      console.log(`Ожидаемая LP: ${ethers.formatEther(expectedLp)} LP`);
+      console.log(`Ожидаемая VG награда: ${ethers.formatEther(expectedVGReward)} VG`);
+      
+      if (vaultVGBalance < expectedVGReward) {
+        console.error('❌ EarnVG: Недостаточно VG в vault для награды');
+        toast.error(`Недостаточно VG в vault. Нужно: ${ethers.formatEther(expectedVGReward)}, доступно: ${ethers.formatEther(vaultVGBalance)}`);
+        return;
+      }
+
       const vcContractWithSigner = vcContract.connect(signer);
 
+      console.log('🔐 EarnVG: Проверка и approve VC токенов');
       // Check and approve VC tokens
       const allowance = await (vcContractWithSigner as any).allowance(account, CONTRACTS.LP_LOCKER);
+      console.log(`Текущий VC allowance: ${ethers.formatEther(allowance)} VC`);
+      
       if (allowance < vcAmountWei) {
+        console.log('📝 EarnVG: Выполняем approve VC токенов');
         toast.loading('Подтверждение VC токенов...');
         const approveTx = await (vcContractWithSigner as any).approve(CONTRACTS.LP_LOCKER, vcAmountWei);
         await approveTx.wait();
+        console.log('✅ EarnVG: VC токены approved');
       }
 
       const lpLockerWithSigner = lpLockerContract.connect(signer);
@@ -98,24 +163,50 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       let finalSlippage = 1500; // 15%
       try {
-        const config = await (lpLockerWithSigner as any).config();
-        const maxAllowedSlippage = config[11];
-        if (finalSlippage > maxAllowedSlippage) {
-          finalSlippage = maxAllowedSlippage;
+        if (finalSlippage > maxSlippageBps) {
+          finalSlippage = Number(maxSlippageBps);
+          console.log(`⚠️ EarnVG: Slippage снижен до максимального: ${finalSlippage} BPS`);
         }
       } catch {
-        // Use default slippage
+        console.log('⚠️ EarnVG: Используем default slippage');
       }
+
+      console.log('🚀 EarnVG: Выполняем транзакцию earnVG');
+      console.log(`Параметры: VC=${ethers.formatEther(vcAmountWei)}, BNB=${ethers.formatEther(bnbAmountWei)}, Slippage=${finalSlippage}BPS`);
 
       const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
         value: bnbAmountWei,
         gasLimit: 500000,
       });
       
+      console.log(`📋 EarnVG: Transaction Hash: ${tx.hash}`);
       toast.loading('Ожидание подтверждения транзакции...');
       const receipt = await tx.wait();
 
       if (receipt.status === 1) {
+        console.log('✅ EarnVG: Транзакция успешна');
+        console.log(`Gas used: ${receipt.gasUsed.toString()}`);
+        
+        // Парсим события для получения деталей
+        try {
+          const events = receipt.logs;
+          console.log(`События транзакции: ${events.length} событий`);
+          
+          // Ищем событие VGEarned
+          for (const event of events) {
+            try {
+              const decoded = lpLockerWithSigner.interface.parseLog(event);
+              if (decoded && decoded.name === 'VGEarned') {
+                console.log(`🎉 VG Earned Event: user=${decoded.args.user}, vgAmount=${ethers.formatEther(decoded.args.vgAmount)} VG`);
+              }
+            } catch (e) {
+              // Игнорируем события других контрактов
+            }
+          }
+        } catch (e) {
+          console.log('⚠️ EarnVG: Не удалось парсить события');
+        }
+        
         toast.success('VG токены успешно получены!');
         
         // Refresh data
@@ -130,17 +221,36 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         throw new Error('Transaction failed');
       }
     } catch (error: any) {
-      console.error('EarnVG Error:', error);
+      console.error('❌ EarnVG Error:', error);
+      
+      // Детальное логирование ошибок
+      if (error.code) {
+        console.error(`Error Code: ${error.code}`);
+      }
+      if (error.data) {
+        console.error(`Error Data:`, error.data);
+      }
+      if (error.transaction) {
+        console.error(`Transaction:`, error.transaction);
+      }
       
       if (error.message?.includes('Too frequent transactions')) {
+        console.error('🚫 MEV Protection активна');
         toast.error('MEV Protection: Подождите 5 минут между транзакциями');
       } else if (error.message?.includes('Slippage exceeded')) {
+        console.error('📈 Slippage превышен');
         toast.error('Slippage превышен. Попробуйте позже');
       } else if (error.message?.includes('insufficient funds')) {
+        console.error('💸 Недостаточно средств');
         toast.error('Недостаточно средств для транзакции');
       } else if (error.message?.includes('user rejected')) {
+        console.error('🚫 Пользователь отклонил транзакцию');
         toast.error('Транзакция отклонена пользователем');
+      } else if (error.message?.includes('VG vault empty') || error.message?.includes('Insufficient VG')) {
+        console.error('🏦 Проблема с VG vault');
+        toast.error('VG vault пустой или недостаточно токенов для награды');
       } else {
+        console.error('❓ Неизвестная ошибка:', error.message);
         toast.error(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
       }
     } finally {
@@ -149,7 +259,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   };
 
   const handleLockLP = async () => {
-    if (!signer || !account || !lpContract || !lpLockerContract) {
+    if (!signer || !account || !lpLockerContract) {
       toast.error('Подключите кошелёк');
       return;
     }
@@ -169,39 +279,33 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     setLoading(true);
 
     try {
-      const lpContractWithSigner = lpContract.connect(signer);
-
-      // Check and approve LP tokens
-      const allowance = await (lpContractWithSigner as any).allowance(account, CONTRACTS.LP_LOCKER);
-      if (allowance < lpAmountWei) {
-        toast.loading('Подтверждение LP токенов...');
-        const approveTx = await (lpContractWithSigner as any).approve(CONTRACTS.LP_LOCKER, lpAmountWei);
-        await approveTx.wait();
-      }
-
       const lpLockerWithSigner = lpLockerContract.connect(signer);
 
-      toast.loading('Блокировка LP токенов и получение VG наград...');
-      
-      const tx = await (lpLockerWithSigner as any).lockLPTokens(lpAmountWei, {
-        gasLimit: 300000,
-      });
-      
-      toast.loading('Ожидание подтверждения транзакции...');
-      const receipt = await tx.wait();
+      // Check if user has LP tokens for locking
+      if (mode === 'lock') {
+        const userLPBalance = await (lpLockerContract as any).balanceOf(account);
+        if (parseFloat(ethers.formatEther(userLPBalance)) < parseFloat(lpAmount)) {
+          toast.error('Недостаточно LP токенов');
+          return;
+        }
 
-      if (receipt.status === 1) {
-        toast.success('LP токены заблокированы, VG награды получены!');
-        
-        // Refresh data
-        setTimeout(() => {
+        // Approve LP tokens
+        const lpAllowance = await (lpLockerContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        if (lpAllowance < ethers.parseEther(lpAmount)) {
+          toast.loading('Подтверждение LP токенов...');
+          const approveTx = await (lpLockerContract as any).approve(CONTRACTS.LP_LOCKER, ethers.parseEther(lpAmount));
+          await approveTx.wait();
+        }
+
+        // Lock LP tokens
+        const tx = await (lpLockerContract as any).lockLPTokens(ethers.parseEther(lpAmount));
+        const receipt = await tx.wait();
+
+        if (receipt.status === 1) {
+          toast.success('LP токены заблокированы!');
           fetchTokenData(true);
-          refreshPoolInfo();
-        }, 2000);
-
-        setLpAmount('');
-      } else {
-        throw new Error('Transaction failed');
+          setLpAmount('');
+        }
       }
     } catch (error: any) {
       console.error('LockLP Error:', error);
