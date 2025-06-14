@@ -125,8 +125,8 @@ const StakingStats: React.FC = () => {
 
       // Contract ABIs
       const LPLOCKER_ABI = [
-        "function getPoolInfo() view returns (uint256, uint256, uint256, uint256)",
-        "function config() view returns (uint256 lpToVgRatio, uint256 lpDivisor)"
+        "function getPoolInfo() view returns (uint256 totalLocked, uint256 totalIssued, uint256 totalDeposited, uint256 availableVG)",
+        "function config() view returns (address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint16 maxSlippageBps, uint16 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited)"
       ];
       
       const ERC20_ABI = [
@@ -143,74 +143,56 @@ const StakingStats: React.FC = () => {
       let userVCBalance = '0';
       let userBNBBalance = '0';
 
-      // Try Web3Context contracts first, then fallback to direct RPC
+      // Skip Web3Context contracts - use direct RPC calls for reliability
+      console.log('StakingStats: Using direct RPC calls for reliability');
+      
       try {
-        if (lpLockerContract && vcContract) {
-          console.log('StakingStats: Trying Web3Context contracts...');
-          const [poolInfoRaw, configRaw, userVCBalanceRaw, userBNBBalanceRaw] = await Promise.allSettled([
-            withTimeout(lpLockerContract.getPoolInfo(), 5000),
-            withTimeout(lpLockerContract.config(), 5000),
-            withTimeout(vcContract.balanceOf(account), 5000),
-            withTimeout(activeProvider.getBalance(account), 5000)
-          ]);
-
-          if (poolInfoRaw.status === 'fulfilled') poolInfo = poolInfoRaw.value;
-          if (configRaw.status === 'fulfilled') config = configRaw.value;
-          if (userVCBalanceRaw.status === 'fulfilled') userVCBalance = ethers.formatEther(userVCBalanceRaw.value);
-          if (userBNBBalanceRaw.status === 'fulfilled') userBNBBalance = ethers.formatEther(userBNBBalanceRaw.value);
-          
-          console.log('StakingStats: Web3Context contracts success');
-        } else {
-          throw new Error('Web3Context contracts not available');
-        }
+        // Pool info from LPLocker
+        poolInfo = await tryMultipleRpc(async (rpcProvider) => {
+          const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
+          return await (lpLockerContract.getPoolInfo as any)();
+        });
+        console.log('StakingStats: Pool info (direct RPC):', poolInfo);
       } catch (error: any) {
-        console.warn('StakingStats: Web3Context contracts failed, using direct RPC:', error.message);
-        
-        // Fallback to direct RPC calls
-        try {
-          // Pool info from LPLocker
-          poolInfo = await tryMultipleRpc(async (rpcProvider) => {
-            const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
-            return await (lpLockerContract.getPoolInfo as any)();
-          });
-          console.log('StakingStats: Pool info (direct RPC):', poolInfo);
-        } catch (error: any) {
-          console.warn('StakingStats: Pool info failed:', error.message);
-        }
+        console.warn('StakingStats: Pool info failed:', error.message);
+      }
 
-        try {
-          // Config from LPLocker
-          config = await tryMultipleRpc(async (rpcProvider) => {
-            const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
-            return await (lpLockerContract.config as any)();
-          });
-          console.log('StakingStats: Config (direct RPC):', config);
-        } catch (error: any) {
-          console.warn('StakingStats: Config failed:', error.message);
-        }
+      try {
+        // Config from LPLocker
+        const configData = await tryMultipleRpc(async (rpcProvider) => {
+          const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
+          return await (lpLockerContract.config as any)();
+        });
+        config = { 
+          lpToVgRatio: configData[7]?.toString() || '10', // lpToVgRatio на позиции 7
+          lpDivisor: configData[6]?.toString() || '1000000' // lpDivisor на позиции 6
+        };
+        console.log('StakingStats: Config (direct RPC):', config);
+      } catch (error: any) {
+        console.warn('StakingStats: Config failed:', error.message);
+      }
 
-        try {
-          // VC balance
-          const vcBalance = await tryMultipleRpc(async (rpcProvider) => {
-            const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
-            return await (vcContract.balanceOf as any)(account);
-          });
-          userVCBalance = ethers.formatEther(vcBalance);
-          console.log('StakingStats: VC balance (direct RPC):', userVCBalance);
-        } catch (error: any) {
-          console.warn('StakingStats: VC balance failed:', error.message);
-        }
+      try {
+        // VC balance
+        const vcBalance = await tryMultipleRpc(async (rpcProvider) => {
+          const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
+          return await (vcContract.balanceOf as any)(account);
+        });
+        userVCBalance = ethers.formatEther(vcBalance);
+        console.log('StakingStats: VC balance (direct RPC):', userVCBalance);
+      } catch (error: any) {
+        console.warn('StakingStats: VC balance failed:', error.message);
+      }
 
-        try {
-          // BNB balance
-          const bnbBalance = await tryMultipleRpc(async (rpcProvider) => {
-            return await rpcProvider.getBalance(account);
-          });
-          userBNBBalance = ethers.formatEther(bnbBalance);
-          console.log('StakingStats: BNB balance (direct RPC):', userBNBBalance);
-        } catch (error: any) {
-          console.warn('StakingStats: BNB balance failed:', error.message);
-        }
+      try {
+        // BNB balance
+        const bnbBalance = await tryMultipleRpc(async (rpcProvider) => {
+          return await rpcProvider.getBalance(account);
+        });
+        userBNBBalance = ethers.formatEther(bnbBalance);
+        console.log('StakingStats: BNB balance (direct RPC):', userBNBBalance);
+      } catch (error: any) {
+        console.warn('StakingStats: BNB balance failed:', error.message);
       }
 
       const newPoolData = {
@@ -240,16 +222,16 @@ const StakingStats: React.FC = () => {
       
       // Устанавливаем данные по умолчанию при ошибке только если нет данных
       if (isMountedRef.current && !poolData) {
-        setPoolData({
-          totalLockedLP: '0',
-          totalVGIssued: '0',
-          totalVGDeposited: '0',
-          availableVG: '0',
-          userVCBalance: '0',
-          userBNBBalance: '0',
-          lpToVgRatio: '10',
-          lpDivisor: '1000000',
-        });
+      setPoolData({
+        totalLockedLP: '0',
+        totalVGIssued: '0',
+        totalVGDeposited: '0',
+        availableVG: '0',
+        userVCBalance: '0',
+        userBNBBalance: '0',
+        lpToVgRatio: '10',
+        lpDivisor: '1000000',
+      });
       }
     } finally {
       if (isMountedRef.current) {
@@ -369,10 +351,10 @@ const StakingStats: React.FC = () => {
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <h3 className="text-xl font-semibold flex items-center">
-              <TrendingUp className="mr-3 text-blue-400" />
-              Статистика LP → VG экосистемы
-            </h3>
+          <h3 className="text-xl font-semibold flex items-center">
+            <TrendingUp className="mr-3 text-blue-400" />
+            Статистика LP → VG экосистемы
+          </h3>
             {refreshing && (
               <div className="flex items-center space-x-2 text-blue-400">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>

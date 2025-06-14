@@ -231,7 +231,11 @@ const Dashboard: React.FC = () => {
     // Only fetch when connection state is ready
     if (isConnected && isCorrectNetwork && account) {
       console.log('Dashboard: Fetching balances for connected account:', account);
-      fetchBalances(false); // Initial fetch
+      
+      // Add small delay to ensure Web3Context is fully initialized
+      const timer = setTimeout(() => {
+        fetchBalances(false); // Initial fetch
+      }, 500); // 500ms delay for Web3Context initialization
       
       // Refresh every 60 seconds (увеличил интервал)
       const interval = setInterval(() => {
@@ -239,6 +243,7 @@ const Dashboard: React.FC = () => {
       }, 60000);
       
       return () => {
+        clearTimeout(timer);
         clearInterval(interval);
       };
     } else {
