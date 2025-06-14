@@ -103,6 +103,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  // Зафиксированный EIP-1193 провайдер после первого успешного подключения
+  const [lockedProvider, setLockedProvider] = useState<EIP1193Provider | null>(null);
 
   // EIP-6963 hooks
   const preferredProvider = usePreferredProvider();
@@ -125,6 +127,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
    * Uses EIP-6963 first, then falls back to legacy detection
    */
   const getEthereumProvider = (): EIP1193Provider | null => {
+    // Если кошелёк уже выбран – всегда возвращаем его
+    if (lockedProvider) return lockedProvider;
+
     // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
     if (preferredProvider) {
       console.log(`Web3Context: Using EIP-6963 provider: ${preferredProvider.info.name} (${preferredProvider.info.rdns})`);
@@ -205,6 +210,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setAccount(accounts[0] || null);
       setIsConnected(true);
       setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
+      setLockedProvider(ethereum); // 🔒 фиксируем провайдер
       
       toast.success('Кошелёк подключён!');
       

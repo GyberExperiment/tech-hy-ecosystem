@@ -8,12 +8,60 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 
+// Fallback RPC providers for config() calls
+const FALLBACK_RPC_URLS = [
+  'https://bsc-testnet-rpc.publicnode.com',
+  'https://data-seed-prebsc-1-s1.binance.org:8545',
+  'https://data-seed-prebsc-2-s1.binance.org:8545',
+  'https://bsc-testnet.public.blastapi.io',
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+];
+
+const LPLOCKER_ABI = [
+  "function config() external view returns (address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint16 maxSlippageBps, uint16 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited)",
+  "function owner() external view returns (address)"
+];
+
 interface EarnVGWidgetProps {
   className?: string;
 }
 
+/**
+ * Fallback function to call config() with JsonRpcProvider when BrowserProvider fails
+ */
+async function tryConfigWithFallback(lpLockerAddress: string): Promise<any> {
+  console.log('🔄 EarnVG: Trying config() with fallback RPC providers...');
+  
+  for (const rpcUrl of FALLBACK_RPC_URLS) {
+    try {
+      console.log(`🌐 EarnVG: Trying RPC: ${rpcUrl}`);
+      
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const contract = new ethers.Contract(lpLockerAddress, LPLOCKER_ABI, provider);
+      
+      const startTime = Date.now();
+      const config = await Promise.race([
+        contract.config?.() || Promise.reject(new Error('Config method not available')),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Fallback timeout')), 10000)
+        )
+      ]);
+      
+      const elapsed = Date.now() - startTime;
+      console.log(`✅ EarnVG: Fallback config() successful with ${rpcUrl} (${elapsed}ms)`);
+      
+      return config;
+    } catch (error) {
+      console.log(`❌ EarnVG: Fallback failed with ${rpcUrl}:`, error);
+      continue;
+    }
+  }
+  
+  throw new Error('All fallback RPC providers failed');
+}
+
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, signer, isConnected, vcContract, lpLockerContract, vgContract } = useWeb3();
+  const { account, signer, isConnected, isCorrectNetwork, provider, vcContract, lpLockerContract, vgContract } = useWeb3();
   
   // Use centralized hooks
   const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
@@ -100,31 +148,124 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     try {
       console.log('🔍 EarnVG: Проверка конфигурации контракта');
       
-      // Проверяем конфигурацию LPLocker с детальным логированием
-      console.log('📞 EarnVG: Вызываем config()...');
-      const configPromise = (lpLockerContract as any).config();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Config timeout after 15 seconds')), 15000)
-      );
+      // Детальная диагностика Web3 состояния
+      console.log('🔧 EarnVG: Web3 State Diagnosis...');
+      console.log('account:', account);
+      console.log('isConnected:', isConnected);
+      console.log('isCorrectNetwork:', isCorrectNetwork);
+      console.log('signer:', signer);
+      console.log('provider:', provider);
+      console.log('lpLockerContract:', lpLockerContract);
       
-      const config = await Promise.race([configPromise, timeoutPromise]);
-      console.log('✅ EarnVG: config() получен успешно');
+      if (!lpLockerContract) {
+        console.error('❌ EarnVG: lpLockerContract is null/undefined');
+        toast.error('LP Locker контракт недоступен');
+        return;
+      }
+      
+      console.log('🔧 EarnVG: Contract details...');
+      console.log('Contract target:', lpLockerContract.target);
+      console.log('Contract runner:', lpLockerContract.runner);
+      console.log('Contract runner type:', typeof lpLockerContract.runner);
+      
+      // Проверяем провайдер контракта
+      const contractProvider = lpLockerContract.runner?.provider;
+      console.log('🌐 EarnVG: Contract provider:', contractProvider);
+      console.log('Contract provider type:', typeof contractProvider);
+      
+      if (!contractProvider) {
+        console.error('❌ EarnVG: Contract provider is null/undefined');
+        toast.error('Провайдер контракта недоступен');
+        return;
+      }
+      
+      // Тестируем простой вызов сначала с read-only контрактом
+      console.log('🧪 EarnVG: Testing with read-only contract...');
+      
+      let readOnlyContract: ethers.Contract;
+      try {
+        // Создаем read-only контракт для view функций
+        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        readOnlyContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, readOnlyProvider);
+        console.log('✅ EarnVG: Read-only contract created');
+      } catch (providerError) {
+        console.error('❌ EarnVG: Failed to create read-only contract:', providerError);
+        toast.error('Не удалось создать read-only контракт');
+        return;
+      }
+      
+      try {
+        const ownerStartTime = Date.now();
+        const owner = await (readOnlyContract as any).owner();
+        const ownerTime = Date.now() - ownerStartTime;
+        console.log(`✅ EarnVG: owner() successful in ${ownerTime}ms:`, owner);
+      } catch (ownerError) {
+        console.error('❌ EarnVG: owner() failed:', ownerError);
+        toast.error('Контракт недоступен для чтения');
+        return;
+      }
+      
+      // Теперь пробуем config() с read-only контрактом
+      console.log('📞 EarnVG: Attempting config() call with read-only contract...');
+      console.log('📞 EarnVG: Current time:', new Date().toISOString());
+      
+      let config: any;
+      
+      try {
+        // Используем read-only контракт для config()
+        console.log('🔄 EarnVG: Trying config() with read-only contract...');
+        const configStartTime = Date.now();
+        
+        // Создаём timeout, который очистим при успехе, чтобы не получить ложный reject
+        let timeoutId: ReturnType<typeof setTimeout>;
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            const elapsed = Date.now() - configStartTime;
+            console.log(`⏰ EarnVG: Read-only config() timeout after ${elapsed}ms`);
+            reject(new Error('Read-only config timeout after 10 seconds'));
+          }, 10000);
+        });
+
+        const configPromise = (readOnlyContract as any).config();
+
+        config = await Promise.race([configPromise, timeoutPromise]);
+        // Если дошли сюда – configPromise сработал раньше, очищаем таймер, чтобы избежать ложных таймаутов
+        clearTimeout(timeoutId!);
+        const configTime = Date.now() - configStartTime;
+        console.log(`✅ EarnVG: Read-only config() successful in ${configTime}ms`);
+        
+      } catch (readOnlyError: unknown) {
+        const errorMessage = readOnlyError instanceof Error ? readOnlyError.message : 'Unknown error';
+        console.log('⚠️ EarnVG: Read-only config() failed, trying fallback...', errorMessage);
+        
+        // Fallback к множественным RPC
+        try {
+          config = await tryConfigWithFallback(CONTRACTS.LP_LOCKER);
+        } catch (fallbackError) {
+          console.error('❌ EarnVG: All config() attempts failed:', fallbackError);
+          toast.error('Не удалось получить конфигурацию контракта');
+          return;
+        }
+      }
+      
+      console.log('📊 EarnVG: Config result type:', typeof config);
+      console.log('📊 EarnVG: Config result:', config);
       
       // Детальное логирование полей config
       console.log('🔍 EarnVG: Анализ полей config...');
       console.log('Config tuple:', config);
       
-      // config() возвращает tuple, а не struct - используем индексы
-      const stakingVault = config[5]; // stakingVaultAddress
-      const maxSlippageBps = config[10]; // maxSlippageBps
-      const mevEnabled = config[12]; // mevProtectionEnabled
+      // config() возвращает объект с именованными полями согласно ABI
+      const stakingVault = config.stakingVaultAddress;
+      const maxSlippageBps = config.maxSlippageBps;
+      const mevEnabled = config.mevProtectionEnabled;
       
       console.log(`✅ EarnVG: Поля извлечены успешно`);
       console.log(`Staking Vault: ${stakingVault}`);
       console.log(`Max Slippage: ${maxSlippageBps} BPS (${(Number(maxSlippageBps) / 100).toFixed(1)}%)`);
       console.log(`MEV Protection: ${mevEnabled}`);
       
-      // Проверяем VG баланс vault'а
+      // Проверяем VG баланс vault'а с read-only контрактом
       if (!vgContract) {
         console.error('❌ EarnVG: VG контракт недоступен');
         toast.error('VG контракт недоступен');
@@ -132,9 +273,21 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
       
       console.log('💰 EarnVG: Проверяем VG баланс vault...');
-      const vaultVGBalance = await (vgContract as any).balanceOf(stakingVault);
       
-      console.log(`VG баланс vault'а: ${ethers.formatEther(vaultVGBalance)} VG`);
+      let vaultVGBalance: bigint;
+      try {
+        // Создаем read-only VG контракт для проверки баланса (переиспользуем provider)
+        const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
+          "function balanceOf(address) view returns (uint256)"
+        ], readOnlyContract.runner); // Переиспользуем тот же provider
+        
+        vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
+        console.log(`VG баланс vault'а: ${ethers.formatEther(vaultVGBalance)} VG`);
+      } catch (balanceError) {
+        console.error('❌ EarnVG: Не удалось получить VG баланс vault:', balanceError);
+        toast.error('Не удалось проверить VG баланс vault');
+        return;
+      }
       
       if (vaultVGBalance === 0n) {
         console.error('❌ EarnVG: VG vault пустой - нет токенов для наград');
@@ -144,8 +297,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       // Рассчитываем ожидаемую награду
       console.log('🧮 EarnVG: Рассчитываем ожидаемую награду...');
-      const lpDivisor = config[6]; // lpDivisor
-      const lpToVgRatio = config[7]; // lpToVgRatio
+      const lpDivisor = config.lpDivisor;
+      const lpToVgRatio = config.lpToVgRatio;
       
       console.log(`LP Divisor: ${lpDivisor.toString()}`);
       console.log(`LP to VG Ratio: ${lpToVgRatio.toString()}`);
@@ -162,19 +315,69 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         return;
       }
 
-      const vcContractWithSigner = vcContract.connect(signer);
-
       console.log('🔐 EarnVG: Проверка и approve VC токенов');
-      // Check and approve VC tokens
-      const allowance = await (vcContractWithSigner as any).allowance(account, CONTRACTS.LP_LOCKER);
-      console.log(`Текущий VC allowance: ${ethers.formatEther(allowance)} VC`);
       
-      if (allowance < vcAmountWei) {
-        console.log('📝 EarnVG: Выполняем approve VC токенов');
-        toast.loading('Подтверждение VC токенов...');
-        const approveTx = await (vcContractWithSigner as any).approve(CONTRACTS.LP_LOCKER, vcAmountWei);
-        await approveTx.wait();
+      // Check allowance with read-only contract (reuse the same provider)
+      let allowance: bigint;
+      try {
+        const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+          "function allowance(address owner, address spender) view returns (uint256)",
+          "function approve(address spender, uint256 amount) returns (bool)"
+        ], readOnlyContract.runner); // Переиспользуем тот же provider
+        
+        allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        console.log(`Текущий VC allowance: ${ethers.formatEther(allowance)} VC`);
+      } catch (allowanceError) {
+        console.error('❌ EarnVG: Не удалось получить allowance:', allowanceError);
+        toast.error('Не удалось проверить allowance');
+        return;
+      }
+      
+      // Separate try-catch for approve operations
+      try {
+        // Повторно убеждаемся, что MetaMask готов показать окно (иногда требуется запрос)
+        await (window as any).ethereum?.request?.({ method: 'eth_requestAccounts' });
+
+        const vcContractWithSigner = vcContract.connect(signer);
+        const MAX_UINT256 = (2n ** 256n - 1n).toString();
+
+        let gasLimitOverride: bigint | undefined;
+        try {
+          const gasFn = (vcContractWithSigner as any).estimateGas?.approve;
+          if (gasFn) {
+            const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
+            gasLimitOverride = (est * 120n) / 100n; // +20 %
+          }
+        } catch {}
+
+        const approveTx = await (vcContractWithSigner as any).approve(
+          CONTRACTS.LP_LOCKER,
+          MAX_UINT256,
+          gasLimitOverride ? { gasLimit: gasLimitOverride } : {}
+        );
+
+        console.log(`📋 EarnVG: Approve TX hash: ${approveTx.hash}`);
+
+        const approveReceipt = await Promise.race([
+          approveTx.wait(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Approve transaction timeout after 60s')), 60000))
+        ]);
+
+        if ((approveReceipt as any).status !== 1) throw new Error('Approve transaction failed');
+
         console.log('✅ EarnVG: VC токены approved');
+      } catch (approveError: any) {
+        console.error('❌ EarnVG: Approve failed:', approveError);
+        if (approveError.message?.includes('user rejected')) {
+          toast.error('Транзакция отклонена пользователем');
+        } else if (approveError.message?.includes('insufficient funds')) {
+          toast.error('Недостаточно средств для approve');
+        } else if (approveError.message?.includes('timeout')) {
+          toast.error('Approve не подтверждён в течение 60 с');
+        } else {
+          toast.error(`Ошибка approve: ${approveError.message || 'Неизвестная ошибка'}`);
+        }
+        return;
       }
 
       const lpLockerWithSigner = lpLockerContract.connect(signer);
@@ -194,84 +397,108 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       console.log('🚀 EarnVG: Выполняем транзакцию earnVG');
       console.log(`Параметры: VC=${ethers.formatEther(vcAmountWei)}, BNB=${ethers.formatEther(bnbAmountWei)}, Slippage=${finalSlippage}BPS`);
 
-      const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
-        value: bnbAmountWei,
-        gasLimit: 500000,
-      });
-      
-      console.log(`📋 EarnVG: Transaction Hash: ${tx.hash}`);
-      toast.loading('Ожидание подтверждения транзакции...');
-      const receipt = await tx.wait();
-
-      if (receipt.status === 1) {
-        console.log('✅ EarnVG: Транзакция успешна');
-        console.log(`Gas used: ${receipt.gasUsed.toString()}`);
+      // Separate try-catch for transaction execution
+      try {
+        const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
+          value: bnbAmountWei,
+          gasLimit: 500000,
+        });
         
-        // Парсим события для получения деталей
-        try {
-          const events = receipt.logs;
-          console.log(`События транзакции: ${events.length} событий`);
+        console.log(`📋 EarnVG: Transaction Hash: ${tx.hash}`);
+        toast.loading('Ожидание подтверждения транзакции...');
+        const receipt = await tx.wait();
+
+        if (receipt.status === 1) {
+          console.log('✅ EarnVG: Транзакция успешна');
+          console.log(`Gas used: ${receipt.gasUsed.toString()}`);
           
-          // Ищем событие VGEarned
-          for (const event of events) {
-            try {
-              const decoded = lpLockerWithSigner.interface.parseLog(event);
-              if (decoded && decoded.name === 'VGEarned') {
-                console.log(`🎉 VG Earned Event: user=${decoded.args.user}, vgAmount=${ethers.formatEther(decoded.args.vgAmount)} VG`);
+          // Парсим события для получения деталей
+          try {
+            const events = receipt.logs;
+            console.log(`События транзакции: ${events.length} событий`);
+            
+            // Ищем событие VGEarned
+            for (const event of events) {
+              try {
+                const decoded = lpLockerWithSigner.interface.parseLog(event);
+                if (decoded && decoded.name === 'VGEarned') {
+                  console.log(`🎉 VG Earned Event: user=${decoded.args.user}, vgAmount=${ethers.formatEther(decoded.args.vgAmount)} VG`);
+                }
+              } catch (e) {
+                // Игнорируем события других контрактов
               }
-            } catch (e) {
-              // Игнорируем события других контрактов
             }
+          } catch (e) {
+            console.log('⚠️ EarnVG: Не удалось парсить события');
           }
-        } catch (e) {
-          console.log('⚠️ EarnVG: Не удалось парсить события');
+          
+          toast.success('VG токены успешно получены!');
+          
+          // Refresh data
+          setTimeout(() => {
+            fetchTokenData(true);
+            refreshPoolInfo();
+          }, 2000);
+
+          setVcAmount('');
+          setBnbAmount('');
+        } else {
+          throw new Error('Transaction failed');
+        }
+      } catch (txError: any) {
+        console.error('❌ EarnVG Transaction Error:', txError);
+        
+        // Детальное логирование ошибок транзакции
+        if (txError.code) {
+          console.error(`Error Code: ${txError.code}`);
+        }
+        if (txError.data) {
+          console.error(`Error Data:`, txError.data);
+        }
+        if (txError.transaction) {
+          console.error(`Transaction:`, txError.transaction);
         }
         
-        toast.success('VG токены успешно получены!');
-        
-        // Refresh data
-        setTimeout(() => {
-          fetchTokenData(true);
-          refreshPoolInfo();
-        }, 2000);
-
-        setVcAmount('');
-        setBnbAmount('');
-      } else {
-        throw new Error('Transaction failed');
+        if (txError.message?.includes('Too frequent transactions')) {
+          console.error('🚫 MEV Protection активна');
+          toast.error('MEV Protection: Подождите 5 минут между транзакциями');
+        } else if (txError.message?.includes('Slippage exceeded')) {
+          console.error('📈 Slippage превышен');
+          toast.error('Slippage превышен. Попробуйте позже');
+        } else if (txError.message?.includes('insufficient funds')) {
+          console.error('💸 Недостаточно средств');
+          toast.error('Недостаточно средств для транзакции');
+        } else if (txError.message?.includes('user rejected')) {
+          console.error('🚫 Пользователь отклонил транзакцию');
+          toast.error('Транзакция отклонена пользователем');
+        } else if (txError.message?.includes('VG vault empty') || txError.message?.includes('Insufficient VG')) {
+          console.error('🏦 Проблема с VG vault');
+          toast.error('VG vault пустой или недостаточно токенов для награды');
+        } else {
+          console.error('❓ Неизвестная ошибка транзакции:', txError.message);
+          toast.error(`Ошибка транзакции: ${txError.message || 'Неизвестная ошибка'}`);
+        }
       }
     } catch (error: any) {
-      console.error('❌ EarnVG Error:', error);
+      console.error('❌ EarnVG Config Error:', error);
       
-      // Детальное логирование ошибок
+      // Детальное логирование ошибок конфигурации
       if (error.code) {
-        console.error(`Error Code: ${error.code}`);
+        console.error(`Config Error Code: ${error.code}`);
       }
       if (error.data) {
-        console.error(`Error Data:`, error.data);
-      }
-      if (error.transaction) {
-        console.error(`Transaction:`, error.transaction);
+        console.error(`Config Error Data:`, error.data);
       }
       
-      if (error.message?.includes('Too frequent transactions')) {
-        console.error('🚫 MEV Protection активна');
-        toast.error('MEV Protection: Подождите 5 минут между транзакциями');
-      } else if (error.message?.includes('Slippage exceeded')) {
-        console.error('📈 Slippage превышен');
-        toast.error('Slippage превышен. Попробуйте позже');
-      } else if (error.message?.includes('insufficient funds')) {
-        console.error('💸 Недостаточно средств');
-        toast.error('Недостаточно средств для транзакции');
-      } else if (error.message?.includes('user rejected')) {
-        console.error('🚫 Пользователь отклонил транзакцию');
-        toast.error('Транзакция отклонена пользователем');
-      } else if (error.message?.includes('VG vault empty') || error.message?.includes('Insufficient VG')) {
-        console.error('🏦 Проблема с VG vault');
-        toast.error('VG vault пустой или недостаточно токенов для награды');
+      if (error.message?.includes('Config timeout') || error.message?.includes('Fallback timeout')) {
+        console.error('⏰ Config timeout произошёл');
+        toast.error('Timeout при получении конфигурации контракта. Попробуйте позже.');
+      } else if (error.message?.includes('network')) {
+        console.error('🌐 Проблема с сетью');
+        toast.error('Проблема с подключением к сети BSC');
       } else {
-        console.error('❓ Неизвестная ошибка:', error.message);
-        toast.error(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
+        console.error('❓ Неизвестная ошибка конфигурации:', error.message);
+        toast.error(`Ошибка конфигурации: ${error.message || 'Неизвестная ошибка'}`);
       }
     } finally {
       setLoading(false);
@@ -303,22 +530,30 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       // Check if user has LP tokens for locking
       if (mode === 'lock') {
-        const userLPBalance = await (lpLockerContract as any).balanceOf(account);
-        if (parseFloat(ethers.formatEther(userLPBalance)) < parseFloat(lpAmount)) {
+        // Получаем LP контракт для проверки баланса пользователя
+        const lpTokenContract = new ethers.Contract(CONTRACTS.LP_TOKEN, [
+          "function balanceOf(address) view returns (uint256)",
+          "function allowance(address owner, address spender) view returns (uint256)",
+          "function approve(address spender, uint256 amount) returns (bool)"
+        ], signer);
+        
+        const userLPBalance = await (lpTokenContract as any).balanceOf(account);
+        if (userLPBalance < lpAmountWei) {
           toast.error('Недостаточно LP токенов');
           return;
         }
 
-        // Approve LP tokens
-        const lpAllowance = await (lpLockerContract as any).allowance(account, CONTRACTS.LP_LOCKER);
-        if (lpAllowance < ethers.parseEther(lpAmount)) {
+        // Approve LP tokens to LP Locker contract
+        const lpAllowance = await (lpTokenContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        if (lpAllowance < lpAmountWei) {
           toast.loading('Подтверждение LP токенов...');
-          const approveTx = await (lpLockerContract as any).approve(CONTRACTS.LP_LOCKER, ethers.parseEther(lpAmount));
+          const approveTx = await (lpTokenContract as any).approve(CONTRACTS.LP_LOCKER, lpAmountWei);
           await approveTx.wait();
         }
 
-        // Lock LP tokens
-        const tx = await (lpLockerContract as any).lockLPTokens(ethers.parseEther(lpAmount));
+        // Lock LP tokens using LP Locker contract
+        toast.loading('Блокировка LP токенов...');
+        const tx = await (lpLockerWithSigner as any).lockLPTokens(lpAmountWei);
         const receipt = await tx.wait();
 
         if (receipt.status === 1) {

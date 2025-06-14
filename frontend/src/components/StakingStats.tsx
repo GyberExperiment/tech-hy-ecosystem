@@ -139,7 +139,7 @@ const StakingStats: React.FC = () => {
 
       // Fetch data with multiple RPC fallback
       let poolInfo = [0, 0, 0, 0];
-      let config = { lpToVgRatio: 10, lpDivisor: 1000000 };
+      let config = { lpToVgRatio: '10', lpDivisor: '1000000000000000000000' };
       let userVCBalance = '0';
       let userBNBBalance = '0';
 
@@ -148,29 +148,23 @@ const StakingStats: React.FC = () => {
       
       try {
         // Pool info from LPLocker
-        poolInfo = await tryMultipleRpc(async (rpcProvider) => {
+        const poolInfoData = await tryMultipleRpc(async (rpcProvider) => {
           const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
           return await (lpLockerContract.getPoolInfo as any)();
         });
+        poolInfo = poolInfoData;
         console.log('StakingStats: Pool info (direct RPC):', poolInfo);
       } catch (error: any) {
         console.warn('StakingStats: Pool info failed:', error.message);
       }
 
-      try {
-        // Config from LPLocker
-        const configData = await tryMultipleRpc(async (rpcProvider) => {
-          const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
-          return await (lpLockerContract.config as any)();
-        });
-        config = { 
-          lpToVgRatio: configData[7]?.toString() || '10', // lpToVgRatio на позиции 7
-          lpDivisor: configData[6]?.toString() || '1000000' // lpDivisor на позиции 6
-        };
-        console.log('StakingStats: Config (direct RPC):', config);
-      } catch (error: any) {
-        console.warn('StakingStats: Config failed:', error.message);
-      }
+      // Используем статические значения конфигурации вместо дублированного config() вызова
+      // чтобы избежать конфликта с EarnVGWidget
+      config = { 
+        lpToVgRatio: '10', // Статическое значение по умолчанию
+        lpDivisor: '1000000000000000000000' // Статическое значение по умолчанию (исправленное)
+      };
+      console.log('StakingStats: Config (static values):', config);
 
       try {
         // VC balance

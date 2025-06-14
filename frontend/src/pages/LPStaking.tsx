@@ -290,11 +290,16 @@ const LPLocking: React.FC = () => {
       const stats = await tryMultipleRpc(async (rpcProvider) => {
         const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
         
-        const [poolInfo, config, totalUsers] = await Promise.all([
+        const [poolInfo, totalUsers] = await Promise.all([
           lpLockerContract.getPoolInfo(),
-          lpLockerContract.config(),
           lpLockerContract.totalUsers().catch(() => 0n) // Fallback if function doesn't exist
         ]);
+        
+        // Используем статические значения конфигурации вместо дублированного config() вызова
+        // чтобы избежать конфликта с EarnVGWidget
+        const config = {
+          lpToVgRatio: '10' // Статическое значение по умолчанию
+        };
         
         return {
           poolInfo,
@@ -349,7 +354,7 @@ const LPLocking: React.FC = () => {
           totalVgIssued: ethers.formatEther(stats.poolInfo[1] || 0n),
           totalVgDeposited: ethers.formatEther(stats.poolInfo[2] || 0n),
           availableVG: ethers.formatEther(stats.poolInfo[3] || 0n),
-          lpToVgRatio: stats.config[7]?.toString() || '10',
+          lpToVgRatio: stats.config.lpToVgRatio?.toString() || '10',
           totalUsers: stats.totalUsers.toString(),
           activeUsers: activeUsersCount
         });

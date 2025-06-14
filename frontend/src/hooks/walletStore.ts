@@ -4,9 +4,30 @@
 import type { EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from '../types/eip6963';
 import { WALLET_PRIORITIES } from '../types/eip6963';
 
-// Store state
-let providers: EIP6963ProviderDetail[] = [];
-let listeners: (() => void)[] = [];
+// --- GLOBAL STORE ---------------------------------------------------------
+// При hot-reload Vite/React создаёт новый модуль, из-за чего локальные
+// переменные сбрасываются. Это рвёт pending JSON-RPC из MetaMask, потому что
+// discovery перезапускается заново. Держим состояние в глобе, чтобы этого
+// не происходило в одной вкладке браузера.
+
+interface WalletDiscoveryState {
+  providers: EIP6963ProviderDetail[];
+  listeners: (() => void)[];
+  discoveryStarted: boolean;
+}
+
+const GLOBAL_KEY = '__techHyWalletDiscovery__';
+const globalState: WalletDiscoveryState = (globalThis as any)[GLOBAL_KEY] ?? {
+  providers: [],
+  listeners: [],
+  discoveryStarted: false,
+};
+
+(globalThis as any)[GLOBAL_KEY] = globalState; // сохраняем между перезагрузками модуля
+
+// NB: переменные-ссылки для удобства чтения, всегда обращаемся к globalState
+let listeners = globalState.listeners;
+let discoveryStarted = globalState.discoveryStarted;
 
 /**
  * Sort providers by priority (MetaMask first)
@@ -23,11 +44,23 @@ const sortProvidersByPriority = (providers: EIP6963ProviderDetail[]): EIP6963Pro
  * Get MetaMask provider specifically
  */
 const getMetaMaskProvider = (): EIP6963ProviderDetail | null => {
-  return providers.find(p => 
+  return globalState.providers.find(p => 
     p.info.rdns === 'io.metamask' || 
     p.info.rdns === 'io.metamask.flask' ||
+    p.info.rdns === 'io.metamask.mobile' ||
     p.provider.isMetaMask
   ) || null;
+};
+
+const isNonEvmProvider = (d: EIP6963ProviderDetail): boolean => {
+  // Phantom, Brave (Solana), любые, где нет request({method: 'eth_requestAccounts'}) или явно Solana
+  const rdns = d.info.rdns?.toLowerCase() || '';
+  return (
+    d.provider.isPhantom ||
+    rdns.includes('phantom') ||
+    d.provider.isBraveWallet ||
+    rdns.includes('solana')
+  );
 };
 
 /**
@@ -35,38 +68,46 @@ const getMetaMaskProvider = (): EIP6963ProviderDetail | null => {
  */
 const handleProviderAnnouncement = (event: EIP6963AnnounceProviderEvent) => {
   const { detail } = event;
+
+  if (isNonEvmProvider(detail)) {
+    console.log(`EIP-6963: Ignoring non-EVM provider ${detail.info.name}`);
+    return;
+  }
   
   // Prevent duplicate providers based on UUID
-  if (providers.some(p => p.info.uuid === detail.info.uuid)) {
+  if (globalState.providers.some(p => p.info.uuid === detail.info.uuid)) {
     console.log(`EIP-6963: Provider ${detail.info.name} already exists, skipping`);
     return;
   }
   
   console.log(`EIP-6963: New provider announced: ${detail.info.name} (${detail.info.rdns})`);
   
-  // Add provider to store
-  providers = [...providers, detail];
-  
-  // Sort by priority (MetaMask first)
-  providers = sortProvidersByPriority(providers);
+  // Add provider immutably -> новая ссылка для useSyncExternalStore
+  const next = sortProvidersByPriority([...globalState.providers, detail]);
+  globalState.providers = next;
   
   // Notify all listeners
-  listeners.forEach(listener => listener());
+  globalState.listeners.forEach(listener => listener());
 };
 
 /**
  * Initialize EIP-6963 provider discovery
  */
 const initializeProviderDiscovery = () => {
+  if (globalState.discoveryStarted) return; // уже запущено
+  globalState.discoveryStarted = true;
+
   console.log('EIP-6963: Initializing provider discovery...');
-  
-  // Listen for provider announcements
+
   window.addEventListener('eip6963:announceProvider', handleProviderAnnouncement);
-  
-  // Request all available providers
   window.dispatchEvent(new Event('eip6963:requestProvider'));
-  
+
   console.log('EIP-6963: Provider discovery initialized');
+
+  // Безопасно чистим слушатель только при закрытии вкладки
+  window.addEventListener('beforeunload', () => {
+    window.removeEventListener('eip6963:announceProvider', handleProviderAnnouncement);
+  });
 };
 
 /**
@@ -84,7 +125,7 @@ export const walletStore = {
   /**
    * Get current providers
    */
-  getProviders: (): EIP6963ProviderDetail[] => providers,
+  getProviders: (): EIP6963ProviderDetail[] => globalState.providers,
   
   /**
    * Get MetaMask provider specifically
@@ -98,7 +139,7 @@ export const walletStore = {
     const metamask = getMetaMaskProvider();
     if (metamask) return metamask;
     
-    return providers.length > 0 ? providers[0] : null;
+    return globalState.providers.length > 0 ? globalState.providers[0] : null;
   },
   
   /**
@@ -106,29 +147,24 @@ export const walletStore = {
    */
   subscribe: (callback: () => void) => {
     // Add listener
-    listeners.push(callback);
+    globalState.listeners.push(callback);
     
     // Initialize discovery on first subscription
-    if (listeners.length === 1) {
+    if (globalState.listeners.length === 1) {
       initializeProviderDiscovery();
     }
     
     // Return cleanup function
     return () => {
-      listeners = listeners.filter(l => l !== callback);
-      
-      // Cleanup discovery when no more listeners
-      if (listeners.length === 0) {
-        cleanupProviderDiscovery();
-        providers = []; // Reset providers
-      }
+      globalState.listeners = globalState.listeners.filter(l => l !== callback);
+      // Не выключаем discovery, чтобы не сбивать MetaMask pending window
     };
   },
   
   /**
    * Get current state (for useSyncExternalStore)
    */
-  getSnapshot: () => providers,
+  getSnapshot: () => globalState.providers,
   
   /**
    * Get server snapshot (for SSR)
