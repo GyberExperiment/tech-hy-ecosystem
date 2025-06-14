@@ -1,9 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { ethers, BrowserProvider, Contract } from 'ethers';
-import { CONTRACTS, BSC_TESTNET } from '../constants/contracts';
-import toast from 'react-hot-toast';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { ethers } from 'ethers';
+import { toast } from 'react-hot-toast';
+import { CONTRACTS } from '../constants/contracts';
 
-// Complete Contract ABIs
+// EIP-6963 imports
+import { usePreferredProvider } from '../hooks/useWalletProviders';
+import { detectLegacyProvider } from '../hooks/walletStore';
+import type { EIP1193Provider } from '../types/eip6963';
+
+// Contract ABIs
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)",
@@ -13,27 +19,6 @@ const ERC20_ABI = [
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
   "function totalSupply() view returns (uint256)",
-];
-
-const LPLOCKER_ABI = [
-  // Real LPLocker functions from the deployed contract
-  "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
-  "function lockLPTokens(uint256 lpAmount) external",
-  "function depositVGTokens(uint256 amount) external",
-  "function updateRates(uint256 newLpToVgRatio, uint256 newLpDivisor) external",
-  "function updatePancakeConfig(address newRouter, address newLpToken) external",
-  "function updateMevProtection(bool enabled, uint256 minTimeBetweenTxs, uint8 maxTxPerBlock) external",
-  "function getPoolInfo() external view returns (uint256 totalLocked, uint256 totalIssued, uint256 totalDeposited, uint256 availableVG)",
-  "function transferAuthority(address newAuthority) external",
-  "function config() external view returns (tuple(address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint256 maxSlippageBps, uint256 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited))",
-  "function lastUserTxTimestamp(address user) external view returns (uint256)",
-  "function lastUserTxBlock(address user) external view returns (uint256)",
-  "function userTxCountInBlock(address user) external view returns (uint8)",
-  "function owner() view returns (address)",
-  "function proxiableUUID() view returns (bytes32)",
-  "function supportsInterface(bytes4 interfaceId) view returns (bool)",
-  "function upgradeTo(address newImplementation) external",
-  "function upgradeToAndCall(address newImplementation, bytes memory data) payable external"
 ];
 
 const VGVOTES_ABI = [
@@ -48,63 +33,23 @@ const VGVOTES_ABI = [
   "function getPastTotalSupply(uint256 blockNumber) view returns (uint256)",
 ];
 
-const GOVERNOR_ABI = [
-  "function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description) returns (uint256)",
-  "function castVote(uint256 proposalId, uint8 support) returns (uint256)",
-  "function castVoteWithReason(uint256 proposalId, uint8 support, string memory reason) returns (uint256)",
-  "function execute(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash) payable returns (uint256)",
-  "function getVotes(address account, uint256 blockNumber) view returns (uint256)",
-  "function hasVoted(uint256 proposalId, address account) view returns (bool)",
-  "function proposalDeadline(uint256 proposalId) view returns (uint256)",
-  "function proposalSnapshot(uint256 proposalId) view returns (uint256)",
-  "function proposalThreshold() view returns (uint256)",
-  "function quorum(uint256 blockNumber) view returns (uint256)",
-  "function state(uint256 proposalId) view returns (uint8)",
-  "function supportsInterface(bytes4 interfaceId) view returns (bool)",
-  "function version() view returns (string)",
-  "function votingDelay() view returns (uint256)",
-  "function votingPeriod() view returns (uint256)",
+const LPLOCKER_ABI = [
+  "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
+  "function lockLPTokens(uint256 lpAmount) external",
+  "function depositVGTokens(uint256 amount) external",
+  "function updateRates(uint256 newLpToVgRatio, uint256 newLpDivisor) external",
+  "function updatePancakeConfig(address newRouter, address newLpToken) external",
+  "function updateMevProtection(bool enabled, uint256 minTimeBetweenTxs, uint8 maxTxPerBlock) external",
+  "function getPoolInfo() external view returns (uint256 totalLocked, uint256 totalIssued, uint256 totalDeposited, uint256 availableVG)",
+  "function transferAuthority(address newAuthority) external",
+  "function config() external view returns (tuple(address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint256 maxSlippageBps, uint256 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited))",
+  "function lastUserTxTimestamp(address user) external view returns (uint256)",
+  "function lastUserTxBlock(address user) external view returns (uint256)",
+  "function userTxCountInBlock(address user) external view returns (uint8)",
+  "function owner() view returns (address)",
 ];
 
-const TIMELOCK_ABI = [
-  "function delay() view returns (uint256)",
-  "function getMinDelay() view returns (uint256)",
-  "function hasRole(bytes32 role, address account) view returns (bool)",
-  "function isOperation(bytes32 id) view returns (bool)",
-  "function isOperationPending(bytes32 id) view returns (bool)",
-  "function isOperationReady(bytes32 id) view returns (bool)",
-  "function isOperationDone(bytes32 id) view returns (bool)",
-  "function getTimestamp(bytes32 id) view returns (uint256)",
-  "function schedule(address target, uint256 value, bytes calldata data, bytes32 predecessor, bytes32 salt, uint256 delay) external",
-  "function execute(address target, uint256 value, bytes calldata data, bytes32 predecessor, bytes32 salt) payable external",
-  "function cancel(bytes32 id) external",
-];
-
-const PANCAKE_ROUTER_ABI = [
-  "function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB, uint liquidity)",
-  "function addLiquidityETH(address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external payable returns (uint amountToken, uint amountETH, uint liquidity)",
-  "function removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB)",
-  "function removeLiquidityETH(address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external returns (uint amountToken, uint amountETH)",
-  "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
-  "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
-  "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
-  "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)",
-  "function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts)",
-  "function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB)",
-  "function factory() external pure returns (address)",
-  "function WETH() external pure returns (address)",
-];
-
-const PANCAKE_FACTORY_ABI = [
-  "function getPair(address tokenA, address tokenB) external view returns (address pair)",
-  "function createPair(address tokenA, address tokenB) external returns (address pair)",
-  "function feeTo() external view returns (address)",
-  "function feeToSetter() external view returns (address)",
-  "function allPairs(uint) external view returns (address pair)",
-  "function allPairsLength() external view returns (uint)",
-];
-
-export const PANCAKE_PAIR_ABI = [
+const PANCAKE_PAIR_ABI = [
   "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
   "function token0() external view returns (address)",
   "function token1() external view returns (address)",
@@ -116,42 +61,33 @@ export const PANCAKE_PAIR_ABI = [
 ];
 
 interface Web3ContextType {
-  // Connection
-  provider: BrowserProvider | null;
+  // Connection state
+  provider: ethers.BrowserProvider | null;
   signer: ethers.JsonRpcSigner | null;
   account: string | null;
-  chainId: number | null;
   isConnected: boolean;
   isCorrectNetwork: boolean;
-  isConnecting: boolean;
   
-  // Functions
+  // Contracts (memoized)
+  vcContract: ethers.Contract | null;
+  vgContract: ethers.Contract | null;
+  vgVotesContract: ethers.Contract | null;
+  lpContract: ethers.Contract | null;
+  lpPairContract: ethers.Contract | null;
+  lpLockerContract: ethers.Contract | null;
+  
+  // Actions
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
-  switchToTestnet: () => Promise<void>;
-  
-  // Contracts
-  getContract: (address: string, abi: string[]) => Contract | null;
-  vcContract: Contract | null;
-  vgContract: Contract | null;
-  vgVotesContract: Contract | null;
-  lpContract: Contract | null; // ERC20 LP token contract
-  lpPairContract: Contract | null; // LP pair contract for getReserves()
-  lpLockerContract: Contract | null;
-  governorContract: Contract | null;
-  timelockContract: Contract | null;
-  // PancakeSwap Contracts
-  pancakeRouterContract: Contract | null;
-  pancakeFactoryContract: Contract | null;
-  wbnbContract: Contract | null;
+  switchNetwork: () => Promise<void>;
 }
 
-const Web3Context = createContext<Web3ContextType | null>(null);
+const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 
 export const useWeb3 = () => {
   const context = useContext(Web3Context);
-  if (!context) {
-    throw new Error('useWeb3 must be used within Web3Provider');
+  if (context === undefined) {
+    throw new Error('useWeb3 must be used within a Web3Provider');
   }
   return context;
 };
@@ -160,155 +96,143 @@ interface Web3ProviderProps {
   children: ReactNode;
 }
 
-// Advanced wallet detection that bypasses conflicting extensions
-const detectWeb3Provider = (): any => {
-  // 1. Try direct MetaMask detection (most reliable)
-  if (window.ethereum?.isMetaMask && !window.ethereum?.isConnected?.()) {
-    return window.ethereum;
-  }
-
-  // 2. Try EIP-6963 wallet discovery (modern standard)
-  if (window.ethereum?.providers) {
-    const metaMaskProvider = window.ethereum.providers.find((p: any) => p.isMetaMask);
-    if (metaMaskProvider) return metaMaskProvider;
-  }
-
-  // 3. Try evmproviders (EIP-5749 standard)
-  if ((window as any).evmproviders) {
-    const providers = Object.values((window as any).evmproviders);
-    const metaMaskProvider = providers.find((p: any) => p.info?.name?.toLowerCase().includes('metamask'));
-    if (metaMaskProvider) return metaMaskProvider;
-  }
-
-  // 4. Check specific MetaMask namespace
-  if ((window as any).ethereum?.selectedProvider?.isMetaMask) {
-    return (window as any).ethereum.selectedProvider;
-  }
-
-  // 5. Final fallback to window.ethereum if available
-  if (window.ethereum) {
-    return window.ethereum;
-  }
-
-  return null;
-};
-
-// Safe provider request wrapper that handles conflicts
-const safeProviderRequest = async (provider: any, method: string, params: any[] = []) => {
-  try {
-    // Direct method call if available
-    if (provider.request) {
-      return await provider.request({ method, params });
-    }
-    
-    // Fallback to send if request not available
-    if (provider.send) {
-      return new Promise((resolve, reject) => {
-        provider.send({ method, params }, (error: any, result: any) => {
-          if (error) reject(error);
-          else resolve(result.result);
-        });
-      });
-    }
-    
-    throw new Error('Provider does not support request or send');
-  } catch (error: any) {
-    // Handle specific extension conflicts
-    if (error.message?.includes('evmAsk') || error.message?.includes('Extension conflict')) {
-      console.warn('Extension conflict detected, trying alternative method');
-      // Add delay and retry
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return await provider.request({ method, params });
-    }
-    throw error;
-  }
-};
-
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-  const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  // State
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [account, setAccount] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<number | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
 
-  const isConnected = !!account;
-  const isCorrectNetwork = chainId === BSC_TESTNET.chainId;
+  // EIP-6963 hooks
+  const preferredProvider = usePreferredProvider();
 
-  // Contract instances
-  const getContract = (address: string, abi: string[]) => {
-    if (!signer) return null;
-    return new Contract(address, abi, signer);
+  // BSC Testnet configuration
+  const BSC_TESTNET_CONFIG = {
+    chainId: '0x61', // 97 in hex
+    chainName: 'BSC Testnet',
+    nativeCurrency: {
+      name: 'tBNB',
+      symbol: 'tBNB',
+      decimals: 18,
+    },
+    rpcUrls: ['https://bsc-testnet-rpc.publicnode.com'],
+    blockExplorerUrls: ['https://testnet.bscscan.com'],
   };
 
-  const vcContract = getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
-  const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-  const vgVotesContract = getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
-  const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-  const lpPairContract = null;
-  const lpLockerContract = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
-  const governorContract = getContract(CONTRACTS.GOVERNOR, GOVERNOR_ABI);
-  const timelockContract = getContract(CONTRACTS.TIMELOCK, TIMELOCK_ABI);
-  // PancakeSwap contracts
-  const pancakeRouterContract = getContract(CONTRACTS.PANCAKE_ROUTER, PANCAKE_ROUTER_ABI);
-  const pancakeFactoryContract = getContract(CONTRACTS.PANCAKE_FACTORY, PANCAKE_FACTORY_ABI);
-  const wbnbContract = getContract(CONTRACTS.WBNB, ERC20_ABI);
+  /**
+   * Get the best available Ethereum provider
+   * Uses EIP-6963 first, then falls back to legacy detection
+   */
+  const getEthereumProvider = (): EIP1193Provider | null => {
+    // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
+    if (preferredProvider) {
+      console.log(`Web3Context: Using EIP-6963 provider: ${preferredProvider.info.name} (${preferredProvider.info.rdns})`);
+      return preferredProvider.provider;
+    }
+
+    // 2. Fallback to legacy detection
+    const legacyProvider = detectLegacyProvider();
+    if (legacyProvider) {
+      console.log('Web3Context: Using legacy provider detection');
+      return legacyProvider;
+    }
+
+    console.log('Web3Context: No Ethereum provider found');
+    return null;
+  };
+
+  // Helper function to create contract instances
+  const getContract = (address: string, abi: any[]): ethers.Contract | null => {
+    if (!signer || !account) return null;
+    try {
+      return new ethers.Contract(address, abi, signer);
+    } catch (error) {
+      console.error(`Web3Context: Failed to create contract at ${address}:`, error);
+      return null;
+    }
+  };
+
+  // Memoized contracts to prevent unnecessary re-renders
+  const vcContract = useMemo(() => {
+    return getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
+  }, [signer, account]);
+
+  const vgContract = useMemo(() => {
+    return getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
+  }, [signer, account]);
+
+  const vgVotesContract = useMemo(() => {
+    return getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
+  }, [signer, account]);
+
+  const lpContract = useMemo(() => {
+    return getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
+  }, [signer, account]);
+
+  const lpPairContract = useMemo(() => {
+    return getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
+  }, [signer, account]);
+
+  const lpLockerContract = useMemo(() => {
+    return getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
+  }, [signer, account]);
 
   const connectWallet = async () => {
-    if (isConnecting) return;
-    
     try {
-      setIsConnecting(true);
-      
-      const detectedProvider = detectWeb3Provider();
-      if (!detectedProvider) {
-        toast.error('MetaMask не найден! Установите MetaMask.');
+      const ethereum = getEthereumProvider();
+      if (!ethereum) {
+        toast.error('MetaMask не найден');
         return;
       }
 
-      // Check if already connected to avoid unnecessary prompts
-      const accounts = await safeProviderRequest(detectedProvider, 'eth_accounts');
+      let accounts = await ethereum.request({ method: 'eth_accounts' }) as string[];
       
-      let finalAccounts = accounts;
       if (!accounts || accounts.length === 0) {
-        // Request connection only if not connected
-        finalAccounts = await safeProviderRequest(detectedProvider, 'eth_requestAccounts');
+        accounts = await ethereum.request({ method: 'eth_requestAccounts' }) as string[];
+        if (!accounts || accounts.length === 0) {
+          toast.error('Подключение отменено пользователем');
+          return;
+        }
       }
 
-      if (!finalAccounts || finalAccounts.length === 0) {
-        toast.error('Подключение отменено пользователем');
-        return;
-      }
-
-      const provider = new BrowserProvider(detectedProvider);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const network = await provider.getNetwork();
+      const ethProvider = new ethers.BrowserProvider(ethereum);
+      const ethSigner = await ethProvider.getSigner();
+      const network = await ethProvider.getNetwork();
       
-      setProvider(provider);
-      setSigner(signer);
-      setAccount(address);
-      setChainId(Number(network.chainId));
+      setProvider(ethProvider);
+      setSigner(ethSigner);
+      setAccount(accounts[0] || null);
+      setIsConnected(true);
+      setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
       
       toast.success('Кошелёк подключён!');
       
-      if (Number(network.chainId) !== BSC_TESTNET.chainId) {
+      if (Number(network.chainId) !== 97) {
         toast.error('Переключитесь на BSC Testnet');
       }
     } catch (error: any) {
-      console.error('Ошибка подключения:', error);
+      console.error('Web3Context: Connection error:', error);
       
-      // Better error handling
+      // Better error handling with Phantom conflict detection
       if (error.code === 4001) {
         toast.error('Подключение отклонено пользователем');
       } else if (error.code === -32002) {
         toast.error('Уже есть запрос на подключение. Проверьте MetaMask.');
       } else if (error.message?.includes('evmAsk')) {
         toast.error('Конфликт расширений. Отключите evmAsk или другие кошельки.');
+      } else if (error.message?.includes('phantom') || error.message?.toLowerCase().includes('solana')) {
+        toast.error('Конфликт с Phantom кошельком. Используйте MetaMask для Ethereum/BSC.');
+      } else if (error.message?.includes('User rejected')) {
+        toast.error('Подключение отменено пользователем');
       } else {
-        toast.error('Ошибка подключения к кошельку');
+        console.error('Web3Context: Detailed connection error:', {
+          code: error.code,
+          message: error.message,
+          data: error.data
+        });
+        toast.error('Ошибка подключения к кошельку. Проверьте MetaMask.');
       }
-    } finally {
-      setIsConnecting(false);
     }
   };
 
@@ -316,49 +240,44 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     setProvider(null);
     setSigner(null);
     setAccount(null);
-    setChainId(null);
+    setIsConnected(false);
+    setIsCorrectNetwork(false);
     toast.success('Кошелёк отключён');
   };
 
-  const switchToTestnet = async () => {
-    const ethereum = detectWeb3Provider();
+  const switchNetwork = async () => {
+    const ethereum = getEthereumProvider();
     if (!ethereum) {
       toast.error('MetaMask не найден');
       return;
     }
 
     try {
-      // Try to switch to BSC Testnet
       await ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${BSC_TESTNET.chainId.toString(16)}` }],
+        params: [{ chainId: '0x61' }], // BSC Testnet chainId in hex
       });
     } catch (switchError: any) {
-      // This error code indicates that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
         try {
           await ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [
               {
-                chainId: `0x${BSC_TESTNET.chainId.toString(16)}`,
-                chainName: BSC_TESTNET.name,
-                nativeCurrency: {
-                  name: BSC_TESTNET.currency,
-                  symbol: BSC_TESTNET.currency,
-                  decimals: 18,
-                },
-                rpcUrls: [BSC_TESTNET.rpcUrl, ...BSC_TESTNET.fallbackRpcUrls],
-                blockExplorerUrls: [BSC_TESTNET.blockExplorer],
+                chainId: '0x61',
+                chainName: BSC_TESTNET_CONFIG.chainName,
+                nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
+                rpcUrls: BSC_TESTNET_CONFIG.rpcUrls,
+                blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
               },
             ],
           });
         } catch (addError) {
-          console.error('Error adding BSC Testnet:', addError);
-          toast.error('Ошибка добавления BSC Testnet в MetaMask');
+          console.error('Ошибка добавления сети:', addError);
+          toast.error('Ошибка добавления BSC Testnet');
         }
       } else {
-        console.error('Error switching to BSC Testnet:', switchError);
+        console.error('Ошибка переключения сети:', switchError);
         toast.error('Ошибка переключения на BSC Testnet');
       }
     }
@@ -366,26 +285,25 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
   // Listen for account/chain changes
   useEffect(() => {
-    const detectedProvider = detectWeb3Provider();
-    if (!detectedProvider) return;
+    const ethereum = getEthereumProvider();
+    if (!ethereum) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
         disconnectWallet();
-      } else if (accounts[0] !== account) {
+      } else {
         setAccount(accounts[0] || null);
-        toast.success('Аккаунт изменён');
       }
     };
 
     const handleChainChanged = (chainId: string) => {
       const newChainId = parseInt(chainId, 16);
-      setChainId(newChainId);
+      setIsCorrectNetwork(newChainId === 97);
       
-      if (newChainId === BSC_TESTNET.chainId) {
+      if (newChainId === 97) {
         toast.success('Переключено на BSC Testnet!');
       } else {
-        toast.error('Сеть изменена. Рекомендуется BSC Testnet.');
+        toast.error('Переключитесь на BSC Testnet');
       }
     };
 
@@ -395,82 +313,43 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
     // Safe event listener attachment
     try {
-      if (detectedProvider.on) {
-        detectedProvider.on('accountsChanged', handleAccountsChanged);
-        detectedProvider.on('chainChanged', handleChainChanged);
-        detectedProvider.on('disconnect', handleDisconnect);
+      if (ethereum.on) {
+        ethereum.on('accountsChanged', handleAccountsChanged);
+        ethereum.on('chainChanged', handleChainChanged);
+        ethereum.on('disconnect', handleDisconnect);
       }
     } catch (error) {
-      console.warn('Error attaching event listeners:', error);
+      console.error('Ошибка подключения слушателей событий:', error);
     }
 
     return () => {
       try {
-        if (detectedProvider.removeListener) {
-          detectedProvider.removeListener('accountsChanged', handleAccountsChanged);
-          detectedProvider.removeListener('chainChanged', handleChainChanged);
-          detectedProvider.removeListener('disconnect', handleDisconnect);
+        if (ethereum.removeListener) {
+          ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          ethereum.removeListener('chainChanged', handleChainChanged);
+          ethereum.removeListener('disconnect', handleDisconnect);
         }
       } catch (error) {
-        console.warn('Error removing event listeners:', error);
+        console.error('Ошибка отключения слушателей событий:', error);
       }
     };
   }, [account]);
-
-  // Auto-connect if previously connected (with advanced detection)
-  useEffect(() => {
-    const checkConnection = async () => {
-      const detectedProvider = detectWeb3Provider();
-      if (!detectedProvider) return;
-      
-      try {
-        const accounts = await safeProviderRequest(detectedProvider, 'eth_accounts');
-        
-        if (accounts && accounts.length > 0) {
-          const provider = new BrowserProvider(detectedProvider);
-          const signer = await provider.getSigner();
-          const network = await provider.getNetwork();
-          
-          setProvider(provider);
-          setSigner(signer);
-          setAccount(accounts[0]);
-          setChainId(Number(network.chainId));
-        }
-      } catch (error) {
-        console.error('Ошибка автоподключения:', error);
-        // Не показываем toast при автоподключении - это не критично
-      }
-    };
-
-    // Добавляем задержку для избежания конфликтов с расширениями
-    const timeoutId = setTimeout(checkConnection, 1500);
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   const value: Web3ContextType = {
     provider,
     signer,
     account,
-    chainId,
     isConnected,
     isCorrectNetwork,
-    isConnecting,
     connectWallet,
     disconnectWallet,
-    switchToTestnet,
-    getContract,
+    switchNetwork,
     vcContract,
     vgContract,
     vgVotesContract,
     lpContract,
     lpPairContract,
     lpLockerContract,
-    governorContract,
-    timelockContract,
-    // PancakeSwap contracts
-    pancakeRouterContract,
-    pancakeFactoryContract,
-    wbnbContract,
   };
 
   return (
@@ -486,4 +365,7 @@ declare global {
     ethereum?: any;
     evmproviders?: any;
   }
-} 
+}
+
+// Export ABI for use in other components
+export { PANCAKE_PAIR_ABI }; 

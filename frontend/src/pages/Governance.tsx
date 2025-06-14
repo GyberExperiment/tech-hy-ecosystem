@@ -54,7 +54,8 @@ const Governance: React.FC = () => {
     isCorrectNetwork, 
     vgContract, 
     vgVotesContract, 
-    provider 
+    governorContract,
+    provider
   } = useWeb3();
 
   const [balances, setBalances] = useState<Record<string, string>>({});
@@ -143,20 +144,26 @@ const Governance: React.FC = () => {
   };
 
   const fetchGovernanceStats = async () => {
-    // Mock data - в продакшене получать из governance контракта
+    // Заглушка - в продакшене получать из governance контракта
     setGovernanceStats({
-      totalProposals: mockProposals.length,
-      activeProposals: mockProposals.filter(p => p.status === 'Active').length,
+      totalProposals: proposals.length,
+      activeProposals: proposals.filter(p => p.status === 'Active').length,
       totalVotingPower: '500000',
       participationRate: '68.5',
     });
+  };
+
+  const fetchProposals = async () => {
+    // Заглушка - в продакшене получать из Governor контракта
+    // Пока используем пустой массив
+    setProposals([]);
   };
 
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {
       fetchBalances();
       fetchGovernanceStats();
-      setProposals(mockProposals);
+      fetchProposals();
     }
   }, [account, isConnected, isCorrectNetwork]);
 
@@ -192,22 +199,34 @@ const Governance: React.FC = () => {
   };
 
   const handleVote = async (proposalId: number, support: boolean) => {
-    if (!voteAmount || !account) {
-      toast.error('Введите количество голосов');
+    if (!voteAmount || !account || !governorContract || !vgVotesContract) {
+      toast.error('Введите количество голосов или подключите кошелек');
       return;
     }
 
     try {
       toast.loading('Отправка голоса...', { id: 'vote' });
       
-      // В продакшене здесь будет вызов governance контракта
-      // const tx = await governanceContract.castVote(proposalId, support, ethers.parseEther(voteAmount));
-      // await tx.wait();
+      // ✅ Проверяем voting power пользователя
+      const proposalSnapshot = await governorContract.proposalSnapshot(proposalId);
+      const votingPower = await vgVotesContract.getPastVotes(account, proposalSnapshot);
       
-      // Mock success
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (votingPower === 0n) {
+        throw new Error('У вас нет voting power для голосования');
+      }
+      
+      // ✅ Отправляем реальный голос в Governor контракт
+      const supportValue = support ? 1 : 0; // 0=Against, 1=For, 2=Abstain
+      const tx = await governorContract.castVote(proposalId, supportValue);
+      
+      toast.loading('Подтверждение транзакции...', { id: 'vote' });
+      await tx.wait();
       
       toast.success(`Голос ${support ? 'ЗА' : 'ПРОТИВ'} успешно подан!`, { id: 'vote' });
+      
+      // Обновляем данные после голосования
+      await fetchProposals();
+      await fetchGovernanceStats();
       
       setVoteAmount('');
       setVoteSupport(null);
@@ -215,7 +234,19 @@ const Governance: React.FC = () => {
       
     } catch (error: any) {
       console.error('Vote error:', error);
-      toast.error(`Ошибка голосования: ${error.message}`, { id: 'vote' });
+      let errorMessage = 'Ошибка голосования';
+      
+      if (error.message?.includes('insufficient voting power')) {
+        errorMessage = 'Недостаточно voting power';
+      } else if (error.message?.includes('already voted')) {
+        errorMessage = 'Вы уже голосовали по этому предложению';
+      } else if (error.message?.includes('proposal not active')) {
+        errorMessage = 'Предложение неактивно для голосования';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, { id: 'vote' });
     }
   };
 
@@ -668,24 +699,24 @@ const Governance: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium">Timelock</span>
               <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.TIMELOCK_CONTROLLER}`}
+                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.TIMELOCK}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
               >
-                <span>{`${CONTRACTS.TIMELOCK_CONTROLLER.slice(0, 6)}...${CONTRACTS.TIMELOCK_CONTROLLER.slice(-4)}`}</span>
+                <span>{`${CONTRACTS.TIMELOCK.slice(0, 6)}...${CONTRACTS.TIMELOCK.slice(-4)}`}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium">Governor</span>
               <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER_GOVERNOR}`}
+                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.GOVERNOR}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
               >
-                <span>{`${CONTRACTS.LP_LOCKER_GOVERNOR.slice(0, 6)}...${CONTRACTS.LP_LOCKER_GOVERNOR.slice(-4)}`}</span>
+                <span>{`${CONTRACTS.GOVERNOR.slice(0, 6)}...${CONTRACTS.GOVERNOR.slice(-4)}`}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>

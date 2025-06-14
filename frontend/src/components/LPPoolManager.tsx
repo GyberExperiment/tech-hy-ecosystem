@@ -489,12 +489,15 @@ const LPPoolManager: React.FC = () => {
   }, [account, isConnected, isCorrectNetwork]);
 
   useEffect(() => {
-    calculateLiquidity();
-    checkApprovals();
-  }, [vcInput, bnbInput, poolInfo]);
+    if (poolInfo && (vcInput || bnbInput)) {
+      calculateLiquidity();
+    }
+  }, [vcInput, bnbInput]);
 
   useEffect(() => {
-    checkApprovals();
+    if (poolInfo && lpTokensInput) {
+      checkApprovals();
+    }
   }, [lpTokensInput, activeTab]);
 
   if (!isConnected) {

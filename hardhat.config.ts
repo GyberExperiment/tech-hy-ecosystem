@@ -27,7 +27,7 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545"
     },
     bscTestnet: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      url: "https://bsc-testnet-rpc.publicnode.com",
       chainId: 97,
       gasPrice: 20000000000,
       accounts: normalizePrivateKey(process.env.PRIVATE_KEY) ? [normalizePrivateKey(process.env.PRIVATE_KEY)!] : [],

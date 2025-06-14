@@ -50,12 +50,13 @@ async function main() {
     
     const LPLocker = await ethers.getContractFactory("LPLocker");
     
-    const initConfig = {
+    // Сначала деплоим с временным адресом, потом обновим
+    const tempInitConfig = {
         vgTokenAddress: tokenData.VG_TOKEN,         // VGToken для rewards
         vcTokenAddress: tokenData.VC_TOKEN,         // VCToken для staking
         pancakeRouter: PANCAKE_ROUTER_TESTNET,
         lpTokenAddress: lpTokenAddress,
-        stakingVaultAddress: deployerAddress, // Temporary, will be updated
+        stakingVaultAddress: deployerAddress, // Временно deployer
         lpDivisor: 1000000,
         lpToVgRatio: 10,
         minBnbAmount: ethers.parseEther("0.01"), // 0.01 BNB
@@ -67,7 +68,7 @@ async function main() {
         maxTxPerUserPerBlock: 2
     };
 
-    const lpLocker = await upgrades.deployProxy(LPLocker, [initConfig], {
+    const lpLocker = await upgrades.deployProxy(LPLocker, [tempInitConfig], {
         initializer: 'initialize',
         kind: 'uups'
     });
@@ -98,9 +99,14 @@ async function main() {
     const currentBalance = await VGToken.balanceOf(deployerAddress);
     console.log("✅ Current VG balance:", ethers.formatEther(currentBalance));
     
-    // Setup approval for LPLocker to distribute rewards
-    await VGToken.approve(lpLockerAddress, rewardSupply);
-    console.log("✅ VG rewards approved for LPLocker:", ethers.formatEther(rewardSupply));
+    // ✅ Переводим VG токены напрямую в LPLocker для выдачи наград
+    console.log("\n🔧 Transferring VG tokens to LPLocker...");
+    await VGToken.transfer(lpLockerAddress, rewardSupply);
+    console.log("✅ Transferred", ethers.formatEther(rewardSupply), "VG tokens to LPLocker");
+    
+    // Проверяем баланс vault
+    const vaultBalance = await VGToken.balanceOf(lpLockerAddress);
+    console.log("✅ LPLocker balance:", ethers.formatEther(vaultBalance));
 
     // Step 6: Setup VGTokenVotes for governance testing
     console.log("\n🗳️  Setting up governance tokens...");
@@ -136,9 +142,9 @@ async function main() {
         DEPLOYER: deployerAddress,
         NETWORK: "BSC_TESTNET",
         DEPLOYMENT_TIMESTAMP: new Date().toISOString(),
-        CONFIG: initConfig,
+        CONFIG: tempInitConfig,
         GOVERNANCE_SETUP: {
-            VG_REWARDS_APPROVED: ethers.formatEther(rewardSupply),
+            LP_LOCKER_BALANCE: ethers.formatEther(vaultBalance),
             VG_GOVERNANCE_DEPOSITED: ethers.formatEther(governanceAmount),
             DEPLOYER_VOTING_POWER: ethers.formatEther(votingPower)
         }
@@ -153,7 +159,6 @@ async function main() {
     console.log("VC Token (staking): ", tokenData.VC_TOKEN);
     console.log("VG Token (rewards): ", tokenData.VG_TOKEN);
     console.log("VGTokenVotes (gov):  ", tokenData.VG_TOKEN_VOTES);
-    console.log("LP Token:           ", lpTokenAddress);
     console.log("LPLocker:           ", lpLockerAddress);
     console.log("StakingDAO:         ", stakingDAOAddress);
     console.log("Governor:           ", governorAddress);

@@ -3,6 +3,50 @@
 ## Цель проекта
 LP LOCKING система для BSC с интеграцией PancakeSwap для permanent liquidity locking
 
+## ✅ ИСПРАВЛЕНЫ КРИТИЧЕСКИЕ ПРОБЛЕМЫ КОШЕЛЬКОВ (ЯНВАРЬ 2025):
+
+### 🔧 WALLET CONNECTION FIXES:
+1. **MetaMask Detection Improved**: Улучшена функция `detectWeb3Provider()` с приоритетом MetaMask
+2. **Phantom Conflict Resolution**: Добавлена фильтрация Phantom и Brave Wallet конфликтов
+3. **Contract Memoization**: Добавлена мемоизация контрактов в Web3Context для предотвращения лишних перерендеров
+4. **Dashboard useEffect Optimization**: Убраны избыточные зависимости, предотвращены циклы
+5. **Enhanced Error Handling**: Улучшена обработка ошибок с детекцией Phantom конфликтов
+6. **WalletTroubleshoot Updated**: Добавлены инструкции по устранению конфликтов кошельков
+
+### 🌐 RPC ENDPOINTS FIXED (ЯНВАРЬ 2025):
+- **Проблема**: BSC Testnet RPC endpoints не работали (timeout, SSL ошибки)
+- **Решение**: Переключен на **publicnode.com** для всех подключений
+- **Frontend**: `https://bsc-testnet-rpc.publicnode.com` в constants/contracts.ts
+- **Hardhat**: `https://bsc-testnet-rpc.publicnode.com` в hardhat.config.ts
+- **Fallback RPC**: Добавлены альтернативные endpoints (omniatech, blastapi, blockpi)
+
+### 📊 VG TOKENS DISTRIBUTION ANALYSIS:
+- **Total Supply**: 100,000,000 VG ✅
+- **LP Locker Vault**: 79,999,980 VG (80%) - vault для наград ✅
+- **VG Votes Contract**: 20,000,000 VG (20%) - wrapper для голосований ✅
+- **Deployer Balance**: 20 VG (0.00%) - только для тестов ✅
+- **Статус**: Все VG токены правильно распределены по архитектуре
+
+### 🔧 DASHBOARD DATA LOADING FIXED:
+- **Fallback Provider**: Добавлен fallback на publicnode.com если Web3Context provider недоступен
+- **Contract Fallbacks**: Прямые вызовы контрактов если Web3Context контракты не работают
+- **Error Handling**: Улучшена обработка ошибок с toast уведомлениями
+- **Balance Keys**: Исправлены ключи балансов (VGVotes вместо VGV)
+- **TypeScript**: Исправлены все типизации и null checks
+
+### 🐛 ИСПРАВЛЕННЫЕ ОШИБКИ КОНСОЛИ:
+- ✅ **"MetaMask extension not found"** - исправлено улучшенной детекцией
+- ✅ **"Dashboard useEffect loops"** - исправлено оптимизацией зависимостей
+- ✅ **"Phantom wallet errors"** - добавлена фильтрация конфликтов
+- ✅ **Contract undefined errors** - добавлены null checks в fetchBalances
+
+### 🔍 ТЕХНИЧЕСКИЕ ДЕТАЛИ ИСПРАВЛЕНИЙ:
+- **detectWeb3Provider()**: Строгая фильтрация `!isPhantom && !isBraveWallet`
+- **Contract Memoization**: `useMemo` с зависимостями `[signer, account]`
+- **Dashboard useEffect**: Зависимости `[account, isConnected, isCorrectNetwork]` только
+- **Error Handling**: Специфичные сообщения для Phantom/Solana конфликтов
+- **Null Safety**: Проверки `contract && contract.balanceOf` перед вызовами
+
 ## Ключевая архитектура
 - Основной контракт: LPLocker (upgradeable UUPS proxy)
 - DAO Governance: LockerDAO + LPLockerGovernor

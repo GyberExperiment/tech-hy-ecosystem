@@ -51,7 +51,7 @@ const LPLOCKER_ABI = [
 ];
 
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, provider, signer, isConnected, getContract } = useWeb3();
+  const { account, provider, signer, isConnected, isCorrectNetwork, getContract, vcContract, vgContract, lpLockerContract } = useWeb3();
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'create' | 'lock'>('create');
   const [vcAmount, setVcAmount] = useState('');
@@ -72,48 +72,64 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   useEffect(() => {
     if (isConnected && account) {
       loadUserData();
+      // Загружаем информацию о пуле
+      loadPoolInfo().then(setPoolInfo).catch(console.error);
     }
   }, [isConnected, account]);
 
   const loadUserData = async () => {
-    if (!provider || !account || !getContract) return;
+    if (!account || !isCorrectNetwork) return;
 
+    setLoading(true);
     try {
-      console.log('Loading user data for account:', account);
-      
-      const vcContract = getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
-      const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-      const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-
-      if (!vcContract || !vgContract || !lpContract) {
-        console.error('Failed to create contracts');
+      if (!vcContract || !vgContract || !lpLockerContract) {
         return;
       }
 
-      const [vcBalance, bnbBalance, lpBalance, vgBalance, poolData] = await Promise.allSettled([
-        vcContract.balanceOf(account),
-        provider.getBalance(account),
-        lpContract.balanceOf(account),
-        vgContract.balanceOf(account),
-        loadPoolInfo()
-      ]);
-
       const newBalances: UserBalances = {
-        vc: vcBalance.status === 'fulfilled' ? ethers.formatEther(vcBalance.value) : '0',
-        bnb: bnbBalance.status === 'fulfilled' ? ethers.formatEther(bnbBalance.value) : '0',
-        lpTokens: lpBalance.status === 'fulfilled' ? ethers.formatEther(lpBalance.value) : '0',
-        vg: vgBalance.status === 'fulfilled' ? ethers.formatEther(vgBalance.value) : '0'
+        vc: '0',
+        vg: '0',
+        bnb: '0',
+        lpTokens: '0'
       };
 
-      console.log('Updated balances:', newBalances);
-      setBalances(newBalances);
-
-      if (poolData.status === 'fulfilled') {
-        setPoolInfo(poolData.value as PoolInfo);
+      try {
+        const vcBalance = await vcContract.balanceOf(account);
+        newBalances.vc = ethers.formatEther(vcBalance);
+      } catch (error) {
+        // Игнорируем ошибки баланса
       }
 
+      try {
+        const vgBalance = await vgContract.balanceOf(account);
+        newBalances.vg = ethers.formatEther(vgBalance);
+      } catch (error) {
+        // Игнорируем ошибки баланса
+      }
+
+      try {
+        const bnbBalance = await provider.getBalance(account);
+        newBalances.bnb = ethers.formatEther(bnbBalance);
+      } catch (error) {
+        // Игнорируем ошибки баланса
+      }
+
+      // Добавляем получение LP токенов
+      try {
+        const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
+        if (lpContract) {
+          const lpBalance = await lpContract.balanceOf(account);
+          newBalances.lpTokens = ethers.formatEther(lpBalance);
+        }
+      } catch (error) {
+        // Игнорируем ошибки баланса
+      }
+
+      setBalances(newBalances);
     } catch (error) {
       console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -203,23 +219,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       try {
         const config = await lpLockerWithSigner.config();
         maxAllowedSlippage = config[11];
-        console.log('Contract Max Slippage BPS:', maxAllowedSlippage);
 
         if (finalSlippage > maxAllowedSlippage) {
           finalSlippage = maxAllowedSlippage;
-          console.log(`Slippage adapted from 15% to ${finalSlippage / 100}%`);
         }
       } catch (configError) {
-        console.warn('Could not fetch contract config, using default slippage');
+        // Используем дефолтный slippage если не можем получить из контракта
       }
-
-      console.log('Transaction Parameters:', {
-        vcAmount: ethers.formatEther(vcAmountWei),
-        bnbAmount: ethers.formatEther(bnbAmountWei),
-        slippageBps: finalSlippage,
-        maxSlippageBps: maxAllowedSlippage,
-        gasLimit: 500000,
-      });
 
       const tx = await lpLockerWithSigner.earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
         value: bnbAmountWei,
@@ -231,12 +237,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       if (receipt.status === 1) {
         toast.success('VG токены успешно получены!');
-        console.log('Transaction successful:', receipt.hash);
 
         // Принудительное обновление балансов с задержкой
         setTimeout(async () => {
           await loadUserData();
-          console.log('Balances updated after transaction');
         }, 2000); // 2 секунды задержка для BSC
 
         await loadUserData();
@@ -341,11 +345,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       toast.loading('Блокировка LP токенов и получение VG наград...');
       
-      console.log('LP Lock Parameters:', {
-        lpAmount: ethers.formatEther(lpAmountWei),
-        gasLimit: 300000,
-      });
-
       const tx = await lpLockerWithSigner.lockLPTokens(lpAmountWei, {
         gasLimit: 300000,
       });
@@ -355,12 +354,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       if (receipt.status === 1) {
         toast.success('LP токены заблокированы, VG награды получены!');
-        console.log('LP Lock transaction successful:', receipt.hash);
 
         // Принудительное обновление балансов с задержкой
         setTimeout(async () => {
           await loadUserData();
-          console.log('Balances updated after LP lock transaction');
         }, 2000); // 2 секунды задержка для BSC
 
         await loadUserData();

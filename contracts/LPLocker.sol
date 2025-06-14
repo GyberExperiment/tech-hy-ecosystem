@@ -7,7 +7,7 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "./interfaces/IPancakeRouter02.sol";
 import { IVGToken } from "./interfaces/IVGToken.sol";
-import "hardhat/console.sol";
+
 contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Структура конфигурации
     struct StakingConfig {
@@ -185,21 +185,9 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         config.totalLockedLp += liquidity;
 
         uint256 vgReward = liquidity * config.lpToVgRatio;
-        IERC20 vgToken = IERC20(config.vgTokenAddress);
-
-        require(
-            vgToken.balanceOf(config.stakingVaultAddress) >= vgReward,
-            "Insufficient VG tokens"
-        );
-
-        // Используем transfer если vault = сам контракт, transferFrom если внешний vault
-        if (config.stakingVaultAddress == address(this)) {
-            // Контракт владеет токенами - используем обычный transfer
-            vgToken.transfer(msg.sender, vgReward);
-        } else {
-            // Внешний vault - используем transferFrom
-            vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
-        }
+        
+        // ✅ Обновленная логика работы с VGVault
+        _distributeVGReward(msg.sender, vgReward);
         
         config.totalVgIssued += vgReward;
 
@@ -231,32 +219,37 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         // Рассчитываем VG награду (такое же соотношение как в earnVG)
         uint256 vgReward = lpAmount * config.lpToVgRatio;
         
-        IERC20 vgToken = IERC20(config.vgTokenAddress);
-        
-        // Проверяем достаточность VG токенов в vault
-        require(
-            vgToken.balanceOf(config.stakingVaultAddress) >= vgReward,
-            "Insufficient VG tokens in vault"
-        );
-        
-        // Используем transfer если vault = сам контракт, transferFrom если внешний vault
-        if (config.stakingVaultAddress == address(this)) {
-            // Контракт владеет токенами - используем обычный transfer
-            vgToken.transfer(msg.sender, vgReward);
-        } else {
-            // Внешний vault - используем transferFrom
-            vgToken.transferFrom(config.stakingVaultAddress, msg.sender, vgReward);
-        }
+        // ✅ Обновленная логика работы с VGVault
+        _distributeVGReward(msg.sender, vgReward);
         
         config.totalVgIssued += vgReward;
         
         emit LPTokensLocked(msg.sender, lpAmount, vgReward, block.timestamp);
     }
 
+    /**
+     * @dev Внутренняя функция для выдачи VG токенов
+     * @param to Адрес получателя
+     * @param amount Количество VG токенов
+     */
+    function _distributeVGReward(address to, uint256 amount) internal {
+        IERC20 vgToken = IERC20(config.vgTokenAddress);
+        
+        // Проверяем что у контракта достаточно VG токенов
+        require(
+            vgToken.balanceOf(address(this)) >= amount,
+            "Insufficient VG tokens in contract"
+        );
+        
+        // Выдаем VG токены напрямую из контракта
+        vgToken.transfer(to, amount);
+    }
+
     function depositVGTokens(uint256 amount) external onlyAuthority {
         IERC20 vgToken = IERC20(config.vgTokenAddress);
 
-        vgToken.transferFrom(msg.sender, config.stakingVaultAddress, amount);
+        // Переводим VG токены в сам контракт для выдачи наград
+        vgToken.transferFrom(msg.sender, address(this), amount);
         config.totalVgDeposited += amount;
         emit VGTokensDeposited(msg.sender, amount, config.totalVgDeposited, block.timestamp);
     }
@@ -292,23 +285,6 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         emit ConfigurationUpdated(msg.sender, "MEVProtection", block.timestamp);
     }
 
-    /**
-     * @notice Обновляет адрес vault для хранения VG токенов
-     * @param newVault Новый адрес vault (может быть контракт или EOA)
-     * @dev Только authority может изменить vault адрес
-     */
-    function updateStakingVault(address newVault) external onlyAuthority {
-        require(newVault != address(0), "Invalid vault address");
-        
-        address oldVault = config.stakingVaultAddress;
-        config.stakingVaultAddress = newVault;
-        
-        emit ConfigurationUpdated(msg.sender, "StakingVault", block.timestamp);
-        
-        // Логируем изменение для удобства
-        console.log("Staking vault updated from %s to %s", oldVault, newVault);
-    }
-
     function getPoolInfo()
         external
         view
@@ -324,7 +300,7 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
             config.totalLockedLp,
             config.totalVgIssued,
             config.totalVgDeposited,
-            vgToken.balanceOf(config.stakingVaultAddress)
+            vgToken.balanceOf(address(this))
         );
     }
 
@@ -332,6 +308,37 @@ contract LPLocker is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgrade
         require(newAuthority != address(0), "Invalid address");
         emit AuthorityTransferred(config.authority, newAuthority, block.timestamp);
         config.authority = newAuthority;
+    }
+
+    /**
+     * @notice Emergency pause - активирует максимальную MEV защиту
+     * @dev Только authority может вызвать в критических ситуациях
+     */
+    function emergencyPause() external onlyAuthority {
+        config.mevProtectionEnabled = true;
+        config.minTimeBetweenTxs = 86400; // 24 часа между транзакциями
+        config.maxTxPerUserPerBlock = 1; // Максимум 1 транзакция на блок
+        emit ConfigurationUpdated(msg.sender, "EmergencyPause", block.timestamp);
+    }
+
+    /**
+     * @notice Emergency unpause - возвращает нормальные параметры MEV защиты
+     * @dev Только authority может отменить emergency режим
+     */
+    function emergencyUnpause() external onlyAuthority {
+        config.mevProtectionEnabled = true; // Оставляем защиту включенной
+        config.minTimeBetweenTxs = 300; // 5 минут между транзакциями (нормально)
+        config.maxTxPerUserPerBlock = 3; // Максимум 3 транзакции на блок (нормально)
+        emit ConfigurationUpdated(msg.sender, "EmergencyUnpause", block.timestamp);
+    }
+
+    /**
+     * @notice Полностью отключает MEV защиту (только для экстренных случаев)
+     * @dev Используйте с осторожностью - убирает все ограничения
+     */
+    function disableMevProtection() external onlyAuthority {
+        config.mevProtectionEnabled = false;
+        emit ConfigurationUpdated(msg.sender, "MEVProtectionDisabled", block.timestamp);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}

@@ -43,6 +43,7 @@ const LPLocking: React.FC = () => {
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [lpLockerStats, setLpLockerStats] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [activeUsers, setActiveUsers] = useState('0');
 
   const fetchBalances = async () => {
     if (!account || !isCorrectNetwork) return;
@@ -107,27 +108,62 @@ const LPLocking: React.FC = () => {
 
   const fetchLPLockerStats = async () => {
     if (!lpLockerContract) return;
-    
-    try {
-      const [poolInfo, config] = await Promise.all([
-        lpLockerContract.getPoolInfo(),
-        lpLockerContract.config()
-      ]);
 
+    try {
+      const poolInfo = await lpLockerContract.getPoolInfo();
+      
       setLpLockerStats({
-        totalLockedLp: poolInfo.totalLockedLp ? ethers.formatEther(poolInfo.totalLockedLp) : '0',
-        totalVgIssued: poolInfo.totalVgIssued ? ethers.formatEther(poolInfo.totalVgIssued) : '0',
-        lpToVgRatio: config.lpToVgRatio ? config.lpToVgRatio.toString() : '0',
-        lpDivisor: config.lpDivisor ? config.lpDivisor.toString() : '0',
+        totalLockedLp: ethers.formatEther(poolInfo.totalLocked),
+        totalVgIssued: ethers.formatEther(poolInfo.totalIssued),
+        totalVgDeposited: ethers.formatEther(poolInfo.totalDeposited),
+        availableVG: ethers.formatEther(poolInfo.availableVG),
+        lpToVgRatio: '10', // Можно получить из config контракта
       });
     } catch (error) {
-      console.error('Error fetching LP Locker stats:', error);
-      setLpLockerStats({
-        totalLockedLp: '0',
-        totalVgIssued: '0',
-        lpToVgRatio: '0',
-        lpDivisor: '0',
+      console.error('Error fetching LP locker stats:', error);
+    }
+  };
+
+  const fetchActiveUsers = async () => {
+    if (!lpLockerContract || !provider) {
+      setActiveUsers('0');
+      return;
+    }
+
+    try {
+      // ✅ Получаем события LPTokensLocked и VGTokensEarned за последние 30 дней
+      const currentBlock = await provider.getBlockNumber();
+      const blocksPerDay = 28800; // Примерно 28800 блоков в день на BSC (3 сек на блок)
+      const fromBlock = currentBlock - (30 * blocksPerDay); // 30 дней назад
+      
+      // Получаем события блокировки LP токенов
+      const lpLockedFilter = lpLockerContract.filters.LPTokensLocked();
+      const vgEarnedFilter = lpLockerContract.filters.VGTokensEarned();
+      
+      const [lpEvents, vgEvents] = await Promise.all([
+        lpLockerContract.queryFilter(lpLockedFilter, fromBlock),
+        lpLockerContract.queryFilter(vgEarnedFilter, fromBlock)
+      ]);
+      
+      // Собираем уникальных пользователей
+      const uniqueUsers = new Set<string>();
+      
+      lpEvents.forEach(event => {
+        if (event.args?.user) {
+          uniqueUsers.add(event.args.user.toLowerCase());
+        }
       });
+      
+      vgEvents.forEach(event => {
+        if (event.args?.user) {
+          uniqueUsers.add(event.args.user.toLowerCase());
+        }
+      });
+      
+      setActiveUsers(uniqueUsers.size.toString());
+    } catch (error) {
+      console.error('Error fetching active users:', error);
+      setActiveUsers('0');
     }
   };
 
@@ -135,15 +171,9 @@ const LPLocking: React.FC = () => {
     if (isConnected && isCorrectNetwork) {
       fetchBalances();
       fetchLPLockerStats();
-      
-      // Refresh every 30 seconds
-      const interval = setInterval(() => {
-        fetchBalances();
-        fetchLPLockerStats();
-      }, 30000);
-      return () => clearInterval(interval);
+      fetchActiveUsers();
     }
-  }, [account, isConnected, isCorrectNetwork]);
+  }, [account, isConnected, isCorrectNetwork, lpLockerContract]);
 
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
@@ -210,7 +240,7 @@ const LPLocking: React.FC = () => {
     },
     {
       title: 'Активные пользователи',
-      value: '42', // Mock data - в продакшене получать из контракта
+      value: activeUsers,
       unit: 'участников',
       icon: Users,
       color: 'text-purple-400',

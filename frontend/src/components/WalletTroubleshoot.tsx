@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, XCircle, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Info, ExternalLink, Zap, Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WalletInfo {
   name: string;
@@ -9,6 +10,7 @@ interface WalletInfo {
 }
 
 const WalletTroubleshoot: React.FC = () => {
+  const { t } = useTranslation(['common']);
   const [wallets, setWallets] = useState<WalletInfo[]>([]);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -143,109 +145,71 @@ const WalletTroubleshoot: React.FC = () => {
     ];
   };
 
+  const troubleshootSteps = [
+    {
+      icon: <Shield className="w-5 h-5 text-blue-400" />,
+      title: 'Установите MetaMask',
+      description: 'Убедитесь, что MetaMask установлен и активен',
+      action: 'Скачать MetaMask',
+      link: 'https://metamask.io/download/',
+    },
+    {
+      icon: <AlertTriangle className="w-5 h-5 text-yellow-400" />,
+      title: 'Отключите конфликтующие кошельки',
+      description: 'Phantom, Brave Wallet и другие кошельки могут конфликтовать с MetaMask',
+      action: 'Отключить в настройках браузера',
+      link: null,
+    },
+    {
+      icon: <Zap className="w-5 h-5 text-green-400" />,
+      title: 'Обновите страницу',
+      description: 'После отключения других кошельков обновите страницу',
+      action: 'Обновить страницу',
+      link: null,
+    },
+  ];
+
   return (
-    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center space-x-2">
-          <AlertTriangle className={hasConflicts ? "text-red-400" : "text-green-400"} size={20} />
-          <span>Диагностика кошелька</span>
+    <div className="card border-yellow-500/20 bg-yellow-500/5">
+      <div className="flex items-center space-x-3 mb-4">
+        <AlertTriangle className="w-6 h-6 text-yellow-400" />
+        <h3 className="text-lg font-semibold text-yellow-400">
+          Проблемы с подключением кошелька?
         </h3>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-blue-400 hover:text-blue-300 text-sm"
-        >
-          {showDetails ? 'Скрыть детали' : 'Показать детали'}
-        </button>
       </div>
-
-      {/* Status Summary */}
-      <div className={`p-4 rounded-lg mb-4 ${
-        hasConflicts 
-          ? 'bg-red-500/10 border border-red-500/20' 
-          : 'bg-green-500/10 border border-green-500/20'
-      }`}>
-        <div className="flex items-center space-x-2 mb-2">
-          {hasConflicts ? (
-            <XCircle className="text-red-400" size={16} />
-          ) : (
-            <CheckCircle className="text-green-400" size={16} />
-          )}
-          <span className={`font-medium ${hasConflicts ? 'text-red-400' : 'text-green-400'}`}>
-            {hasConflicts ? 'Конфликты обнаружены' : 'Конфигурация корректна'}
-          </span>
-        </div>
-        
-        <div className="text-sm text-gray-300">
-          Обнаружено кошельков: {wallets.length}
-          {hasConflicts && ` (${conflictingWallets.length} конфликтующих)`}
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="space-y-2 mb-4">
-        <h4 className="font-medium text-white flex items-center space-x-2">
-          <Info size={16} />
-          <span>Рекомендации:</span>
-        </h4>
-        {getInstructions().map((instruction, index) => (
-          <div key={index} className="flex items-start space-x-2 text-sm text-gray-300">
-            <span className="text-blue-400 font-bold">{index + 1}.</span>
-            <span>{instruction}</span>
+      
+      <div className="space-y-4">
+        {troubleshootSteps.map((step, index) => (
+          <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-800/50">
+            <div className="flex-shrink-0 mt-0.5">
+              {step.icon}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium text-white mb-1">{step.title}</h4>
+              <p className="text-sm text-gray-300 mb-2">{step.description}</p>
+              {step.link ? (
+                <a
+                  href={step.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {step.action}
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">{step.action}</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Detailed Wallet List */}
-      {showDetails && wallets.length > 0 && (
-        <div className="border-t border-white/10 pt-4">
-          <h4 className="font-medium text-white mb-3">Обнаруженные кошельки:</h4>
-          <div className="space-y-2">
-            {wallets.map((wallet, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  {wallet.isMetaMask ? (
-                    <CheckCircle className="text-green-400" size={16} />
-                  ) : wallet.isConflicting ? (
-                    <XCircle className="text-red-400" size={16} />
-                  ) : (
-                    <Info className="text-blue-400" size={16} />
-                  )}
-                  <span className="font-medium">{wallet.name}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {wallet.isMetaMask && (
-                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">
-                      Рекомендуется
-                    </span>
-                  )}
-                  {wallet.isConflicting && (
-                    <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded">
-                      Конфликт
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="border-t border-white/10 pt-4 mt-4">
-        <div className="flex space-x-3">
-          <button
-            onClick={() => window.location.reload()}
-            className="btn-secondary text-sm"
-          >
-            Перезагрузить страницу
-          </button>
-          <button
-            onClick={() => window.open('chrome://extensions/', '_blank')}
-            className="btn-primary text-sm"
-          >
-            Управление расширениями
-          </button>
-        </div>
+      <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+        <p className="text-sm text-blue-300">
+          <strong>Совет:</strong> Если у вас установлен Phantom кошелек, временно отключите его в настройках браузера, 
+          чтобы избежать конфликтов с MetaMask при работе с BSC сетью.
+        </p>
       </div>
     </div>
   );

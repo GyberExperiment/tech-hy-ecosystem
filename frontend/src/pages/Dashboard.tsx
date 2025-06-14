@@ -19,6 +19,8 @@ import {
 import WalletTroubleshoot from '../components/WalletTroubleshoot';
 import StakingStats from '../components/StakingStats';
 import TransactionHistory from '../components/TransactionHistory';
+import ConnectionDebug from '../components/ConnectionDebug';
+import { toast } from 'react-hot-toast';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -30,70 +32,157 @@ const Dashboard: React.FC = () => {
     vgContract, 
     vgVotesContract, 
     lpContract,
-    provider 
+    provider,
+    lpPairContract
   } = useWeb3();
 
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [bnbBalance, setBnbBalance] = useState<string>('0');
   const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchBalances = async () => {
-    if (!account || !isCorrectNetwork) return;
+    if (!account || !isCorrectNetwork || isFetching) {
+      console.log('Dashboard: Skipping balance fetch', { account, isCorrectNetwork, isFetching });
+      return;
+    }
     
+    console.log('Dashboard: Starting balance fetch for account:', account);
     setLoading(true);
+    setIsFetching(true);
+    
     try {
-      const balancePromises = [];
+      const newBalances: Record<string, string> = {};
+      let newBnbBalance = '0';
 
-      // BNB balance
-      if (provider) {
-        balancePromises.push(
-          provider.getBalance(account).then(balance => ({
-            symbol: 'BNB',
-            balance: ethers.formatEther(balance)
-          }))
-        );
+      // Create fallback provider with multiple RPC endpoints
+      const fallbackRpcUrls = [
+        'https://bsc-testnet-rpc.publicnode.com',
+        'https://data-seed-prebsc-1-s1.binance.org:8545',
+        'https://data-seed-prebsc-2-s1.binance.org:8545',
+        'https://bsc-testnet.public.blastapi.io',
+        'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+      ];
+      
+      const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
+      const activeProvider = provider || fallbackProvider;
+
+      // Helper function for timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+          )
+        ]);
+      };
+
+      // Helper function to try multiple RPC endpoints
+      const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
+        let lastError: Error | null = null;
+        
+        for (const rpcUrl of fallbackRpcUrls) {
+          try {
+            console.log(`Dashboard: Trying RPC ${rpcUrl}...`);
+            const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+            const result = await withTimeout(operation(rpcProvider), 15000); // Увеличил до 15 секунд
+            console.log(`Dashboard: RPC success with ${rpcUrl}`);
+            return result;
+          } catch (error: any) {
+            console.warn(`Dashboard: RPC failed for ${rpcUrl}:`, error.message);
+            lastError = error;
+            continue;
+          }
+        }
+        
+        throw lastError || new Error('All RPC endpoints failed');
+      };
+
+      // BNB balance with multiple RPC fallback
+      try {
+        console.log('Dashboard: Fetching BNB balance...');
+        const balance = await tryMultipleRpc(async (rpcProvider) => {
+          return await rpcProvider.getBalance(account);
+        });
+        newBnbBalance = ethers.formatEther(balance);
+        console.log('Dashboard: BNB balance fetched:', newBnbBalance);
+      } catch (error: any) {
+        console.error('Dashboard: Error fetching BNB balance:', error.message);
+        newBnbBalance = '0';
       }
 
-      // Token balances
-      const contracts = [
-        { contract: vcContract, symbol: 'VC' },
-        { contract: vgContract, symbol: 'VG' },
-        { contract: vgVotesContract, symbol: 'VGV' },
-        { contract: lpContract, symbol: 'LP' },
+      // Token balances with fallback contracts
+      const tokenContracts = [
+        { name: 'VC', contract: vcContract, address: CONTRACTS.VC_TOKEN },
+        { name: 'VG', contract: vgContract, address: CONTRACTS.VG_TOKEN },
+        { name: 'VGVotes', contract: vgVotesContract, address: CONTRACTS.VG_TOKEN_VOTES },
+        { name: 'LP', contract: lpContract, address: CONTRACTS.LP_TOKEN }
       ];
 
-      for (const { contract, symbol } of contracts) {
-        if (contract && contract.balanceOf) {
-          balancePromises.push(
-            contract.balanceOf(account).then((balance: any) => ({
-              symbol,
-              balance: ethers.formatEther(balance)
-            }))
-          );
+      const ERC20_ABI = [
+        "function balanceOf(address) view returns (uint256)",
+        "function name() view returns (string)",
+        "function symbol() view returns (string)"
+      ];
+
+      for (const { name, contract, address } of tokenContracts) {
+        try {
+          console.log(`Dashboard: Fetching ${name} balance...`);
+          
+          let balance = '0';
+          
+          // Сразу используем fallback RPC - Web3Context контракты зависают
+          console.log(`Dashboard: Using direct RPC for ${name} (Web3Context contracts timeout)`);
+          const bal = await tryMultipleRpc(async (rpcProvider) => {
+            const fallbackContract = new ethers.Contract(address, ERC20_ABI, rpcProvider);
+            return await (fallbackContract.balanceOf as any)(account);
+          });
+          balance = ethers.formatEther(bal);
+          console.log(`Dashboard: ${name} balance (direct RPC):`, balance);
+          
+          newBalances[name] = balance;
+          console.log(`Dashboard: Added ${name} balance to newBalances:`, newBalances[name]);
+        } catch (error: any) {
+          console.error(`Dashboard: Error fetching ${name} balance:`, error);
+          newBalances[name] = '0';
         }
       }
 
-      const results = await Promise.all(balancePromises);
-      const newBalances: Record<string, string> = {};
-      
-      results.forEach(result => {
-        if (result.symbol === 'BNB') {
-          setBnbBalance(result.balance);
-        } else {
-          newBalances[result.symbol] = result.balance;
+      // LP Pool info with fallback
+      try {
+        console.log('Dashboard: Fetching LP pool info...');
+        
+        if (lpPairContract && lpPairContract.getReserves) {
+          try {
+            const reservesPromise = lpPairContract.getReserves();
+            const reserves = await withTimeout(reservesPromise, 8000); // 8 second timeout
+            console.log('Dashboard: LP reserves fetched:', reserves);
+          } catch (error: any) {
+            console.warn('Dashboard: LP reserves failed:', error.message);
+          }
         }
-      });
+      } catch (error: any) {
+        console.error('Dashboard: Error fetching LP info:', error);
+      }
 
+      // Update state
       setBalances(newBalances);
+      setBnbBalance(newBnbBalance);
+      console.log('Dashboard: All balances updated:', { bnb: newBnbBalance, tokens: newBalances });
+      
     } catch (error) {
-      console.error('Error fetching balances:', error);
+      console.error('Dashboard: Critical error in fetchBalances:', error);
+      toast.error('Ошибка загрузки данных. Проверьте подключение.');
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
   useEffect(() => {
-    if (isConnected && isCorrectNetwork) {
+    // Only log when connection state actually changes
+    if (isConnected && isCorrectNetwork && account) {
+      console.log('Dashboard: Fetching balances for connected account:', account);
       fetchBalances();
       
       // Refresh every 30 seconds
@@ -101,9 +190,15 @@ const Dashboard: React.FC = () => {
         fetchBalances();
       }, 30000);
       return () => clearInterval(interval);
+    } else {
+      console.log('Dashboard: Skipping balance fetch - not ready', { 
+        isConnected, 
+        isCorrectNetwork, 
+        hasAccount: !!account 
+      });
     }
     return undefined;
-  }, [account, isConnected, isCorrectNetwork]);
+  }, [account, isConnected, isCorrectNetwork]); // Removed contract dependencies to prevent loops
 
   const formatBalance = (balance: string): string => {
     const num = parseFloat(balance);
@@ -133,11 +228,11 @@ const Dashboard: React.FC = () => {
       address: CONTRACTS.VG_TOKEN,
     },
     {
-      symbol: 'VGV',
+      symbol: 'VGVotes',
       name: TOKEN_INFO.VG_VOTES.name,
       icon: <Vote className="w-6 h-6" />,
       color: 'from-purple-500 to-pink-500',
-      balance: balances.VGV || '0',
+      balance: balances.VGVotes || '0',
       address: CONTRACTS.VG_TOKEN_VOTES,
     },
     {
@@ -174,7 +269,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: t('dashboard:stats.governancePower'),
-      value: formatBalance(balances.VGV || '0'),
+      value: formatBalance(balances.VGVotes || '0'),
       unit: t('dashboard:stats.votes'),
       icon: Users,
       color: 'text-yellow-400',
@@ -227,6 +322,9 @@ const Dashboard: React.FC = () => {
           {t('dashboard:subtitle')}
         </p>
       </div>
+
+      {/* Debug Info */}
+      <ConnectionDebug />
 
       {/* Connection Status & Troubleshooting */}
       {!isConnected && (
