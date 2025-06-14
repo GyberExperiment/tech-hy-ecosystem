@@ -189,17 +189,16 @@ const Dashboard: React.FC = () => {
       try {
         console.log('Dashboard: Fetching LP pool info...');
         
-        if (lpPairContract && lpPairContract.getReserves) {
-          try {
-            const reservesPromise = lpPairContract.getReserves();
-            const reserves = await withTimeout(reservesPromise, 8000); // 8 second timeout
-            console.log('Dashboard: LP reserves fetched:', reserves);
-          } catch (error: any) {
-            console.warn('Dashboard: LP reserves failed:', error.message);
-          }
-        }
+        // Используем tryMultipleRpc для LP reserves
+        const reserves = await tryMultipleRpc(async (rpcProvider) => {
+          const lpPairContract = new ethers.Contract(CONTRACTS.LP_TOKEN, [
+            "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)"
+          ], rpcProvider);
+          return await (lpPairContract.getReserves as any)();
+        });
+        console.log('Dashboard: LP reserves fetched:', reserves);
       } catch (error: any) {
-        console.error('Dashboard: Error fetching LP info:', error);
+        console.warn('Dashboard: LP reserves failed (non-critical):', error.message);
       }
 
       // Update state only if component is still mounted
