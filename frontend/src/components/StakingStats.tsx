@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap } from 'lucide-react';
 import { CardSkeleton } from './LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
+import { CONTRACTS } from '../constants/contracts';
 
 interface PoolData {
   totalLockedLP: string;
@@ -60,7 +61,7 @@ const StakingStats: React.FC = () => {
       return;
     }
     
-    if (!account || !isConnected || !isCorrectNetwork || !lpLockerContract || !vcContract || !provider) {
+    if (!account || !isConnected || !isCorrectNetwork) {
       console.log('StakingStats: Skipping fetch - not ready');
       return;
     }
@@ -79,30 +80,138 @@ const StakingStats: React.FC = () => {
     const signal = abortControllerRef.current.signal;
 
     try {
-      // Параллельные запросы для оптимизации
-      const [
-        poolInfoRaw,
-        configRaw,
-        userVCBalanceRaw,
-        userBNBBalanceRaw
-      ] = await Promise.allSettled([
-        lpLockerContract.getPoolInfo(),
-        lpLockerContract.config(),
-        vcContract.balanceOf(account),
-        provider.getBalance(account)
-      ]);
+      // Create fallback provider with multiple RPC endpoints
+      const fallbackRpcUrls = [
+        'https://bsc-testnet-rpc.publicnode.com',
+        'https://data-seed-prebsc-1-s1.binance.org:8545',
+        'https://data-seed-prebsc-2-s1.binance.org:8545',
+        'https://bsc-testnet.public.blastapi.io',
+        'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+      ];
+      
+      const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
+      const activeProvider = provider || fallbackProvider;
 
-      // Обработка результатов с fallback значениями
-      const poolInfo = poolInfoRaw.status === 'fulfilled' ? poolInfoRaw.value : [0, 0, 0, 0];
-      const config = configRaw.status === 'fulfilled' ? configRaw.value : { lpToVgRatio: 10, lpDivisor: 1000000 };
+      // Helper function for timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+          )
+        ]);
+      };
+
+      // Helper function to try multiple RPC endpoints
+      const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
+        let lastError: Error | null = null;
+        
+        for (const rpcUrl of fallbackRpcUrls) {
+          try {
+            console.log(`StakingStats: Trying RPC ${rpcUrl}...`);
+            const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+            const result = await withTimeout(operation(rpcProvider), 15000);
+            console.log(`StakingStats: RPC success with ${rpcUrl}`);
+            return result;
+          } catch (error: any) {
+            console.warn(`StakingStats: RPC failed for ${rpcUrl}:`, error.message);
+            lastError = error;
+            continue;
+          }
+        }
+        
+        throw lastError || new Error('All RPC endpoints failed');
+      };
+
+      // Contract ABIs
+      const LPLOCKER_ABI = [
+        "function getPoolInfo() view returns (uint256, uint256, uint256, uint256)",
+        "function config() view returns (uint256 lpToVgRatio, uint256 lpDivisor)"
+      ];
       
-      const userVCBalance = userVCBalanceRaw.status === 'fulfilled' 
-        ? ethers.formatEther(userVCBalanceRaw.value) 
-        : '0';
-      
-      const userBNBBalance = userBNBBalanceRaw.status === 'fulfilled' 
-        ? ethers.formatEther(userBNBBalanceRaw.value) 
-        : '0';
+      const ERC20_ABI = [
+        "function balanceOf(address) view returns (uint256)"
+      ];
+
+      // Contract addresses
+      const LP_LOCKER_ADDRESS = CONTRACTS.LP_LOCKER;
+      const VC_TOKEN_ADDRESS = CONTRACTS.VC_TOKEN;
+
+      // Fetch data with multiple RPC fallback
+      let poolInfo = [0, 0, 0, 0];
+      let config = { lpToVgRatio: 10, lpDivisor: 1000000 };
+      let userVCBalance = '0';
+      let userBNBBalance = '0';
+
+      // Try Web3Context contracts first, then fallback to direct RPC
+      try {
+        if (lpLockerContract && vcContract) {
+          console.log('StakingStats: Trying Web3Context contracts...');
+          const [poolInfoRaw, configRaw, userVCBalanceRaw, userBNBBalanceRaw] = await Promise.allSettled([
+            withTimeout(lpLockerContract.getPoolInfo(), 5000),
+            withTimeout(lpLockerContract.config(), 5000),
+            withTimeout(vcContract.balanceOf(account), 5000),
+            withTimeout(activeProvider.getBalance(account), 5000)
+          ]);
+
+          if (poolInfoRaw.status === 'fulfilled') poolInfo = poolInfoRaw.value;
+          if (configRaw.status === 'fulfilled') config = configRaw.value;
+          if (userVCBalanceRaw.status === 'fulfilled') userVCBalance = ethers.formatEther(userVCBalanceRaw.value);
+          if (userBNBBalanceRaw.status === 'fulfilled') userBNBBalance = ethers.formatEther(userBNBBalanceRaw.value);
+          
+          console.log('StakingStats: Web3Context contracts success');
+        } else {
+          throw new Error('Web3Context contracts not available');
+        }
+      } catch (error: any) {
+        console.warn('StakingStats: Web3Context contracts failed, using direct RPC:', error.message);
+        
+        // Fallback to direct RPC calls
+        try {
+          // Pool info from LPLocker
+          poolInfo = await tryMultipleRpc(async (rpcProvider) => {
+            const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
+            return await (lpLockerContract.getPoolInfo as any)();
+          });
+          console.log('StakingStats: Pool info (direct RPC):', poolInfo);
+        } catch (error: any) {
+          console.warn('StakingStats: Pool info failed:', error.message);
+        }
+
+        try {
+          // Config from LPLocker
+          config = await tryMultipleRpc(async (rpcProvider) => {
+            const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
+            return await (lpLockerContract.config as any)();
+          });
+          console.log('StakingStats: Config (direct RPC):', config);
+        } catch (error: any) {
+          console.warn('StakingStats: Config failed:', error.message);
+        }
+
+        try {
+          // VC balance
+          const vcBalance = await tryMultipleRpc(async (rpcProvider) => {
+            const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
+            return await (vcContract.balanceOf as any)(account);
+          });
+          userVCBalance = ethers.formatEther(vcBalance);
+          console.log('StakingStats: VC balance (direct RPC):', userVCBalance);
+        } catch (error: any) {
+          console.warn('StakingStats: VC balance failed:', error.message);
+        }
+
+        try {
+          // BNB balance
+          const bnbBalance = await tryMultipleRpc(async (rpcProvider) => {
+            return await rpcProvider.getBalance(account);
+          });
+          userBNBBalance = ethers.formatEther(bnbBalance);
+          console.log('StakingStats: BNB balance (direct RPC):', userBNBBalance);
+        } catch (error: any) {
+          console.warn('StakingStats: BNB balance failed:', error.message);
+        }
+      }
 
       const newPoolData = {
         totalLockedLP: ethers.formatEther(poolInfo[0] || 0),
