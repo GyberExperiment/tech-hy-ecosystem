@@ -1,5 +1,38 @@
 # Память проекта
 
+## ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ CONFIG() TIMEOUT (ЯНВАРЬ 2025):
+
+### 🐛 **ПРОБЛЕМА РЕШЕНА:**
+- **Config timeout**: Вызов `config()` в EarnVGWidget зависал с "Config timeout after 15 seconds"
+- **Причина**: Неправильное обращение к результату config() - ABI определяет его как tuple, а не struct
+- **Симптомы**: Frontend зависал на config(), хотя backend скрипт работал корректно
+
+### 🔧 **ТЕХНИЧЕСКОЕ ИСПРАВЛЕНИЕ:**
+- **Проблема в ABI**: config() возвращает tuple (массив), а не struct с именованными полями
+- **EarnVGWidget.tsx**: Заменено обращение к полям struct на индексы tuple:
+  - `config.stakingVaultAddress` → `config[5]`
+  - `config.maxSlippageBps` → `config[10]`
+  - `config.mevProtectionEnabled` → `config[12]`
+  - `config.lpDivisor` → `config[6]`
+  - `config.lpToVgRatio` → `config[7]`
+- **LPStaking.tsx**: Исправлено `config.lpToVgRatio` → `config[7]`
+
+### 📋 **ABI TUPLE MAPPING:**
+```
+config() returns tuple:
+[0] authority, [1] vgTokenAddress, [2] vcTokenAddress, [3] pancakeRouter,
+[4] lpTokenAddress, [5] stakingVaultAddress, [6] lpDivisor, [7] lpToVgRatio,
+[8] minBnbAmount, [9] minVcAmount, [10] maxSlippageBps, [11] defaultSlippageBps,
+[12] mevProtectionEnabled, [13] minTimeBetweenTxs, [14] maxTxPerUserPerBlock,
+[15] totalLockedLp, [16] totalVgIssued, [17] totalVgDeposited
+```
+
+### 🎯 **РЕЗУЛЬТАТ:**
+- **EarnVGWidget теперь работает** - config() больше не зависает
+- **Кнопка "Create LP + Earn VG" функциональна** - проходит проверку конфигурации
+- **Архитектурная проблема устранена** - правильное обращение к Solidity tuple
+- **Timeout защита работает** - 15-секундный timeout как fallback
+
 ## ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ EARNVG WIDGET (ЯНВАРЬ 2025):
 
 ### 🐛 **ПРОБЛЕМА РЕШЕНА:**

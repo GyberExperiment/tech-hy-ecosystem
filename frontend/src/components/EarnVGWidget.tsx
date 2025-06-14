@@ -112,11 +112,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       // Детальное логирование полей config
       console.log('🔍 EarnVG: Анализ полей config...');
-      console.log('Config object:', config);
+      console.log('Config tuple:', config);
       
-      const stakingVault = config.stakingVaultAddress;
-      const maxSlippageBps = config.maxSlippageBps;
-      const mevEnabled = config.mevProtectionEnabled;
+      // config() возвращает tuple, а не struct - используем индексы
+      const stakingVault = config[5]; // stakingVaultAddress
+      const maxSlippageBps = config[10]; // maxSlippageBps
+      const mevEnabled = config[12]; // mevProtectionEnabled
       
       console.log(`✅ EarnVG: Поля извлечены успешно`);
       console.log(`Staking Vault: ${stakingVault}`);
@@ -143,8 +144,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       // Рассчитываем ожидаемую награду
       console.log('🧮 EarnVG: Рассчитываем ожидаемую награду...');
-      const lpDivisor = config.lpDivisor;
-      const lpToVgRatio = config.lpToVgRatio;
+      const lpDivisor = config[6]; // lpDivisor
+      const lpToVgRatio = config[7]; // lpToVgRatio
       
       console.log(`LP Divisor: ${lpDivisor.toString()}`);
       console.log(`LP to VG Ratio: ${lpToVgRatio.toString()}`);
