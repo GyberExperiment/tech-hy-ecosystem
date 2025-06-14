@@ -100,12 +100,25 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     try {
       console.log('🔍 EarnVG: Проверка конфигурации контракта');
       
-      // Проверяем конфигурацию LPLocker
-      const config = await (lpLockerContract as any).config();
-      const stakingVault = config[5];
-      const maxSlippageBps = config[10];
-      const mevEnabled = config[12];
+      // Проверяем конфигурацию LPLocker с детальным логированием
+      console.log('📞 EarnVG: Вызываем config()...');
+      const configPromise = (lpLockerContract as any).config();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Config timeout after 15 seconds')), 15000)
+      );
       
+      const config = await Promise.race([configPromise, timeoutPromise]);
+      console.log('✅ EarnVG: config() получен успешно');
+      
+      // Детальное логирование полей config
+      console.log('🔍 EarnVG: Анализ полей config...');
+      console.log('Config object:', config);
+      
+      const stakingVault = config.stakingVaultAddress;
+      const maxSlippageBps = config.maxSlippageBps;
+      const mevEnabled = config.mevProtectionEnabled;
+      
+      console.log(`✅ EarnVG: Поля извлечены успешно`);
       console.log(`Staking Vault: ${stakingVault}`);
       console.log(`Max Slippage: ${maxSlippageBps} BPS (${(Number(maxSlippageBps) / 100).toFixed(1)}%)`);
       console.log(`MEV Protection: ${mevEnabled}`);
@@ -117,6 +130,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         return;
       }
       
+      console.log('💰 EarnVG: Проверяем VG баланс vault...');
       const vaultVGBalance = await (vgContract as any).balanceOf(stakingVault);
       
       console.log(`VG баланс vault'а: ${ethers.formatEther(vaultVGBalance)} VG`);
@@ -128,8 +142,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
       
       // Рассчитываем ожидаемую награду
-      const lpDivisor = config[6];
-      const lpToVgRatio = config[7];
+      console.log('🧮 EarnVG: Рассчитываем ожидаемую награду...');
+      const lpDivisor = config.lpDivisor;
+      const lpToVgRatio = config.lpToVgRatio;
+      
+      console.log(`LP Divisor: ${lpDivisor.toString()}`);
+      console.log(`LP to VG Ratio: ${lpToVgRatio.toString()}`);
+      
       const expectedLp = (vcAmountWei * bnbAmountWei) / lpDivisor;
       const expectedVGReward = expectedLp * BigInt(lpToVgRatio);
       

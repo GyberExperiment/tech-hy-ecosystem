@@ -349,7 +349,7 @@ const LPLocking: React.FC = () => {
           totalVgIssued: ethers.formatEther(stats.poolInfo[1] || 0n),
           totalVgDeposited: ethers.formatEther(stats.poolInfo[2] || 0n),
           availableVG: ethers.formatEther(stats.poolInfo[3] || 0n),
-          lpToVgRatio: stats.config[14]?.toString() || '10',
+          lpToVgRatio: stats.config.lpToVgRatio?.toString() || '10',
           totalUsers: stats.totalUsers.toString(),
           activeUsers: activeUsersCount
         });
