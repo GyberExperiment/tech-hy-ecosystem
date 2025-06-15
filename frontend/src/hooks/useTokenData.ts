@@ -129,9 +129,9 @@ export const useTokenData = () => {
       abortControllerRef.current.abort();
     }
     
-    // Cache check - не запрашиваем чаще чем раз в 10 секунд
+    // Cache check - не запрашиваем чаще чем раз в 30 секунд для rate limiting protection
     const now = Date.now();
-    if (!showRefreshToast && now - lastFetchTime < 10000) {
+    if (!showRefreshToast && now - lastFetchTime < 30000) {
       console.log('useTokenData: Skipping fetch - cached data is fresh');
       return;
     }
