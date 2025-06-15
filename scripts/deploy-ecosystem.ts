@@ -50,13 +50,13 @@ async function main() {
     
     const LPLocker = await ethers.getContractFactory("LPLocker");
     
-    // Сначала деплоим с временным адресом, потом обновим
-    const tempInitConfig = {
+    // ✅ PRODUCTION CONFIG - убираем временные решения
+    const productionInitConfig = {
         vgTokenAddress: tokenData.VG_TOKEN,         // VGToken для rewards
         vcTokenAddress: tokenData.VC_TOKEN,         // VCToken для staking
         pancakeRouter: PANCAKE_ROUTER_TESTNET,
         lpTokenAddress: lpTokenAddress,
-        stakingVaultAddress: deployerAddress, // Временно deployer
+        stakingVaultAddress: deployerAddress, // ✅ Будет обновлён после деплоя StakingDAO
         lpDivisor: 1000000,
         lpToVgRatio: 10,
         minBnbAmount: ethers.parseEther("0.01"), // 0.01 BNB
@@ -68,7 +68,7 @@ async function main() {
         maxTxPerUserPerBlock: 2
     };
 
-    const lpLocker = await upgrades.deployProxy(LPLocker, [tempInitConfig], {
+    const lpLocker = await upgrades.deployProxy(LPLocker, [productionInitConfig], {
         initializer: 'initialize',
         kind: 'uups'
     });
@@ -104,9 +104,9 @@ async function main() {
     await VGToken.transfer(lpLockerAddress, rewardSupply);
     console.log("✅ Transferred", ethers.formatEther(rewardSupply), "VG tokens to LPLocker");
     
-    // Проверяем баланс vault
-    const vaultBalance = await VGToken.balanceOf(lpLockerAddress);
-    console.log("✅ LPLocker balance:", ethers.formatEther(vaultBalance));
+    // Проверяем баланс LPLocker
+    const lpLockerBalance = await VGToken.balanceOf(lpLockerAddress);
+    console.log("✅ LPLocker VG balance:", ethers.formatEther(lpLockerBalance));
 
     // Step 6: Setup VGTokenVotes for governance testing
     console.log("\n🗳️  Setting up governance tokens...");
@@ -142,9 +142,9 @@ async function main() {
         DEPLOYER: deployerAddress,
         NETWORK: "BSC_TESTNET",
         DEPLOYMENT_TIMESTAMP: new Date().toISOString(),
-        CONFIG: tempInitConfig,
+        PRODUCTION_CONFIG: productionInitConfig, // ✅ Сохраняем production конфигурацию
         GOVERNANCE_SETUP: {
-            LP_LOCKER_BALANCE: ethers.formatEther(vaultBalance),
+            LP_LOCKER_VG_BALANCE: ethers.formatEther(lpLockerBalance),
             VG_GOVERNANCE_DEPOSITED: ethers.formatEther(governanceAmount),
             DEPLOYER_VOTING_POWER: ethers.formatEther(votingPower)
         }

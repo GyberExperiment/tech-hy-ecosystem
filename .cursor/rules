@@ -1,0 +1,20 @@
+# Memory Management Rules
+- Always start conversations by saying "Remembering..." and reading the memory graph
+- Reference stored knowledge as "memory" when providing context
+- When completing tasks, update memory with:
+  1. New entities for important concepts/components
+  2. Relations between entities
+  3. Observations about solutions, fixes, and decisions
+
+# Project Context Rules  
+- This is the tech-hy-ecosystem project - LP LOCKING system for BSC
+- User prefers Russian language and expert-level explanations
+- Always read existing files before making changes
+- Focus on real solutions based on actual code analysis
+- Update memory with any architectural decisions or bug fixes
+
+# Code Quality Rules
+- Analyze each warning from architectural perspective
+- Find root causes before proposing solutions
+- Follow best practices and maintain existing code patterns
+- Test changes thoroughly before implementation 

@@ -31,9 +31,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   
   // Memoized calculations
   const calculatedBnbAmount = useMemo(() => {
-    if (!vcAmount || !poolInfo.isLoaded || poolInfo.vcReserve === '0' || poolInfo.bnbReserve === '0') {
-      return '';
-    }
+    if (!vcAmount || !poolInfo || parseFloat(vcAmount) <= 0) return '';
     
     try {
       const vcValue = parseFloat(vcAmount);
@@ -42,20 +40,23 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       const ratio = parseFloat(poolInfo.bnbReserve) / parseFloat(poolInfo.vcReserve);
       const calculatedBnb = (vcValue * ratio).toFixed(6);
       
-      log.debug('Auto-calculated BNB amount from VC', {
-        component: 'EarnVGWidget',
-        function: 'calculatedBnbAmount',
-        vcAmount: vcValue,
-        ratio: ratio.toFixed(8),
-        calculatedBnb
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Auto-calculated BNB amount from VC', {
+          component: 'EarnVGWidget',
+          vcAmount,
+          bnbAmount: calculatedBnb,
+          ratio: ratio.toFixed(8)
+        });
+      }
       return calculatedBnb;
     } catch (error) {
-      log.error('Failed to calculate BNB amount', {
-        component: 'EarnVGWidget',
-        function: 'calculatedBnbAmount',
-        vcAmount
-      }, error as Error);
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Failed to calculate BNB amount', {
+          component: 'EarnVGWidget',
+          function: 'calculatedBnbAmount',
+          vcAmount
+        }, error as Error);
+      }
       return '';
     }
   }, [vcAmount, poolInfo]);
@@ -69,43 +70,17 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
   // Auto-check allowance when wallet connects
   useEffect(() => {
-    if (account && vcContract && mode === 'create') {
-      const checkAllowanceOnMount = async () => {
-        try {
-          log.debug('Auto-checking VC allowance on wallet connect', {
-            component: 'EarnVGWidget',
-            function: 'checkAllowanceOnMount',
-            address: account,
-            mode
-          });
-          
-          const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
-          const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
-            "function allowance(address owner, address spender) view returns (uint256)"
-          ], readOnlyProvider);
-          
-          const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
-          const allowanceFormatted = ethers.formatEther(allowance);
-          
-          setCurrentAllowance(allowanceFormatted);
-          log.info('VC allowance auto-check completed', {
-            component: 'EarnVGWidget',
-            function: 'checkAllowanceOnMount',
-            address: account,
-            allowance: allowanceFormatted
-          });
-        } catch (error) {
-          log.warn('Auto-check allowance failed', {
-            component: 'EarnVGWidget',
-            function: 'checkAllowanceOnMount',
-            address: account
-          }, error as Error);
-        }
-      };
-      
-      checkAllowanceOnMount();
+    if (account && vcContract && vcAmount && parseFloat(vcAmount) > 0) {
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Auto-checking VC allowance on wallet connect', {
+          component: 'EarnVGWidget',
+          account,
+          vcAmount
+        });
+      }
+      checkCurrentAllowance();
     }
-  }, [account, vcContract, mode]);
+  }, [account, vcContract, vcAmount]);
 
   // Check current allowance function
   const checkCurrentAllowance = async () => {
@@ -116,11 +91,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
     setCheckingAllowance(true);
     try {
-      log.info('Checking current VC allowance', {
-        component: 'EarnVGWidget',
-        function: 'checkCurrentAllowance',
-        address: account
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Checking current VC allowance', {
+          component: 'EarnVGWidget',
+          function: 'checkCurrentAllowance',
+          address: account
+        });
+      }
       
       const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
       const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
@@ -131,12 +108,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       const allowanceFormatted = ethers.formatEther(allowance);
       
       setCurrentAllowance(allowanceFormatted);
-      log.info('Current VC allowance retrieved', {
-        component: 'EarnVGWidget',
-        function: 'checkCurrentAllowance',
-        address: account,
-        allowance: allowanceFormatted
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Current VC allowance retrieved', {
+          component: 'EarnVGWidget',
+          function: 'checkCurrentAllowance',
+          address: account,
+          allowance: allowanceFormatted
+        });
+      }
       
       if (parseFloat(allowanceFormatted) > 0) {
         toast.success(`Approve уже выполнен! Allowance: ${parseFloat(allowanceFormatted).toFixed(2)} VC`);
@@ -144,11 +123,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         toast.success('Approve не выполнен. Allowance: 0 VC');
       }
     } catch (error: any) {
-      log.error('Failed to check VC allowance', {
-        component: 'EarnVGWidget',
-        function: 'checkCurrentAllowance',
-        address: account
-      }, error);
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Failed to check VC allowance', {
+          component: 'EarnVGWidget',
+          function: 'checkCurrentAllowance',
+          address: account
+        }, error);
+      }
       toast.error('Ошибка проверки allowance');
     } finally {
       setCheckingAllowance(false);
@@ -157,14 +138,16 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
   // Transaction handlers
   const handleEarnVG = async () => {
-    log.info('Starting EarnVG operation', {
-      component: 'EarnVGWidget',
-      function: 'handleEarnVG',
-      address: account,
-      vcAmount,
-      bnbAmount,
-      mode
-    });
+    if (process.env.NODE_ENV === 'development') {
+      log.info('Starting EarnVG operation', {
+        component: 'EarnVGWidget',
+        function: 'handleEarnVG',
+        address: account,
+        vcAmount,
+        bnbAmount,
+        mode
+      });
+    }
     
     if (!signer || !account || !vcContract || !lpLockerContract) {
       const missingItems = [];
@@ -173,22 +156,26 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       if (!vcContract) missingItems.push('vcContract');
       if (!lpLockerContract) missingItems.push('lpLockerContract');
       
-      log.error('Missing required components for EarnVG', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        missingComponents: missingItems
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Missing required components for EarnVG', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          missingComponents: missingItems
+        });
+      }
       toast.error('Подключите кошелёк');
       return;
     }
 
     if (!vcAmount || !bnbAmount) {
-      log.error('Missing VC or BNB amounts', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        vcAmount,
-        bnbAmount
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Missing VC or BNB amounts', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          vcAmount,
+          bnbAmount
+        });
+      }
       toast.error('Введите количество VC и BNB');
       return;
     }
@@ -196,31 +183,37 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     const vcAmountWei = ethers.parseEther(vcAmount);
     const bnbAmountWei = ethers.parseEther(bnbAmount);
 
-    log.info('Checking user balances', {
-      component: 'EarnVGWidget',
-      function: 'handleEarnVG',
-      required: { vc: vcAmount, bnb: bnbAmount },
-      available: { vc: balances.VC || '0', bnb: balances.BNB || '0' }
-    });
-
-    if (parseFloat(balances.VC || '0') < parseFloat(vcAmount)) {
-      log.error('Insufficient VC tokens', {
+    if (process.env.NODE_ENV === 'development') {
+      log.info('Checking user balances', {
         component: 'EarnVGWidget',
         function: 'handleEarnVG',
-        required: vcAmount,
-        available: balances.VC || '0'
+        required: { vc: vcAmount, bnb: bnbAmount },
+        available: { vc: balances.VC || '0', bnb: balances.BNB || '0' }
       });
+    }
+
+    if (parseFloat(balances.VC || '0') < parseFloat(vcAmount)) {
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Insufficient VC tokens', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          required: vcAmount,
+          available: balances.VC || '0'
+        });
+      }
       toast.error('Недостаточно VC токенов');
       return;
     }
 
     if (parseFloat(balances.BNB || '0') < parseFloat(bnbAmount)) {
-      log.error('Insufficient BNB', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        required: bnbAmount,
-        available: balances.BNB || '0'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Insufficient BNB', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          required: bnbAmount,
+          available: balances.BNB || '0'
+        });
+      }
       toast.error('Недостаточно BNB');
       return;
     }
@@ -228,10 +221,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     setLoading(true);
     
     try {
-      log.info('Loading configuration from static values', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Loading configuration from static values', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG'
+        });
+      }
       
       // Статические значения конфигурации (проверены Node.js скриптами)
       // Заменяет config() вызов который зависал на 10+ секунд в browser
@@ -241,33 +236,39 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       const lpDivisor = ethers.parseEther('1000'); // 1e21
       const lpToVgRatio = 10;
       
-      log.info('Configuration loaded from static values', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        config: {
-          stakingVault,
-          maxSlippageBps,
-          mevEnabled,
-          lpDivisor: lpDivisor.toString(),
-          lpToVgRatio
-        }
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Configuration loaded from static values', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          config: {
+            stakingVault,
+            maxSlippageBps,
+            mevEnabled,
+            lpDivisor: lpDivisor.toString(),
+            lpToVgRatio
+          }
+        });
+      }
       
       // Проверяем VG баланс vault'а с read-only контрактом
       if (!vgContract) {
-        log.error('VG contract unavailable', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('VG contract unavailable', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         toast.error('VG контракт недоступен');
         return;
       }
       
-      log.info('Checking VG vault balance', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        vault: stakingVault
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Checking VG vault balance', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          vault: stakingVault
+        });
+      }
       
       let vaultVGBalance: bigint;
       try {
@@ -278,66 +279,80 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         ], readOnlyProvider);
         
         vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
-        log.info('VG vault balance retrieved', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          vault: stakingVault,
-          balance: ethers.formatEther(vaultVGBalance)
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('VG vault balance retrieved', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            vault: stakingVault,
+            balance: ethers.formatEther(vaultVGBalance)
+          });
+        }
       } catch (balanceError) {
-        log.error('Failed to get VG vault balance', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          vault: stakingVault
-        }, balanceError as Error);
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Failed to get VG vault balance', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            vault: stakingVault
+          }, balanceError as Error);
+        }
         toast.error('Не удалось проверить VG баланс vault');
         return;
       }
       
       if (vaultVGBalance === 0n) {
-        log.error('VG vault empty - no tokens for reward', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('VG vault empty - no tokens for reward', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         toast.error('VG vault пустой - обратитесь к администратору');
         return;
       }
       
       // Рассчитываем ожидаемую награду
-      log.info('Calculating expected reward', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Calculating expected reward', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG'
+        });
+      }
       
       const expectedLp = (vcAmountWei * bnbAmountWei) / lpDivisor;
       const expectedVGReward = expectedLp * BigInt(lpToVgRatio);
       
-      log.info('Expected LP', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        expectedLp: ethers.formatEther(expectedLp)
-      });
-      log.info('Expected VG reward', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        expectedVGReward: ethers.formatEther(expectedVGReward)
-      });
-      
-      if (vaultVGBalance < expectedVGReward) {
-        log.error('Insufficient VG in vault for reward', {
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Expected LP', {
           component: 'EarnVGWidget',
           function: 'handleEarnVG',
-          required: ethers.formatEther(expectedVGReward),
-          available: ethers.formatEther(vaultVGBalance)
+          expectedLp: ethers.formatEther(expectedLp)
         });
+        log.info('Expected VG reward', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          expectedVGReward: ethers.formatEther(expectedVGReward)
+        });
+      }
+      
+      if (vaultVGBalance < expectedVGReward) {
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Insufficient VG in vault for reward', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            required: ethers.formatEther(expectedVGReward),
+            available: ethers.formatEther(vaultVGBalance)
+          });
+        }
         toast.error(`Недостаточно VG в vault. Нужно: ${ethers.formatEther(expectedVGReward)}, доступно: ${ethers.formatEther(vaultVGBalance)}`);
         return;
       }
 
-      log.info('Checking and approving VC tokens', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Checking and approving VC tokens', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG'
+        });
+      }
       
       // Check allowance with read-only contract
       let allowance: bigint;
@@ -349,133 +364,165 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         ], readOnlyProvider);
         
         allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
-        log.info('Current VC allowance', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          allowance: ethers.formatEther(allowance)
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Current VC allowance', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            allowance: ethers.formatEther(allowance)
+          });
+        }
       } catch (allowanceError) {
-        log.error('Failed to get allowance', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          allowanceError
-        }, allowanceError as Error);
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Failed to get allowance', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            allowanceError
+          }, allowanceError as Error);
+        }
         toast.error('Не удалось проверить allowance');
         return;
       }
 
       // Separate try-catch for approve operations
       try {
-        log.info('Starting approve operation', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Starting approve operation', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         
         // ✅ ДОБАВЛЯЕМ ПРОВЕРКУ ПОДКЛЮЧЕНИЯ вместо повторного запроса
         if (!account || !signer) {
           throw new Error('Кошелёк не подключён. Переподключите MetaMask.');
         }
-        log.info('Connection confirmed', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          address: account.slice(0, 6) + '...'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Connection confirmed', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            address: account.slice(0, 6) + '...'
+          });
+        }
 
-        log.info('Creating VC contract with signer', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Creating VC contract with signer', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         const vcContractWithSigner = vcContract.connect(signer);
-        log.info('VC contract with signer created', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          created: !!vcContractWithSigner
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('VC contract with signer created', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            created: !!vcContractWithSigner
+          });
+        }
         
         // Дополнительная диагностика контракта
-        log.info('VC contract diagnostics', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          contractAddress: CONTRACTS.VC_TOKEN,
-          signerAddress: await signer.getAddress(),
-          signerProvider: !!signer.provider,
-          contractTarget: (vcContractWithSigner as any).target,
-          contractInterface: !!(vcContractWithSigner as any).interface
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('VC contract diagnostics', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            contractAddress: CONTRACTS.VC_TOKEN,
+            signerAddress: await signer.getAddress(),
+            signerProvider: !!signer.provider,
+            contractTarget: (vcContractWithSigner as any).target,
+            contractInterface: !!(vcContractWithSigner as any).interface
+          });
+        }
         
         // Проверяем что approve функция существует
         try {
           const approveFn = (vcContractWithSigner as any).approve;
-          log.info('Approve function exists', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            exists: !!approveFn
-          });
-          log.info('Approve function type', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            type: typeof approveFn
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.info('Approve function exists', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              exists: !!approveFn
+            });
+            log.info('Approve function type', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              type: typeof approveFn
+            });
+          }
         } catch (e) {
-          log.error('Failed to check approve function', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            error: e
-          }, e as Error);
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Failed to check approve function', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              error: e
+            }, e as Error);
+          }
         }
         
         const MAX_UINT256 = (2n ** 256n - 1n).toString();
-        log.info('MAX_UINT256', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          value: MAX_UINT256
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('MAX_UINT256', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            value: MAX_UINT256
+          });
+        }
 
-        log.info('Estimating gas for approve', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Estimating gas for approve', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         let gasLimitOverride: bigint | undefined;
         try {
           const gasFn = (vcContractWithSigner as any).estimateGas?.approve;
-          log.info('Gas estimation function exists', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            exists: !!gasFn
-          });
-          if (gasFn) {
-            log.info('Calling estimateGas.approve', {
-              component: 'EarnVGWidget',
-              function: 'handleEarnVG'
-            });
-            const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
-            gasLimitOverride = (est * 120n) / 100n; // +20 %
-            log.info('Gas estimated', {
+          if (process.env.NODE_ENV === 'development') {
+            log.info('Gas estimation function exists', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              estimatedGas: est.toString(),
-              withOverride: gasLimitOverride?.toString()
+              exists: !!gasFn
             });
           }
+          if (gasFn) {
+            if (process.env.NODE_ENV === 'development') {
+              log.info('Calling estimateGas.approve', {
+                component: 'EarnVGWidget',
+                function: 'handleEarnVG'
+              });
+            }
+            const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
+            gasLimitOverride = (est * 120n) / 100n; // +20 %
+            if (process.env.NODE_ENV === 'development') {
+              log.info('Gas estimated', {
+                component: 'EarnVGWidget',
+                function: 'handleEarnVG',
+                estimatedGas: est.toString(),
+                withOverride: gasLimitOverride?.toString()
+              });
+            }
+          }
         } catch (gasError) {
-          log.warn('Gas estimation failed, will use default', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            error: gasError
-          }, gasError as Error);
+          if (process.env.NODE_ENV === 'development') {
+            log.warn('Gas estimation failed, will use default', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              error: gasError
+            }, gasError as Error);
+          }
         }
 
-        log.info('Calling approve transaction', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
-        log.info('Approve parameters', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          spender: CONTRACTS.LP_LOCKER,
-          amount: MAX_UINT256,
-          gasLimit: gasLimitOverride ? gasLimitOverride.toString() : 'default'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Calling approve transaction', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+          log.info('Approve parameters', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            spender: CONTRACTS.LP_LOCKER,
+            amount: MAX_UINT256,
+            gasLimit: gasLimitOverride ? gasLimitOverride.toString() : 'default'
+          });
+        }
         
         // Уведомление для Arc browser пользователей
         toast.loading('Approve отправлен в MetaMask. Если не видите окно - кликните на иконку MetaMask в панели расширений!', {
@@ -494,21 +541,25 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           setTimeout(() => reject(new Error('Approve transaction timeout after 60 seconds')), 60000)
         );
 
-        log.info('Waiting for approve transaction (timeout 60s)', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Waiting for approve transaction (timeout 60s)', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         const approveTx = await Promise.race([approvePromise, timeoutPromise]);
 
-        log.info('Approve TX hash', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          hash: (approveTx as any).hash
-        });
-        log.info('Waiting for approve transaction confirmation', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Approve TX hash', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            hash: (approveTx as any).hash
+          });
+          log.info('Waiting for approve transaction confirmation', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
 
         const receiptPromise = (approveTx as any).wait();
         const receiptTimeoutPromise = new Promise((_, reject) => 
@@ -517,31 +568,37 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
         const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]);
 
-        log.info('Approve receipt received', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          receipt: !!approveReceipt
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Approve receipt received', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            receipt: !!approveReceipt
+          });
+        }
         if ((approveReceipt as any).status !== 1) throw new Error('Approve transaction failed');
 
-        log.info('VC tokens approved', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('VC tokens approved', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
       } catch (approveError: any) {
-        log.error('Approve failed', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          error: approveError
-        }, approveError as Error);
-        log.error('Approve error details', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          message: approveError.message,
-          code: approveError.code,
-          data: approveError.data,
-          stack: approveError.stack
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Approve failed', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            error: approveError
+          }, approveError as Error);
+          log.error('Approve error details', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            message: approveError.message,
+            code: approveError.code,
+            data: approveError.data,
+            stack: approveError.stack
+          });
+        }
         
         if (approveError.message?.includes('user rejected')) {
           toast.error('Транзакция отклонена пользователем');
@@ -565,35 +622,41 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       try {
         if (finalSlippage > maxSlippageBps) {
           finalSlippage = Number(maxSlippageBps);
-          log.warn('Slippage reduced to maximum', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            finalSlippage: finalSlippage
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.warn('Slippage reduced to maximum', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              finalSlippage: finalSlippage
+            });
+          }
         }
       } catch {
-        log.warn('Using default slippage', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.warn('Using default slippage', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
       }
 
-      log.info('Executing earnVG transaction', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        parameters: {
+      if (process.env.NODE_ENV === 'development') {
+        log.info('Executing earnVG transaction', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
+          parameters: {
+            vc: ethers.formatEther(vcAmountWei),
+            bnb: ethers.formatEther(bnbAmountWei),
+            slippage: finalSlippage
+          }
+        });
+        log.info('Transaction parameters', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG',
           vc: ethers.formatEther(vcAmountWei),
           bnb: ethers.formatEther(bnbAmountWei),
           slippage: finalSlippage
-        }
-      });
-      log.info('Transaction parameters', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG',
-        vc: ethers.formatEther(vcAmountWei),
-        bnb: ethers.formatEther(bnbAmountWei),
-        slippage: finalSlippage
-      });
+        });
+      }
 
       // Separate try-catch for transaction execution
       try {
@@ -602,55 +665,65 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           gasLimit: 500000,
         });
         
-        log.info('Transaction hash', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          hash: tx.hash
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.info('Transaction hash', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            hash: tx.hash
+          });
+        }
         toast.loading('Ожидание подтверждения транзакции...');
         const receipt = await tx.wait();
 
         if (receipt.status === 1) {
-          log.info('Transaction successful', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
-          log.info('Gas used', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            gasUsed: receipt.gasUsed.toString()
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.info('Transaction successful', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+            log.info('Gas used', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              gasUsed: receipt.gasUsed.toString()
+            });
+          }
           
           // Парсим события для получения деталей
           try {
             const events = receipt.logs;
-            log.info('Transaction events', {
-              component: 'EarnVGWidget',
-              function: 'handleEarnVG',
-              events: events.length
-            });
+            if (process.env.NODE_ENV === 'development') {
+              log.info('Transaction events', {
+                component: 'EarnVGWidget',
+                function: 'handleEarnVG',
+                events: events.length
+              });
+            }
             
             // Ищем событие VGEarned
             for (const event of events) {
               try {
                 const decoded = lpLockerWithSigner.interface.parseLog(event);
                 if (decoded && decoded.name === 'VGEarned') {
-                  log.info('VG Earned event', {
-                    component: 'EarnVGWidget',
-                    function: 'handleEarnVG',
-                    user: decoded.args.user,
-                    vgAmount: ethers.formatEther(decoded.args.vgAmount)
-                  });
+                  if (process.env.NODE_ENV === 'development') {
+                    log.info('VG Earned event', {
+                      component: 'EarnVGWidget',
+                      function: 'handleEarnVG',
+                      user: decoded.args.user,
+                      vgAmount: ethers.formatEther(decoded.args.vgAmount)
+                    });
+                  }
                 }
               } catch (e) {
                 // Игнорируем события других контрактов
               }
             }
           } catch (e) {
-            log.warn('Failed to parse events', {
-              component: 'EarnVGWidget',
-              function: 'handleEarnVG'
-            }, e);
+            if (process.env.NODE_ENV === 'development') {
+              log.warn('Failed to parse events', {
+                component: 'EarnVGWidget',
+                function: 'handleEarnVG'
+              }, e);
+            }
           }
           
           toast.success('VG токены успешно получены!');
@@ -667,114 +740,146 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           throw new Error('Transaction failed');
         }
       } catch (txError: any) {
-        log.error('Transaction error', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          error: txError
-        }, txError as Error);
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Transaction error', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            error: txError
+          }, txError as Error);
+        }
         
         // Детальное логирование ошибок транзакции
         if (txError.code) {
-          log.error('Error Code', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            code: txError.code
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Error Code', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              code: txError.code
+            });
+          }
         }
         if (txError.data) {
-          log.error('Error Data', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            data: txError.data
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Error Data', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              data: txError.data
+            });
+          }
         }
         if (txError.transaction) {
-          log.error('Transaction', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            transaction: txError.transaction
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Transaction', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              transaction: txError.transaction
+            });
+          }
         }
         
         if (txError.message?.includes('Too frequent transactions')) {
-          log.info('MEV Protection active', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.info('MEV Protection active', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+          }
           toast.error('MEV Protection: Подождите 5 минут между транзакциями');
         } else if (txError.message?.includes('Slippage exceeded')) {
-          log.warn('Slippage exceeded', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.warn('Slippage exceeded', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+          }
           toast.error('Slippage превышен. Попробуйте позже');
         } else if (txError.message?.includes('insufficient funds')) {
-          log.error('Insufficient funds', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Insufficient funds', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+          }
           toast.error('Недостаточно средств');
         } else if (txError.message?.includes('user rejected')) {
-          log.error('User rejected transaction', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('User rejected transaction', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+          }
           toast.error('Транзакция отклонена пользователем');
         } else if (txError.message?.includes('VG vault empty') || txError.message?.includes('Insufficient VG')) {
-          log.error('VG vault problem', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG'
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('VG vault problem', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG'
+            });
+          }
           toast.error('VG vault пустой или недостаточно токенов для награды');
         } else {
-          log.error('Unknown transaction error', {
-            component: 'EarnVGWidget',
-            function: 'handleEarnVG',
-            error: txError.message
-          });
+          if (process.env.NODE_ENV === 'development') {
+            log.error('Unknown transaction error', {
+              component: 'EarnVGWidget',
+              function: 'handleEarnVG',
+              error: txError.message
+            });
+          }
           toast.error(`Ошибка транзакции: ${txError.message || 'Неизвестная ошибка'}`);
         }
       }
     } catch (error: any) {
-      log.error('Config error', {
-        component: 'EarnVGWidget',
-        function: 'handleEarnVG'
-      }, error);
+      if (process.env.NODE_ENV === 'development') {
+        log.error('Config error', {
+          component: 'EarnVGWidget',
+          function: 'handleEarnVG'
+        }, error);
+      }
       
       // Детальное логирование ошибок конфигурации
       if (error.code) {
-        log.error('Config Error Code', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          code: error.code
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Config Error Code', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            code: error.code
+          });
+        }
       }
       if (error.data) {
-        log.error('Config Error Data', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          data: error.data
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Config Error Data', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            data: error.data
+          });
+        }
       }
       
       if (error.message?.includes('Config timeout') || error.message?.includes('Fallback timeout')) {
-        log.error('Config timeout occurred', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Config timeout occurred', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         toast.error('Timeout при получении конфигурации контракта. Попробуйте позже.');
       } else if (error.message?.includes('network')) {
-        log.error('Network problem', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Network problem', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG'
+          });
+        }
         toast.error('Проблема с подключением к сети BSC');
       } else {
-        log.error('Unknown config error', {
-          component: 'EarnVGWidget',
-          function: 'handleEarnVG',
-          error: error.message
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.error('Unknown config error', {
+            component: 'EarnVGWidget',
+            function: 'handleEarnVG',
+            error: error.message
+          });
+        }
         toast.error(`Ошибка конфигурации: ${error.message || 'Неизвестная ошибка'}`);
       }
     } finally {
@@ -783,6 +888,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   };
 
   const handleLockLP = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      log.info('Starting LockLP operation', {
+        component: 'EarnVGWidget',
+        function: 'handleLockLP',
+        address: account,
+        lpAmount
+      });
+    }
+    
     if (!signer || !account || !lpLockerContract) {
       toast.error('Подключите кошелёк');
       return;
@@ -840,11 +954,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         }
       }
     } catch (error: any) {
-      log.error('LockLP Error', {
-        component: 'EarnVGWidget',
-        function: 'handleLockLP',
-        error: error
-      }, error as Error);
+      if (process.env.NODE_ENV === 'development') {
+        log.error('LockLP Error', {
+          component: 'EarnVGWidget',
+          function: 'handleLockLP',
+          error: error
+        }, error as Error);
+      }
       
       if (error.message?.includes('Too frequent transactions')) {
         toast.error('MEV Protection: Подождите 5 минут между транзакциями');
@@ -902,10 +1018,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   };
 
   const refreshAllData = async () => {
-    log.info('Manual refresh triggered', {
-      component: 'EarnVGWidget',
-      function: 'refreshAllData'
-    });
+    if (process.env.NODE_ENV === 'development') {
+      log.info('Manual refresh triggered', {
+        component: 'EarnVGWidget',
+        function: 'refreshAllData'
+      });
+    }
     await fetchTokenData(true);
     await refreshPoolInfo();
   };

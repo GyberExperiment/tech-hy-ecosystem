@@ -18,7 +18,7 @@ import {
 import WalletTroubleshoot from '../components/WalletTroubleshoot';
 import StakingStats from '../components/StakingStats';
 import TransactionHistory from '../components/TransactionHistory';
-import ConnectionDebug from '../components/ConnectionDebug';
+import { ContractStatus } from '../components/ContractStatus';
 import TokenStats from '../components/TokenStats';
 import { useTokenData } from '../hooks/useTokenData';
 
@@ -167,8 +167,8 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Debug Info */}
-      <ConnectionDebug />
+      {/* Contract Status */}
+      <ContractStatus />
 
       {/* Connection Status & Troubleshooting */}
       {!isConnected && (

@@ -113,20 +113,25 @@ const handleProviderAnnouncement = (event: CustomEvent<EIP6963ProviderDetail>) =
  * Initialize EIP-6963 provider discovery
  */
 const initializeProviderDiscovery = (): (() => void) => {
-  log.info('EIP-6963: Initializing provider discovery', {
-    component: 'walletStore',
-    function: 'initializeProviderDiscovery'
-  });
+  if (typeof window === 'undefined') return;
+
+  // ✅ Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('EIP-6963: Initializing provider discovery...');
+  }
 
   if (globalState.discoveryStarted) return; // уже запущено
   globalState.discoveryStarted = true;
 
-  console.log('EIP-6963: Initializing provider discovery...');
-
+  // Listen for provider announcements
   window.addEventListener('eip6963:announceProvider', handleProviderAnnouncement);
+  
+  // Request existing providers
   window.dispatchEvent(new Event('eip6963:requestProvider'));
-
-  console.log('EIP-6963: Provider discovery initialized');
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('EIP-6963: Provider discovery initialized');
+  }
 
   // Безопасно чистим слушатель только при закрытии вкладки
   window.addEventListener('beforeunload', () => {

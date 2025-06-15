@@ -135,10 +135,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     // 🧪 ВРЕМЕННО: Принудительно используем legacy для тестирования Arc browser popup проблемы
     const forceLegacy = localStorage.getItem('forceLegacyProvider') === 'true';
     if (forceLegacy) {
-      log.debug('FORCE LEGACY MODE - Using window.ethereum directly', { 
-        component: 'Web3Context',
-        function: 'getEthereumProvider'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('FORCE LEGACY MODE - Using window.ethereum directly', { 
+          component: 'Web3Context',
+          function: 'getEthereumProvider'
+        });
+      }
       const legacyProvider = detectLegacyProvider();
       if (legacyProvider) {
         return legacyProvider;
@@ -147,22 +149,26 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
     // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
     if (preferredProvider) {
-      log.debug('Using EIP-6963 provider', {
-        component: 'Web3Context',
-        function: 'getEthereumProvider',
-        providerName: preferredProvider.info.name,
-        providerRdns: preferredProvider.info.rdns
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Using EIP-6963 provider', {
+          component: 'Web3Context',
+          function: 'getEthereumProvider',
+          providerName: preferredProvider.info.name,
+          providerRdns: preferredProvider.info.rdns
+        });
+      }
       return preferredProvider.provider;
     }
 
     // 2. Fallback to legacy detection
     const legacyProvider = detectLegacyProvider();
     if (legacyProvider) {
-      log.debug('Using legacy provider detection', { 
-        component: 'Web3Context',
-        function: 'getEthereumProvider'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Using legacy provider detection', { 
+          component: 'Web3Context',
+          function: 'getEthereumProvider'
+        });
+      }
       return legacyProvider;
     }
 
@@ -344,10 +350,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         }
       } else {
         // Возможно старый RPC не работает - пытаемся обновить RPC
-        log.debug('Switch failed, trying to update RPC URLs', {
-          component: 'Web3Context',
-          function: 'switchNetwork'
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.debug('Switch failed, trying to update RPC URLs', {
+            component: 'Web3Context',
+            function: 'switchNetwork'
+          });
+        }
         try {
           // Принудительно обновляем RPC URLs для BSC Testnet
           await ethereum.request({
@@ -435,24 +443,28 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       if (accounts.length === 0) {
         disconnectWallet();
       } else {
-        log.debug('Account changed', {
-          component: 'Web3Context',
-          function: 'handleAccountsChanged',
-          newAccount: accounts[0],
-          previousAccount: account
-        });
+        if (process.env.NODE_ENV === 'development') {
+          log.debug('Account changed', {
+            component: 'Web3Context',
+            function: 'handleAccountsChanged',
+            newAccount: accounts[0],
+            previousAccount: account
+          });
+        }
         setAccount(accounts[0] || null);
       }
     };
 
     const handleChainChanged = (chainId: string) => {
       const newChainId = parseInt(chainId, 16);
-      log.debug('Chain changed', {
-        component: 'Web3Context',
-        function: 'handleChainChanged',
-        newChainId,
-        isCorrectNetwork: newChainId === 97
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Chain changed', {
+          component: 'Web3Context',
+          function: 'handleChainChanged',
+          newChainId,
+          isCorrectNetwork: newChainId === 97
+        });
+      }
       setIsCorrectNetwork(newChainId === 97);
       
       if (newChainId === 97) {
@@ -463,10 +475,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     };
 
     const handleDisconnect = () => {
-      log.debug('Provider disconnected', {
-        component: 'Web3Context',
-        function: 'handleDisconnect'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log.debug('Provider disconnected', {
+          component: 'Web3Context',
+          function: 'handleDisconnect'
+        });
+      }
       disconnectWallet();
     };
 
