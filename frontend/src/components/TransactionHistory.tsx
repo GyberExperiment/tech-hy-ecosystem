@@ -39,7 +39,7 @@ interface Transaction {
 
 const TransactionHistory: React.FC = () => {
   const { t } = useTranslation(['common']);
-  const { account, provider } = useWeb3();
+  const { account } = useWeb3();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -476,26 +476,6 @@ const TransactionHistory: React.FC = () => {
       }
     }
   }, [account, transactions.length, lastFetchTime, dataSource]);
-
-  const addTransaction = (tx: Omit<Transaction, 'id' | 'timestamp'>) => {
-    const newTx: Transaction = {
-      ...tx,
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-    };
-    
-    const updated = [newTx, ...transactions];
-    setTransactions(updated);
-    saveTransactions(updated);
-  };
-
-  const updateTransactionStatus = (hash: string, status: Transaction['status'], blockNumber?: number) => {
-    const updated = transactions.map(tx => 
-      tx.hash === hash ? { ...tx, status, ...(blockNumber !== undefined && { blockNumber }) } : tx
-    );
-    setTransactions(updated);
-    saveTransactions(updated);
-  };
 
   const getTypeIcon = (type: Transaction['type']) => {
     switch (type) {

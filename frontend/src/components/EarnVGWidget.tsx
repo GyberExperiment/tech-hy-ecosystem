@@ -9,19 +9,12 @@ import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
 
-const LPLOCKER_ABI = [
-  "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
-  "function lockLPTokens(uint256 lpAmount) external",  
-  "function owner() view returns (address)",
-  "function config() external view returns (address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint16 maxSlippageBps, uint16 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited)",
-];
-
 interface EarnVGWidgetProps {
   className?: string;
 }
 
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, signer, isConnected, isCorrectNetwork, provider, vcContract, lpLockerContract, vgContract, updateBSCTestnetRPC } = useWeb3();
+  const { account, signer, isConnected, vcContract, lpLockerContract, vgContract, updateBSCTestnetRPC } = useWeb3();
   
   // Use centralized hooks
   const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
