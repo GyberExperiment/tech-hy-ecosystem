@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { toast } from 'react-hot-toast';
 import { CONTRACTS } from '../constants/contracts';
+import { log } from '../utils/logger';
 
 // EIP-6963 imports
 import { usePreferredProvider } from '../hooks/useWalletProviders';
@@ -134,7 +135,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     // 🧪 ВРЕМЕННО: Принудительно используем legacy для тестирования Arc browser popup проблемы
     const forceLegacy = localStorage.getItem('forceLegacyProvider') === 'true';
     if (forceLegacy) {
-      console.log('Web3Context: 🧪 FORCE LEGACY MODE - Using window.ethereum directly');
+      log.debug('FORCE LEGACY MODE - Using window.ethereum directly', { 
+        component: 'Web3Context',
+        function: 'getEthereumProvider'
+      });
       const legacyProvider = detectLegacyProvider();
       if (legacyProvider) {
         return legacyProvider;
@@ -143,18 +147,29 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
     // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
     if (preferredProvider) {
-      console.log(`Web3Context: Using EIP-6963 provider: ${preferredProvider.info.name} (${preferredProvider.info.rdns})`);
+      log.debug('Using EIP-6963 provider', {
+        component: 'Web3Context',
+        function: 'getEthereumProvider',
+        providerName: preferredProvider.info.name,
+        providerRdns: preferredProvider.info.rdns
+      });
       return preferredProvider.provider;
     }
 
     // 2. Fallback to legacy detection
     const legacyProvider = detectLegacyProvider();
     if (legacyProvider) {
-      console.log('Web3Context: Using legacy provider detection');
+      log.debug('Using legacy provider detection', { 
+        component: 'Web3Context',
+        function: 'getEthereumProvider'
+      });
       return legacyProvider;
     }
 
-    console.log('Web3Context: No Ethereum provider found');
+    log.warn('No Ethereum provider found', { 
+      component: 'Web3Context',
+      function: 'getEthereumProvider'
+    });
     return null;
   };
 
@@ -164,7 +179,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     try {
       return new ethers.Contract(address, abi, signer);
     } catch (error) {
-      console.error(`Web3Context: Failed to create contract at ${address}:`, error);
+      log.error('Failed to create contract', {
+        component: 'Web3Context',
+        function: 'getContract',
+        address,
+        account
+      }, error as Error);
       return null;
     }
   };
@@ -223,6 +243,14 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
       setLockedProvider(ethereum); // 🔒 фиксируем провайдер
       
+      log.info('Wallet connected successfully', {
+        component: 'Web3Context',
+        function: 'connectWallet',
+        address: accounts[0],
+        network: network.name,
+        chainId: Number(network.chainId)
+      });
+      
       toast.success('Кошелёк подключён!');
       
       // ✅ АВТОМАТИЧЕСКИ ОБНОВЛЯЕМ RPC ENDPOINTS ПОСЛЕ ПОДКЛЮЧЕНИЯ
@@ -233,7 +261,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         toast.error('Переключитесь на BSC Testnet');
       }
     } catch (error: any) {
-      console.error('Web3Context: Connection error:', error);
+      log.error('Wallet connection failed', {
+        component: 'Web3Context',
+        function: 'connectWallet'
+      }, error);
       
       // Better error handling with Phantom conflict detection
       if (error.code === 4001) {
@@ -247,10 +278,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       } else if (error.message?.includes('User rejected')) {
         toast.error('Подключение отменено пользователем');
       } else {
-        console.error('Web3Context: Detailed connection error:', {
-          code: error.code,
-          message: error.message,
-          data: error.data
+        log.error('Detailed connection error', {
+          component: 'Web3Context',
+          function: 'connectWallet',
+          errorCode: error.code,
+          errorMessage: error.message,
+          errorData: error.data
         });
         toast.error('Ошибка подключения к кошельку. Проверьте MetaMask.');
       }
@@ -258,6 +291,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   };
 
   const disconnectWallet = () => {
+    log.info('Wallet disconnected', {
+      component: 'Web3Context',
+      function: 'disconnectWallet',
+      address: account
+    });
     setProvider(null);
     setSigner(null);
     setAccount(null);
@@ -297,12 +335,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
           });
           toast.success('BSC Testnet добавлен с обновленными RPC!');
         } catch (addError) {
-          console.error('Ошибка добавления сети:', addError);
+          log.error('Failed to add BSC Testnet network', {
+            component: 'Web3Context',
+            function: 'switchNetwork',
+            network: 'BSC_TESTNET'
+          }, addError as Error);
           toast.error('Ошибка добавления BSC Testnet');
         }
       } else {
         // Возможно старый RPC не работает - пытаемся обновить RPC
-        console.log('Switch failed, trying to update RPC URLs...');
+        log.debug('Switch failed, trying to update RPC URLs', {
+          component: 'Web3Context',
+          function: 'switchNetwork'
+        });
         try {
           // Принудительно обновляем RPC URLs для BSC Testnet
           await ethereum.request({
@@ -325,7 +370,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
             params: [{ chainId: '0x61' }],
           });
         } catch (updateError) {
-          console.error('Ошибка обновления RPC:', updateError);
+          log.error('Failed to update RPC endpoints', {
+            component: 'Web3Context',
+            function: 'switchNetwork',
+            network: 'BSC_TESTNET'
+          }, updateError as Error);
           toast.error('Ошибка переключения на BSC Testnet. Проверьте подключение к интернету.');
         }
       }
@@ -338,7 +387,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     if (!ethereum) return false;
 
     try {
-      console.log('🔄 Принудительно обновляем BSC Testnet RPC endpoints...');
+      log.info('Forcefully updating BSC Testnet RPC endpoints', {
+        component: 'Web3Context',  
+        function: 'updateBSCTestnetRPC',
+        network: 'BSC_TESTNET'
+      });
       
       // Принудительно обновляем/добавляем BSC Testnet с новыми RPC
       await ethereum.request({
@@ -354,11 +407,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         ],
       });
       
-      console.log('✅ BSC Testnet RPC endpoints обновлены!');
+      log.info('BSC Testnet RPC endpoints updated successfully', {
+        component: 'Web3Context',
+        function: 'updateBSCTestnetRPC',
+        rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
+      });
       toast.success('RPC endpoints обновлены! Теперь используется publicnode.com');
       return true;
     } catch (error: any) {
-      console.error('❌ Ошибка обновления RPC:', error);
+      log.error('Failed to update BSC Testnet RPC endpoints', {
+        component: 'Web3Context',
+        function: 'updateBSCTestnetRPC',
+        network: 'BSC_TESTNET'
+      }, error);
       if (error.code !== 4001) { // Игнорируем "пользователь отклонил"
         toast.error('Ошибка обновления RPC endpoints');
       }
@@ -375,12 +436,24 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       if (accounts.length === 0) {
         disconnectWallet();
       } else {
+        log.debug('Account changed', {
+          component: 'Web3Context',
+          function: 'handleAccountsChanged',
+          newAccount: accounts[0],
+          previousAccount: account
+        });
         setAccount(accounts[0] || null);
       }
     };
 
     const handleChainChanged = (chainId: string) => {
       const newChainId = parseInt(chainId, 16);
+      log.debug('Chain changed', {
+        component: 'Web3Context',
+        function: 'handleChainChanged',
+        newChainId,
+        isCorrectNetwork: newChainId === 97
+      });
       setIsCorrectNetwork(newChainId === 97);
       
       if (newChainId === 97) {
@@ -391,6 +464,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     };
 
     const handleDisconnect = () => {
+      log.debug('Provider disconnected', {
+        component: 'Web3Context',
+        function: 'handleDisconnect'
+      });
       disconnectWallet();
     };
 
@@ -402,7 +479,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         ethereum.on('disconnect', handleDisconnect);
       }
     } catch (error) {
-      console.error('Ошибка подключения слушателей событий:', error);
+      log.error('Failed to attach event listeners', {
+        component: 'Web3Context',
+        function: 'useEffect'
+      }, error as Error);
     }
 
     return () => {
@@ -413,7 +493,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
           ethereum.removeListener('disconnect', handleDisconnect);
         }
       } catch (error) {
-        console.error('Ошибка отключения слушателей событий:', error);
+        log.error('Failed to remove event listeners', {
+          component: 'Web3Context',
+          function: 'useEffect-cleanup'
+        }, error as Error);
       }
     };
   }, [account]);

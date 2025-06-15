@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
+import { log } from '../utils/logger';
 
 // Define supported languages
 export const SUPPORTED_LANGUAGES = {
@@ -83,7 +84,13 @@ i18n
     saveMissing: process.env.NODE_ENV === 'development',
     missingKeyHandler: (lng, ns, key) => {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(`Missing translation: ${lng}.${ns}.${key}`);
+        log.warn('Missing translation key', {
+          component: 'i18n',
+          function: 'missingKeyHandler',
+          language: lng,
+          namespace: ns,
+          key
+        });
       }
     },
   });

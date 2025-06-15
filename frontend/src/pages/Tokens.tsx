@@ -35,6 +35,7 @@ import { ContractStatus } from '../components/ContractStatus';
 import TokenStats from '../components/TokenStats';
 import { useTokenData } from '../hooks/useTokenData';
 import type { TokenData } from '../hooks/useTokenData';
+import { log } from '../utils/logger';
 
 interface TokenAllowance {
   spender: string;
@@ -54,7 +55,11 @@ const createFallbackProvider = () => {
   try {
     return new ethers.JsonRpcProvider(FALLBACK_PROVIDERS[0]);
   } catch (error) {
-    console.error('Failed to create fallback provider:', error);
+    log.error('Failed to create fallback provider', {
+      component: 'Tokens',
+      function: 'createFallbackProvider',
+      provider: FALLBACK_PROVIDERS[0]
+    }, error as Error);
     return null;
   }
 };
@@ -168,14 +173,24 @@ const Tokens: React.FC = () => {
               });
             }
           } catch (error) {
-            console.warn(`Error fetching allowance for ${token.symbol} -> ${spender.name}:`, error);
+            log.warn('Failed to fetch token allowance', {
+              component: 'Tokens',
+              function: 'fetchAllowances',
+              token: token.symbol,
+              spender: spender.name,
+              address: account
+            }, error as Error);
           }
         }
       }
 
       setAllowances(allowanceData);
     } catch (error) {
-      console.error('Error fetching allowances:', error);
+      log.error('Failed to fetch all allowances', {
+        component: 'Tokens',
+        function: 'fetchAllowances',
+        address: account
+      }, error as Error);
     }
   };
 
@@ -214,7 +229,12 @@ const Tokens: React.FC = () => {
       // Добавляем 20% буфер для безопасности
       return gasEstimate * 120n / 100n;
     } catch (error) {
-      console.warn('Gas estimation failed, using default:', error);
+      log.warn('Gas estimation failed, using fallback gas limit', {
+        component: 'Tokens',
+        function: 'estimateGas',
+        method,
+        fallbackGas: '100000'
+      }, error as Error);
       return 100000n; // Fallback gas limit
     }
   };
@@ -263,6 +283,13 @@ const Tokens: React.FC = () => {
       const receipt = await tx.wait();
       
       if (receipt.status === 1) {
+        log.transaction('Token transfer successful', tx.hash, {
+          token: selectedToken.symbol,
+          amount: transferAmount,
+          recipient: transferTo,
+          sender: account
+        });
+        
         toast.success(`Перевод ${transferAmount} ${selectedToken.symbol} выполнен успешно!`, { id: 'transfer' });
         
         // Обновляем балансы
@@ -276,7 +303,16 @@ const Tokens: React.FC = () => {
       }
       
     } catch (error: any) {
-      console.error('Transfer error:', error);
+      log.error('Token transfer failed', {
+        component: 'Tokens',
+        function: 'handleTransfer',
+        token: selectedToken?.symbol,
+        amount: transferAmount,
+        recipient: transferTo,
+        sender: account,
+        errorMessage: error.message
+      }, error);
+      
       let errorMessage = 'Ошибка перевода';
       
       if (error.message?.includes('insufficient funds')) {
@@ -341,6 +377,13 @@ const Tokens: React.FC = () => {
       const receipt = await tx.wait();
       
       if (receipt.status === 1) {
+        log.transaction('Token approval successful', tx.hash, {
+          token: selectedToken.symbol,
+          amount: approveAmount,
+          spender: approveTo,
+          owner: account
+        });
+        
         toast.success(`Approve для ${selectedToken.symbol} выполнен успешно!`, { id: 'approve' });
         
         // Обновляем allowances
@@ -354,7 +397,16 @@ const Tokens: React.FC = () => {
       }
       
     } catch (error: any) {
-      console.error('Approve error:', error);
+      log.error('Token approval failed', {
+        component: 'Tokens',
+        function: 'handleApprove',
+        token: selectedToken?.symbol,
+        amount: approveAmount,
+        spender: approveTo,
+        owner: account,
+        errorMessage: error.message
+      }, error);
+      
       let errorMessage = 'Ошибка approve';
       
       if (error.message?.includes('insufficient funds')) {

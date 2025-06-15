@@ -31,6 +31,7 @@ import {
   Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { log } from '../utils/logger';
 
 interface ProposalData {
   id: number;
@@ -111,21 +112,26 @@ const Governance: React.FC = () => {
   ];
 
   const fetchBalances = async () => {
-    if (!account || !isCorrectNetwork) return;
-    
-    setLoading(true);
-    try {
-      const contracts = [
-        { contract: vgContract, symbol: 'VG' },
-        { contract: vgVotesContract, symbol: 'VGV' },
-      ];
+    if (!vgContract || !vgVotesContract || !account) return;
 
-      const balancePromises = contracts.map(async ({ contract, symbol }) => {
-        if (contract) {
-          const balance = await contract.balanceOf(account);
-          return { symbol, balance: ethers.formatEther(balance) };
+    try {
+      setLoading(true);
+      
+      const balancePromises = [
+        {
+          symbol: 'VG',
+          promise: vgContract.balanceOf(account)
+        },
+        {
+          symbol: 'VGV',
+          promise: vgVotesContract.balanceOf(account)
         }
-        return { symbol, balance: '0' };
+      ].map(async ({ symbol, promise }) => {
+        const balance = await promise;
+        return {
+          symbol,
+          balance: (parseFloat(balance.toString()) / Math.pow(10, 18)).toFixed(6)
+        };
       });
 
       const results = await Promise.all(balancePromises);
@@ -137,7 +143,11 @@ const Governance: React.FC = () => {
 
       setBalances(newBalances);
     } catch (error) {
-      console.error('Error fetching balances:', error);
+      log.error('Failed to fetch governance balances', {
+        component: 'Governance',
+        function: 'fetchBalances',
+        address: account
+      }, error as Error);
     } finally {
       setLoading(false);
     }
@@ -222,6 +232,13 @@ const Governance: React.FC = () => {
       toast.loading('Подтверждение транзакции...', { id: 'vote' });
       await tx.wait();
       
+      log.transaction('Governance vote cast successfully', tx.hash, {
+        proposalId,
+        support,
+        votingPower: votingPower.toString(),
+        voter: account
+      });
+      
       toast.success(`Голос ${support ? 'ЗА' : 'ПРОТИВ'} успешно подан!`, { id: 'vote' });
       
       // Обновляем данные после голосования
@@ -233,7 +250,15 @@ const Governance: React.FC = () => {
       setSelectedProposal(null);
       
     } catch (error: any) {
-      console.error('Vote error:', error);
+      log.error('Governance vote failed', {
+        component: 'Governance',
+        function: 'handleVote',
+        proposalId,
+        support,
+        address: account,
+        errorMessage: error.message
+      }, error);
+      
       let errorMessage = 'Ошибка голосования';
       
       if (error.message?.includes('insufficient voting power')) {
