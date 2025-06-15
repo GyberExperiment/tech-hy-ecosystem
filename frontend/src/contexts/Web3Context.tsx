@@ -381,8 +381,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     }
   };
 
-  // ✅ ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО ОБНОВЛЕНИЯ RPC ENDPOINTS
-  const updateBSCTestnetRPC = async () => {
+  const updateBSCTestnetRPC = async (): Promise<boolean> => {
     const ethereum = getEthereumProvider();
     if (!ethereum) return false;
 
