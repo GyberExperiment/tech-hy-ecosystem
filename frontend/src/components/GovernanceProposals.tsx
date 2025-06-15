@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { TableSkeleton } from './LoadingSkeleton';
+import { log } from '../utils/logger';
 
 interface Proposal {
   id: string;
@@ -70,9 +71,13 @@ const GovernanceProposals: React.FC = () => {
       const currentBlock = await provider.getBlockNumber();
       const power = await vgVotesContract.getPastVotes(account, currentBlock - 1);
       setVotingPower(power ? ethers.formatEther(power) : '0');
-    } catch (error) {
-      console.error('Error fetching voting power:', error);
-      setVotingPower('0'); // Fallback значение при ошибке
+    } catch (error: any) {
+      log.error('Failed to fetch voting power', {
+        component: 'GovernanceProposals',
+        function: 'fetchVotingPower',
+        address: account
+      }, error);
+      setVotingPower('0');
     }
   };
 
@@ -138,8 +143,11 @@ const GovernanceProposals: React.FC = () => {
       ];
       
       setProposals(mockProposals);
-    } catch (error) {
-      console.error('Error fetching proposals:', error);
+    } catch (error: any) {
+      log.error('Failed to fetch proposals', {
+        component: 'GovernanceProposals',
+        function: 'fetchProposals'
+      }, error);
       toast.error('Ошибка загрузки предложений');
     } finally {
       setLoading(false);
@@ -158,8 +166,14 @@ const GovernanceProposals: React.FC = () => {
       toast.success('Голос успешно отправлен!', { id: 'vote' });
       fetchProposals(); // Refresh proposals
     } catch (error: any) {
-      console.error('Error voting:', error);
-      toast.error(`Ошибка голосования: ${error.message}`, { id: 'vote' });
+      log.error('Failed to vote on proposal', {
+        component: 'GovernanceProposals',
+        function: 'handleVote',
+        proposalId,
+        support,
+        address: account
+      }, error);
+      toast.error('Ошибка голосования');
     }
   };
 
@@ -194,8 +208,14 @@ const GovernanceProposals: React.FC = () => {
       });
       fetchProposals();
     } catch (error: any) {
-      console.error('Error creating proposal:', error);
-      toast.error(`Ошибка создания: ${error.message}`, { id: 'create' });
+      log.error('Failed to create proposal', {
+        component: 'GovernanceProposals',
+        function: 'handleCreateProposal',
+        title: newProposal.title,
+        description: newProposal.description,
+        address: account
+      }, error);
+      toast.error('Ошибка создания предложения');
     }
   };
 

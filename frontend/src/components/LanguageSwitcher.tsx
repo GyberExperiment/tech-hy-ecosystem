@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
+import { log } from '../utils/logger';
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation();
@@ -13,7 +14,11 @@ const LanguageSwitcher: React.FC = () => {
       await i18n.changeLanguage(language);
       setIsOpen(false);
     } catch (error) {
-      console.error('Failed to change language:', error);
+      log.error('Failed to change language', {
+        component: 'LanguageSwitcher',
+        function: 'handleLanguageChange',
+        targetLanguage: language
+      }, error as Error);
     }
   };
 

@@ -5,6 +5,7 @@ import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap, BarChart3 } from 
 import { CardSkeleton } from './LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
 import { CONTRACTS } from '../constants/contracts';
+import { log } from '../utils/logger';
 
 interface PoolData {
   totalLockedLP: string;
@@ -57,16 +58,30 @@ const StakingStats: React.FC = () => {
     // Cache check - не запрашиваем чаще чем раз в 10 секунд
     const now = Date.now();
     if (!isRefresh && now - lastFetchTime < 10000) {
-      console.log('StakingStats: Skipping fetch - cached data is fresh');
+      log.debug('Skipping fetch - cached data is fresh', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats',
+        account
+      });
       return;
     }
     
     if (!account || !isConnected || !isCorrectNetwork) {
-      console.log('StakingStats: Skipping fetch - not ready');
+      log.debug('Skipping fetch - not ready', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats',
+        account,
+        isConnected,
+        isCorrectNetwork
+      });
       return;
     }
 
-    console.log('StakingStats: Starting pool stats fetch for account:', account);
+    log.info('Starting pool stats fetch', {
+      component: 'StakingStats',
+      function: 'fetchPoolStats',
+      account
+    });
     
     // Set loading states
     if (!poolData) {
@@ -109,13 +124,26 @@ const StakingStats: React.FC = () => {
         
         for (const rpcUrl of fallbackRpcUrls) {
           try {
-            console.log(`StakingStats: Trying RPC ${rpcUrl}...`);
+            log.debug('Trying RPC endpoint', {
+              component: 'StakingStats',
+              function: 'tryMultipleRpc',
+              rpcUrl
+            });
             const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
             const result = await withTimeout(operation(rpcProvider), 15000);
-            console.log(`StakingStats: RPC success with ${rpcUrl}`);
+            log.info('RPC endpoint success', {
+              component: 'StakingStats',
+              function: 'tryMultipleRpc',
+              rpcUrl
+            });
             return result;
           } catch (error: any) {
-            console.warn(`StakingStats: RPC failed for ${rpcUrl}:`, error.message);
+            log.warn('RPC endpoint failed', {
+              component: 'StakingStats',
+              function: 'tryMultipleRpc',
+              rpcUrl,
+              error: error.message
+            });
             lastError = error;
             continue;
           }
@@ -145,7 +173,10 @@ const StakingStats: React.FC = () => {
       let userBNBBalance = '0';
 
       // Skip Web3Context contracts - use direct RPC calls for reliability
-      console.log('StakingStats: Using direct RPC calls for reliability');
+      log.info('Using direct RPC calls for reliability', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats'
+      });
       
       try {
         // Pool info from LPLocker
@@ -154,40 +185,72 @@ const StakingStats: React.FC = () => {
           return await (lpLockerContract.getPoolInfo as any)();
         });
         poolInfo = poolInfoData;
-        console.log('StakingStats: Pool info (direct RPC):', poolInfo);
+        log.info('Pool info retrieved via direct RPC', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          poolInfo
+        });
       } catch (error: any) {
-        console.warn('StakingStats: Pool info failed:', error.message);
+        log.warn('Pool info retrieval failed', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          error: error.message
+        });
       }
 
       // Используем статические значения конфигурации вместо дублированного config() вызова
       // чтобы избежать конфликта с EarnVGWidget
-      config = { 
-        lpToVgRatio: '10', // Статическое значение по умолчанию
+      config = {
+        maxSlippageBps: 1000,
+        mevEnabled: false,
+        lpToVgRatio: 10,
+        minVCAmount: '100000000000000000', // 0.1 VC 
+        maxVCAmount: '10000000000000000000000', // 10,000 VC
         lpDivisor: '1000000000000000000000' // Статическое значение по умолчанию (исправленное)
       };
-      console.log('StakingStats: Config (static values):', config);
+      log.info('Config loaded with static values', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats',
+        config
+      });
 
       try {
         // VC balance
-        const vcBalance = await tryMultipleRpc(async (rpcProvider) => {
+        userVCBalance = await tryMultipleRpc(async (rpcProvider) => {
           const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
-          return await (vcContract.balanceOf as any)(account);
+          const vcBalance = await (vcContract.balanceOf as any)(account);
+          return ethers.formatEther(vcBalance);
         });
-        userVCBalance = ethers.formatEther(vcBalance);
-        console.log('StakingStats: VC balance (direct RPC):', userVCBalance);
+        log.info('VC balance retrieved via direct RPC', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          userVCBalance
+        });
       } catch (error: any) {
-        console.warn('StakingStats: VC balance failed:', error.message);
+        log.warn('VC balance retrieval failed', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          error: error.message
+        });
       }
 
       try {
         // BNB balance
-        const bnbBalance = await tryMultipleRpc(async (rpcProvider) => {
-          return await rpcProvider.getBalance(account);
+        userBNBBalance = await tryMultipleRpc(async (rpcProvider) => {
+          const bnbBalance = await rpcProvider.getBalance(account);
+          return ethers.formatEther(bnbBalance);
         });
-        userBNBBalance = ethers.formatEther(bnbBalance);
-        console.log('StakingStats: BNB balance (direct RPC):', userBNBBalance);
+        log.info('BNB balance retrieved via direct RPC', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          userBNBBalance
+        });
       } catch (error: any) {
-        console.warn('StakingStats: BNB balance failed:', error.message);
+        log.warn('BNB balance retrieval failed', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          error: error.message
+        });
       }
 
       const newPoolData = {
@@ -205,15 +268,27 @@ const StakingStats: React.FC = () => {
       if (isMountedRef.current && !signal.aborted) {
         setPoolData(newPoolData);
         setLastFetchTime(now);
-        console.log('StakingStats: Pool data updated:', newPoolData);
+        log.info('Pool data updated successfully', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          newPoolData
+        });
       }
 
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('StakingStats: Fetch aborted');
+        log.debug('Pool stats fetch aborted', {
+          component: 'StakingStats',
+          function: 'fetchPoolStats',
+          account
+        });
         return;
       }
-      console.error('StakingStats: Error fetching pool stats:', error);
+      log.error('Failed to fetch pool stats', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats',
+        account
+      }, error);
       
       // Устанавливаем данные по умолчанию при ошибке только если нет данных
       if (isMountedRef.current && !poolData) {

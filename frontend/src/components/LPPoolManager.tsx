@@ -6,6 +6,7 @@ import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, Zap, BarChart3
 import toast from 'react-hot-toast';
 import { PoolInfoSkeleton, InputFormSkeleton } from './LoadingSkeleton';
 import { ContractStatus } from './ContractStatus';
+import { log } from '../utils/logger';
 
 interface PoolInfo {
   reserve0: string;
@@ -71,8 +72,13 @@ const LPPoolManager: React.FC = () => {
       // Get LP pair address from PancakeSwap factory with enhanced error handling
       let pairAddress: string;
       try {
-        console.log('Fetching pair address for:', CONTRACTS.VC_TOKEN, 'and', CONTRACTS.WBNB);
-        console.log('Using factory:', CONTRACTS.PANCAKE_FACTORY);
+        log.info('Fetching LP pair address', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          vcToken: CONTRACTS.VC_TOKEN,
+          wbnb: CONTRACTS.WBNB,
+          factory: CONTRACTS.PANCAKE_FACTORY
+        });
         
         // First verify factory contract exists
         const factoryCode = await provider.getCode(CONTRACTS.PANCAKE_FACTORY);
@@ -83,7 +89,11 @@ const LPPoolManager: React.FC = () => {
         pairAddress = await pancakeFactoryContract.getPair(CONTRACTS.VC_TOKEN, CONTRACTS.WBNB);
         
         if (!pairAddress || pairAddress === ethers.ZeroAddress || pairAddress === '0x0000000000000000000000000000000000000000') {
-          console.warn('LP пул не найден или не создан');
+          log.warn('LP pool not found or not created', {
+            component: 'LPPoolManager',
+            function: 'fetchPoolInfo',
+            pairAddress
+          });
           toast.error('LP пул не найден. Возможно, ликвидность ещё не добавлена.');
           
           // Set minimal fallback data
@@ -102,9 +112,17 @@ const LPPoolManager: React.FC = () => {
           return;
         }
         
-        console.log('Found LP pair at:', pairAddress);
+        log.info('LP pair found', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          pairAddress
+        });
       } catch (error: any) {
-        console.error('Error getting pair address:', error);
+        log.error('Failed to get pair address', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          factory: CONTRACTS.PANCAKE_FACTORY
+        }, error);
         
         // Enhanced error handling based on error type
         if (error.message.includes('could not decode result data')) {
@@ -139,7 +157,11 @@ const LPPoolManager: React.FC = () => {
       let userLPBalance, userVCBalance, userBNBBalance;
 
       try {
-        console.log('Fetching pool reserves...');
+        log.info('Fetching pool reserves', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          pairAddress
+        });
         // Get pool reserves from pair contract with timeout
         const poolDataPromise = Promise.all([
           lpPairContract.getReserves(),
@@ -155,9 +177,20 @@ const LPPoolManager: React.FC = () => {
         
         [reserves, token0, token1, totalSupply] = await Promise.race([poolDataPromise, timeoutPromise]) as any;
         
-        console.log('Pool data fetched successfully:', { reserves, token0, token1, totalSupply: totalSupply.toString() });
+        log.info('Pool data fetched successfully', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          reserves: reserves.toString(),
+          token0,
+          token1,
+          totalSupply: totalSupply.toString()
+        });
       } catch (error: any) {
-        console.error('Error fetching pool data:', error);
+        log.error('Failed to fetch pool data', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          pairAddress
+        }, error);
         toast.error('Ошибка получения данных пула. Попробуйте обновить страницу.');
         
         // Use fallback values but continue to get user balances
@@ -168,7 +201,11 @@ const LPPoolManager: React.FC = () => {
       }
 
       try {
-        console.log('Fetching user balances...');
+        log.info('Fetching user balances', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          address: account
+        });
         // Get user balances with enhanced error handling
         const balanceResults = await Promise.allSettled([
           lpContract.balanceOf(account),
@@ -180,13 +217,22 @@ const LPPoolManager: React.FC = () => {
         userVCBalance = balanceResults[1].status === 'fulfilled' ? balanceResults[1].value : 0n;
         userBNBBalance = balanceResults[2].status === 'fulfilled' ? balanceResults[2].value : 0n;
         
-        console.log('User balances fetched:', { 
-          userLPBalance: ethers.formatEther(userLPBalance),
-          userVCBalance: ethers.formatEther(userVCBalance),
-          userBNBBalance: ethers.formatEther(userBNBBalance)
+        log.info('User balances fetched', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          address: account,
+          balances: {
+            lp: ethers.formatEther(userLPBalance),
+            vc: ethers.formatEther(userVCBalance),
+            bnb: ethers.formatEther(userBNBBalance)
+          }
         });
       } catch (error: any) {
-        console.error('Error fetching user balances:', error);
+        log.error('Failed to fetch user balances', {
+          component: 'LPPoolManager',
+          function: 'fetchPoolInfo',
+          address: account
+        }, error);
         // Use fallback values
         userLPBalance = 0n;
         userVCBalance = 0n;
@@ -224,7 +270,11 @@ const LPPoolManager: React.FC = () => {
         bnbPrice: bnbPriceInVC.toFixed(8),
       });
     } catch (error) {
-      console.error('Error fetching pool info:', error);
+      log.error('Failed to fetch pool info', {
+        component: 'LPPoolManager',
+        function: 'fetchPoolInfo',
+        address: account
+      }, error as Error);
       toast.error('Ошибка загрузки информации о пуле');
       
       // Set fallback pool info
@@ -303,7 +353,12 @@ const LPPoolManager: React.FC = () => {
         shareOfPool,
       });
     } catch (error) {
-      console.error('Error calculating liquidity:', error);
+      log.error('Failed to calculate liquidity', {
+        component: 'LPPoolManager',
+        function: 'calculateLiquidity',
+        vcInput,
+        bnbInput
+      }, error as Error);
     }
   };
 
@@ -317,7 +372,11 @@ const LPPoolManager: React.FC = () => {
         const vcApprovalNeeded = ethers.parseEther(vcInput || '0');
         setVcApproved(vcAllowance >= vcApprovalNeeded);
       } catch (error: any) {
-        console.warn('Error checking VC allowance:', error);
+        log.warn('Failed to check VC allowance', {
+          component: 'LPPoolManager',
+          function: 'checkApprovals',
+          address: account
+        }, error);
         // Fallback: assume not approved
         setVcApproved(false);
       }
@@ -332,7 +391,12 @@ const LPPoolManager: React.FC = () => {
           const lpApprovalNeeded = ethers.parseEther(lpTokensInput);
           setLpApproved(lpAllowance >= lpApprovalNeeded);
         } catch (error: any) {
-          console.warn('Error checking LP allowance:', error);
+          log.warn('Failed to check LP allowance', {
+            component: 'LPPoolManager',
+            function: 'checkApprovals',
+            address: account,
+            lpTokensInput
+          }, error);
           // Fallback: assume not approved
           setLpApproved(false);
         }
@@ -341,7 +405,11 @@ const LPPoolManager: React.FC = () => {
         setLpApproved(true);
       }
     } catch (error: any) {
-      console.error('Error checking approvals:', error);
+      log.error('Failed to check approvals', {
+        component: 'LPPoolManager',
+        function: 'checkApprovals',
+        address: account
+      }, error);
       // Set safe defaults
       setVcApproved(false);
       setBnbApproved(true);
@@ -360,7 +428,11 @@ const LPPoolManager: React.FC = () => {
       toast.success('VC токены разрешены!', { id: 'approve-vc' });
       setVcApproved(true);
     } catch (error: any) {
-      console.error('Error approving VC:', error);
+      log.error('Failed to approve VC tokens', {
+        component: 'LPPoolManager',
+        function: 'approveVC',
+        amount: vcInput
+      }, error);
       toast.error('Ошибка разрешения VC токенов', { id: 'approve-vc' });
     }
   };
@@ -376,7 +448,11 @@ const LPPoolManager: React.FC = () => {
       toast.success('LP токены разрешены!', { id: 'approve-lp' });
       setLpApproved(true);
     } catch (error: any) {
-      console.error('Error approving LP:', error);
+      log.error('Failed to approve LP tokens', {
+        component: 'LPPoolManager',
+        function: 'approveLP',
+        amount: lpTokensInput
+      }, error);
       toast.error('Ошибка разрешения LP токенов', { id: 'approve-lp' });
     }
   };
@@ -415,7 +491,11 @@ const LPPoolManager: React.FC = () => {
       setCalculation(null);
       fetchPoolInfo();
     } catch (error: any) {
-      console.error('Error adding liquidity:', error);
+      log.error('Failed to add liquidity', {
+        component: 'LPPoolManager',
+        function: 'addLiquidity',
+        calculation
+      }, error);
       toast.error('Ошибка добавления ликвидности', { id: 'add-liquidity' });
     }
   };
@@ -455,7 +535,12 @@ const LPPoolManager: React.FC = () => {
       setRemovePercentage(25);
       fetchPoolInfo();
     } catch (error: any) {
-      console.error('Error removing liquidity:', error);
+      log.error('Failed to remove liquidity', {
+        component: 'LPPoolManager',
+        function: 'removeLiquidity',
+        lpTokensInput,
+        removePercentage
+      }, error);
       toast.error('Ошибка удаления ликвидности', { id: 'remove-liquidity' });
     }
   };

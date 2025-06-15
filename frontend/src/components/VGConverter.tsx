@@ -5,6 +5,7 @@ import { CONTRACTS } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
 import { RefreshCw, Vote, Gem, ArrowRightLeft, Clock } from 'lucide-react';
 import { useTokenData } from '../hooks/useTokenData';
+import { log } from '../utils/logger';
 
 interface VGConverterProps {
   className?: string;
@@ -52,8 +53,13 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       setAmount('');
 
     } catch (error: any) {
-      console.error('Error depositing:', error);
-      toast.error(error.message || 'Ошибка при конвертации');
+      log.error('Failed to deposit VG', {
+        component: 'VGConverter',
+        function: 'handleDeposit',
+        amount: amount,
+        address: account
+      }, error);
+      toast.error('Ошибка депозита');
     } finally {
       setLoading(false);
       // Refresh balances after transaction
@@ -84,8 +90,13 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       setAmount('');
 
     } catch (error: any) {
-      console.error('Error withdrawing:', error);
-      toast.error(error.message || 'Ошибка при конвертации');
+      log.error('Failed to withdraw VG', {
+        component: 'VGConverter',
+        function: 'handleWithdraw',
+        amount: amount,
+        address: account
+      }, error);
+      toast.error('Ошибка вывода');
     } finally {
       setLoading(false);
       // Refresh balances after transaction

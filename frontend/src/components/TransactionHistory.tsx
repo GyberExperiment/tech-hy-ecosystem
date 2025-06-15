@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
 import { BSCScanAPI, convertBSCScanToTransaction } from '../utils/bscscanApi';
+import { log } from '../utils/logger';
 
 interface Transaction {
   id: string;
@@ -78,7 +79,11 @@ const TransactionHistory: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading stored transactions:', error);
+      log.error('Failed to load stored transactions', {
+        component: 'TransactionHistory',
+        function: 'loadStoredTransactions',
+        address: account
+      }, error as Error);
     }
   };
 
@@ -86,7 +91,12 @@ const TransactionHistory: React.FC = () => {
     try {
       localStorage.setItem(`transactions_${account}`, JSON.stringify(txs));
     } catch (error) {
-      console.error('Error saving transactions:', error);
+      log.error('Failed to save transactions', {
+        component: 'TransactionHistory',
+        function: 'saveTransactions',
+        address: account,
+        transactionCount: txs.length
+      }, error as Error);
     }
   };
 
@@ -94,7 +104,11 @@ const TransactionHistory: React.FC = () => {
   const fetchTransactionsFromBSCScan = async (): Promise<Transaction[]> => {
     if (!account) return [];
     
-    console.log('TransactionHistory: Fetching from BSCScan API...');
+    log.info('Fetching transactions from BSCScan API', {
+      component: 'TransactionHistory',
+      function: 'fetchTransactionsFromBSCScan',
+      address: account
+    });
     
     try {
       const contractAddresses = [
@@ -163,11 +177,20 @@ const TransactionHistory: React.FC = () => {
         allTransactions.push(converted);
       }
       
-      console.log(`TransactionHistory: BSCScan found ${allTransactions.length} transactions`);
+      log.info('BSCScan transactions fetched', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        address: account,
+        transactionCount: allTransactions.length
+      });
       return allTransactions;
       
     } catch (error) {
-      console.warn('TransactionHistory: BSCScan API failed:', error);
+      log.warn('BSCScan API failed', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        address: account
+      }, error as Error);
       return [];
     }
   };
@@ -186,13 +209,26 @@ const TransactionHistory: React.FC = () => {
     
     for (const rpcUrl of fallbackRpcUrls) {
       try {
-        console.log(`TransactionHistory: Trying RPC ${rpcUrl}...`);
+        log.debug('Trying RPC endpoint', {
+          component: 'TransactionHistory',
+          function: 'tryMultipleRpc',
+          rpcUrl
+        });
         const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
         const result = await operation(rpcProvider);
-        console.log(`TransactionHistory: RPC success with ${rpcUrl}`);
+        log.info('RPC endpoint success', {
+          component: 'TransactionHistory',
+          function: 'tryMultipleRpc',
+          rpcUrl
+        });
         return result;
       } catch (error: any) {
-        console.warn(`TransactionHistory: RPC failed for ${rpcUrl}:`, error.message);
+        log.warn('RPC endpoint failed', {
+          component: 'TransactionHistory',
+          function: 'tryMultipleRpc',
+          rpcUrl,
+          error: error.message
+        });
         lastError = error;
         continue;
       }
@@ -213,13 +249,23 @@ const TransactionHistory: React.FC = () => {
       '0x05efba57c502b405ad59fb2a64d32f919f973a536253774561715e387c4faf95'  // Create pair
     ];
     
-    console.log(`TransactionHistory: Checking known transaction hashes...`);
+    log.info('Checking known transaction hashes', {
+      component: 'TransactionHistory',
+      function: 'parseKnownTransactions',
+      address: account,
+      knownTxCount: knownTxHashes.length
+    });
     
     for (const txHash of knownTxHashes) {
       try {
         const receipt = await rpcProvider.getTransactionReceipt(txHash);
         if (receipt && receipt.from.toLowerCase() === account!.toLowerCase()) {
-          console.log(`TransactionHistory: Found known transaction: ${txHash}`);
+          log.info('Found known transaction', {
+            component: 'TransactionHistory',
+            function: 'parseKnownTransactions',
+            txHash,
+            address: account
+          });
           
           const block = await rpcProvider.getBlock(receipt.blockNumber);
           
@@ -262,11 +308,21 @@ const TransactionHistory: React.FC = () => {
           });
         }
       } catch (error) {
-        console.warn(`TransactionHistory: Failed to check known transaction ${txHash}:`, error);
+        log.warn('Failed to check known transaction', {
+          component: 'TransactionHistory',
+          function: 'parseKnownTransactions',
+          txHash,
+          address: account
+        }, error as Error);
       }
     }
     
-    console.log(`TransactionHistory: Found ${transactions.length} known transactions`);
+    log.info('Known transactions found', {
+      component: 'TransactionHistory',
+      function: 'parseKnownTransactions',
+      address: account,
+      foundCount: transactions.length
+    });
     return transactions;
   };
 
@@ -277,16 +333,28 @@ const TransactionHistory: React.FC = () => {
     
     const now = Date.now();
     if (!isRefresh && now - lastFetchTime < 10000) {
-      console.log('TransactionHistory: Skipping fetch - cached data is fresh');
+      log.debug('Skipping fetch - cached data is fresh', {
+        component: 'TransactionHistory',
+        function: 'fetchRecentTransactions',
+        address: account
+      });
       return;
     }
     
     if (!account) {
-      console.log('TransactionHistory: Skipping fetch - no account');
+      log.debug('Skipping fetch - no account', {
+        component: 'TransactionHistory',
+        function: 'fetchRecentTransactions'
+      });
       return;
     }
     
-    console.log('TransactionHistory: Starting transaction fetch for account:', account);
+    log.info('Starting transaction fetch', {
+      component: 'TransactionHistory',
+      function: 'fetchRecentTransactions',
+      address: account,
+      isRefresh
+    });
     
     if (transactions.length === 0) {
       setInitialLoading(true);
@@ -302,15 +370,28 @@ const TransactionHistory: React.FC = () => {
       
       // Primary: Try BSCScan API first
       if (dataSource === 'bscscan' || dataSource === 'hybrid') {
-        console.log('TransactionHistory: Fetching from BSCScan API...');
+        log.info('Fetching from BSCScan API', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account
+        });
         const bscscanTxs = await fetchTransactionsFromBSCScan();
         allTransactions.push(...bscscanTxs);
-        console.log(`TransactionHistory: BSCScan provided ${bscscanTxs.length} transactions`);
+        log.info('BSCScan provided transactions', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account,
+          count: bscscanTxs.length
+        });
       }
       
       // Fallback: Try RPC for known transactions if BSCScan didn't provide enough
       if ((dataSource === 'rpc' || dataSource === 'hybrid') && allTransactions.length < 5) {
-        console.log('TransactionHistory: Fetching known transactions via RPC...');
+        log.info('Fetching known transactions via RPC', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account
+        });
         const knownTxs = await tryMultipleRpc(parseKnownTransactions);
         
         // Add known transactions that aren't already in the list
@@ -319,10 +400,20 @@ const TransactionHistory: React.FC = () => {
             allTransactions.push(knownTx);
           }
         }
-        console.log(`TransactionHistory: RPC provided ${knownTxs.length} additional transactions`);
+        log.info('RPC provided additional transactions', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account,
+          count: knownTxs.length
+        });
       }
       
-      console.log(`TransactionHistory: Total transactions before deduplication: ${allTransactions.length}`);
+      log.debug('Total transactions before deduplication', {
+        component: 'TransactionHistory',
+        function: 'fetchRecentTransactions',
+        address: account,
+        count: allTransactions.length
+      });
       
       // Sort by timestamp (newest first)
       allTransactions.sort((a, b) => b.timestamp - a.timestamp);
@@ -332,24 +423,46 @@ const TransactionHistory: React.FC = () => {
         .filter((tx, index, self) => index === self.findIndex(t => t.hash === tx.hash))
         .slice(0, 50);
       
-      console.log(`TransactionHistory: Final unique transactions: ${uniqueTransactions.length}`);
+      log.info('Final unique transactions', {
+        component: 'TransactionHistory',
+        function: 'fetchRecentTransactions',
+        address: account,
+        finalCount: uniqueTransactions.length
+      });
       
       if (isMountedRef.current && !signal.aborted) {
         setTransactions(uniqueTransactions);
         saveTransactions(uniqueTransactions);
         setLastFetchTime(now);
-        console.log('TransactionHistory: Transactions updated successfully');
+        log.info('Transactions updated successfully', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account,
+          count: uniqueTransactions.length
+        });
         
         if (uniqueTransactions.length === 0) {
-          console.log('TransactionHistory: No transactions found. This might be normal if the account has not interacted with our contracts yet.');
+          log.info('No transactions found - account may not have interacted with contracts yet', {
+            component: 'TransactionHistory',
+            function: 'fetchRecentTransactions',
+            address: account
+          });
         }
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('TransactionHistory: Fetch aborted');
+        log.debug('Transaction fetch aborted', {
+          component: 'TransactionHistory',
+          function: 'fetchRecentTransactions',
+          address: account
+        });
         return;
       }
-      console.error('TransactionHistory: Error fetching transactions:', error);
+      log.error('Failed to fetch transactions', {
+        component: 'TransactionHistory',
+        function: 'fetchRecentTransactions',
+        address: account
+      }, error);
       
       // If no cached transactions, show empty state
       if (transactions.length === 0) {

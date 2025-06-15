@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy, Settings } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
+import { log } from '../utils/logger';
 
 const Header: React.FC = () => {
   const { t } = useTranslation('common');
@@ -40,7 +41,11 @@ const Header: React.FC = () => {
         await navigator.clipboard.writeText(account);
         // You could add a toast notification here
       } catch (error) {
-        console.error('Failed to copy address:', error);
+        log.error('Failed to copy address to clipboard', {
+          component: 'Header',
+          function: 'copyToClipboard',
+          address: account
+        }, error as Error);
       }
     }
   };

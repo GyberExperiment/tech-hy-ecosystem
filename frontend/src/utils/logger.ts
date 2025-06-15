@@ -116,7 +116,27 @@ class ProductionLogger {
 
     const contextStr = this.getContextString(entry.context);
     const emoji = this.getLevelEmoji(entry.level);
-    const timestamp = entry.timestamp.split('T')[1].split('.')[0]; // HH:MM:SS
+    
+    // Безопасное извлечение времени из timestamp
+    let timestamp = 'unknown';
+    try {
+      if (entry.timestamp) {
+        const parts = entry.timestamp.split('T');
+        if (parts.length > 1 && parts[1]) {
+          const timeParts = parts[1].split('.');
+          if (timeParts.length > 0 && timeParts[0]) {
+            timestamp = timeParts[0];
+          }
+        }
+      }
+      
+      if (timestamp === 'unknown') {
+        const now = new Date();
+        timestamp = now.toTimeString().substring(0, 8); // HH:MM:SS
+      }
+    } catch {
+      timestamp = new Date().toTimeString().substring(0, 8);
+    }
     
     const formattedMessage = `${emoji} ${timestamp} ${contextStr}${entry.message}`;
 
