@@ -578,12 +578,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         const vcValue = parseFloat(vcAmount);
         const bnbValue = parseFloat(bnbAmount);
         
-        // ✅ ИСПРАВЛЕННАЯ ФОРМУЛА - соответствует контракту
-        // Используем lpDivisor = 1e21 и lpToVgRatio = 10 как в контракте
-        const lpDivisor = 1e21; // 1000000000000000000000
-        const lpToVgRatio = 10;  // ✅ Правильное значение из логов, не 15
-        
-        const lpAmount = (vcValue * bnbValue) / lpDivisor;
+        // ✅ ПРАВИЛЬНАЯ ФОРМУЛА - оригинальная sqrt формула с исправленным коэффициентом
+        // Math.sqrt для фронтенда правильная, контракт использует другую логику внутри
+        const lpToVgRatio = 10; // ✅ Правильное значение из логов, не 15
+        const lpAmount = Math.sqrt(vcValue * bnbValue);
         const vgReward = lpAmount * lpToVgRatio;
         
         return vgReward.toFixed(2);
@@ -635,8 +633,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             <h3 className="text-xl font-bold text-white">⚡ Получить VG токены</h3>
             <p className="text-gray-300 text-sm">
               {mode === 'create' 
-                ? 'Создайте LP позицию и получите VG (15:1)'
-                : 'Заблокируйте LP токены и получите VG (15:1)'
+                ? 'Создайте LP позицию и получите VG (10:1)'
+                : 'Заблокируйте LP токены и получите VG (10:1)'
               }
             </p>
           </div>
@@ -915,7 +913,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         <div className="font-medium text-white mb-3">Important Information:</div>
         <div className="text-sm text-gray-300 space-y-1">
           <div>• LP токены блокируются навсегда (permanent lock)</div>
-          <div>• Получаете 15 VG за каждый 1 LP токен (мгновенно)</div>
+          <div>• Получаете 10 VG за каждый 1 LP токен (мгновенно)</div>
           <div>• VG токены можно использовать для governance</div>
           <div>• Это НЕ стейкинг - LP нельзя забрать обратно</div>
           {mode === 'lock' && (
