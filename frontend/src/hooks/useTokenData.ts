@@ -26,11 +26,12 @@ export interface TokenBalances {
 
 // Fallback RPC providers для надёжности
 const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://data-seed-prebsc-1-s1.binance.org:8545',
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+  'https://bsc-testnet.public.blastapi.io',  // ✅ Первый - самый надежный
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
+  'https://bsc-testnet-rpc.publicnode.com',  // ✅ Переместили в конец из-за CORS в некоторых браузерах
+  // ❌ УБРАЛИ СЛОМАННЫЕ binance.org endpoints
+  // 'https://data-seed-prebsc-1-s1.binance.org:8545',
+  // 'https://data-seed-prebsc-2-s1.binance.org:8545',
 ];
 
 const ERC20_ABI = [
@@ -92,9 +93,16 @@ export const useTokenData = () => {
   const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
     let lastError: Error | null = null;
     
-    for (const rpcUrl of FALLBACK_RPC_URLS) {
+    for (let i = 0; i < FALLBACK_RPC_URLS.length; i++) {
+      const rpcUrl = FALLBACK_RPC_URLS[i];
       try {
         console.log(`useTokenData: Trying RPC ${rpcUrl}...`);
+        
+        // ✅ ДОБАВЛЯЕМ DELAY между попытками для rate limiting protection
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * i)); // 2s, 4s, 6s delays
+        }
+        
         const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
         const result = await withTimeout(operation(rpcProvider), 15000);
         console.log(`useTokenData: RPC success with ${rpcUrl}`);
@@ -102,6 +110,12 @@ export const useTokenData = () => {
       } catch (error: any) {
         console.warn(`useTokenData: RPC failed for ${rpcUrl}:`, error.message);
         lastError = error;
+        
+        // ✅ Больше delay после 429 ошибок
+        if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
+          console.log('Rate limited, waiting 5 seconds before next RPC...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
         continue;
       }
     }

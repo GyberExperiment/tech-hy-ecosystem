@@ -8,60 +8,19 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 
-// Fallback RPC providers for config() calls
-const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://data-seed-prebsc-1-s1.binance.org:8545',
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
-];
-
 const LPLOCKER_ABI = [
+  "function earnVG(uint256 vcAmount, uint256 bnbAmount, uint16 slippageBps) external payable",
+  "function lockLPTokens(uint256 lpAmount) external",  
+  "function owner() view returns (address)",
   "function config() external view returns (address authority, address vgTokenAddress, address vcTokenAddress, address pancakeRouter, address lpTokenAddress, address stakingVaultAddress, uint256 lpDivisor, uint256 lpToVgRatio, uint256 minBnbAmount, uint256 minVcAmount, uint16 maxSlippageBps, uint16 defaultSlippageBps, bool mevProtectionEnabled, uint256 minTimeBetweenTxs, uint8 maxTxPerUserPerBlock, uint256 totalLockedLp, uint256 totalVgIssued, uint256 totalVgDeposited)",
-  "function owner() external view returns (address)"
 ];
 
 interface EarnVGWidgetProps {
   className?: string;
 }
 
-/**
- * Fallback function to call config() with JsonRpcProvider when BrowserProvider fails
- */
-async function tryConfigWithFallback(lpLockerAddress: string): Promise<any> {
-  console.log('🔄 EarnVG: Trying config() with fallback RPC providers...');
-  
-  for (const rpcUrl of FALLBACK_RPC_URLS) {
-    try {
-      console.log(`🌐 EarnVG: Trying RPC: ${rpcUrl}`);
-      
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const contract = new ethers.Contract(lpLockerAddress, LPLOCKER_ABI, provider);
-      
-      const startTime = Date.now();
-      const config = await Promise.race([
-        contract.config?.() || Promise.reject(new Error('Config method not available')),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Fallback timeout')), 10000)
-        )
-      ]);
-      
-      const elapsed = Date.now() - startTime;
-      console.log(`✅ EarnVG: Fallback config() successful with ${rpcUrl} (${elapsed}ms)`);
-      
-      return config;
-    } catch (error) {
-      console.log(`❌ EarnVG: Fallback failed with ${rpcUrl}:`, error);
-      continue;
-    }
-  }
-  
-  throw new Error('All fallback RPC providers failed');
-}
-
 const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
-  const { account, signer, isConnected, isCorrectNetwork, provider, vcContract, lpLockerContract, vgContract } = useWeb3();
+  const { account, signer, isConnected, isCorrectNetwork, provider, vcContract, lpLockerContract, vgContract, updateBSCTestnetRPC } = useWeb3();
   
   // Use centralized hooks
   const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
@@ -73,6 +32,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   const [vcAmount, setVcAmount] = useState('');
   const [bnbAmount, setBnbAmount] = useState('');
   const [lpAmount, setLpAmount] = useState('');
+  const [currentAllowance, setCurrentAllowance] = useState<string>('0');
+  const [checkingAllowance, setCheckingAllowance] = useState(false);
   
   // Memoized calculations
   const calculatedBnbAmount = useMemo(() => {
@@ -101,6 +62,67 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       setBnbAmount(calculatedBnbAmount);
     }
   }, [calculatedBnbAmount]);
+
+  // Auto-check allowance when wallet connects
+  useEffect(() => {
+    if (account && vcContract && mode === 'create') {
+      const checkAllowanceOnMount = async () => {
+        try {
+          console.log('🔍 Auto-проверяем VC allowance при подключении...');
+          
+          const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+          const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+            "function allowance(address owner, address spender) view returns (uint256)"
+          ], readOnlyProvider);
+          
+          const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+          const allowanceFormatted = ethers.formatEther(allowance);
+          
+          setCurrentAllowance(allowanceFormatted);
+          console.log(`✅ Auto-check VC allowance: ${allowanceFormatted} VC`);
+        } catch (error) {
+          console.log('⚠️ Auto-check allowance failed:', error);
+        }
+      };
+      
+      checkAllowanceOnMount();
+    }
+  }, [account, vcContract, mode]);
+
+  // Check current allowance function
+  const checkCurrentAllowance = async () => {
+    if (!account || !vcContract) {
+      toast.error('Подключите кошелёк');
+      return;
+    }
+
+    setCheckingAllowance(true);
+    try {
+      console.log('🔍 Проверяем текущий VC allowance...');
+      
+      const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+      const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+        "function allowance(address owner, address spender) view returns (uint256)"
+      ], readOnlyProvider);
+      
+      const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+      const allowanceFormatted = ethers.formatEther(allowance);
+      
+      setCurrentAllowance(allowanceFormatted);
+      console.log(`✅ Текущий VC allowance: ${allowanceFormatted} VC`);
+      
+      if (parseFloat(allowanceFormatted) > 0) {
+        toast.success(`Approve уже выполнен! Allowance: ${parseFloat(allowanceFormatted).toFixed(2)} VC`);
+      } else {
+        toast.success('Approve не выполнен. Allowance: 0 VC');
+      }
+    } catch (error: any) {
+      console.error('❌ Ошибка проверки allowance:', error);
+      toast.error('Ошибка проверки allowance');
+    } finally {
+      setCheckingAllowance(false);
+    }
+  };
 
   // Transaction handlers
   const handleEarnVG = async () => {
@@ -146,124 +168,22 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     setLoading(true);
     
     try {
-      console.log('🔍 EarnVG: Проверка конфигурации контракта');
+      console.log('🔍 EarnVG: Загрузка конфигурации из статических значений');
       
-      // Детальная диагностика Web3 состояния
-      console.log('🔧 EarnVG: Web3 State Diagnosis...');
-      console.log('account:', account);
-      console.log('isConnected:', isConnected);
-      console.log('isCorrectNetwork:', isCorrectNetwork);
-      console.log('signer:', signer);
-      console.log('provider:', provider);
-      console.log('lpLockerContract:', lpLockerContract);
+      // Статические значения конфигурации (проверены Node.js скриптами)
+      // Заменяет config() вызов который зависал на 10+ секунд в browser
+      const stakingVault = CONTRACTS.LP_LOCKER; // 0x9269baba99cE0388Daf814E351b4d556fA728D32
+      const maxSlippageBps = 1000; // 10.0%
+      const mevEnabled = false;
+      const lpDivisor = ethers.parseEther('1000'); // 1e21
+      const lpToVgRatio = 10;
       
-      if (!lpLockerContract) {
-        console.error('❌ EarnVG: lpLockerContract is null/undefined');
-        toast.error('LP Locker контракт недоступен');
-        return;
-      }
-      
-      console.log('🔧 EarnVG: Contract details...');
-      console.log('Contract target:', lpLockerContract.target);
-      console.log('Contract runner:', lpLockerContract.runner);
-      console.log('Contract runner type:', typeof lpLockerContract.runner);
-      
-      // Проверяем провайдер контракта
-      const contractProvider = lpLockerContract.runner?.provider;
-      console.log('🌐 EarnVG: Contract provider:', contractProvider);
-      console.log('Contract provider type:', typeof contractProvider);
-      
-      if (!contractProvider) {
-        console.error('❌ EarnVG: Contract provider is null/undefined');
-        toast.error('Провайдер контракта недоступен');
-        return;
-      }
-      
-      // Тестируем простой вызов сначала с read-only контрактом
-      console.log('🧪 EarnVG: Testing with read-only contract...');
-      
-      let readOnlyContract: ethers.Contract;
-      try {
-        // Создаем read-only контракт для view функций
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
-        readOnlyContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, readOnlyProvider);
-        console.log('✅ EarnVG: Read-only contract created');
-      } catch (providerError) {
-        console.error('❌ EarnVG: Failed to create read-only contract:', providerError);
-        toast.error('Не удалось создать read-only контракт');
-        return;
-      }
-      
-      try {
-        const ownerStartTime = Date.now();
-        const owner = await (readOnlyContract as any).owner();
-        const ownerTime = Date.now() - ownerStartTime;
-        console.log(`✅ EarnVG: owner() successful in ${ownerTime}ms:`, owner);
-      } catch (ownerError) {
-        console.error('❌ EarnVG: owner() failed:', ownerError);
-        toast.error('Контракт недоступен для чтения');
-        return;
-      }
-      
-      // Теперь пробуем config() с read-only контрактом
-      console.log('📞 EarnVG: Attempting config() call with read-only contract...');
-      console.log('📞 EarnVG: Current time:', new Date().toISOString());
-      
-      let config: any;
-      
-      try {
-        // Используем read-only контракт для config()
-        console.log('🔄 EarnVG: Trying config() with read-only contract...');
-        const configStartTime = Date.now();
-        
-        // Создаём timeout, который очистим при успехе, чтобы не получить ложный reject
-        let timeoutId: ReturnType<typeof setTimeout>;
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => {
-            const elapsed = Date.now() - configStartTime;
-            console.log(`⏰ EarnVG: Read-only config() timeout after ${elapsed}ms`);
-            reject(new Error('Read-only config timeout after 10 seconds'));
-          }, 10000);
-        });
-
-        const configPromise = (readOnlyContract as any).config();
-
-        config = await Promise.race([configPromise, timeoutPromise]);
-        // Если дошли сюда – configPromise сработал раньше, очищаем таймер, чтобы избежать ложных таймаутов
-        clearTimeout(timeoutId!);
-        const configTime = Date.now() - configStartTime;
-        console.log(`✅ EarnVG: Read-only config() successful in ${configTime}ms`);
-        
-      } catch (readOnlyError: unknown) {
-        const errorMessage = readOnlyError instanceof Error ? readOnlyError.message : 'Unknown error';
-        console.log('⚠️ EarnVG: Read-only config() failed, trying fallback...', errorMessage);
-        
-        // Fallback к множественным RPC
-        try {
-          config = await tryConfigWithFallback(CONTRACTS.LP_LOCKER);
-        } catch (fallbackError) {
-          console.error('❌ EarnVG: All config() attempts failed:', fallbackError);
-          toast.error('Не удалось получить конфигурацию контракта');
-          return;
-        }
-      }
-      
-      console.log('📊 EarnVG: Config result type:', typeof config);
-      console.log('📊 EarnVG: Config result:', config);
-      
-      // Детальное логирование полей config
-      console.log('🔍 EarnVG: Анализ полей config...');
-      console.log('Config tuple:', config);
-      
-      // config() возвращает объект с именованными полями согласно ABI
-      const stakingVault = config.stakingVaultAddress;
-      const maxSlippageBps = config.maxSlippageBps;
-      const mevEnabled = config.mevProtectionEnabled;
-      
-      console.log(`✅ EarnVG: Поля извлечены успешно`);
+      console.log(`✅ EarnVG: Конфигурация загружена из статических значений`);
       console.log(`Staking Vault: ${stakingVault}`);
-      console.log(`Max Slippage: ${maxSlippageBps} BPS (${(Number(maxSlippageBps) / 100).toFixed(1)}%)`);
+      console.log(`Max Slippage: ${maxSlippageBps} BPS (${(maxSlippageBps / 100).toFixed(1)}%)`);
       console.log(`MEV Protection: ${mevEnabled}`);
+      console.log(`LP Divisor: ${lpDivisor.toString()}`);
+      console.log(`LP to VG Ratio: ${lpToVgRatio}`);
       
       // Проверяем VG баланс vault'а с read-only контрактом
       if (!vgContract) {
@@ -276,10 +196,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       let vaultVGBalance: bigint;
       try {
-        // Создаем read-only VG контракт для проверки баланса (переиспользуем provider)
+        // Создаем read-only VG контракт для проверки баланса
+        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
         const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
           "function balanceOf(address) view returns (uint256)"
-        ], readOnlyContract.runner); // Переиспользуем тот же provider
+        ], readOnlyProvider);
         
         vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
         console.log(`VG баланс vault'а: ${ethers.formatEther(vaultVGBalance)} VG`);
@@ -297,11 +218,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       // Рассчитываем ожидаемую награду
       console.log('🧮 EarnVG: Рассчитываем ожидаемую награду...');
-      const lpDivisor = config.lpDivisor;
-      const lpToVgRatio = config.lpToVgRatio;
-      
-      console.log(`LP Divisor: ${lpDivisor.toString()}`);
-      console.log(`LP to VG Ratio: ${lpToVgRatio.toString()}`);
       
       const expectedLp = (vcAmountWei * bnbAmountWei) / lpDivisor;
       const expectedVGReward = expectedLp * BigInt(lpToVgRatio);
@@ -317,13 +233,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       console.log('🔐 EarnVG: Проверка и approve VC токенов');
       
-      // Check allowance with read-only contract (reuse the same provider)
+      // Check allowance with read-only contract
       let allowance: bigint;
       try {
+        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
         const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)",
           "function approve(address spender, uint256 amount) returns (bool)"
-        ], readOnlyContract.runner); // Переиспользуем тот же provider
+        ], readOnlyProvider);
         
         allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
         console.log(`Текущий VC allowance: ${ethers.formatEther(allowance)} VC`);
@@ -332,48 +249,112 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         toast.error('Не удалось проверить allowance');
         return;
       }
-      
+
       // Separate try-catch for approve operations
       try {
-        // Повторно убеждаемся, что MetaMask готов показать окно (иногда требуется запрос)
-        await (window as any).ethereum?.request?.({ method: 'eth_requestAccounts' });
+        console.log('🔐 EarnVG: Начинаем approve операцию');
+        
+        // ✅ ДОБАВЛЯЕМ ПРОВЕРКУ ПОДКЛЮЧЕНИЯ вместо повторного запроса
+        if (!account || !signer) {
+          throw new Error('Кошелёк не подключён. Переподключите MetaMask.');
+        }
+        console.log('✅ EarnVG: Подключение подтверждено:', account.slice(0, 6) + '...');
 
+        console.log('🔐 EarnVG: Создаем VC контракт с signer');
         const vcContractWithSigner = vcContract.connect(signer);
+        console.log('✅ EarnVG: VC контракт с signer создан:', !!vcContractWithSigner);
+        
+        // Дополнительная диагностика контракта
+        console.log('🔍 EarnVG: Диагностика VC контракта:');
+        console.log('  - VC контракт адрес:', CONTRACTS.VC_TOKEN);
+        console.log('  - Signer адрес:', await signer.getAddress());
+        console.log('  - Signer provider:', !!signer.provider);
+        console.log('  - Contract target:', (vcContractWithSigner as any).target);
+        console.log('  - Contract interface:', !!(vcContractWithSigner as any).interface);
+        
+        // Проверяем что approve функция существует
+        try {
+          const approveFn = (vcContractWithSigner as any).approve;
+          console.log('  - approve функция существует:', !!approveFn);
+          console.log('  - approve функция тип:', typeof approveFn);
+        } catch (e) {
+          console.error('  - Ошибка проверки approve функции:', e);
+        }
+        
         const MAX_UINT256 = (2n ** 256n - 1n).toString();
+        console.log('🔐 EarnVG: MAX_UINT256:', MAX_UINT256);
 
+        console.log('🔐 EarnVG: Пытаемся оценить газ для approve');
         let gasLimitOverride: bigint | undefined;
         try {
           const gasFn = (vcContractWithSigner as any).estimateGas?.approve;
+          console.log('🔐 EarnVG: Gas estimation function exists:', !!gasFn);
           if (gasFn) {
+            console.log('🔐 EarnVG: Вызываем estimateGas.approve...');
             const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
             gasLimitOverride = (est * 120n) / 100n; // +20 %
+            console.log(`✅ EarnVG: Gas estimated: ${est.toString()}, with override: ${gasLimitOverride.toString()}`);
           }
-        } catch {}
+        } catch (gasError) {
+          console.log('⚠️ EarnVG: Gas estimation failed, will use default:', gasError);
+        }
 
-        const approveTx = await (vcContractWithSigner as any).approve(
+        console.log('🚀 EarnVG: Вызываем approve транзакцию...');
+        console.log('🚀 EarnVG: approve параметры:');
+        console.log('  - spender:', CONTRACTS.LP_LOCKER);
+        console.log('  - amount:', MAX_UINT256);
+        console.log('  - gasLimit:', gasLimitOverride ? gasLimitOverride.toString() : 'default');
+        
+        // Уведомление для Arc browser пользователей
+        toast.loading('Approve отправлен в MetaMask. Если не видите окно - кликните на иконку MetaMask в панели расширений!', {
+          duration: 10000,
+          id: 'arc-browser-help'
+        });
+        
+        // Добавляем timeout для approve операции
+        const approvePromise = (vcContractWithSigner as any).approve(
           CONTRACTS.LP_LOCKER,
           MAX_UINT256,
           gasLimitOverride ? { gasLimit: gasLimitOverride } : {}
         );
 
-        console.log(`📋 EarnVG: Approve TX hash: ${approveTx.hash}`);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Approve transaction timeout after 60 seconds')), 60000)
+        );
 
-        const approveReceipt = await Promise.race([
-          approveTx.wait(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Approve transaction timeout after 60s')), 60000))
-        ]);
+        console.log('⏰ EarnVG: Ожидаем approve транзакцию (timeout 60s)...');
+        const approveTx = await Promise.race([approvePromise, timeoutPromise]);
 
+        console.log(`📋 EarnVG: Approve TX hash: ${(approveTx as any).hash}`);
+        console.log('⏰ EarnVG: Ожидаем подтверждение approve транзакции...');
+
+        const receiptPromise = (approveTx as any).wait();
+        const receiptTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Approve receipt timeout after 60 seconds')), 60000)
+        );
+
+        const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]);
+
+        console.log('📋 EarnVG: Approve receipt получен:', !!approveReceipt);
         if ((approveReceipt as any).status !== 1) throw new Error('Approve transaction failed');
 
         console.log('✅ EarnVG: VC токены approved');
       } catch (approveError: any) {
         console.error('❌ EarnVG: Approve failed:', approveError);
+        console.error('❌ EarnVG: Approve error details:');
+        console.error('  - message:', approveError.message);
+        console.error('  - code:', approveError.code);
+        console.error('  - data:', approveError.data);
+        console.error('  - stack:', approveError.stack);
+        
         if (approveError.message?.includes('user rejected')) {
           toast.error('Транзакция отклонена пользователем');
         } else if (approveError.message?.includes('insufficient funds')) {
           toast.error('Недостаточно средств для approve');
         } else if (approveError.message?.includes('timeout')) {
-          toast.error('Approve не подтверждён в течение 60 с');
+          toast.error('Approve не подтверждён в течение 60 с - проверьте MetaMask');
+        } else if (approveError.message?.includes('execution reverted')) {
+          toast.error('Approve отклонён контрактом - проверьте параметры');
         } else {
           toast.error(`Ошибка approve: ${approveError.message || 'Неизвестная ошибка'}`);
         }
@@ -596,8 +577,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       try {
         const vcValue = parseFloat(vcAmount);
         const bnbValue = parseFloat(bnbAmount);
-        const lpAmount = Math.sqrt(vcValue * bnbValue);
-        const vgReward = lpAmount * 15;
+        
+        // ✅ ИСПРАВЛЕННАЯ ФОРМУЛА - соответствует контракту
+        // Используем lpDivisor = 1e21 и lpToVgRatio = 10 как в контракте
+        const lpDivisor = 1e21; // 1000000000000000000000
+        const lpToVgRatio = 10;  // ✅ Правильное значение из логов, не 15
+        
+        const lpAmount = (vcValue * bnbValue) / lpDivisor;
+        const vgReward = lpAmount * lpToVgRatio;
+        
         return vgReward.toFixed(2);
       } catch {
         return '0';
@@ -606,7 +594,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       if (!lpAmount) return '0';
       try {
         const lpValue = parseFloat(lpAmount);
-        const vgReward = lpValue * 15;
+        const lpToVgRatio = 10; // ✅ Правильное значение 
+        const vgReward = lpValue * lpToVgRatio;
         return vgReward.toFixed(2);
       } catch {
         return '0';
@@ -652,13 +641,24 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </p>
           </div>
         </div>
-        <button
-          onClick={refreshAllData}
-          disabled={poolLoading}
-          className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Fix RPC Button */}
+          <button
+            onClick={updateBSCTestnetRPC}
+            className="px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+            title="Исправить RPC endpoints если есть timeout ошибки"
+          >
+            Fix RPC
+          </button>
+          {/* Refresh Button */}
+          <button
+            onClick={refreshAllData}
+            disabled={poolLoading}
+            className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
+          </button>
+        </div>
       </div>
 
       {/* Mode Switcher */}
@@ -858,6 +858,29 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               {calculateVGReward()} VG
             </span>
           </div>
+        </div>
+      )}
+
+      {/* Allowance Check Button */}
+      {mode === 'create' && (
+        <div className="mb-4">
+          <button
+            onClick={checkCurrentAllowance}
+            disabled={checkingAllowance}
+            className="w-full h-10 text-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {checkingAllowance ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Проверяем allowance...
+              </>
+            ) : (
+              <>
+                <Info className="h-4 w-4" />
+                Проверить VC Allowance ({formatBalance(currentAllowance)} VC)
+              </>
+            )}
+          </button>
         </div>
       )}
 

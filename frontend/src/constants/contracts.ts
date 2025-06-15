@@ -6,8 +6,6 @@ export const BSC_TESTNET = {
   rpcUrl: 'https://bsc-testnet-rpc.publicnode.com',
   fallbackRpcUrls: [
     'https://bsc-testnet-rpc.publicnode.com',
-    'https://data-seed-prebsc-1-s1.binance.org:8545',
-    'https://data-seed-prebsc-2-s1.binance.org:8545',
     'https://bsc-testnet.public.blastapi.io',
     'https://endpoints.omniatech.io/v1/bsc/testnet/public',
     'https://bsc-testnet.blockpi.network/v1/rpc/public',

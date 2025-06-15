@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy } from 'lucide-react';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy, Settings } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const Header: React.FC = () => {
@@ -11,6 +11,7 @@ const Header: React.FC = () => {
   const { account, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
+  const [forceLegacy, setForceLegacy] = useState(localStorage.getItem('forceLegacyProvider') === 'true');
 
   const navigation = [
     { name: t('navigation.dashboard'), href: '/', icon: BarChart3 },
@@ -47,6 +48,20 @@ const Header: React.FC = () => {
   const handleDisconnect = () => {
     disconnectWallet();
     setIsWalletMenuOpen(false);
+  };
+
+  const toggleLegacyMode = () => {
+    const newValue = !forceLegacy;
+    setForceLegacy(newValue);
+    localStorage.setItem('forceLegacyProvider', newValue.toString());
+    
+    // Если кошелёк подключен - отключаем для применения изменений
+    if (isConnected) {
+      disconnectWallet();
+      setTimeout(() => {
+        window.location.reload(); // Перезагружаем для применения нового режима
+      }, 500);
+    }
   };
 
   // Close wallet menu when clicking outside
@@ -100,6 +115,20 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
             {/* Language Switcher */}
             <LanguageSwitcher />
+            
+            {/* Legacy Mode Toggle (для тестирования Arc browser popup проблемы) */}
+            <button
+              onClick={toggleLegacyMode}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs ${
+                forceLegacy
+                  ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
+                  : 'bg-gray-600/20 border border-gray-500/30 text-gray-400 hover:bg-gray-600/30'
+              }`}
+              title={forceLegacy ? 'Legacy Mode: ON (window.ethereum)' : 'EIP-6963 Mode: ON'}
+            >
+              <Settings className="w-3 h-3" />
+              <span>{forceLegacy ? 'Legacy' : 'EIP-6963'}</span>
+            </button>
             
             {/* Wallet Connection */}
             {isConnected ? (

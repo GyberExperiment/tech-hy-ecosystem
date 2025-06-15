@@ -80,6 +80,7 @@ interface Web3ContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   switchNetwork: () => Promise<void>;
+  updateBSCTestnetRPC: () => Promise<boolean>;
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
@@ -129,6 +130,16 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   const getEthereumProvider = (): EIP1193Provider | null => {
     // Если кошелёк уже выбран – всегда возвращаем его
     if (lockedProvider) return lockedProvider;
+
+    // 🧪 ВРЕМЕННО: Принудительно используем legacy для тестирования Arc browser popup проблемы
+    const forceLegacy = localStorage.getItem('forceLegacyProvider') === 'true';
+    if (forceLegacy) {
+      console.log('Web3Context: 🧪 FORCE LEGACY MODE - Using window.ethereum directly');
+      const legacyProvider = detectLegacyProvider();
+      if (legacyProvider) {
+        return legacyProvider;
+      }
+    }
 
     // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
     if (preferredProvider) {
@@ -214,7 +225,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       
       toast.success('Кошелёк подключён!');
       
-      if (Number(network.chainId) !== 97) {
+      // ✅ АВТОМАТИЧЕСКИ ОБНОВЛЯЕМ RPC ENDPOINTS ПОСЛЕ ПОДКЛЮЧЕНИЯ
+      if (Number(network.chainId) === 97) {
+        // Если уже в BSC Testnet - обновляем RPC в фоне
+        setTimeout(() => updateBSCTestnetRPC(), 1000);
+      } else {
         toast.error('Переключитесь на BSC Testnet');
       }
     } catch (error: any) {
@@ -259,12 +274,14 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     }
 
     try {
+      // Сначала пытаемся переключиться на BSC Testnet
       await ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0x61' }], // BSC Testnet chainId in hex
       });
     } catch (switchError: any) {
       if (switchError.code === 4902) {
+        // Сеть не найдена - добавляем с правильным RPC
         try {
           await ethereum.request({
             method: 'wallet_addEthereumChain',
@@ -278,14 +295,74 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
               },
             ],
           });
+          toast.success('BSC Testnet добавлен с обновленными RPC!');
         } catch (addError) {
           console.error('Ошибка добавления сети:', addError);
           toast.error('Ошибка добавления BSC Testnet');
         }
       } else {
-        console.error('Ошибка переключения сети:', switchError);
-        toast.error('Ошибка переключения на BSC Testnet');
+        // Возможно старый RPC не работает - пытаемся обновить RPC
+        console.log('Switch failed, trying to update RPC URLs...');
+        try {
+          // Принудительно обновляем RPC URLs для BSC Testnet
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: '0x61',
+                chainName: BSC_TESTNET_CONFIG.chainName,
+                nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
+                rpcUrls: BSC_TESTNET_CONFIG.rpcUrls, // Обновленные RPC URLs
+                blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
+              },
+            ],
+          });
+          toast.success('RPC endpoints обновлены!');
+          
+          // Теперь пытаемся переключиться снова
+          await ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x61' }],
+          });
+        } catch (updateError) {
+          console.error('Ошибка обновления RPC:', updateError);
+          toast.error('Ошибка переключения на BSC Testnet. Проверьте подключение к интернету.');
+        }
       }
+    }
+  };
+
+  // ✅ ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО ОБНОВЛЕНИЯ RPC ENDPOINTS
+  const updateBSCTestnetRPC = async () => {
+    const ethereum = getEthereumProvider();
+    if (!ethereum) return false;
+
+    try {
+      console.log('🔄 Принудительно обновляем BSC Testnet RPC endpoints...');
+      
+      // Принудительно обновляем/добавляем BSC Testnet с новыми RPC
+      await ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: BSC_TESTNET_CONFIG.chainId,
+            chainName: BSC_TESTNET_CONFIG.chainName,
+            nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
+            rpcUrls: BSC_TESTNET_CONFIG.rpcUrls, // ✅ Новые рабочие RPC
+            blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
+          },
+        ],
+      });
+      
+      console.log('✅ BSC Testnet RPC endpoints обновлены!');
+      toast.success('RPC endpoints обновлены! Теперь используется publicnode.com');
+      return true;
+    } catch (error: any) {
+      console.error('❌ Ошибка обновления RPC:', error);
+      if (error.code !== 4001) { // Игнорируем "пользователь отклонил"
+        toast.error('Ошибка обновления RPC endpoints');
+      }
+      return false;
     }
   };
 
@@ -350,6 +427,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     connectWallet,
     disconnectWallet,
     switchNetwork,
+    updateBSCTestnetRPC,
     vcContract,
     vgContract,
     vgVotesContract,

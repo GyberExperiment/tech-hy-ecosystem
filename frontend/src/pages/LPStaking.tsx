@@ -34,11 +34,9 @@ import toast from 'react-hot-toast';
 
 // Fallback RPC providers для надёжности
 const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://data-seed-prebsc-1-s1.binance.org:8545',
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
   'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
+  'https://bsc-testnet-rpc.publicnode.com',
 ];
 
 const ERC20_ABI = [
