@@ -1,3 +1,5 @@
+import { log } from './logger';
+
 interface BSCScanTransaction {
   blockNumber: string;
   timeStamp: string;
@@ -61,6 +63,8 @@ const BSCSCAN_BASE_URL = 'https://api-testnet.bscscan.com/api';
 
 export class BSCScanAPI {
   private static async fetchWithRetry(url: string, retries = 2): Promise<any> {
+    let lastError: Error;
+    
     for (let i = 0; i < retries; i++) {
       try {
         const response = await fetch(url);
@@ -77,13 +81,23 @@ export class BSCScanAPI {
         
         return data;
       } catch (error) {
-        console.warn(`BSCScan API attempt ${i + 1} failed:`, error);
-        if (i === retries - 1) throw error;
+        log.warn('BSCScan API attempt failed', {
+          component: 'BSCScanAPI',
+          function: 'fetchWithRetry',
+          url,
+          attempt: i + 1,
+          retries
+        }, error as Error);
+        lastError = error as Error;
         
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        // Wait before retry (exponential backoff)
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
       }
     }
+    
+    throw lastError!;
   }
 
   // Get normal transactions for an address
@@ -106,7 +120,13 @@ export class BSCScanAPI {
       
       return [];
     } catch (error) {
-      console.warn('BSCScan getNormalTransactions failed:', error);
+      log.warn('BSCScan getNormalTransactions failed', {
+        component: 'BSCScanAPI',
+        function: 'getNormalTransactions',
+        address,
+        startBlock,
+        endBlock
+      }, error as Error);
       return [];
     }
   }
@@ -136,7 +156,16 @@ export class BSCScanAPI {
       
       return [];
     } catch (error) {
-      console.warn('BSCScan getTokenTransfers failed:', error);
+      log.warn('BSCScan getTokenTransfers failed', {
+        component: 'BSCScanAPI',
+        function: 'getTokenTransfers',
+        address,
+        contractAddress: contractAddress ? contractAddress : 'undefined',
+        startBlock,
+        endBlock,
+        page,
+        offset
+      }, error as Error);
       return [];
     }
   }
@@ -162,7 +191,17 @@ export class BSCScanAPI {
       const data = await this.fetchWithRetry(url);
       return data.result || [];
     } catch (error) {
-      console.warn('BSCScan getEventLogs failed:', error);
+      log.warn('BSCScan getEventLogs failed', {
+        component: 'BSCScanAPI',
+        function: 'getEventLogs',
+        contractAddress,
+        fromBlock,
+        toBlock,
+        topic0,
+        topic1,
+        topic2,
+        topic3
+      }, error as Error);
       return [];
     }
   }
@@ -175,7 +214,11 @@ export class BSCScanAPI {
       const data = await this.fetchWithRetry(url);
       return data.result;
     } catch (error) {
-      console.warn('BSCScan getTransactionReceipt failed:', error);
+      log.warn('BSCScan getTransactionReceipt failed', {
+        component: 'BSCScanAPI',
+        function: 'getTransactionReceipt',
+        txHash
+      }, error as Error);
       return null;
     }
   }
@@ -191,24 +234,48 @@ export class BSCScanAPI {
     eventLogs: BSCScanEventLog[];
   }> {
     try {
-      console.log(`BSCScan: Fetching transactions for ${address} (free tier)`);
+      log.info('BSCScan: Fetching transactions', {
+        component: 'BSCScanAPI',
+        function: 'getAllTransactions',
+        address,
+        contractCount: contractAddresses.length,
+        maxResults
+      });
       
       // Get normal transactions (reduced limit for free tier)
       const normalTxs = await this.getNormalTransactions(address, 0, 99999999, 1, Math.min(maxResults / 2, 20));
-      console.log(`BSCScan: Found ${normalTxs.length} normal transactions`);
+      log.info('BSCScan: Found normal transactions', {
+        component: 'BSCScanAPI',
+        function: 'getAllTransactions',
+        address,
+        count: normalTxs.length
+      });
       
       // Get token transfers (reduced limit for free tier)
       const tokenTxs = await this.getTokenTransfers(address, undefined, 0, 99999999, 1, Math.min(maxResults / 2, 20));
-      console.log(`BSCScan: Found ${tokenTxs.length} token transfers`);
+      log.info('BSCScan: Found token transfers', {
+        component: 'BSCScanAPI',
+        function: 'getAllTransactions',
+        address,
+        count: tokenTxs.length
+      });
       
       // Skip event logs for free tier (often requires API key)
       const eventLogs: BSCScanEventLog[] = [];
-      console.log(`BSCScan: Skipping event logs (requires API key)`);
+      log.info('BSCScan: Skipping event logs (requires API key)', {
+        component: 'BSCScanAPI',
+        function: 'getAllTransactions',
+        address
+      });
       
       return { normalTxs, tokenTxs, eventLogs };
       
     } catch (error) {
-      console.error('BSCScan getAllTransactions failed:', error);
+      log.error('BSCScan getAllTransactions failed', {
+        component: 'BSCScanAPI',
+        function: 'getAllTransactions',
+        address
+      }, error as Error);
       return { normalTxs: [], tokenTxs: [], eventLogs: [] };
     }
   }

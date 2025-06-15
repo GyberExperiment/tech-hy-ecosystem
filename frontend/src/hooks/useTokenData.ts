@@ -3,6 +3,7 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
+import { log } from '../utils/logger';
 
 export interface TokenData {
   symbol: string;
@@ -96,7 +97,11 @@ export const useTokenData = () => {
     for (let i = 0; i < FALLBACK_RPC_URLS.length; i++) {
       const rpcUrl = FALLBACK_RPC_URLS[i];
       try {
-        console.log(`useTokenData: Trying RPC ${rpcUrl}...`);
+        log.debug('useTokenData: Trying RPC endpoint', {
+          component: 'useTokenData',
+          function: 'tryMultipleRpc',
+          rpcUrl
+        });
         
         // ✅ ДОБАВЛЯЕМ DELAY между попытками для rate limiting protection
         if (i > 0) {
@@ -105,15 +110,28 @@ export const useTokenData = () => {
         
         const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
         const result = await withTimeout(operation(rpcProvider), 15000);
-        console.log(`useTokenData: RPC success with ${rpcUrl}`);
+        log.info('useTokenData: RPC endpoint success', {
+          component: 'useTokenData',
+          function: 'tryMultipleRpc',
+          rpcUrl
+        });
         return result;
       } catch (error: any) {
-        console.warn(`useTokenData: RPC failed for ${rpcUrl}:`, error.message);
+        log.warn('useTokenData: RPC endpoint failed', {
+          component: 'useTokenData',
+          function: 'tryMultipleRpc',
+          rpcUrl,
+          error: error.message
+        });
         lastError = error;
         
         // ✅ Больше delay после 429 ошибок
         if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
-          console.log('Rate limited, waiting 5 seconds before next RPC...');
+          log.info('Rate limited, waiting 5 seconds before next RPC', {
+            component: 'useTokenData',
+            function: 'tryMultipleRpc',
+            rpcUrl
+          });
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
         continue;
@@ -132,16 +150,26 @@ export const useTokenData = () => {
     // Cache check - не запрашиваем чаще чем раз в 30 секунд для rate limiting protection
     const now = Date.now();
     if (!showRefreshToast && now - lastFetchTime < 30000) {
-      console.log('useTokenData: Skipping fetch - cached data is fresh');
+      log.debug('useTokenData: Skipping fetch - cached data is fresh', {
+        component: 'useTokenData',
+        function: 'fetchTokenData',
+        timeSinceLastFetch: now - lastFetchTime
+      });
       return;
     }
     
     if (!account || !isConnected || !isCorrectNetwork) {
-      console.log('useTokenData: Skipping fetch', { account, isConnected, isCorrectNetwork });
+      log.debug('useTokenData: Skipping fetch', {
+        component: 'useTokenData',
+        function: 'fetchTokenData',
+        account: account ? 'connected' : 'not connected',
+        isConnected,
+        isCorrectNetwork
+      });
       return;
     }
     
-    console.log('useTokenData: Starting token data fetch for account:', account);
+    log.info('useTokenData: Starting token data fetch for account:', account);
     
     if (showRefreshToast) {
       setRefreshing(true);
@@ -166,14 +194,27 @@ export const useTokenData = () => {
 
       // BNB balance
       try {
-        console.log('useTokenData: Fetching BNB balance...');
+        log.debug('useTokenData: Fetching BNB balance', {
+          component: 'useTokenData',
+          function: 'fetchTokenData',
+          address: account
+        });
         const balance = await tryMultipleRpc(async (rpcProvider) => {
           return await rpcProvider.getBalance(account);
         });
         newBalances.BNB = ethers.formatEther(balance);
-        console.log('useTokenData: BNB balance fetched:', newBalances.BNB);
+        log.info('useTokenData: BNB balance fetched:', {
+          component: 'useTokenData',
+          function: 'fetchTokenData',
+          address: account,
+          balance: newBalances.BNB
+        });
       } catch (error: any) {
-        console.error('useTokenData: Error fetching BNB balance:', error.message);
+        log.error('useTokenData: Error fetching BNB balance:', {
+          component: 'useTokenData',
+          function: 'fetchTokenData',
+          address: account
+        }, error);
         newBalances.BNB = '0';
       }
 
@@ -208,7 +249,13 @@ export const useTokenData = () => {
       // Fetch all token data
       for (const tokenInfo of tokenContracts) {
         try {
-          console.log(`useTokenData: Fetching ${tokenInfo.symbol} data...`);
+          log.debug('useTokenData: Fetching token data', {
+            component: 'useTokenData',
+            function: 'fetchTokenData',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address
+          });
           
           const [balance, decimals, totalSupply] = await tryMultipleRpc(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
@@ -240,9 +287,21 @@ export const useTokenData = () => {
             color: tokenInfo.color
           });
           
-          console.log(`useTokenData: ${tokenInfo.symbol} balance:`, formattedBalance);
+          log.info('useTokenData: Token balance fetched', {
+            component: 'useTokenData',
+            function: 'fetchTokenData',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            balance: formattedBalance
+          });
         } catch (error) {
-          console.error(`useTokenData: Error fetching ${tokenInfo.symbol} data:`, error);
+          log.error('useTokenData: Error fetching token data', {
+            component: 'useTokenData',
+            function: 'fetchTokenData',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address
+          }, error);
           
           // Add token with zero values as fallback
           newBalances[tokenInfo.symbol as keyof TokenBalances] = '0';
@@ -265,15 +324,25 @@ export const useTokenData = () => {
         setTokens(tokenData);
         setLastFetchTime(now);
         
-        console.log('useTokenData: Updated balances:', newBalances);
-        console.log('useTokenData: Updated tokens:', tokenData.length, 'tokens');
+        log.info('useTokenData: Updated balances', {
+          component: 'useTokenData',
+          function: 'fetchTokenData',
+          address: account,
+          tokenCount: tokenData.length,
+          balances: Object.keys(newBalances)
+        });
+        log.info('useTokenData: Updated tokens:', tokenData.length, 'tokens');
         
         if (showRefreshToast) {
           toast.success('Данные токенов обновлены!', { id: 'refresh-tokens' });
         }
       }
     } catch (error) {
-      console.error('useTokenData: Error fetching token data:', error);
+      log.error('useTokenData: Error fetching token data', {
+        component: 'useTokenData',
+        function: 'fetchTokenData',
+        address: account
+      }, error as Error);
       const errorMessage = 'Ошибка загрузки данных токенов';
       
       if (showRefreshToast) {

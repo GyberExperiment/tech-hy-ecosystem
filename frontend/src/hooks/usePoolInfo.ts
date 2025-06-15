@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
+import { log } from '../utils/logger';
 
 interface PoolInfo {
   vcReserve: string;
@@ -52,13 +53,26 @@ const tryMultipleRpc = async <T,>(
 ): Promise<T> => {
   for (const rpcUrl of FALLBACK_RPC_URLS) {
     try {
-      console.log(`usePoolInfo: Trying RPC ${rpcUrl}...`);
+      log.debug('usePoolInfo: Trying RPC endpoint', {
+        component: 'usePoolInfo',
+        function: 'tryMultipleRpc',
+        rpcUrl
+      });
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const result = await withTimeout(operation(provider), 10000);
-      console.log(`usePoolInfo: RPC success with ${rpcUrl}`);
+      log.info('usePoolInfo: RPC endpoint success', {
+        component: 'usePoolInfo',
+        function: 'tryMultipleRpc',
+        rpcUrl
+      });
       return result;
-    } catch (error) {
-      console.warn(`usePoolInfo: RPC ${rpcUrl} failed:`, error);
+    } catch (error: any) {
+      log.warn('usePoolInfo: RPC endpoint failed', {
+        component: 'usePoolInfo',
+        function: 'tryMultipleRpc',
+        rpcUrl,
+        error: error.message
+      });
       continue;
     }
   }
@@ -91,7 +105,10 @@ export const usePoolInfo = (): UsePoolInfoReturn => {
   // Load pool info with caching
   const loadPoolInfo = useCallback(async (forceRefresh = false): Promise<void> => {
     if (loadingRef.current) {
-      console.log('usePoolInfo: Already loading, skipping');
+      log.debug('usePoolInfo: Already loading, skipping', {
+        component: 'usePoolInfo',
+        function: 'loadPoolInfo'
+      });
       return;
     }
 
@@ -99,13 +116,20 @@ export const usePoolInfo = (): UsePoolInfoReturn => {
     const cacheKey = 'pool-info';
     const cached = poolInfoCache.get(cacheKey);
     if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      console.log('usePoolInfo: Using cached pool info');
+      log.debug('usePoolInfo: Using cached pool info', {
+        component: 'usePoolInfo',
+        function: 'loadPoolInfo',
+        timeSinceLastFetch: Date.now() - cached.timestamp
+      });
       setPoolInfo(cached.data);
       setLastUpdated(cached.timestamp);
       return;
     }
 
-    console.log('usePoolInfo: Loading pool info...');
+    log.info('usePoolInfo: Loading pool info', {
+      component: 'usePoolInfo',
+      function: 'loadPoolInfo'
+    });
     loadingRef.current = true;
     setLoading(true);
     setError(null);
@@ -146,10 +170,22 @@ export const usePoolInfo = (): UsePoolInfoReturn => {
         // Cache the result
         poolInfoCache.set(cacheKey, { data: result, timestamp });
         
-        console.log('usePoolInfo: Pool info loaded successfully:', result);
+        log.info('usePoolInfo: Pool info loaded successfully', {
+          component: 'usePoolInfo',
+          function: 'loadPoolInfo',
+          result: {
+            vcReserve: result.vcReserve,
+            bnbReserve: result.bnbReserve,
+            price: result.price,
+            isLoaded: result.isLoaded
+          }
+        });
       }
     } catch (error: any) {
-      console.error('usePoolInfo: Error loading pool info:', error);
+      log.error('usePoolInfo: Error loading pool info', {
+        component: 'usePoolInfo',
+        function: 'loadPoolInfo'
+      }, error as Error);
       
       if (mountedRef.current) {
         setError(error.message || 'Failed to load pool info');

@@ -3,6 +3,7 @@
 
 import type { EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from '../types/eip6963';
 import { WALLET_PRIORITIES } from '../types/eip6963';
+import { log } from '../utils/logger';
 
 // --- GLOBAL STORE ---------------------------------------------------------
 // При hot-reload Vite/React создаёт новый модуль, из-за чего локальные
@@ -66,21 +67,39 @@ const isNonEvmProvider = (d: EIP6963ProviderDetail): boolean => {
 /**
  * Handle wallet provider announcement
  */
-const handleProviderAnnouncement = (event: EIP6963AnnounceProviderEvent) => {
-  const { detail } = event;
-
-  if (isNonEvmProvider(detail)) {
-    console.log(`EIP-6963: Ignoring non-EVM provider ${detail.info.name}`);
+const handleProviderAnnouncement = (event: CustomEvent<EIP6963ProviderDetail>) => {
+  const detail = event.detail;
+  
+  // Filter out non-EVM wallets (Phantom, Solana wallets)
+  if (detail.info.rdns.includes('phantom') || 
+      detail.info.rdns.includes('solana') ||
+      detail.info.name.toLowerCase().includes('phantom')) {
+    log.debug('EIP-6963: Ignoring non-EVM provider', {
+      component: 'walletStore',
+      function: 'handleProviderAnnouncement',
+      providerName: detail.info.name,
+      rdns: detail.info.rdns
+    });
     return;
   }
   
-  // Prevent duplicate providers based on UUID
-  if (globalState.providers.some(p => p.info.uuid === detail.info.uuid)) {
-    console.log(`EIP-6963: Provider ${detail.info.name} already exists, skipping`);
+  // Check if provider already exists
+  if (globalState.providers.some(p => p.info.rdns === detail.info.rdns)) {
+    log.debug('EIP-6963: Provider already exists, skipping', {
+      component: 'walletStore',
+      function: 'handleProviderAnnouncement',
+      providerName: detail.info.name,
+      rdns: detail.info.rdns
+    });
     return;
   }
   
-  console.log(`EIP-6963: New provider announced: ${detail.info.name} (${detail.info.rdns})`);
+  log.info('EIP-6963: New provider announced', {
+    component: 'walletStore',
+    function: 'handleProviderAnnouncement',
+    providerName: detail.info.name,
+    rdns: detail.info.rdns
+  });
   
   // Add provider immutably -> новая ссылка для useSyncExternalStore
   const next = sortProvidersByPriority([...globalState.providers, detail]);
@@ -93,7 +112,12 @@ const handleProviderAnnouncement = (event: EIP6963AnnounceProviderEvent) => {
 /**
  * Initialize EIP-6963 provider discovery
  */
-const initializeProviderDiscovery = () => {
+const initializeProviderDiscovery = (): (() => void) => {
+  log.info('EIP-6963: Initializing provider discovery', {
+    component: 'walletStore',
+    function: 'initializeProviderDiscovery'
+  });
+
   if (globalState.discoveryStarted) return; // уже запущено
   globalState.discoveryStarted = true;
 
@@ -108,14 +132,20 @@ const initializeProviderDiscovery = () => {
   window.addEventListener('beforeunload', () => {
     window.removeEventListener('eip6963:announceProvider', handleProviderAnnouncement);
   });
-};
 
-/**
- * Cleanup EIP-6963 provider discovery
- */
-const cleanupProviderDiscovery = () => {
-  console.log('EIP-6963: Cleaning up provider discovery...');
-  window.removeEventListener('eip6963:announceProvider', handleProviderAnnouncement);
+  log.info('EIP-6963: Provider discovery initialized', {
+    component: 'walletStore',
+    function: 'initializeProviderDiscovery',
+    initialProviders: globalState.providers.length
+  });
+
+  return () => {
+    log.info('EIP-6963: Cleaning up provider discovery', {
+      component: 'walletStore',
+      function: 'cleanup'
+    });
+    window.removeEventListener('eip6963:announceProvider', handleProviderAnnouncement);
+  };
 };
 
 /**
@@ -176,11 +206,17 @@ export const walletStore = {
  * Legacy fallback for window.ethereum detection
  */
 export const detectLegacyProvider = (): any => {
-  console.log('EIP-6963: Falling back to legacy window.ethereum detection');
+  log.info('EIP-6963: Falling back to legacy window.ethereum detection', {
+    component: 'walletStore',
+    function: 'detectMetaMaskProvider'
+  });
   
   // Try to find MetaMask specifically
   if (window.ethereum?.isMetaMask && !window.ethereum?.isPhantom && !window.ethereum?.isBraveWallet) {
-    console.log('Legacy: MetaMask detected via window.ethereum.isMetaMask');
+    log.info('Legacy: MetaMask detected via window.ethereum.isMetaMask', {
+      component: 'walletStore',
+      function: 'detectMetaMaskProvider'
+    });
     return window.ethereum;
   }
   
@@ -190,17 +226,26 @@ export const detectLegacyProvider = (): any => {
       p.isMetaMask && !p.isPhantom && !p.isBraveWallet
     );
     if (metaMaskProvider) {
-      console.log('Legacy: MetaMask detected via window.ethereum.providers');
+      log.info('Legacy: MetaMask detected via window.ethereum.providers', {
+        component: 'walletStore',
+        function: 'detectMetaMaskProvider'
+      });
       return metaMaskProvider;
     }
   }
   
   // Last resort - use window.ethereum if it exists
   if (window.ethereum) {
-    console.log('Legacy: Using window.ethereum as fallback');
+    log.info('Legacy: Using window.ethereum as fallback', {
+      component: 'walletStore',
+      function: 'detectMetaMaskProvider'
+    });
     return window.ethereum;
   }
   
-  console.log('Legacy: No Ethereum provider found');
+  log.warn('Legacy: No Ethereum provider found', {
+    component: 'walletStore',
+    function: 'detectMetaMaskProvider'
+  });
   return null;
 }; 

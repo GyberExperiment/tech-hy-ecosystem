@@ -1,15 +1,18 @@
 const { ethers } = require('hardhat');
+const { log } = require('./logger');
 
 async function main() {
-  console.log('🔄 Перевод VG токенов на контракт LPLocker...\n');
+  log.info('🔄 Перевод VG токенов на контракт LPLocker...');
+  log.separator();
 
   // Подключение к сети
   const [deployer] = await ethers.getSigners();
   
-  console.log('📋 Информация о подключении:');
-  console.log(`Deployer: ${deployer.address}`);
-  console.log(`Network: ${(await ethers.provider.getNetwork()).name}`);
-  console.log(`Chain ID: ${(await ethers.provider.getNetwork()).chainId}\n`);
+  log.info('📋 Информация о подключении:');
+  log.info(`Deployer: ${deployer.address}`);
+  log.info(`Network: ${(await ethers.provider.getNetwork()).name}`);
+  log.info(`Chain ID: ${(await ethers.provider.getNetwork()).chainId}`);
+  log.separator();
 
   // Адреса контрактов
   const contracts = {
@@ -21,45 +24,45 @@ async function main() {
   const vgToken = await ethers.getContractAt("VGToken", contracts.VG_TOKEN);
   const lpLocker = await ethers.getContractAt("LPLocker", contracts.LP_LOCKER);
 
-  console.log('💰 Проверка текущих балансов:');
+  log.info('💰 Проверка текущих балансов:');
   try {
     const deployerVGBalance = await vgToken.balanceOf(deployer.address);
     const contractVGBalance = await vgToken.balanceOf(contracts.LP_LOCKER);
     
-    console.log(`Deployer VG Balance: ${ethers.formatEther(deployerVGBalance)} VG`);
-    console.log(`LPLocker VG Balance: ${ethers.formatEther(contractVGBalance)} VG`);
+    log.info(`Deployer VG Balance: ${ethers.formatEther(deployerVGBalance)} VG`);
+    log.info(`LPLocker VG Balance: ${ethers.formatEther(contractVGBalance)} VG`);
     
     if (deployerVGBalance === 0n) {
-      console.log('❌ У deployer нет VG токенов для перевода');
+      log.error('❌ У deployer нет VG токенов для перевода');
       return;
     }
   } catch (error) {
-    console.log(`❌ Ошибка получения балансов: ${error.message}`);
+    log.error('❌ Ошибка получения балансов:', error.message);
     return;
   }
-  console.log();
+  log.separator();
 
-  console.log('⚙️ Проверка конфигурации LPLocker:');
+  log.info('⚙️ Проверка конфигурации LPLocker:');
   try {
     const config = await lpLocker.config();
     const stakingVault = config[5];
     
-    console.log(`Текущий Staking Vault: ${stakingVault}`);
-    console.log(`LPLocker Address: ${contracts.LP_LOCKER}`);
+    log.info(`Текущий Staking Vault: ${stakingVault}`);
+    log.info(`LPLocker Address: ${contracts.LP_LOCKER}`);
     
     if (stakingVault.toLowerCase() === contracts.LP_LOCKER.toLowerCase()) {
-      console.log('✅ Staking Vault правильно указывает на LPLocker контракт');
+      log.success('✅ Staking Vault правильно указывает на LPLocker контракт');
     } else {
-      console.log('❌ Staking Vault указывает на неправильный адрес');
-      console.log('🔧 Нужно обновить конфигурацию или перевести токены на правильный адрес');
+      log.error('❌ Staking Vault указывает на неправильный адрес');
+      log.info('🔧 Нужно обновить конфигурацию или перевести токены на правильный адрес');
     }
   } catch (error) {
-    console.log(`❌ Ошибка получения конфигурации: ${error.message}`);
+    log.error('❌ Ошибка получения конфигурации:', error.message);
     return;
   }
-  console.log();
+  log.separator();
 
-  console.log('🚀 Перевод VG токенов на LPLocker контракт:');
+  log.info('🚀 Перевод VG токенов на LPLocker контракт:');
   try {
     const deployerBalance = await vgToken.balanceOf(deployer.address);
     

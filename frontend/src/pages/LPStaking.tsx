@@ -31,6 +31,7 @@ import {
   Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { log } from '../utils/logger';
 
 // Fallback RPC providers для надёжности
 const FALLBACK_RPC_URLS = [
@@ -105,13 +106,26 @@ const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) 
   
   for (const rpcUrl of FALLBACK_RPC_URLS) {
     try {
-      console.log(`LPStaking: Trying RPC ${rpcUrl}...`);
+      log.debug('LPStaking: Trying RPC endpoint', {
+        component: 'LPStaking',
+        function: 'tryMultipleRpc',
+        rpcUrl
+      });
       const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
       const result = await withTimeout(operation(rpcProvider), 15000);
-      console.log(`LPStaking: RPC success with ${rpcUrl}`);
+      log.info('LPStaking: RPC endpoint success', {
+        component: 'LPStaking',
+        function: 'tryMultipleRpc',
+        rpcUrl
+      });
       return result;
     } catch (error: any) {
-      console.warn(`LPStaking: RPC failed for ${rpcUrl}:`, error.message);
+      log.warn('LPStaking: RPC endpoint failed', {
+        component: 'LPStaking',
+        function: 'tryMultipleRpc',
+        rpcUrl,
+        error: error.message
+      });
       lastError = error;
       continue;
     }
@@ -175,16 +189,30 @@ const LPLocking: React.FC = () => {
     // Cache check - не запрашиваем чаще чем раз в 10 секунд
     const now = Date.now();
     if (!showRefreshToast && now - lastFetchTime < 10000) {
-      console.log('LPStaking: Skipping fetch - cached data is fresh');
+      log.debug('LPStaking: Skipping fetch - cached data is fresh', {
+        component: 'LPStaking',
+        function: 'fetchBalances',
+        timeSinceLastFetch: now - lastFetchTime
+      });
       return;
     }
     
     if (!account || !isConnected || !isCorrectNetwork) {
-      console.log('LPStaking: Skipping fetch', { account, isConnected, isCorrectNetwork });
+      log.debug('LPStaking: Skipping fetch', {
+        component: 'LPStaking',
+        function: 'fetchBalances',
+        account: account ? 'connected' : 'not connected',
+        isConnected,
+        isCorrectNetwork
+      });
       return;
     }
     
-    console.log('LPStaking: Starting balance fetch for account:', account);
+    log.info('LPStaking: Starting balance fetch for account', {
+      component: 'LPStaking',
+      function: 'fetchBalances',
+      address: account
+    });
     
     if (showRefreshToast) {
       setRefreshing(true);
@@ -207,14 +235,28 @@ const LPLocking: React.FC = () => {
 
       // BNB balance
       try {
-        console.log('LPStaking: Fetching BNB balance...');
+        log.debug('LPStaking: Fetching BNB balance', {
+          component: 'LPStaking',
+          function: 'fetchBalances',
+          address: account
+        });
+        
         const balance = await tryMultipleRpc(async (rpcProvider) => {
           return await rpcProvider.getBalance(account);
         });
         newBalances.BNB = ethers.formatEther(balance);
-        console.log('LPStaking: BNB balance fetched:', newBalances.BNB);
+        log.info('LPStaking: BNB balance fetched', {
+          component: 'LPStaking',
+          function: 'fetchBalances',
+          address: account,
+          balance: newBalances.BNB
+        });
       } catch (error: any) {
-        console.error('LPStaking: Error fetching BNB balance:', error.message);
+        log.error('LPStaking: Error fetching BNB balance', {
+          component: 'LPStaking',
+          function: 'fetchBalances',
+          address: account
+        }, error);
         newBalances.BNB = '0';
       }
 
@@ -229,7 +271,13 @@ const LPLocking: React.FC = () => {
       // Fetch all token balances
       for (const tokenInfo of tokenContracts) {
         try {
-          console.log(`LPStaking: Fetching ${tokenInfo.symbol} balance...`);
+          log.debug('LPStaking: Fetching token balance', {
+            component: 'LPStaking',
+            function: 'fetchBalances',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address
+          });
           
           const balance = await tryMultipleRpc(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
@@ -244,9 +292,21 @@ const LPLocking: React.FC = () => {
           const formattedBalance = ethers.formatUnits(balance, decimals);
           newBalances[tokenInfo.symbol as keyof UserBalances] = formattedBalance;
           
-          console.log(`LPStaking: ${tokenInfo.symbol} balance:`, formattedBalance);
+          log.info('LPStaking: Token balance fetched', {
+            component: 'LPStaking',
+            function: 'fetchBalances',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            balance: formattedBalance
+          });
         } catch (error) {
-          console.error(`LPStaking: Error fetching ${tokenInfo.symbol} balance:`, error);
+          log.error('LPStaking: Error fetching token balance', {
+            component: 'LPStaking',
+            function: 'fetchBalances',
+            address: account,
+            tokenSymbol: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address
+          }, error);
           newBalances[tokenInfo.symbol as keyof UserBalances] = '0';
         }
       }
@@ -256,14 +316,23 @@ const LPLocking: React.FC = () => {
         setBalances(newBalances);
         setLastFetchTime(now);
         
-        console.log('LPStaking: Updated balances:', newBalances);
+        log.info('LPStaking: Updated balances', {
+          component: 'LPStaking',
+          function: 'fetchBalances',
+          address: account,
+          balances: Object.keys(newBalances)
+        });
         
         if (showRefreshToast) {
           toast.success('Данные обновлены!', { id: 'refresh-balances' });
         }
       }
     } catch (error) {
-      console.error('LPStaking: Error fetching balances:', error);
+      log.error('LPStaking: Error fetching balances', {
+        component: 'LPStaking',
+        function: 'fetchBalances',
+        address: account
+      }, error as Error);
       const errorMessage = 'Ошибка загрузки балансов';
       
       if (showRefreshToast) {
@@ -283,7 +352,10 @@ const LPLocking: React.FC = () => {
     if (!account || !isConnected || !isCorrectNetwork) return;
 
     try {
-      console.log('LPStaking: Fetching LP Locker stats...');
+      log.info('LPStaking: Fetching LP Locker stats', {
+        component: 'LPStaking',
+        function: 'fetchLPLockerStats'
+      });
       
       const stats = await tryMultipleRpc(async (rpcProvider) => {
         const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
@@ -343,7 +415,10 @@ const LPLocking: React.FC = () => {
         
         activeUsersCount = uniqueUsers.toString();
       } catch (error) {
-        console.warn('LPStaking: Error fetching active users:', error);
+        log.warn('LPStaking: Error fetching active users', {
+          component: 'LPStaking',
+          function: 'fetchLPLockerStats'
+        }, error as Error);
       }
 
       if (isMountedRef.current) {
@@ -357,10 +432,21 @@ const LPLocking: React.FC = () => {
           activeUsers: activeUsersCount
         });
         
-        console.log('LPStaking: LP Locker stats updated');
+        log.info('LPStaking: LP Locker stats updated', {
+          component: 'LPStaking',
+          function: 'fetchLPLockerStats',
+          stats: {
+            totalLocked: stats.poolInfo[0] || 0n,
+            totalIssued: stats.poolInfo[1] || 0n,
+            activeUsers: activeUsersCount
+          }
+        });
       }
     } catch (error) {
-      console.error('LPStaking: Error fetching LP locker stats:', error);
+      log.error('LPStaking: Error fetching LP locker stats', {
+        component: 'LPStaking',
+        function: 'fetchLPLockerStats'
+      }, error as Error);
       // Keep existing stats on error
     }
   }, [account, isConnected, isCorrectNetwork]);

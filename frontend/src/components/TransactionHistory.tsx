@@ -491,7 +491,7 @@ const TransactionHistory: React.FC = () => {
 
   const updateTransactionStatus = (hash: string, status: Transaction['status'], blockNumber?: number) => {
     const updated = transactions.map(tx => 
-      tx.hash === hash ? { ...tx, status, blockNumber } : tx
+      tx.hash === hash ? { ...tx, status, ...(blockNumber !== undefined && { blockNumber }) } : tx
     );
     setTransactions(updated);
     saveTransactions(updated);
@@ -755,7 +755,13 @@ export const useTransactionHistory = () => {
       const updated = [newTx, ...existing];
       localStorage.setItem(`transactions_${account}`, JSON.stringify(updated));
     } catch (error) {
-      console.error('Error saving transaction:', error);
+      log.error('Error saving transaction', {
+        component: 'useTransactionHistory',
+        function: 'addTransaction',
+        address: account,
+        txId: newTx.id,
+        txHash: newTx.hash
+      }, error as Error);
     }
   };
 
@@ -772,7 +778,13 @@ export const useTransactionHistory = () => {
         localStorage.setItem(`transactions_${account}`, JSON.stringify(updated));
       }
     } catch (error) {
-      console.error('Error updating transaction:', error);
+      log.error('Error updating transaction', {
+        component: 'useTransactionHistory',
+        function: 'updateTransactionStatus',
+        address: account,
+        txHash: hash,
+        status
+      }, error as Error);
     }
   };
 

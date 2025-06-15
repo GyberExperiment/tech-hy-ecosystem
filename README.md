@@ -15,6 +15,7 @@ TECH HY Ecosystem is an enterprise-grade DeFi platform for **permanent LP lockin
 - **⚡ Instant VG Rewards**: Immediate VG token rewards (15:1 ratio) for every lock operation
 - **🗳️ DAO Governance**: VG → VGVotes for decentralized voting
 - **🛡️ Enterprise Security**: Timelock, MEV protection, and slippage control
+- **📊 Production Logging**: Enterprise-grade structured logging and monitoring
 
 ## 🏗️ System Architecture
 
@@ -48,9 +49,9 @@ TECH HY Ecosystem is an enterprise-grade DeFi platform for **permanent LP lockin
 - ✅ **Permanent liquidity**: LP tokens remain in protocol forever
 - ✅ **One-time operation**: `earnVG()` = lock + reward in one call
 
-## 🛠️ Architecture Overview
+## 🛠️ Enhanced Architecture Overview
 
-### High-Level System Architecture
+### Enterprise System Architecture with Logging Layer
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -58,6 +59,14 @@ TECH HY Ecosystem is an enterprise-grade DeFi platform for **permanent LP lockin
 │                  BSC DeFi LP Locking Platform                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  Frontend DApp (React + TypeScript + ethers.js)                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │          Production Logging Layer (NEW)                │   │
+│  │  ┌─────────────────┐  ┌─────────────────────────────┐   │   │
+│  │  │  Structured     │  │  Error Tracking & Context  │   │   │
+│  │  │  Logging        │  │  Web3/Transaction Logging  │   │   │
+│  │  │  (logger.ts)    │  │  (ErrorBoundary.tsx)       │   │   │
+│  │  └─────────────────┘  └─────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────────────┤
 │  Smart Contract Layer (Solidity 0.8.22)                       │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
@@ -75,18 +84,142 @@ TECH HY Ecosystem is an enterprise-grade DeFi platform for **permanent LP lockin
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Token Flow Architecture
+### Error Management & Logging Flow
 
 ```
-User Assets Flow:
-VC Tokens + BNB → LPLocker.earnVG() → PancakeSwap.addLiquidityETH() 
-                                    ↓
-LP Tokens (Locked Forever) ← VG Rewards (15:1 ratio) ← User
+Component Error → ErrorBoundary → Structured Log → Context Capture
+                                        ↓
+localStorage Buffer ← Production Logger ← External Service (Sentry Ready)
+                                        ↓
+Debug Export ← Log Aggregation ← Monitoring Dashboard
+```
 
-Governance Flow:
-VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
-                                              ↓
-                                    Timelock.execute() → Contract Updates
+## 📊 Production Logging & Monitoring
+
+### 🚀 **Enterprise Logging System**
+
+Our platform features a comprehensive **production-grade logging system** that replaces all `console.*` calls with structured, context-aware logging.
+
+#### **Frontend Logger** (`frontend/src/utils/logger.ts`)
+```typescript
+import { log } from '../utils/logger';
+
+// Context-aware transaction logging
+log.error('Transaction failed', {
+  component: 'EarnVGWidget',
+  function: 'handleEarnVG',
+  txHash: '0x123...',
+  address: account,
+  network: 'BSC Testnet'
+}, error);
+
+// Specialized Web3 logging
+log.web3('Wallet connected', { address });
+log.transaction('TX confirmed', txHash);
+log.contract('Contract interaction', contractAddress);
+```
+
+#### **Node.js Logger** (`scripts/logger.js`)
+```javascript
+const { log } = require('./logger');
+
+log.section('Contract Deployment');
+log.info('Deploying LPLocker contract', { deployer: address });
+log.success('Contract deployed successfully', contractAddress);
+```
+
+### 🛡️ **Production Features**
+
+#### **1. Structured Logging with Context**
+- **Type Safety**: Full TypeScript support with interface definitions
+- **Component Context**: Automatic component and function tracking
+- **Web3 Context**: Transaction hashes, addresses, network info
+- **Error Context**: Full error objects with stack traces
+
+#### **2. Log Levels & Filtering**
+```typescript
+export enum LogLevel {
+  ERROR = 0,    // 🚨 Critical errors only
+  WARN = 1,     // ⚠️  Warnings and errors
+  INFO = 2,     // ℹ️  General information
+  DEBUG = 3,    // 🔍 Development debugging
+  TRACE = 4,    // 📍 Detailed execution flow
+}
+```
+
+#### **3. Production Safeguards**
+- **Automatic Level Control**: Production = WARN+, Development = TRACE
+- **Performance Optimized**: No-op in production when disabled
+- **Memory Management**: 1000-entry rotating buffer
+- **Error Persistence**: Critical errors saved to localStorage
+
+#### **4. Error Boundaries & Recovery**
+```typescript
+// Automatic error capture
+window.addEventListener('error', (event) => {
+  log.error('Uncaught Error', {
+    component: 'Global',
+    function: 'windowError',
+    filename: event.filename,
+    lineno: event.lineno
+  }, event.error);
+});
+```
+
+### 📈 **Monitoring & Observability**
+
+#### **Real-time Error Tracking**
+- **Error Aggregation**: All errors collected with full context
+- **Component Isolation**: Track which components fail most often
+- **User Journey**: Full transaction flow with timestamps
+- **Network Issues**: RPC failures and timeouts tracked
+
+#### **Performance Monitoring**
+- **Transaction Timing**: Full lifecycle from initiation to confirmation
+- **RPC Performance**: Multiple endpoint failover tracking
+- **Gas Usage**: Actual vs estimated gas tracking
+- **User Behavior**: Feature usage analytics
+
+#### **Debug Tools**
+```javascript
+// Browser console commands
+logger.exportLogs()           // Export all logs as JSON
+logger.getLogs()              // Get current log buffer
+logger.setLevel(LogLevel.DEBUG) // Change log level
+logger.clearLogs()            // Clear log buffer
+
+// View error logs
+JSON.parse(localStorage.getItem('app_error_logs'))
+```
+
+## 🔧 Stage-Debugging Workflow
+
+### **Development Branch Strategy**
+```bash
+# Switch to enhanced debugging branch
+git checkout stage-debugging
+
+# This branch includes:
+# - Full TRACE logging enabled
+# - Debug UI components
+# - Enhanced error boundaries
+# - Performance profiling
+```
+
+### **Debug Mode Features**
+1. **Enhanced Error UI**: Detailed error screens with stack traces
+2. **Component Inspector**: Real-time component state monitoring  
+3. **Transaction Debugger**: Step-by-step transaction analysis
+4. **RPC Monitor**: Live RPC endpoint health tracking
+
+### **Debug Console Integration**
+```typescript
+// Debug helpers available in development
+if (process.env.NODE_ENV === 'development') {
+  (window as any).debugLogger = logger;
+  (window as any).exportLogs = () => logger.exportLogs();
+  (window as any).clearLogs = () => logger.clearLogs();
+}
 ```
 
 ## 🛠️ Technical Stack
@@ -114,6 +247,7 @@ VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
 - **State Management**: React Query 5.8.4 + React Context
 - **Routing**: React Router DOM 6.18.0
 - **Notifications**: React Hot Toast 2.4.1
+- **⭐ Logging**: Enterprise Production Logger (Custom)
 
 ### Development Tools
 - **Testing**: Hardhat Toolbox with Mocha/Chai
@@ -121,6 +255,7 @@ VG Tokens → VGTokenVotes.deposit() → VGVotes → Governor.propose/vote()
 - **Type Safety**: TypeChain for contract types
 - **Coverage**: Hardhat Coverage plugin
 - **Deployment**: Custom scripts with verification
+- **⭐ Monitoring**: Structured logging with context tracking
 
 ## 📊 Smart Contracts Documentation
 
@@ -226,6 +361,7 @@ frontend/
 │   │   ├── EarnVGWidget.tsx    # Main earnVG component
 │   │   ├── VGConverter.tsx     # VG ↔ VGVotes converter
 │   │   ├── LPPoolManager.tsx   # Liquidity management
+│   │   ├── ErrorBoundary.tsx   # ⭐ Enterprise error handling
 │   │   └── TokenBalance.tsx    # Token balances
 │   ├── contexts/            # React contexts
 │   │   ├── Web3Context.tsx     # Web3 integration
@@ -240,36 +376,74 @@ frontend/
 │   ├── constants/           # Config
 │   │   ├── contracts.ts       # Contract addresses
 │   │   └── abi.ts            # Contract ABIs
-│   └── utils/               # Utilities
-│       ├── formatters.ts      # Data formatting
-│       └── validators.ts      # Input validation
+│   ├── utils/               # Utilities
+│   │   ├── logger.ts          # ⭐ Production Logger
+│   │   ├── formatters.ts      # Data formatting
+│   │   └── validators.ts      # Input validation
+│   └── i18n/                # ⭐ Enhanced i18n with logging
+│       ├── index.ts           # i18n config with logger
+│       └── locales/           # Language files
+├── scripts/                 # Node.js deployment scripts
+│   ├── logger.js            # ⭐ Node.js Production Logger
+│   ├── deploy-ecosystem.js  # Contract deployment
+│   └── fix-vg-ownership.js  # ⭐ Enhanced with logging
 ```
 
 ### Key Components
 
-#### EarnVGWidget.tsx
-Main component for LPLocker contract interaction:
+#### EarnVGWidget.tsx ⭐ Enhanced
+Main component for LPLocker contract interaction with production logging:
 
 ```typescript
-// Auto mode detection
+import { log } from '../utils/logger';
+
+// Auto mode detection with logging
 const hasLPTokens = lpBalance > 0n;
 const mode = hasLPTokens ? 'earn' : 'create';
 
-// One-click LP creation + VG earning
+log.info('Mode detected', {
+  component: 'EarnVGWidget',
+  function: 'modeDetection',
+  mode,
+  hasLPTokens
+});
+
+// One-click LP creation + VG earning with comprehensive logging
 const handleEarnVG = async () => {
-  const tx = await lpLockerContract.earnVG(
-           vcAmount,
-    bnbAmount,
-    slippageBps,
-    { value: bnbAmount, gasLimit: 500000 }
-  );
+  log.info('Starting EarnVG operation', {
+    component: 'EarnVGWidget',
+    function: 'handleEarnVG',
+    address: account,
+    vcAmount,
+    bnbAmount
+  });
+
+  try {
+    const tx = await lpLockerContract.earnVG(
+      vcAmount,
+      bnbAmount,
+      slippageBps,
+      { value: bnbAmount, gasLimit: 500000 }
+    );
+    
+    log.transaction('EarnVG transaction sent', tx.hash);
+    
+  } catch (error) {
+    log.error('EarnVG failed', {
+      component: 'EarnVGWidget',
+      function: 'handleEarnVG',
+      address: account
+    }, error);
+  }
 };
 ```
 
-#### Web3Context.tsx
-Centralized Web3 connection management:
+#### Web3Context.tsx ⭐ Enhanced
+Centralized Web3 connection management with enterprise logging:
 
 ```typescript
+import { log } from '../utils/logger';
+
 const Web3Context = createContext({
   provider: null,
   signer: null,
@@ -278,6 +452,29 @@ const Web3Context = createContext({
   connectWallet: () => {},
   switchToBSCTestnet: () => {},
 });
+
+// Enhanced connection with logging
+const connectWallet = async () => {
+  log.info('Initiating wallet connection', {
+    component: 'Web3Context',
+    function: 'connectWallet'
+  });
+  
+  try {
+    // Connection logic...
+    log.info('Wallet connected successfully', {
+      component: 'Web3Context', 
+      function: 'connectWallet',
+      address: account,
+      network: chainId
+    });
+  } catch (error) {
+    log.error('Wallet connection failed', {
+      component: 'Web3Context',
+      function: 'connectWallet'
+    }, error);
+  }
+};
 ```
 
 ### User Experience Features
@@ -286,8 +483,9 @@ const Web3Context = createContext({
 2. **Automatic Network Switching**: Auto switch to BSC Testnet
 3. **Real-time Data**: Balances and stats update every 30s
 4. **Responsive Design**: Full mobile support
-5. **Error Handling**: Detailed error messages with suggestions
-6. **Transaction Tracking**: Status with BSCScan links
+5. **⭐ Enterprise Error Handling**: Detailed error messages with structured logging
+6. **⭐ Transaction Tracking**: Full lifecycle monitoring with context
+7. **⭐ Debug Tools**: Production-ready debugging and monitoring
 
 ## 🚀 Deployment Guide
 
@@ -327,56 +525,75 @@ cp deploy.env.example .env
 # Set environment variables
 PRIVATE_KEY=your_private_key_here
 BSCSCAN_API_KEY=your_bscscan_api_key
+
+# ⭐ Production Logging Configuration
+VITE_ENABLE_LOGGING=true         # Enable logging in production
+VITE_LOG_LEVEL=WARN              # Production log level (ERROR, WARN, INFO, DEBUG, TRACE)
+VITE_SENTRY_DSN=your_sentry_dsn  # Optional: Error tracking service
+VITE_LOG_BUFFER_SIZE=1000        # Log buffer size (default: 1000)
 ```
 
 ### Smart Contract Deployment
 
-#### 1. Deploy Tokens
+#### 1. Deploy Tokens ⭐ Enhanced Logging
 ```bash
 npm run deploy:tokens
 ```
 
-Deploys:
-- VCToken (Value Coin)
-- VGToken (Value Gold) 
-- VGTokenVotes (Governance wrapper)
+Deploys with enhanced logging:
+- VCToken (Value Coin) - Full deployment logging
+- VGToken (Value Gold) - Transaction tracking  
+- VGTokenVotes (Governance wrapper) - Configuration logging
 
-#### 2. Deploy Ecosystem
+#### 2. Deploy Ecosystem ⭐ Enhanced Logging
 ```bash
 npm run deploy:ecosystem
 ```
 
-Deploys:
-- LPLocker (UUPS Proxy)
-- LockerDAO
-- LPLockerGovernor
-- TimelockController
+Deploys with production monitoring:
+- LPLocker (UUPS Proxy) - Full deployment flow tracking
+- LockerDAO - Governance setup logging
+- LPLockerGovernor - Proposal system monitoring
+- TimelockController - Security parameter logging
 
-#### 3. Test Deployment
+#### 3. Test Deployment ⭐ Enhanced Validation
 ```bash
 npm run deploy:test
 ```
 
-Checks deployment and config correctness.
+Enhanced validation with logging:
+- Contract deployment verification
+- Configuration correctness checks
+- Network connectivity testing
+- Transaction parameter validation
 
 ### Frontend Deployment
 
-#### Development Server
+#### Development Server ⭐ Full Debug Mode
 ```bash
 cd frontend
 npm run dev
+
+# Full trace logging enabled in development
+# Debug console helpers available
+# Error boundaries with detailed stack traces
 ```
 
-Runs dev server at `http://localhost:5174`
-
-#### Production Build
+#### Production Build ⭐ Optimized Logging
 ```bash
 cd frontend
+
+# Production build with optimized logging
 npm run build
+
+# Preview with production logging settings
 npm run preview
 ```
 
-Builds production app in `frontend/dist/`
+Builds production app in `frontend/dist/` with:
+- **Optimized Logging**: Only WARN+ levels in production
+- **Error Tracking**: Automatic error capture and reporting
+- **Performance Monitoring**: Bundle size and load time tracking
 
 ### Deployed Addresses (BSC Testnet)
 
@@ -401,7 +618,123 @@ const CONTRACTS = {
 };
 ```
 
-## 🔧 API Reference
+## 🔧 Enhanced API Reference
+
+### Logger API Reference ⭐ NEW
+
+#### Production Logger (`frontend/src/utils/logger.ts`)
+
+```typescript
+import { log, logger, LogLevel } from '../utils/logger';
+
+// ===== BASIC LOGGING =====
+
+// Context-aware logging with component tracking
+log.error('Transaction failed', {
+  component: 'EarnVGWidget',
+  function: 'handleEarnVG',
+  txHash: '0x123...',
+  address: account,
+  network: 'BSC Testnet'
+}, error);
+
+log.warn('Slippage too high', {
+  component: 'LPPoolManager',
+  function: 'calculateLiquidity',
+  slippage: 15,
+  maxSlippage: 10
+});
+
+log.info('User wallet connected', {
+  component: 'Web3Context',
+  function: 'connectWallet',
+  address: account,
+  network: 'BSC Testnet'
+});
+
+log.debug('Pool info fetched', {
+  component: 'StakingStats',
+  function: 'fetchPoolStats',
+  reserves: { vc: '1000', bnb: '10' }
+});
+
+// ===== SPECIALIZED LOGGING =====
+
+// Web3-specific logging
+log.web3('Provider detected', { provider: 'MetaMask' });
+log.transaction('TX confirmed', txHash);
+log.contract('Contract call', contractAddress);
+
+// ===== LOGGER MANAGEMENT =====
+
+// Logger configuration
+logger.setLevel(LogLevel.DEBUG);        // Change log level
+logger.getLevel();                      // Get current level
+logger.clearLogs();                     // Clear log buffer
+logger.getLogs();                       // Get all logs
+logger.exportLogs();                    // Export as JSON
+
+// Production error tracking
+const errorLogs = JSON.parse(localStorage.getItem('app_error_logs') || '[]');
+```
+
+#### Node.js Logger (`scripts/logger.js`)
+
+```javascript
+const { log } = require('./logger');
+
+// Section headers for deployment scripts
+log.section('Contract Deployment');
+log.section('Configuration Setup');
+
+// Deployment logging
+log.info('Deploying contract', { name: 'LPLocker' });
+log.success('Contract deployed', contractAddress);
+log.error('Deployment failed', error);
+
+// Progress tracking
+log.progress('Step 1/5: Token deployment');
+log.progress('Step 2/5: LP creation');
+
+// Color-coded terminal output
+log.highlight('Important configuration');
+log.dim('Optional parameter');
+```
+
+#### Logger Interfaces
+
+```typescript
+// Log context interface
+interface LogContext {
+  component?: string;           // React component name
+  function?: string;           // Function/method name
+  userId?: string;             // User identifier
+  txHash?: string;             // Transaction hash
+  address?: string;            // Wallet/contract address
+  network?: string;            // Blockchain network
+  [key: string]: any;          // Additional context
+}
+
+// Log entry structure
+interface LogEntry {
+  timestamp: string;           // ISO timestamp
+  level: LogLevel;            // Log level enum
+  levelName: string;          // Human-readable level
+  message: string;            // Log message
+  context?: LogContext;       // Structured context
+  error?: Error;              // Error object (if applicable)
+  data?: any;                 // Additional data
+}
+
+// Log levels enum
+enum LogLevel {
+  ERROR = 0,    // 🚨 Critical errors only
+  WARN = 1,     // ⚠️  Warnings and errors  
+  INFO = 2,     // ℹ️  General information
+  DEBUG = 3,    // 🔍 Development debugging
+  TRACE = 4,    // 📍 Detailed execution flow
+}
+```
 
 ### LPLocker Contract API
 
