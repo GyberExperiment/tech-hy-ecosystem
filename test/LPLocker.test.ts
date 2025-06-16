@@ -1,17 +1,17 @@
 import { ethers, upgrades, network } from "hardhat";
 import { expect } from "chai";
-import { Signer, Contract } from "ethers";
-import { ERC20, LPLocker, VGToken, VCToken } from "../typechain-types";
+import { Signer } from "ethers";
+import { LPLocker, VGToken, VCToken, MockERC20, MockPancakeRouter } from "../typechain-types";
 
 describe("LPLocker", () => {
   let owner: Signer;
   let authority: Signer;
   let user: Signer;
   let lpLocker: LPLocker;
-  let vgToken: ERC20;
-  let vcToken: ERC20;
-  let lpToken: ERC20;
-  let pancakeRouter: Contract;
+  let vgToken: VGToken;
+  let vcToken: VCToken;
+  let lpToken: MockERC20;
+  let pancakeRouter: MockPancakeRouter;
   
   const MIN_BNB = ethers.parseEther("0.01");
   const MIN_VC = ethers.parseUnits("1", 18);
@@ -60,7 +60,7 @@ describe("LPLocker", () => {
       { 
         initializer: "initialize"
       }
-    );
+    ) as unknown as LPLocker;
   });
 
   describe("Инициализация", () => {
