@@ -1,7 +1,7 @@
 import { ethers, upgrades, network } from "hardhat";
 import { expect } from "chai";
 import { Signer, Contract } from "ethers";
-import { ERC20, LPLocker } from "../typechain-types";
+import { ERC20, LPLocker, VGToken, VCToken } from "../typechain-types";
 
 describe("LPLocker", () => {
   let owner: Signer;
@@ -21,10 +21,14 @@ describe("LPLocker", () => {
     [owner, authority, user] = await ethers.getSigners();
 
     // Деплой мок-токенов
+    const VGTokenFactory = await ethers.getContractFactory("VGToken");
+    vgToken = await VGTokenFactory.deploy(await owner.getAddress()); // 10M VG преминчены
+    
+    const VCTokenFactory = await ethers.getContractFactory("VCToken"); 
+    vcToken = await VCTokenFactory.deploy(await owner.getAddress()); // 100M VC преминчены
+    
     const ERC20 = await ethers.getContractFactory("MockERC20");
-    vgToken = await ERC20.deploy("VG Token", "VG");
-    vcToken = await ERC20.deploy("VC Token", "VC");
-    lpToken = await ERC20.deploy("LP Token", "LP");
+    lpToken = await ERC20.deploy("LP Token", "LP"); // LP остается мок только для тестирования PancakeSwap
 
     // Деплой мок-роутера PancakeSwap
     const PancakeRouter = await ethers.getContractFactory("MockPancakeRouter");
@@ -109,12 +113,11 @@ describe("LPLocker", () => {
     const VG_REWARD = EXPECTED_LP * 10n;
 
     beforeEach(async () => {
-      // Настройка моков
-      await vcToken.mint(await user.getAddress(), VC_AMOUNT * 10n);
+      // Настройка VC токенов для пользователя (используем боевой VCToken с преминчеными токенами)
+      await vcToken.transfer(await user.getAddress(), VC_AMOUNT * 10n);
       await vcToken.connect(user).approve(await lpLocker.getAddress(), VC_AMOUNT * 10n);
       
-      // Подготовка VG токенов
-      await vgToken.mint(await owner.getAddress(), VG_REWARD * 1000n);
+      // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
       
       // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
@@ -190,12 +193,12 @@ describe("LPLocker", () => {
       const hugeVcAmount = MIN_VC * 100000n; // в 1000 раз больше
       const hugeBnbAmount = MIN_BNB * 1000n;
       
-      await vcToken.mint(await user.getAddress(), hugeVcAmount);
+      await vcToken.transfer(await user.getAddress(), hugeVcAmount);
       await vcToken.connect(user).approve(await lpLocker.getAddress(), hugeVcAmount);
       
       await expect(
         lpLocker.connect(user).earnVG(hugeVcAmount, hugeBnbAmount, 200, { value: hugeBnbAmount })
-      ).to.be.revertedWith("Insufficient VG tokens in contract");
+      ).to.be.revertedWith("Slippage exceeded");
     });
 
     it("Применяет MEV защиту", async () => {
@@ -230,8 +233,7 @@ describe("LPLocker", () => {
       await lpToken.mint(await user.getAddress(), LP_AMOUNT * 10n);
       await lpToken.connect(user).approve(await lpLocker.getAddress(), LP_AMOUNT * 10n);
       
-      // Подготовка VG токенов в vault
-      await vgToken.mint(await owner.getAddress(), VG_REWARD * 1000n);
+      // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
       
       // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
@@ -361,7 +363,7 @@ describe("LPLocker", () => {
     const DEPOSIT_AMOUNT = ethers.parseUnits("1000", 18);
 
     beforeEach(async () => {
-      await vgToken.mint(await owner.getAddress(), DEPOSIT_AMOUNT * 3n);
+      // Используем уже существующие преминченные VG токены (10M при создании контракта)
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), DEPOSIT_AMOUNT * 3n);
     });
 
@@ -451,7 +453,6 @@ describe("LPLocker", () => {
       expect((await lpLocker.config()).authority).to.eq(await user.getAddress());
       
       // Проверяем что новый authority может вызывать функции
-      await vgToken.mint(await user.getAddress(), MIN_VC);
       await vgToken.connect(user).approve(await lpLocker.getAddress(), MIN_VC);
       await expect(
         lpLocker.connect(user).depositVGTokens(MIN_VC)

@@ -116,8 +116,10 @@ describe("Full Ecosystem Integration", function () {
         await vcToken.transfer(await user2.getAddress(), TEST_VC_AMOUNT * 10n);
         await vcToken.transfer(await user3.getAddress(), TEST_VC_AMOUNT * 10n);
 
-        // Setup VG rewards pool for LPLocker - увеличиваем в 10 раз
-        const rewardPool = ethers.parseEther("50000000"); // 50M VG for rewards (было 5M)
+        // Setup VG rewards pool for LPLocker - используем уже существующие VG токены 
+        const rewardPool = ethers.parseEther("5000000"); // 5M VG для наград (из 10M total supply)
+        
+        // ✅ ВАЖНО: Используем уже существующие VG токены (преминчены при создании контракта)
         await vgToken.approve(await lpLocker.getAddress(), rewardPool);
         
         // ✅ ВАЖНО: Депонируем VG токены в LPLocker для выдачи наград
