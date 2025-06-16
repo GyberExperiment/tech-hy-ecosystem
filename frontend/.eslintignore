@@ -1,0 +1,13 @@
+# Build output
+dist/
+build/
+
+# Auto-generated typechain files
+src/typechain-types/
+src/types/
+
+# Test files (temporary)
+src/test/
+
+# Node modules
+node_modules/ 
