@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: techhy-ecosystem-frontend
-  namespace: techhy-ecosystem
+  namespace: techhy-ecosystem-staging
   labels:
     app.kubernetes.io/name: techhy-ecosystem
     app.kubernetes.io/component: frontend
@@ -135,7 +135,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: techhy-ecosystem-frontend-hpa
-  namespace: techhy-ecosystem
+  namespace: techhy-ecosystem-staging
   labels:
     app.kubernetes.io/name: techhy-ecosystem
     app.kubernetes.io/component: autoscaling

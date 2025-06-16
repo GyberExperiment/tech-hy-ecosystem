@@ -151,6 +151,15 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      - name: 🗝️ Create GHCR imagePullSecret
+        run: |
+          kubectl create secret docker-registry ghcr-login \
+            --docker-server=ghcr.io \
+            --docker-username="${{ secrets.GHCR_USERNAME }}" \
+            --docker-password="${{ secrets.GHCR_TOKEN }}" \
+            --docker-email="dev@techhy.me" \
+            -n techhy-ecosystem-staging --dry-run=client -o yaml | kubectl apply -f -
+
       - name: 🎯 Deploy to Staging K3S
         run: |
           # Set staging environment variables
