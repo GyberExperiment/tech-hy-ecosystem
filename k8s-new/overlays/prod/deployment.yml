@@ -28,6 +28,11 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
         resources:
           limits:
             cpu: 300m
@@ -54,4 +59,9 @@ spec:
           readOnlyRootFilesystem: true
           capabilities:
             drop:
-            - ALL 
+            - ALL
+      volumes:
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
+        emptyDir: {} 
