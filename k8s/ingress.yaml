@@ -1,0 +1,111 @@
+# 🚪 TECH HY Ecosystem Ingress Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: techhy-ecosystem-ingress
+  namespace: techhy-ecosystem
+  labels:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: tech-hy-ecosystem
+    app.kubernetes.io/managed-by: github-actions
+    environment: production
+  annotations:
+    # Traefik Ingress Controller annotations
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/redirect-scheme: https
+    
+    # Security headers
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    
+    # Rate limiting
+    traefik.ingress.kubernetes.io/router.middlewares: default-rate-limit@kubernetescrd
+    
+    # Certificate Manager (for automatic TLS)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    
+    # Description
+    description: "Ingress for TECH HY Ecosystem DeFi Platform"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - stage.techhyecosystem.build.infra.gyber.org
+    - ecosystem.techhy.me
+    secretName: techhy-ecosystem-tls
+  rules:
+  # Staging domain
+  - host: stage.techhyecosystem.build.infra.gyber.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: techhy-ecosystem-frontend-service
+            port:
+              number: 80
+  
+  # Production domain (future)
+  - host: ecosystem.techhy.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: techhy-ecosystem-frontend-service
+            port:
+              number: 80
+
+---
+# 🔒 TLS Certificate for automatic SSL
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: techhy-ecosystem-cert
+  namespace: techhy-ecosystem
+  labels:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/part-of: tech-hy-ecosystem
+spec:
+  secretName: techhy-ecosystem-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - stage.techhyecosystem.build.infra.gyber.org
+  - ecosystem.techhy.me
+
+---
+# 🛡️ Security Headers Middleware for Traefik
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: techhy-ecosystem
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+    customResponseHeaders:
+      X-Frame-Options: "SAMEORIGIN"
+      X-Content-Type-Options: "nosniff"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https: data:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https: wss: ws:;"
+
+---
+# 🚦 Rate Limiting Middleware for Traefik
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: techhy-ecosystem
+spec:
+  rateLimit:
+    burst: 50
+    average: 100 

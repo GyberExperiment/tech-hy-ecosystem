@@ -1,0 +1,16 @@
+# 🏗️ TECH HY Ecosystem Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: techhy-ecosystem
+  labels:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: tech-hy-ecosystem
+    app.kubernetes.io/managed-by: github-actions
+    environment: production
+    project: tech-hy-ecosystem
+  annotations:
+    description: "TECH HY Ecosystem DeFi Platform - Enterprise LP Locking & DAO Governance"
+    contact: "i@techhy.me"
+    version: "1.0.0" 

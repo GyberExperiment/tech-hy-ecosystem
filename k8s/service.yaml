@@ -1,0 +1,48 @@
+# 🌐 TECH HY Ecosystem Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: techhy-ecosystem-frontend-service
+  namespace: techhy-ecosystem
+  labels:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: tech-hy-ecosystem
+    app.kubernetes.io/managed-by: github-actions
+    environment: production
+  annotations:
+    service.beta.kubernetes.io/backend-config: '{"default": "techhy-ecosystem-backend-config"}'
+    description: "Frontend service for TECH HY Ecosystem DeFi Platform"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: frontend
+  sessionAffinity: None
+
+---
+# 📊 Service Monitor for Prometheus (optional)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: techhy-ecosystem-frontend-monitor
+  namespace: techhy-ecosystem
+  labels:
+    app.kubernetes.io/name: techhy-ecosystem
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: tech-hy-ecosystem
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: techhy-ecosystem
+      app.kubernetes.io/component: service
+  endpoints:
+  - port: http
+    path: /health
+    interval: 30s
+    scrapeTimeout: 10s 
