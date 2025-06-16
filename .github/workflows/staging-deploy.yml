@@ -169,7 +169,7 @@ jobs:
 
       - name: 🕒 Wait for Staging Deployment
         run: |
-          kubectl rollout status deployment/techhy-ecosystem-frontend -n techhy-ecosystem-staging --timeout=600s
+          kubectl rollout status deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging --timeout=600s
 
       - name: ✅ Verify Staging Deployment
         run: |
