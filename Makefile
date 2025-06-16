@@ -72,6 +72,11 @@ deploy-prod: ## Deploy to production K3S
 	ENVIRONMENT=production ./scripts/k8s/deploy.sh
 	@echo "✅ Production deployment completed!"
 
+deploy-staging: ## Deploy to staging K3S
+	@echo "🎭 Deploying to staging..."
+	ENVIRONMENT=staging ./scripts/k8s/deploy.sh
+	@echo "✅ Staging deployment completed!"
+
 deploy-dev: ## Deploy to development K3S
 	@echo "🧪 Deploying to development..."
 	ENVIRONMENT=development ./scripts/k8s/deploy.sh
@@ -87,6 +92,10 @@ monitor: ## Monitor K3S deployment
 	@echo "📊 Monitoring deployment..."
 	./scripts/k8s/monitor.sh
 
+monitor-staging: ## Monitor staging deployment
+	@echo "📊 Monitoring staging deployment..."
+	NAMESPACE=techhy-ecosystem-staging ./scripts/k8s/monitor.sh
+
 monitor-dev: ## Monitor development deployment
 	@echo "📊 Monitoring development deployment..."
 	NAMESPACE=techhy-ecosystem-dev ./scripts/k8s/monitor.sh
@@ -94,6 +103,10 @@ monitor-dev: ## Monitor development deployment
 logs: ## Show application logs
 	@echo "📋 Showing application logs..."
 	kubectl logs -f deployment/techhy-ecosystem-frontend -n techhy-ecosystem
+
+logs-staging: ## Show staging logs
+	@echo "📋 Showing staging logs..."
+	kubectl logs -f deployment/techhy-ecosystem-frontend -n techhy-ecosystem-staging
 
 logs-dev: ## Show development logs
 	@echo "📋 Showing development logs..."
@@ -103,6 +116,10 @@ logs-dev: ## Show development logs
 health: ## Check application health
 	@echo "🔍 Checking health..."
 	curl -f https://ecosystem.techhy.me/health || echo "❌ Health check failed"
+
+health-staging: ## Check staging health
+	@echo "🔍 Checking staging health..."
+	curl -f https://stage.techhyecosystem.build.infra.gyber.org/health || echo "❌ Staging health check failed"
 
 health-local: ## Check local health via port-forward
 	@echo "🔍 Checking local health..."
@@ -139,6 +156,9 @@ prod: test build deploy-prod ## Full production deployment
 status: ## Show all deployment status
 	@echo "📊 Production Status:"
 	kubectl get pods,svc,ingress -n techhy-ecosystem || echo "❌ Production not deployed"
+	@echo ""
+	@echo "📊 Staging Status:"
+	kubectl get pods,svc,ingress -n techhy-ecosystem-staging || echo "❌ Staging not deployed"
 	@echo ""
 	@echo "📊 Development Status:"
 	kubectl get pods,svc,ingress -n techhy-ecosystem-dev || echo "❌ Development not deployed"
