@@ -103,9 +103,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
       const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
         "function allowance(address owner, address spender) view returns (uint256)"
-      ], readOnlyProvider);
+      ], readOnlyProvider) as ethers.Contract & {
+        allowance(owner: string, spender: string): Promise<bigint>;
+      };
       
-      const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+      const allowance = await readOnlyVCContract.allowance(account, CONTRACTS.LP_LOCKER);
       const allowanceFormatted = ethers.formatEther(allowance);
       
       setCurrentAllowance(allowanceFormatted);
@@ -123,13 +125,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       } else {
         toast.success('Approve не выполнен. Allowance: 0 VC');
       }
-    } catch (error: any) {
+    } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         log.error('Failed to check VC allowance', {
           component: 'EarnVGWidget',
           function: 'checkCurrentAllowance',
           address: account
-        }, error);
+        }, error as Error);
       }
       toast.error('Ошибка проверки allowance');
     } finally {
@@ -277,9 +279,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
         const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
           "function balanceOf(address) view returns (uint256)"
-        ], readOnlyProvider);
+        ], readOnlyProvider) as ethers.Contract & {
+          balanceOf(address: string): Promise<bigint>;
+        };
         
-        vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
+        vaultVGBalance = await readOnlyVGContract.balanceOf(stakingVault);
         if (process.env.NODE_ENV === 'development') {
           log.info('VG vault balance retrieved', {
             component: 'EarnVGWidget',
@@ -362,9 +366,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)",
           "function approve(address spender, uint256 amount) returns (bool)"
-        ], readOnlyProvider);
+        ], readOnlyProvider) as ethers.Contract & {
+          allowance(owner: string, spender: string): Promise<bigint>;
+          approve(spender: string, amount: string | bigint): Promise<any>;
+        };
         
-        allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        allowance = await readOnlyVCContract.allowance(account, CONTRACTS.LP_LOCKER);
         if (process.env.NODE_ENV === 'development') {
           log.info('Current VC allowance', {
             component: 'EarnVGWidget',
@@ -401,7 +408,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           log.info('Connection confirmed', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            address: account.slice(0, 6) + '...'
+            address: `${account.slice(0, 6)}...`
           });
         }
 
@@ -411,7 +418,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-        const vcContractWithSigner = vcContract.connect(signer);
+        const vcContractWithSigner = vcContract.connect(signer) as ethers.Contract & {
+          approve(spender: string, amount: string | bigint, overrides?: any): Promise<any>;
+          estimateGas?: {
+            approve(spender: string, amount: string | bigint): Promise<bigint>;
+          };
+          target?: string;
+          interface?: unknown;
+        };
         if (process.env.NODE_ENV === 'development') {
           log.info('VC contract with signer created', {
             component: 'EarnVGWidget',
@@ -428,14 +442,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             contractAddress: CONTRACTS.VC_TOKEN,
             signerAddress: await signer.getAddress(),
             signerProvider: !!signer.provider,
-            contractTarget: (vcContractWithSigner as any).target,
-            contractInterface: !!(vcContractWithSigner as any).interface
+            contractTarget: vcContractWithSigner.target,
+            contractInterface: !!vcContractWithSigner.interface
           });
         }
         
         // Проверяем что approve функция существует
         try {
-          const approveFn = (vcContractWithSigner as any).approve;
+          const approveFn = vcContractWithSigner.approve;
           if (process.env.NODE_ENV === 'development') {
             log.info('Approve function exists', {
               component: 'EarnVGWidget',
@@ -475,7 +489,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         }
         let gasLimitOverride: bigint | undefined;
         try {
-          const gasFn = (vcContractWithSigner as any).estimateGas?.approve;
+          const gasFn = vcContractWithSigner.estimateGas?.approve;
           if (process.env.NODE_ENV === 'development') {
             log.info('Gas estimation function exists', {
               component: 'EarnVGWidget',
@@ -532,7 +546,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
         
         // Добавляем timeout для approve операции
-        const approvePromise = (vcContractWithSigner as any).approve(
+        const approvePromise = vcContractWithSigner.approve(
           CONTRACTS.LP_LOCKER,
           MAX_UINT256,
           gasLimitOverride ? { gasLimit: gasLimitOverride } : {}
@@ -548,13 +562,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-        const approveTx = await Promise.race([approvePromise, timeoutPromise]);
+        const approveTx: any = await Promise.race([approvePromise, timeoutPromise]);
 
         if (process.env.NODE_ENV === 'development') {
           log.info('Approve TX hash', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            hash: (approveTx as any).hash
+            hash: approveTx.hash
           });
           log.info('Waiting for approve transaction confirmation', {
             component: 'EarnVGWidget',
@@ -562,7 +576,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           });
         }
 
-        const receiptPromise = (approveTx as any).wait();
+        const receiptPromise = approveTx.wait();
         const receiptTimeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Approve receipt timeout after 60 seconds')), 60000)
         );
@@ -576,7 +590,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             receipt: !!approveReceipt
           });
         }
-        if ((approveReceipt as any).status !== 1) throw new Error('Approve transaction failed');
+        if (approveReceipt.status !== 1) throw new Error('Approve transaction failed');
 
         if (process.env.NODE_ENV === 'development') {
           log.info('VC tokens approved', {
@@ -584,7 +598,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-      } catch (approveError: any) {
+      } catch (approveError) {
         if (process.env.NODE_ENV === 'development') {
           log.error('Approve failed', {
             component: 'EarnVGWidget',
@@ -594,23 +608,23 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           log.error('Approve error details', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            message: approveError.message,
-            code: approveError.code,
-            data: approveError.data,
-            stack: approveError.stack
+            message: (approveError as any).message,
+            code: (approveError as any).code,
+            data: (approveError as any).data,
+            stack: (approveError as any).stack
           });
         }
         
-        if (approveError.message?.includes('user rejected')) {
+        if ((approveError as any).message?.includes('user rejected')) {
           toast.error('Транзакция отклонена пользователем');
-        } else if (approveError.message?.includes('insufficient funds')) {
+        } else if ((approveError as any).message?.includes('insufficient funds')) {
           toast.error('Недостаточно средств для approve');
-        } else if (approveError.message?.includes('timeout')) {
+        } else if ((approveError as any).message?.includes('timeout')) {
           toast.error('Approve не подтверждён в течение 60 с - проверьте MetaMask');
-        } else if (approveError.message?.includes('execution reverted')) {
+        } else if ((approveError as any).message?.includes('execution reverted')) {
           toast.error('Approve отклонён контрактом - проверьте параметры');
         } else {
-          toast.error(`Ошибка approve: ${approveError.message || 'Неизвестная ошибка'}`);
+          toast.error(`Ошибка approve: ${(approveError as any).message || 'Неизвестная ошибка'}`);
         }
         return;
       }

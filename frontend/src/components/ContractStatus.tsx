@@ -10,19 +10,20 @@ interface ContractInfo {
   error?: string;
 }
 
+// Вынесено за пределы компонента для избежания ворнинга useCallback
+const contractList = [
+  { address: CONTRACTS.PANCAKE_FACTORY, name: 'PancakeSwap Factory' },
+  { address: CONTRACTS.PANCAKE_ROUTER, name: 'PancakeSwap Router' },
+  { address: CONTRACTS.VC_TOKEN, name: 'VC Token' },
+  { address: CONTRACTS.VG_TOKEN, name: 'VG Token' },
+  { address: CONTRACTS.LP_TOKEN, name: 'LP Token' },
+  { address: CONTRACTS.LP_LOCKER, name: 'LP Locker' },
+];
+
 export const ContractStatus: React.FC = () => {
   const { provider, isConnected, isCorrectNetwork } = useWeb3();
   const [contracts, setContracts] = useState<ContractInfo[]>([]);
   const [checking, setChecking] = useState(false);
-
-  const contractList = [
-    { address: CONTRACTS.PANCAKE_FACTORY, name: 'PancakeSwap Factory' },
-    { address: CONTRACTS.PANCAKE_ROUTER, name: 'PancakeSwap Router' },
-    { address: CONTRACTS.VC_TOKEN, name: 'VC Token' },
-    { address: CONTRACTS.VG_TOKEN, name: 'VG Token' },
-    { address: CONTRACTS.LP_TOKEN, name: 'LP Token' },
-    { address: CONTRACTS.LP_LOCKER, name: 'LP Locker' },
-  ];
 
   const checkContracts = useCallback(async () => {
     if (!provider || !isConnected || !isCorrectNetwork) return;

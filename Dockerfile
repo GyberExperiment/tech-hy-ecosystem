@@ -15,7 +15,7 @@ COPY frontend/package*.json ./
 COPY frontend/.npmrc* ./
 
 # Install dependencies
-RUN npm ci --only=production --ignore-scripts
+RUN npm ci
 
 # Copy source code
 COPY frontend/ .
