@@ -3,5 +3,4 @@ resources:
   - ../../cluster
   - deployment.yml
   - service.yml
-  - istio-gateway.yml
-  - istio-virtualservice.yml 
+  - ingress.yml 
