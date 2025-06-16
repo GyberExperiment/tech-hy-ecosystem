@@ -42,7 +42,18 @@ jobs:
       #   run: npm run test:coverage
 
       - name: 🏗️ Build Production
-        run: npm run build
+        run: |
+          # Copy appropriate env file based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            cp config/production.env .env
+            echo "🚀 Building for PRODUCTION (mainnet)"
+          else
+            cp config/staging.env .env
+            echo "🎯 Building for STAGING (testnet)"
+          fi
+          
+          # Build with environment variables
+          npm run build
         env:
           NODE_ENV: production
 
@@ -58,7 +69,7 @@ jobs:
     name: 🐳 Docker Build & Push
     runs-on: ubuntu-latest
     needs: [ frontend-build]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     permissions:
       contents: read
       packages: write
@@ -91,7 +102,8 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=production-latest,enable={{is_default_branch}}
+            type=raw,value=staging-latest,enable=${{ github.ref == 'refs/heads/develop' }}
 
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v6.9.0
@@ -105,9 +117,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 🚀 Deploy to K3S
-  deploy-k3s:
-    name: 🚀 Deploy to K3S
+  # 🚀 Deploy to K3S Production
+  deploy-production:
+    name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: github.ref == 'refs/heads/main'
@@ -131,31 +143,56 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
-      - name: 🎯 Deploy to Kubernetes
+      - name: 🎯 Deploy to Production
         run: |
-          # Substitute environment variables in k8s manifests
-          export IMAGE_TAG="${{ github.sha }}"
-          export NAMESPACE="techhy-ecosystem"
-          
-          # Apply Kubernetes manifests
-          kubectl apply -f k8s/namespace.yaml
-          envsubst < k8s/deployment.yaml | kubectl apply -f -
-          kubectl apply -f k8s/service.yaml
-          kubectl apply -f k8s/ingress.yaml
+          # Apply production kustomization
+          kubectl apply -k k8s-new/overlays/prod
 
       - name: 🕒 Wait for Deployment
         run: |
-          kubectl rollout status deployment/techhy-ecosystem-frontend -n techhy-ecosystem --timeout=300s
+          kubectl rollout status deployment/techhy-ecosystem-prod-deployment -n default --timeout=300s
 
-      - name: ✅ Verify Deployment
+      - name: ✅ Verify Production Deployment
         run: |
-          kubectl get pods -n techhy-ecosystem
-          kubectl get services -n techhy-ecosystem
-          kubectl get ingress -n techhy-ecosystem
+          kubectl get pods -l app=techhy-ecosystem-prod -n default
+          kubectl get services -l app=techhy-ecosystem-prod -n default
 
-      - name: 🎉 Deployment Success Notification
-        if: success()
+  # 🎯 Deploy to K3S Staging
+  deploy-staging:
+    name: 🎯 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.29.0'
+
+      - name: 📝 Setup Kubeconfig
         run: |
-          echo "🎉 TECH HY Ecosystem successfully deployed to K3S!"
-          echo "🌐 Frontend URL: https://stage.techhyecosystem.build.infra.gyber.org"
-          echo "📊 Check status: kubectl get all -n techhy-ecosystem" 
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: 🔍 Verify K3S Connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: 🎯 Deploy to Staging
+        run: |
+          # Apply staging kustomization
+          kubectl apply -k k8s-new/overlays/stage
+
+      - name: 🕒 Wait for Deployment
+        run: |
+          kubectl rollout status deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging --timeout=300s
+
+      - name: ✅ Verify Staging Deployment
+        run: |
+          kubectl get pods -l app=techhy-ecosystem-stage -n techhy-ecosystem-staging
+          kubectl get services -l app=techhy-ecosystem-stage -n techhy-ecosystem-staging 

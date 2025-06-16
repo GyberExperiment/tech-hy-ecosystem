@@ -1,0 +1,58 @@
+# 🚀 TECH HY Ecosystem Frontend Dockerfile
+# Ultra-simple Node.js static server
+
+# Stage 1: Build the application
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY frontend/ .
+
+# Build the application
+RUN npm run build
+
+# Stage 2: Serve static files
+FROM node:20-alpine AS production
+
+# Install serve globally
+RUN npm install -g serve
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S frontend -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy built assets from builder stage
+COPY --from=builder /app/dist ./build
+
+# Change ownership to non-root user
+RUN chown -R frontend:nodejs /app
+
+# Switch to non-root user
+USER frontend
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Labels for better container management
+LABEL maintainer="TECH HY Team <i@techhy.me>"
+LABEL version="1.0.0"
+LABEL description="TECH HY Ecosystem DeFi Frontend - Node.js Static Server"
+LABEL org.opencontainers.image.source="https://github.com/GyberExperiment/tech-hy-ecosystem"
+
+# Start serve
+CMD ["serve", "-s", "build", "-l", "3000"] 

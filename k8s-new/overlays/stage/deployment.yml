@@ -28,55 +28,30 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
-        env:
-        - name: REACT_APP_BSC_RPC_URL
-          value: "https://bsc-testnet-rpc.publicnode.com"
-        - name: REACT_APP_BSC_CHAIN_ID
-          value: "97"
-        - name: REACT_APP_ENVIRONMENT
-          value: "staging"
-        - name: REACT_APP_VC_TOKEN
-          value: "0xC88eC091302Eb90e78a4CA361D083330752dfc9A"
-        - name: REACT_APP_VG_TOKEN
-          value: "0xe87c0Ff36aCf68F2dD5857C65342d"
-        - name: REACT_APP_LP_LOCKER
-          value: "0x9269baba99cE0388Daf814E351b4d556fA728D32"
-        - name: REACT_APP_GOVERNOR
-          value: "0x786133467f52813Ce0855023D4723A244524563E"
-        - name: REACT_APP_TIMELOCK
-          value: "0x06EEB4c972c05BBEbf960Fec99f483dC95768e39"
-        - name: REACT_APP_LP_TOKEN
-          value: "0xA221093a37396c6301db4B24D55E1C871DF31d13"
-        - name: REACT_APP_BRAND_NAME
-          value: "TECH HY Ecosystem"
-        - name: REACT_APP_BRAND_URL
-          value: "https://techhy.me"
-        - name: REACT_APP_SUPPORT_EMAIL
-          value: "i@techhy.me"
         resources:
           limits:
-            cpu: 500m
-            memory: 256Mi
-          requests:
-            cpu: 100m
+            cpu: 200m
             memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         livenessProbe:
           httpGet:
             path: /health
             port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 10
+          periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /health
             port: 80
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 10
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 101
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
             - ALL 
