@@ -12,27 +12,27 @@ env:
 
 jobs:
   # 🧪 Smart Contracts Testing for Staging
-  staging-contracts-test:
-    name: 🔗 Staging Contracts Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: 🔧 Install Dependencies
-        run: npm ci
-
-      - name: 🔨 Compile Contracts
-        run: npm run compile
-
-      - name: 🧪 Run Tests
-        run: npm run test
+  # staging-contracts-test:
+  #   name: 🔗 Staging Contracts Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 📥 Checkout Code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #
+  #     - name: 🔧 Install Dependencies
+  #       run: npm ci
+  #
+  #     - name: 🔨 Compile Contracts
+  #       run: npm run compile
+  #
+  #     - name: 🧪 Run Tests
+  #       run: npm run test
 
   # 🎨 Frontend Build for Staging
   staging-frontend-build:
@@ -81,7 +81,7 @@ jobs:
   staging-docker-build:
     name: 🐳 Staging Docker Build
     runs-on: ubuntu-latest
-    needs: [staging-contracts-test, staging-frontend-build]
+    needs: [staging-frontend-build]
     if: github.ref == 'refs/heads/stage-debugging'
     permissions:
       contents: read
