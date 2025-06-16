@@ -1,9 +1,8 @@
-# 🔥 TECH HY Ecosystem: Enterprise LP Locking Platform
 
 <div align="center">
   
   <!-- Hero Banner -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:7ED321,50:4A90E2,100:50E3C2&height=300&section=header&text=TECH%20HY&fontSize=90&fontAlignY=35&desc=Enterprise%20LP%20Locking%20%26%20DeFi%20Governance&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
+ <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=24,30,30,35,40&height=300&section=header&text=TECH HY Ecosystem: &fontSize=50&&fontAlignY=35&desc=DeFi Venture Governance Platform&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
   
   <br>
   
