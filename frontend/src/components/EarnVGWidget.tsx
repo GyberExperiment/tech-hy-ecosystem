@@ -8,6 +8,8 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
+import type { LPLocker } from '../typechain-types/contracts/LPLocker';
+import { LPLocker__factory } from '../typechain-types/factories/contracts/LPLocker__factory';
 
 interface EarnVGWidgetProps {
   className?: string;
@@ -138,6 +140,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       setCheckingAllowance(false);
     }
   };
+
+  // Получаем строго типизированный контракт LPLocker
+  const lpLockerTyped = useMemo(() => {
+    if (!lpLockerContract) return null;
+    return LPLocker__factory.connect(lpLockerContract.address, signer ?? undefined);
+  }, [lpLockerContract, signer]);
 
   // Transaction handlers
   const handleEarnVG = async () => {
@@ -497,7 +505,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               exists: !!gasFn
             });
           }
-          if (gasFn) {
+          if (typeof gasFn === 'function') {
             if (process.env.NODE_ENV === 'development') {
               log.info('Calling estimateGas.approve', {
                 component: 'EarnVGWidget',
@@ -562,7 +570,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-        const approveTx: any = await Promise.race([approvePromise, timeoutPromise]);
+        const approveTx = await Promise.race([approvePromise, timeoutPromise]) as ethers.ContractTransactionResponse;
 
         if (process.env.NODE_ENV === 'development') {
           log.info('Approve TX hash', {
@@ -580,8 +588,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         const receiptTimeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Approve receipt timeout after 60 seconds')), 60000)
         );
-
-        const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]);
+        const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]) as Awaited<ReturnType<typeof approveTx.wait>>;
 
         if (process.env.NODE_ENV === 'development') {
           log.info('Approve receipt received', {
@@ -590,7 +597,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             receipt: !!approveReceipt
           });
         }
-        if (approveReceipt.status !== 1) throw new Error('Approve transaction failed');
+        if (!approveReceipt || approveReceipt.status !== 1) throw new Error('Approve transaction failed');
 
         if (process.env.NODE_ENV === 'development') {
           log.info('VC tokens approved', {
@@ -598,33 +605,34 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-      } catch (approveError) {
+      } catch (approveError: unknown) {
+        const err = approveError as Error & { message?: string; code?: string; data?: unknown; stack?: string };
         if (process.env.NODE_ENV === 'development') {
           log.error('Approve failed', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            error: approveError
-          }, approveError as Error);
+            error: err
+          }, err);
           log.error('Approve error details', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            message: (approveError as any).message,
-            code: (approveError as any).code,
-            data: (approveError as any).data,
-            stack: (approveError as any).stack
+            message: err.message,
+            code: err.code,
+            data: err.data,
+            stack: err.stack
           });
         }
         
-        if ((approveError as any).message?.includes('user rejected')) {
+        if (err.message?.includes('user rejected')) {
           toast.error('Транзакция отклонена пользователем');
-        } else if ((approveError as any).message?.includes('insufficient funds')) {
+        } else if (err.message?.includes('insufficient funds')) {
           toast.error('Недостаточно средств для approve');
-        } else if ((approveError as any).message?.includes('timeout')) {
+        } else if (err.message?.includes('timeout')) {
           toast.error('Approve не подтверждён в течение 60 с - проверьте MetaMask');
-        } else if ((approveError as any).message?.includes('execution reverted')) {
+        } else if (err.message?.includes('execution reverted')) {
           toast.error('Approve отклонён контрактом - проверьте параметры');
         } else {
-          toast.error(`Ошибка approve: ${(approveError as any).message || 'Неизвестная ошибка'}`);
+          toast.error(`Ошибка approve: ${err.message || 'Неизвестная ошибка'}`);
         }
         return;
       }
@@ -675,7 +683,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       // Separate try-catch for transaction execution
       try {
-        const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
+        const tx = await lpLockerTyped!.earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
           value: bnbAmountWei,
           gasLimit: 500000,
         });
@@ -690,6 +698,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         toast.loading('Ожидание подтверждения транзакции...');
         const receipt = await tx.wait();
 
+        if (!receipt) throw new Error('Transaction failed');
         if (receipt.status === 1) {
           if (process.env.NODE_ENV === 'development') {
             log.info('Transaction successful', {
@@ -717,7 +726,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             // Ищем событие VGEarned
             for (const event of events) {
               try {
-                const decoded = lpLockerWithSigner.interface.parseLog(event);
+                if (!event) continue;
+                const decoded = lpLockerTyped!.interface.parseLog(event);
                 if (decoded && decoded.name === 'VGEarned') {
                   if (process.env.NODE_ENV === 'development') {
                     log.info('VG Earned event', {
@@ -754,45 +764,46 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         } else {
           throw new Error('Transaction failed');
         }
-      } catch (txError: any) {
+      } catch (txError: unknown) {
+        const err = txError as Error & { message?: string; code?: string; data?: unknown; transaction?: unknown };
         if (process.env.NODE_ENV === 'development') {
           log.error('Transaction error', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            error: txError
-          }, txError as Error);
+            error: err
+          }, err);
         }
         
         // Детальное логирование ошибок транзакции
-        if (txError.code) {
+        if (err.code) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Error Code', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              code: txError.code
+              code: err.code
             });
           }
         }
-        if (txError.data) {
+        if (err.data) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Error Data', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              data: txError.data
+              data: err.data
             });
           }
         }
-        if (txError.transaction) {
+        if (err.transaction) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Transaction', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              transaction: txError.transaction
+              transaction: err.transaction
             });
           }
         }
         
-        if (txError.message?.includes('Too frequent transactions')) {
+        if (err.message?.includes('Too frequent transactions')) {
           if (process.env.NODE_ENV === 'development') {
             log.info('MEV Protection active', {
               component: 'EarnVGWidget',
@@ -800,7 +811,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('MEV Protection: Подождите 5 минут между транзакциями');
-        } else if (txError.message?.includes('Slippage exceeded')) {
+        } else if (err.message?.includes('Slippage exceeded')) {
           if (process.env.NODE_ENV === 'development') {
             log.warn('Slippage exceeded', {
               component: 'EarnVGWidget',
@@ -808,7 +819,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Slippage превышен. Попробуйте позже');
-        } else if (txError.message?.includes('insufficient funds')) {
+        } else if (err.message?.includes('insufficient funds')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Insufficient funds', {
               component: 'EarnVGWidget',
@@ -816,7 +827,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Недостаточно средств');
-        } else if (txError.message?.includes('user rejected')) {
+        } else if (err.message?.includes('user rejected')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('User rejected transaction', {
               component: 'EarnVGWidget',
@@ -824,7 +835,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Транзакция отклонена пользователем');
-        } else if (txError.message?.includes('VG vault empty') || txError.message?.includes('Insufficient VG')) {
+        } else if (err.message?.includes('VG vault empty') || err.message?.includes('Insufficient VG')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('VG vault problem', {
               component: 'EarnVGWidget',
@@ -837,10 +848,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             log.error('Unknown transaction error', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              error: txError.message
+              error: err.message
             });
           }
-          toast.error(`Ошибка транзакции: ${txError.message || 'Неизвестная ошибка'}`);
+          toast.error(`Ошибка транзакции: ${err.message || 'Неизвестная ошибка'}`);
         }
       }
     } catch (error: any) {
