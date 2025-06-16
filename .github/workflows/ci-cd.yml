@@ -11,38 +11,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # # 🧪 Smart Contracts Testing
-  # smart-contracts-test:
-  #   name: 🔗 Smart Contracts Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 📥 Checkout Code
-  #       uses: actions/checkout@v4
-
-  #     - name: 📦 Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-
-  #     - name: 🔧 Install Dependencies
-  #       run: npm ci
-
-  #     - name: 🔨 Compile Contracts
-  #       run: npm run compile
-
-  #     - name: 🧪 Run Tests
-  #       run: npm run test
-
-  #     - name: 📊 Coverage Report
-  #       run: npm run coverage
-
-  #     - name: 📈 Upload Coverage
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         file: ./coverage/lcov.info
-  #         fail_ci_if_error: false
-
   # 🎨 Frontend Build & Test
   frontend-build:
     name: 🎨 Frontend Build & Test

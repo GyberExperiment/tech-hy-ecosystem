@@ -136,7 +136,7 @@ describe("LPLocker", () => {
           VG_REWARD,
           BNB_AMOUNT,
           VC_AMOUNT,
-          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+          (await ethers.provider.getBlock(tx.blockNumber ?? 0))?.timestamp ?? 0
         );
 
       expect(await vgToken.balanceOf(await user.getAddress())).to.eq(VG_REWARD);
@@ -252,7 +252,7 @@ describe("LPLocker", () => {
           await user.getAddress(),
           LP_AMOUNT,
           VG_REWARD,
-          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+          (await ethers.provider.getBlock(tx.blockNumber ?? 0))?.timestamp ?? 0
         );
 
       // Проверяем что LP токены переведены к контракту
@@ -352,7 +352,7 @@ describe("LPLocker", () => {
           await user.getAddress(),
           LP_AMOUNT,
           newVgReward,
-          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+          (await ethers.provider.getBlock(tx.blockNumber ?? 0))?.timestamp ?? 0
         );
         
       expect(await vgToken.balanceOf(await user.getAddress())).to.eq(newVgReward);
@@ -375,7 +375,7 @@ describe("LPLocker", () => {
           await owner.getAddress(),
           DEPOSIT_AMOUNT,
           DEPOSIT_AMOUNT,
-          (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
+          (await ethers.provider.getBlock(tx.blockNumber ?? 0))?.timestamp ?? 0
         );
 
       expect(await vgToken.balanceOf(await lpLocker.getAddress())).to.eq(DEPOSIT_AMOUNT);
