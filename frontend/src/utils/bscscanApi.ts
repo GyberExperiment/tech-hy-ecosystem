@@ -227,56 +227,156 @@ export class BSCScanAPI {
   static async getAllTransactions(
     address: string,
     contractAddresses: string[] = [],
-    maxResults = 50
+    maxResults = 200,
+    page = 1
   ): Promise<{
     normalTxs: BSCScanTransaction[];
     tokenTxs: BSCScanTokenTransfer[];
     eventLogs: BSCScanEventLog[];
+    hasMore: boolean;
   }> {
+    log.info('Fetching all transactions from BSCScan', {
+      component: 'BSCScanAPI',
+      function: 'getAllTransactions',
+      address,
+      contractAddresses,
+      maxResults,
+      page
+    });
+
     try {
-      log.info('BSCScan: Fetching transactions', {
-        component: 'BSCScanAPI',
-        function: 'getAllTransactions',
-        address,
-        contractCount: contractAddresses.length,
-        maxResults
-      });
+      const promises = [
+        // Get normal transactions (BNB transfers, contract calls)
+        this.getNormalTransactions(address, 0, 99999999, page, Math.min(maxResults, 100)),
+        
+        // Get token transfers for our specific tokens
+        this.getTokenTransfers(address, undefined, 0, 99999999, page, Math.min(maxResults, 100))
+      ];
+
+      // Add event logs for each contract
+      for (const contractAddr of contractAddresses) {
+        promises.push(
+          this.getEventLogs(contractAddr, 0, 'latest')
+        );
+      }
+
+      const results = await Promise.allSettled(promises);
       
-      // Get normal transactions (reduced limit for free tier)
-      const normalTxs = await this.getNormalTransactions(address, 0, 99999999, 1, Math.min(maxResults / 2, 20));
-      log.info('BSCScan: Found normal transactions', {
-        component: 'BSCScanAPI',
-        function: 'getAllTransactions',
-        address,
-        count: normalTxs.length
-      });
-      
-      // Get token transfers (reduced limit for free tier)
-      const tokenTxs = await this.getTokenTransfers(address, undefined, 0, 99999999, 1, Math.min(maxResults / 2, 20));
-      log.info('BSCScan: Found token transfers', {
-        component: 'BSCScanAPI',
-        function: 'getAllTransactions',
-        address,
-        count: tokenTxs.length
-      });
-      
-      // Skip event logs for free tier (often requires API key)
+      const normalTxs = results[0].status === 'fulfilled' ? results[0].value : [];
+      const tokenTxs = results[1].status === 'fulfilled' ? results[1].value : [];
       const eventLogs: BSCScanEventLog[] = [];
-      log.info('BSCScan: Skipping event logs (requires API key)', {
+      
+      // Collect event logs from all contracts
+      for (let i = 2; i < results.length; i++) {
+        if (results[i].status === 'fulfilled') {
+          eventLogs.push(...(results[i] as any).value);
+        }
+      }
+
+      // Determine if there are more transactions available
+      const hasMore = normalTxs.length >= Math.min(maxResults, 100) || 
+                      tokenTxs.length >= Math.min(maxResults, 100);
+
+      log.info('BSCScan transactions fetched', {
         component: 'BSCScanAPI',
         function: 'getAllTransactions',
-        address
+        address,
+        normalTxsCount: normalTxs.length,
+        tokenTxsCount: tokenTxs.length,
+        eventLogsCount: eventLogs.length,
+        hasMore,
+        page
       });
-      
-      return { normalTxs, tokenTxs, eventLogs };
-      
+
+      return {
+        normalTxs,
+        tokenTxs,
+        eventLogs,
+        hasMore
+      };
     } catch (error) {
-      log.error('BSCScan getAllTransactions failed', {
+      log.error('Failed to fetch transactions from BSCScan', {
         component: 'BSCScanAPI',
         function: 'getAllTransactions',
-        address
+        address,
+        maxResults,
+        page
       }, error as Error);
-      return { normalTxs: [], tokenTxs: [], eventLogs: [] };
+      
+      return {
+        normalTxs: [],
+        tokenTxs: [],
+        eventLogs: [],
+        hasMore: false
+      };
+    }
+  }
+
+  // Get ALL transactions for an address without filtering
+  static async getAllUserTransactions(
+    address: string,
+    page = 1,
+    maxResults = 100
+  ): Promise<{
+    normalTxs: BSCScanTransaction[];
+    tokenTxs: BSCScanTokenTransfer[];
+    hasMore: boolean;
+  }> {
+    log.info('Fetching ALL user transactions from BSCScan', {
+      component: 'BSCScanAPI',
+      function: 'getAllUserTransactions',
+      address,
+      page,
+      maxResults
+    });
+
+    try {
+      const promises = [
+        // Get ALL normal transactions
+        this.getNormalTransactions(address, 0, 99999999, page, Math.min(maxResults, 100)),
+        
+        // Get ALL token transfers
+        this.getTokenTransfers(address, undefined, 0, 99999999, page, Math.min(maxResults, 100))
+      ];
+
+      const results = await Promise.allSettled(promises);
+      
+      const normalTxs = results[0].status === 'fulfilled' ? results[0].value : [];
+      const tokenTxs = results[1].status === 'fulfilled' ? results[1].value : [];
+      
+      // Determine if there are more transactions available
+      const hasMore = normalTxs.length >= Math.min(maxResults, 100) || 
+                      tokenTxs.length >= Math.min(maxResults, 100);
+
+      log.info('All user transactions fetched', {
+        component: 'BSCScanAPI',
+        function: 'getAllUserTransactions',
+        address,
+        normalTxsCount: normalTxs.length,
+        tokenTxsCount: tokenTxs.length,
+        hasMore,
+        page
+      });
+
+      return {
+        normalTxs,
+        tokenTxs,
+        hasMore
+      };
+    } catch (error) {
+      log.error('Failed to fetch all user transactions from BSCScan', {
+        component: 'BSCScanAPI',
+        function: 'getAllUserTransactions',
+        address,
+        maxResults,
+        page
+      }, error as Error);
+      
+      return {
+        normalTxs: [],
+        tokenTxs: [],
+        hasMore: false
+      };
     }
   }
 }

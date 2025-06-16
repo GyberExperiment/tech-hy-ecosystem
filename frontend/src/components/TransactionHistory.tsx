@@ -11,7 +11,8 @@ import {
   RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { TableSkeleton } from './LoadingSkeleton';
@@ -47,6 +48,11 @@ const TransactionHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [dataSource, setDataSource] = useState<'bscscan' | 'rpc' | 'hybrid'>('hybrid');
+  const [searchMode, setSearchMode] = useState<'ecosystem' | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalTransactionsLoaded, setTotalTransactionsLoaded] = useState(0);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
@@ -101,16 +107,84 @@ const TransactionHistory: React.FC = () => {
   };
 
   // Fetch transactions using BSCScan API (primary method)
-  const fetchTransactionsFromBSCScan = async (): Promise<Transaction[]> => {
-    if (!account) return [];
+  const fetchTransactionsFromBSCScan = async (page = 1, append = false): Promise<{transactions: Transaction[], hasMore: boolean}> => {
+    if (!account) return { transactions: [], hasMore: false };
     
     log.info('Fetching transactions from BSCScan API', {
       component: 'TransactionHistory',
       function: 'fetchTransactionsFromBSCScan',
-      address: account
+      address: account,
+      page,
+      append,
+      searchMode
     });
     
     try {
+      // Use different search strategies based on mode
+      if (searchMode === 'all') {
+        // Get ALL user transactions and filter client-side
+        const { normalTxs, tokenTxs, hasMore } = await BSCScanAPI.getAllUserTransactions(
+          account,
+          page,
+          200
+        );
+        
+        log.info('Raw BSCScan API response (ALL mode)', {
+          component: 'TransactionHistory',
+          function: 'fetchTransactionsFromBSCScan',
+          normalTxsCount: normalTxs.length,
+          tokenTxsCount: tokenTxs.length,
+          normalTxsSample: normalTxs.slice(0, 3),
+          tokenTxsSample: tokenTxs.slice(0, 3)
+        });
+        
+        const allTransactions: Transaction[] = [];
+        
+        // Process ALL normal transactions
+        let normalTxsProcessed = 0;
+        for (const tx of normalTxs) {
+          if (tx.to && tx.value !== '0') {
+            allTransactions.push(convertBSCScanToTransaction(tx, 'normal'));
+            normalTxsProcessed++;
+          }
+        }
+        
+        // Process ALL token transfers
+        let tokenTxsProcessed = 0;
+        for (const tx of tokenTxs) {
+          const converted = convertBSCScanToTransaction(tx, 'token');
+          
+          // Determine transaction type based on contract interaction
+          if (tx.to.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
+            converted.type = 'lock_lp';
+          } else if (tx.to.toLowerCase() === CONTRACTS.PANCAKE_ROUTER.toLowerCase()) {
+            converted.type = 'add_liquidity';
+          } else if (tx.to.toLowerCase() === CONTRACTS.PANCAKE_FACTORY.toLowerCase()) {
+            converted.type = 'add_liquidity';
+          } else if (tx.from.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
+            converted.type = 'earn_vg';
+          } else if ([CONTRACTS.VG_TOKEN.toLowerCase(), CONTRACTS.VC_TOKEN.toLowerCase(), CONTRACTS.LP_TOKEN.toLowerCase()].includes(tx.contractAddress.toLowerCase())) {
+            converted.type = 'transfer';
+          } else {
+            converted.type = 'transfer';
+          }
+          
+          allTransactions.push(converted);
+          tokenTxsProcessed++;
+        }
+        
+        log.info('ALL mode transactions processed', {
+          component: 'TransactionHistory',
+          function: 'fetchTransactionsFromBSCScan',
+          normalTxsProcessed,
+          tokenTxsProcessed,
+          totalProcessed: allTransactions.length
+        });
+        
+        return { transactions: allTransactions, hasMore };
+      }
+      
+      // Original ecosystem-only search
       const contractAddresses = [
         CONTRACTS.LP_LOCKER,
         CONTRACTS.VG_TOKEN,
@@ -118,49 +192,141 @@ const TransactionHistory: React.FC = () => {
         CONTRACTS.LP_TOKEN
       ];
       
-      const { normalTxs, tokenTxs, eventLogs } = await BSCScanAPI.getAllTransactions(
+      log.info('Contract addresses for search', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        contractAddresses,
+        account
+      });
+      
+      const { normalTxs, tokenTxs, eventLogs, hasMore } = await BSCScanAPI.getAllTransactions(
         account,
         contractAddresses,
-        100 // Max 100 transactions
+        200, // Max 200 transactions per page
+        page
       );
+      
+      log.info('Raw BSCScan API response', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        normalTxsCount: normalTxs.length,
+        tokenTxsCount: tokenTxs.length,
+        eventLogsCount: eventLogs.length,
+        normalTxsSample: normalTxs.slice(0, 3),
+        tokenTxsSample: tokenTxs.slice(0, 3)
+      });
       
       const allTransactions: Transaction[] = [];
       
       // Convert normal transactions
-      for (const tx of normalTxs.slice(0, 20)) {
+      let normalTxsProcessed = 0;
+      for (const tx of normalTxs.slice(0, 50)) {
         // Skip contract creation transactions
         if (tx.to && tx.value !== '0') {
           allTransactions.push(convertBSCScanToTransaction(tx, 'normal'));
+          normalTxsProcessed++;
         }
       }
+      
+      log.info('Normal transactions processed', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        total: normalTxs.length,
+        processed: normalTxsProcessed,
+        skipped: normalTxs.length - normalTxsProcessed
+      });
       
       // Convert token transfers
-      for (const tx of tokenTxs.slice(0, 30)) {
-        // Filter for our tokens only
-        const isOurToken = [
+      let tokenTxsProcessed = 0;
+      let tokenTxsFiltered = 0;
+      for (const tx of tokenTxs.slice(0, 100)) {
+        // Check if transaction involves any of our ecosystem contracts
+        const isEcosystemTx = [
           CONTRACTS.VG_TOKEN.toLowerCase(),
           CONTRACTS.VC_TOKEN.toLowerCase(),
-          CONTRACTS.LP_TOKEN.toLowerCase()
-        ].includes(tx.contractAddress.toLowerCase());
+          CONTRACTS.LP_TOKEN.toLowerCase(),
+          CONTRACTS.LP_LOCKER.toLowerCase(),
+          CONTRACTS.PANCAKE_ROUTER.toLowerCase(),
+          CONTRACTS.PANCAKE_FACTORY.toLowerCase()
+        ].includes(tx.contractAddress.toLowerCase()) ||
+        [
+          CONTRACTS.VG_TOKEN.toLowerCase(),
+          CONTRACTS.VC_TOKEN.toLowerCase(),
+          CONTRACTS.LP_TOKEN.toLowerCase(),
+          CONTRACTS.LP_LOCKER.toLowerCase(),
+          CONTRACTS.PANCAKE_ROUTER.toLowerCase()
+        ].includes(tx.to.toLowerCase()) ||
+        [
+          CONTRACTS.VG_TOKEN.toLowerCase(),
+          CONTRACTS.VC_TOKEN.toLowerCase(),
+          CONTRACTS.LP_TOKEN.toLowerCase(),
+          CONTRACTS.LP_LOCKER.toLowerCase(),
+          CONTRACTS.PANCAKE_ROUTER.toLowerCase()
+        ].includes(tx.from.toLowerCase());
         
-        if (isOurToken) {
-          const converted = convertBSCScanToTransaction(tx, 'token');
-          
-          // Determine transaction type based on contract interaction
-          if (tx.to.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
-            converted.type = 'lock_lp';
-          } else if (tx.from.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
-            converted.type = 'earn_vg';
-          } else {
-            converted.type = 'transfer';
-          }
-          
-          allTransactions.push(converted);
+        if (!isEcosystemTx) {
+          tokenTxsFiltered++;
+          log.debug('Token transaction filtered out', {
+            component: 'TransactionHistory',
+            function: 'fetchTransactionsFromBSCScan',
+            contractAddress: tx.contractAddress,
+            tokenSymbol: tx.tokenSymbol,
+            to: tx.to,
+            from: tx.from,
+            hash: tx.hash
+          });
+          continue;
         }
+        
+        const converted = convertBSCScanToTransaction(tx, 'token');
+        
+        // Determine transaction type based on contract interaction
+        if (tx.to.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
+          converted.type = 'lock_lp';
+        } else if (tx.to.toLowerCase() === CONTRACTS.VG_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.to.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.to.toLowerCase() === CONTRACTS.LP_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.to.toLowerCase() === CONTRACTS.PANCAKE_ROUTER.toLowerCase()) {
+          converted.type = 'add_liquidity';
+        } else if (tx.to.toLowerCase() === CONTRACTS.PANCAKE_FACTORY.toLowerCase()) {
+          converted.type = 'add_liquidity';
+        } else if (tx.from.toLowerCase() === CONTRACTS.LP_LOCKER.toLowerCase()) {
+          converted.type = 'earn_vg';
+        } else if (tx.from.toLowerCase() === CONTRACTS.VG_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.from.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.from.toLowerCase() === CONTRACTS.LP_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.contractAddress.toLowerCase() === CONTRACTS.VG_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.contractAddress.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else if (tx.contractAddress.toLowerCase() === CONTRACTS.LP_TOKEN.toLowerCase()) {
+          converted.type = 'transfer';
+        } else {
+          converted.type = 'transfer';
+        }
+        
+        allTransactions.push(converted);
+        tokenTxsProcessed++;
       }
       
+      log.info('Token transactions processed', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        total: tokenTxs.length,
+        processed: tokenTxsProcessed,
+        filtered: tokenTxsFiltered,
+        ourTokens: [CONTRACTS.VG_TOKEN, CONTRACTS.VC_TOKEN, CONTRACTS.LP_TOKEN]
+      });
+      
       // Convert event logs
-      for (const log of eventLogs.slice(0, 20)) {
+      let eventLogsProcessed = 0;
+      for (const log of eventLogs.slice(0, 50)) {
         const converted = convertBSCScanToTransaction(log, 'event');
         
         // Determine event type based on contract and topic
@@ -175,23 +341,39 @@ const TransactionHistory: React.FC = () => {
         }
         
         allTransactions.push(converted);
+        eventLogsProcessed++;
       }
+      
+      log.info('Event logs processed', {
+        component: 'TransactionHistory',
+        function: 'fetchTransactionsFromBSCScan',
+        total: eventLogs.length,
+        processed: eventLogsProcessed
+      });
       
       log.info('BSCScan transactions fetched', {
         component: 'TransactionHistory',
         function: 'fetchTransactionsFromBSCScan',
         address: account,
-        transactionCount: allTransactions.length
+        transactionCount: allTransactions.length,
+        breakdown: {
+          normalTxs: normalTxsProcessed,
+          tokenTxs: tokenTxsProcessed,
+          eventLogs: eventLogsProcessed
+        },
+        page,
+        hasMore
       });
-      return allTransactions;
+      return { transactions: allTransactions, hasMore };
       
     } catch (error) {
       log.warn('BSCScan API failed', {
         component: 'TransactionHistory',
         function: 'fetchTransactionsFromBSCScan',
-        address: account
+        address: account,
+        page
       }, error as Error);
-      return [];
+      return { transactions: [], hasMore: false };
     }
   };
 
@@ -326,13 +508,13 @@ const TransactionHistory: React.FC = () => {
     return transactions;
   };
 
-  const fetchRecentTransactions = useCallback(async (isRefresh = false) => {
+  const fetchRecentTransactions = useCallback(async (isRefresh = false, loadMore = false) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
     const now = Date.now();
-    if (!isRefresh && now - lastFetchTime < 10000) {
+    if (!isRefresh && !loadMore && now - lastFetchTime < 10000) {
       log.debug('Skipping fetch - cached data is fresh', {
         component: 'TransactionHistory',
         function: 'fetchRecentTransactions',
@@ -349,15 +531,21 @@ const TransactionHistory: React.FC = () => {
       return;
     }
     
+    const pageToFetch = loadMore ? currentPage + 1 : 1;
+    
     log.info('Starting transaction fetch', {
       component: 'TransactionHistory',
       function: 'fetchRecentTransactions',
       address: account,
-      isRefresh
+      isRefresh,
+      loadMore,
+      pageToFetch
     });
     
-    if (transactions.length === 0) {
+    if (transactions.length === 0 && !loadMore) {
       setInitialLoading(true);
+    } else if (loadMore) {
+      setLoadingMore(true);
     } else {
       setRefreshing(true);
     }
@@ -366,27 +554,41 @@ const TransactionHistory: React.FC = () => {
     const signal = abortControllerRef.current.signal;
 
     try {
-      const allTransactions: Transaction[] = [];
+      let allTransactions: Transaction[] = loadMore ? [...transactions] : [];
+      let hasMoreData = false;
       
       // Primary: Try BSCScan API first
       if (dataSource === 'bscscan' || dataSource === 'hybrid') {
         log.info('Fetching from BSCScan API', {
           component: 'TransactionHistory',
           function: 'fetchRecentTransactions',
-          address: account
+          address: account,
+          pageToFetch
         });
-        const bscscanTxs = await fetchTransactionsFromBSCScan();
-        allTransactions.push(...bscscanTxs);
+        const { transactions: bscscanTxs, hasMore } = await fetchTransactionsFromBSCScan(pageToFetch, loadMore);
+        
+        if (loadMore) {
+          // Remove duplicates when loading more
+          const newTxs = bscscanTxs.filter(newTx => 
+            !allTransactions.some(existingTx => existingTx.hash === newTx.hash)
+          );
+          allTransactions.push(...newTxs);
+        } else {
+          allTransactions.push(...bscscanTxs);
+        }
+        
+        hasMoreData = hasMore;
         log.info('BSCScan provided transactions', {
           component: 'TransactionHistory',
           function: 'fetchRecentTransactions',
           address: account,
-          count: bscscanTxs.length
+          count: bscscanTxs.length,
+          hasMore: hasMoreData
         });
       }
       
       // Fallback: Try RPC for known transactions if BSCScan didn't provide enough
-      if ((dataSource === 'rpc' || dataSource === 'hybrid') && allTransactions.length < 5) {
+      if ((dataSource === 'rpc' || dataSource === 'hybrid') && allTransactions.length < 5 && !loadMore) {
         log.info('Fetching known transactions via RPC', {
           component: 'TransactionHistory',
           function: 'fetchRecentTransactions',
@@ -418,27 +620,39 @@ const TransactionHistory: React.FC = () => {
       // Sort by timestamp (newest first)
       allTransactions.sort((a, b) => b.timestamp - a.timestamp);
       
-      // Remove duplicates and limit to 50 transactions
+      // Remove duplicates and limit to reasonable amount
       const uniqueTransactions = allTransactions
         .filter((tx, index, self) => index === self.findIndex(t => t.hash === tx.hash))
-        .slice(0, 50);
+        .slice(0, 1000); // Увеличиваем лимит до 1000 транзакций
       
       log.info('Final unique transactions', {
         component: 'TransactionHistory',
         function: 'fetchRecentTransactions',
         address: account,
-        finalCount: uniqueTransactions.length
+        finalCount: uniqueTransactions.length,
+        hasMoreData
       });
       
       if (isMountedRef.current && !signal.aborted) {
         setTransactions(uniqueTransactions);
         saveTransactions(uniqueTransactions);
         setLastFetchTime(now);
+        setHasMoreTransactions(hasMoreData);
+        setTotalTransactionsLoaded(uniqueTransactions.length);
+        
+        if (loadMore) {
+          setCurrentPage(pageToFetch);
+        } else {
+          setCurrentPage(1);
+        }
+        
         log.info('Transactions updated successfully', {
           component: 'TransactionHistory',
           function: 'fetchRecentTransactions',
           address: account,
-          count: uniqueTransactions.length
+          count: uniqueTransactions.length,
+          currentPage: loadMore ? pageToFetch : 1,
+          hasMore: hasMoreData
         });
         
         if (uniqueTransactions.length === 0) {
@@ -461,21 +675,30 @@ const TransactionHistory: React.FC = () => {
       log.error('Failed to fetch transactions', {
         component: 'TransactionHistory',
         function: 'fetchRecentTransactions',
-        address: account
+        address: account,
+        pageToFetch
       }, error);
       
       // If no cached transactions, show empty state
-      if (transactions.length === 0) {
+      if (transactions.length === 0 && !loadMore) {
         setTransactions([]);
       }
     } finally {
       if (isMountedRef.current) {
         setInitialLoading(false);
         setRefreshing(false);
+        setLoadingMore(false);
         setLastFetchTime(Date.now());
       }
     }
-  }, [account, transactions.length, lastFetchTime, dataSource]);
+  }, [account, transactions.length, lastFetchTime, dataSource, currentPage]);
+
+  // Load more transactions
+  const loadMoreTransactions = () => {
+    if (!loadingMore && hasMoreTransactions) {
+      fetchRecentTransactions(false, true);
+    }
+  };
 
   const getTypeIcon = (type: Transaction['type']) => {
     switch (type) {
@@ -576,6 +799,11 @@ const TransactionHistory: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
         <h3 className="text-xl font-semibold text-slate-100">История транзакций</h3>
+          <div className="text-sm text-gray-400">
+            {totalTransactionsLoaded > 0 && (
+              <span>Загружено: {totalTransactionsLoaded} транзакций</span>
+            )}
+          </div>
           {refreshing && (
             <div className="flex items-center space-x-2 text-blue-400">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
@@ -584,6 +812,14 @@ const TransactionHistory: React.FC = () => {
           )}
         </div>
         <div className="flex items-center space-x-2">
+          <select
+            value={searchMode}
+            onChange={(e) => setSearchMode(e.target.value as 'ecosystem' | 'all')}
+            className="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-xs"
+          >
+            <option value="all">🔍 Все транзакции</option>
+            <option value="ecosystem">🏗️ Только экосистема</option>
+          </select>
           <select
             value={dataSource}
             onChange={(e) => setDataSource(e.target.value as 'bscscan' | 'rpc' | 'hybrid')}
@@ -711,6 +947,29 @@ const TransactionHistory: React.FC = () => {
               </div>
             </div>
           ))}
+          
+          {/* Load More Button */}
+          {hasMoreTransactions && filteredTransactions.length > 0 && (
+            <div className="text-center pt-6">
+              <button
+                onClick={loadMoreTransactions}
+                disabled={loadingMore}
+                className="btn-secondary flex items-center space-x-2 mx-auto"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Загружаем...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Загрузить еще транзакции</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

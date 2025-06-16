@@ -3,12 +3,12 @@
 <div align="center">
   
   <!-- Hero Banner -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:7ED321,50:4A90E2,100:50E3C2&height=300&section=header&text=TECH%20HY&fontSize=90&fontAlignY=35&desc=Enterprise%20LP%20Locking%20%26%20DeFi%20Governance&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:F3BA2F,50:FF6B6B,100:4ECDC4&height=300&section=header&text=TECH%20HY&fontSize=90&fontAlignY=35&desc=Enterprise%20LP%20Locking%20%26%20DeFi%20Governance&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
   
   <br>
   
   <!-- Animated Typing Text -->
-  [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=2000&pause=1000&color=7ED321&center=true&vCenter=true&multiline=true&width=900&height=220&lines=🔒+Permanent+LP+Locking;💎+Enterprise+DeFi+Platform;⚡+BSC+Smart+Contracts;🚀+DAO+Governance+System;💰+MEV+Protection+Built-in)](https://git.io/typing-svg)
+  [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=2000&pause=1000&color=F3BA2F&center=true&vCenter=true&multiline=true&width=900&height=220&lines=🔒+Permanent+LP+Locking;💎+Enterprise+DeFi+Platform;⚡+BSC+Smart+Contracts;🚀+DAO+Governance+System;💰+MEV+Protection+Built-in)](https://git.io/typing-svg)
   
 </div>
 
@@ -26,7 +26,7 @@
         <img src="https://img.shields.io/badge/💎%20VG%20REWARDS-80M%20AVAILABLE-blue?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="VG Rewards"/>
       </td>
       <td align="center">
-        <img src="https://img.shields.io/badge/⚡%20NETWORK-BSC%20TESTNET-50E3C2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="Network"/>
+        <img src="https://img.shields.io/badge/⚡%20NETWORK-BSC%20TESTNET-F3BA2F?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="Network"/>
       </td>
     </tr>
   </table>
@@ -72,7 +72,7 @@
       <td width="60%">
         <h3>🎯 Our Mission</h3>
         <p align="left">
-          <strong>TECH HY Ecosystem</strong> is a revolutionary <strong>Enterprise Venture Governance  Platform</strong> built on Binance Smart Chain. We provide permanent liquidity locking solutions with advanced DAO governance, MEV protection, and sustainable reward mechanisms. Our platform enables permanent LP token locking with attractive VG token rewards, ensuring long-term liquidity stability for DeFi projects.
+          <strong>TECH HY Ecosystem</strong> is a revolutionary <strong>Enterprise LP Locking Platform</strong> built on Binance Smart Chain. We provide permanent liquidity locking solutions with advanced DAO governance, MEV protection, and sustainable reward mechanisms. Our platform enables permanent LP token locking with attractive VG token rewards, ensuring long-term liquidity stability for DeFi projects.
         </p>
         
         
@@ -83,31 +83,6 @@
 
 
 
----
-
-## 🔍 Platform Features
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%">
-        <h3>🔒 Permanent LP Locking</h3>
-        <p>Irreversible liquidity commitment with smart contract enforcement and transparent on-chain verification</p>
-        <img src="https://img.shields.io/badge/SECURITY-Maximum-7ED321?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
-      </td>
-      <td align="center" width="33%">
-        <h3>💎 VG Token Rewards</h3>
-        <p>Earn 10 VG tokens for every LP token locked, with sustainable tokenomics and governance utilities</p>
-        <img src="https://img.shields.io/badge/REWARDS-10%20VG%20per%20LP-4A90E2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
-      </td>
-      <td align="center" width="33%">
-        <h3>🛡️ MEV Protection</h3>
-        <p>Advanced protection against sandwich attacks with time-based limits and slippage controls</p>
-        <img src="https://img.shields.io/badge/PROTECTION-Anti%20MEV-50E3C2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
-      </td>
-    </tr>
-  </table>
-</div>
 
 ---
 
@@ -116,7 +91,9 @@
 <div align="center">
   
   <h3>🔥 Core Technologies</h3>
+  <img src="https://skillicons.dev/icons?i=solidity,react,typescript,nodejs,hardhat,vite&theme=dark" />
   
+  <br><br>
   
   <table>
     <tr>
@@ -163,13 +140,13 @@
   <table>
     <tr>
       <td align="center">
-        <img src="https://img.shields.io/badge/🌟%20PRODUCTION-READY-7ED321?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
+        <img src="https://img.shields.io/badge/🌟%20PRODUCTION-READY-brightgreen?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
       </td>
       <td align="center">
-        <img src="https://img.shields.io/badge/🚀%20ENTERPRISE-GRADE-4A90E2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
+        <img src="https://img.shields.io/badge/🚀%20ENTERPRISE-GRADE-orange?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
       </td>
       <td align="center">
-        <img src="https://img.shields.io/badge/🔥%20BSC-OPTIMIZED-50E3C2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
+        <img src="https://img.shields.io/badge/🔥%20BSC-OPTIMIZED-red?style=for-the-badge&logoColor=white&labelColor=1a1a1a" />
       </td>
     </tr>
   </table>
@@ -177,7 +154,7 @@
 </div>
 
 <div align="center">
-  <img src="https://media.giphy.com/media/d8iPm91TeShX4kHG69/giphy-downsized-large.gif" width="90%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(126, 211, 33, 0.2);"/> 
+  <img src="https://media.giphy.com/media/d8iPm91TeShX4kHG69/giphy-downsized-large.gif" width="90%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(243, 186, 47, 0.2);"/> 
 </div>
 
 ---
@@ -191,26 +168,28 @@
   <table>
     <tr>
       <td align="center" width="50%">
+        <img src="https://via.placeholder.com/400x250/F3BA2F/FFFFFF?text=🔒+LP+LOCKER" alt="LP Locker" style="border-radius: 15px;" />
         <h3>🔒 LP Locker Contract</h3>
         <p><strong>Core Locking Mechanism</strong></p>
         <p>Advanced LP token locking with MEV protection and reward distribution</p>
         <br>
         <code>0x9269baba99cE0388Daf814E351b4d556fA728D32</code>
         <br><br>
-        <a href="https://testnet.bscscan.com/address/0x9269baba99cE0388Daf814E351b4d556fA728D32"><img src="https://img.shields.io/badge/🔍%20VERIFY-BSCScan-7ED321?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
+        <a href="https://testnet.bscscan.com/address/0x9269baba99cE0388Daf814E351b4d556fA728D32"><img src="https://img.shields.io/badge/🔍%20VERIFY-BSCScan-success?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
         <br><br>
         <img src="https://img.shields.io/badge/Solidity-0.8.22-363636?style=flat-square&logo=solidity" />
         <img src="https://img.shields.io/badge/UUPS-Upgradeable-blue?style=flat-square" />
         <img src="https://img.shields.io/badge/OpenZeppelin-Audited-green?style=flat-square" />
       </td>
       <td align="center" width="50%">
+        <img src="https://via.placeholder.com/400x250/4ECDC4/FFFFFF?text=💎+VG+TOKEN" alt="VG Token" style="border-radius: 15px;" />
         <h3>💎 VG Token Contract</h3>
         <p><strong>Governance & Rewards Token</strong></p>
         <p>ERC20 token with voting capabilities and reward distribution mechanisms</p>
         <br>
         <code>0xe87c0Ff36084033FfB56aCf68F2dD5857C65342d</code>
         <br><br>
-        <a href="https://testnet.bscscan.com/address/0xe87c0Ff36084033FfB56aCf68F2dD5857C65342d"><img src="https://img.shields.io/badge/🔍%20VERIFY-BSCScan-4A90E2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
+        <a href="https://testnet.bscscan.com/address/0xe87c0Ff36084033FfB56aCf68F2dD5857C65342d"><img src="https://img.shields.io/badge/🔍%20VERIFY-BSCScan-purple?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
         <br><br>
         <img src="https://img.shields.io/badge/Max%20Supply-100M-purple?style=flat-square" />
         <img src="https://img.shields.io/badge/Vault%20Balance-80M-orange?style=flat-square" />
@@ -255,72 +234,46 @@
 
 ---
 
+
+
+---
+
 ## 🚀 Quick Start
 
 <div align="center">
+  
+  
 
+  
   <br>
-
   
   <table>
     <tr>
-      <td align="center" width="33%">
-        <img src="https://skillicons.dev/icons?i=git" width="80" height="80" />
-        <h4>1️⃣ Clone & Install</h4>
-        <p><code>git clone https://github.com/GyberExperiment/tech-hy-ecosystem</code></p>
-        <p><code>npm install</code></p>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://skillicons.dev/icons?i=nodejs" width="80" height="80" />
-        <h4>2️⃣ Configure & Build</h4>
-        <p><code>cp .env.example .env</code></p>
-        <p><code>npm run build</code></p>
-      </td>
-      <td align="center" width="33%">
-        <img src="https://skillicons.dev/icons?i=react" width="80" height="80" />
-        <h4>3️⃣ Launch Platform</h4>
-        <p><code>npm run dev</code></p>
-        <p>Visit <code>localhost:3000</code></p>
-      </td>
-    </tr>
-  </table>
-  
-  <br>
-
-  ---
-
-  <br>
-
-  <table>
-    <tr>
       <td align="center">
-        <a href="#"><img src="https://img.shields.io/badge/🌐%20LIVE%20DEMO-Visit%20Platform-7ED321?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
+        <a href="#"><img src="https://img.shields.io/badge/🌐%20LIVE%20DEMO-Visit%20Platform-success?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
       </td>
       <td align="center">
-        <a href="#"><img src="https://img.shields.io/badge/📖%20DOCUMENTATION-Read%20Docs-4A90E2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
+        <a href="#"><img src="https://img.shields.io/badge/📖%20DOCUMENTATION-Read%20Docs-blue?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
       </td>
       <td align="center">
-        <a href="#"><img src="https://img.shields.io/badge/💬%20COMMUNITY-Join%20Discord-50E3C2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
+        <a href="#"><img src="https://img.shields.io/badge/💬%20COMMUNITY-Join%20Discord-purple?style=for-the-badge&logoColor=white&labelColor=1a1a1a" /></a>
       </td>
     </tr>
   </table>
   
 </div>
 
+---
 
 
 
-
-
-
-
-
+---
 
 <!-- Animated Footer -->
 <div align="center">
   
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=24,30,30,35,40&height=150&section=footer&text=Securing%20DeFi%20Liquidity&fontSize=24&fontColor=fff&animation=twinkling&fontAlignY=65" />
   
-  <sub><b>🔥 TECH HY Ecosystem © 2024 | Licensed under AGPL | Built with ❤️ by Gybernaty Team</b></sub>
+  <sub><b>🔥 TECH HY Ecosystem © 2024 | Licensed under MIT | Built with ❤️ by Gybernaty Team</b></sub>
   
 </div>
