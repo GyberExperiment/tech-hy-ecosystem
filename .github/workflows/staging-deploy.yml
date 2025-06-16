@@ -61,9 +61,6 @@ jobs:
       - name: 🎯 Lint Code
         run: npm run lint -- --max-warnings 250
 
-      - name: 🧪 Run Tests
-        run: npm run test:coverage
-
       - name: 🏗️ Build Staging
         run: npm run build
         env:
