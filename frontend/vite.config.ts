@@ -39,6 +39,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts']
   },
   define: {
-    global: 'globalThis'
+    global: 'globalThis',
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
   }
 })

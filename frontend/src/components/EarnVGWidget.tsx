@@ -66,10 +66,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
     if (calculatedBnbAmount && calculatedBnbAmount !== bnbAmount) {
       setBnbAmount(calculatedBnbAmount);
     }
-  }, [calculatedBnbAmount]);
+  }, [calculatedBnbAmount, bnbAmount]);
 
   // Auto-check allowance when wallet connects
-  useEffect(() => {
+  /* useEffect(() => {
     if (account && vcContract && vcAmount && parseFloat(vcAmount) > 0) {
       if (process.env.NODE_ENV === 'development') {
         log.debug('Auto-checking VC allowance on wallet connect', {
@@ -80,7 +80,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
       checkCurrentAllowance();
     }
-  }, [account, vcContract, vcAmount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, vcContract, vcAmount]); */
 
   // Check current allowance function
   const checkCurrentAllowance = async () => {

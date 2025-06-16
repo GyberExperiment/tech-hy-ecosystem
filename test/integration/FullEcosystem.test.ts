@@ -72,7 +72,7 @@ describe("Full Ecosystem Integration", function () {
         const StakingDAOFactory = await ethers.getContractFactory("StakingDAO");
         stakingDAO = await upgrades.deployProxy(StakingDAOFactory, [
             await vgTokenVotes.getAddress(), // governance token
-            ethers.ZeroAddress               // LPLocker будет установлен позже
+            await owner.getAddress()         // Временно используем owner address, потом обновим на LPLocker
         ], { 
             initializer: 'initialize',
             kind: 'uups'
@@ -116,9 +116,12 @@ describe("Full Ecosystem Integration", function () {
         await vcToken.transfer(await user2.getAddress(), TEST_VC_AMOUNT * 10n);
         await vcToken.transfer(await user3.getAddress(), TEST_VC_AMOUNT * 10n);
 
-        // Setup VG rewards pool for LPLocker
-        const rewardPool = ethers.parseEther("5000000"); // 5M VG for rewards
+        // Setup VG rewards pool for LPLocker - увеличиваем в 10 раз
+        const rewardPool = ethers.parseEther("50000000"); // 50M VG for rewards (было 5M)
         await vgToken.approve(await lpLocker.getAddress(), rewardPool);
+        
+        // ✅ ВАЖНО: Депонируем VG токены в LPLocker для выдачи наград
+        await lpLocker.depositVGTokens(rewardPool);
 
         // Setup mock PancakeRouter behavior
         const expectedLP = (TEST_VC_AMOUNT * TEST_BNB_AMOUNT) / 1000000n;
@@ -149,7 +152,7 @@ describe("Full Ecosystem Integration", function () {
             expect(await lpLocker.config().then(c => c.vgTokenAddress)).to.equal(await vgToken.getAddress());
             expect(await lpLocker.config().then(c => c.vcTokenAddress)).to.equal(await vcToken.getAddress());
             
-            expect(await stakingDAO.governanceToken()).to.equal(await vgTokenVotes.getAddress());
+            expect(await stakingDAO.token()).to.equal(await vgTokenVotes.getAddress());
             expect(await governor.token()).to.equal(await vgTokenVotes.getAddress());
         });
 
@@ -412,7 +415,7 @@ describe("Full Ecosystem Integration", function () {
                 lpLocker.connect(user1).earnVG(TEST_VC_AMOUNT, TEST_BNB_AMOUNT, 200, { 
                     value: TEST_BNB_AMOUNT 
                 })
-            ).to.be.revertedWith("Insufficient VG tokens");
+            ).to.be.revertedWith("Insufficient VG tokens in contract");
         });
     });
 

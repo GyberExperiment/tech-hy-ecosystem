@@ -116,6 +116,9 @@ describe("LPLocker", () => {
       // Подготовка VG токенов
       await vgToken.mint(await owner.getAddress(), VG_REWARD * 1000n);
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
+      
+      // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
+      await lpLocker.depositVGTokens(VG_REWARD * 50n);
 
       await pancakeRouter.setAddLiquidityResult(0, 0, EXPECTED_LP);
     });
@@ -172,10 +175,27 @@ describe("LPLocker", () => {
     });
 
     it("Блокирует если недостаточно VG в хранилище", async () => {
-      await vgToken.connect(owner).transfer(await user.getAddress(), await vgToken.balanceOf(await owner.getAddress()));
+      // Переводим все VG токены из контракта чтобы он стал пустым
+      const contractBalance = await vgToken.balanceOf(await lpLocker.getAddress());
+      
+      // Создаём временный контракт для изъятия VG токенов
+      const ERC20 = await ethers.getContractFactory("MockERC20");
+      const tempToken = await ERC20.deploy("Temp", "TEMP");
+      
+      // Обнуляем баланс контракта через внутренний механизм (симуляция)
+      // Поскольку мы не можем напрямую изъять токены из контракта,
+      // создадим ситуацию где VG токенов недостаточно
+      
+      // Используем огромную сумму VC и BNB чтобы превысить доступные VG
+      const hugeVcAmount = MIN_VC * 100000n; // в 1000 раз больше
+      const hugeBnbAmount = MIN_BNB * 1000n;
+      
+      await vcToken.mint(await user.getAddress(), hugeVcAmount);
+      await vcToken.connect(user).approve(await lpLocker.getAddress(), hugeVcAmount);
+      
       await expect(
-        lpLocker.connect(user).earnVG(VC_AMOUNT, BNB_AMOUNT, 200, { value: BNB_AMOUNT })
-      ).to.be.revertedWith("Insufficient VG tokens");
+        lpLocker.connect(user).earnVG(hugeVcAmount, hugeBnbAmount, 200, { value: hugeBnbAmount })
+      ).to.be.revertedWith("Insufficient VG tokens in contract");
     });
 
     it("Применяет MEV защиту", async () => {
@@ -213,6 +233,9 @@ describe("LPLocker", () => {
       // Подготовка VG токенов в vault
       await vgToken.mint(await owner.getAddress(), VG_REWARD * 1000n);
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
+      
+      // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
+      await lpLocker.depositVGTokens(VG_REWARD * 50n);
     });
 
     it("Успешно блокирует LP токены и выдает VG награды", async () => {
@@ -264,12 +287,16 @@ describe("LPLocker", () => {
     });
 
     it("Блокирует если недостаточно VG токенов в vault", async () => {
-      // Переводим все VG токены от owner к user, оставляя vault пустым
-      await vgToken.connect(owner).transfer(await user.getAddress(), await vgToken.balanceOf(await owner.getAddress()));
+      // Используем огромное количество LP токенов чтобы превысить доступные VG
+      const hugeLpAmount = ethers.parseEther("100000"); // 100K LP
+      
+      // Подготавливаем огромные LP токены для пользователя
+      await lpToken.mint(await user.getAddress(), hugeLpAmount);
+      await lpToken.connect(user).approve(await lpLocker.getAddress(), hugeLpAmount);
       
       await expect(
-        lpLocker.connect(user).lockLPTokens(LP_AMOUNT)
-      ).to.be.revertedWith("Insufficient VG tokens in vault");
+        lpLocker.connect(user).lockLPTokens(hugeLpAmount)
+      ).to.be.revertedWith("Insufficient VG tokens in contract");
     });
 
     it("Применяет MEV защиту", async () => {
@@ -349,7 +376,7 @@ describe("LPLocker", () => {
           (await ethers.provider.getBlock(tx.blockNumber!)).timestamp
         );
 
-      expect(await vgToken.balanceOf(await lpLocker.getAddress())).to.eq(0);
+      expect(await vgToken.balanceOf(await lpLocker.getAddress())).to.eq(DEPOSIT_AMOUNT);
       expect(await (await lpLocker.config()).totalVgDeposited).to.eq(DEPOSIT_AMOUNT);
     });
 

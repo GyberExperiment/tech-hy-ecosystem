@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
-import { ethers } from 'ethers';
 
 interface ContractInfo {
   address: string;
@@ -25,7 +24,7 @@ export const ContractStatus: React.FC = () => {
     { address: CONTRACTS.LP_LOCKER, name: 'LP Locker' },
   ];
 
-  const checkContracts = async () => {
+  const checkContracts = useCallback(async () => {
     if (!provider || !isConnected || !isCorrectNetwork) return;
 
     setChecking(true);
@@ -40,26 +39,26 @@ export const ContractStatus: React.FC = () => {
           exists: code !== '0x',
           loading: false,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         results.push({
           address: contract.address,
           name: contract.name,
           exists: false,
           loading: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
 
     setContracts(results);
     setChecking(false);
-  };
+  }, [provider, isConnected, isCorrectNetwork]);
 
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {
       checkContracts();
     }
-  }, [isConnected, isCorrectNetwork, provider]);
+  }, [isConnected, isCorrectNetwork, checkContracts]);
 
   if (!isConnected || !isCorrectNetwork) {
     return null;
