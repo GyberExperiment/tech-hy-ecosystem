@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: techhy-ecosystem-prod-virtualservice
+  namespace: default
+  labels:
+    app: techhy-ecosystem-prod
+    environment: production
+spec:
+  hosts:
+  - ecosystem.techhy.me
+  - www.ecosystem.techhy.me
+  gateways:
+  - techhy-ecosystem-prod-gateway
+  http:
+  - route:
+    - destination:
+        host: techhy-ecosystem-prod-service
+        port:
+          number: 80 

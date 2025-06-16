@@ -125,11 +125,51 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # 🔍 Verify Image Tag in GHCR (Fail-Fast)
+  verify-image-tag:
+    name: 🔍 Verify Image Tag
+    runs-on: ubuntu-latest
+    needs: [staging-docker-build]
+    if: github.ref == 'refs/heads/stage-debugging'
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: ✅ Verify staging tag exists in GHCR
+        run: |
+          IMAGE_TAG="staging-latest"
+          IMAGE_FULL="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
+          
+          echo "🔍 Checking if image tag exists: ${IMAGE_FULL}"
+          
+          # Try to pull manifest (read-only check)
+          if docker manifest inspect "${IMAGE_FULL}" > /dev/null 2>&1; then
+            echo "✅ Image tag ${IMAGE_TAG} successfully found in GHCR!"
+            echo "🚀 Ready for deployment"
+          else
+            echo "❌ FAIL-FAST: Image tag ${IMAGE_TAG} not found in GHCR!"
+            echo "📦 Available tags for debugging:"
+            # List recent tags (requires GitHub CLI or API call)
+            curl -s \
+              -H "Authorization: Bearer ${{ secrets.GHCR_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions" \
+              | jq -r '.[0:5].[].metadata.container.tags[]?' || echo "Could not fetch tags"
+            exit 1
+          fi
+
   # 🚀 Deploy to Staging K3S
   deploy-staging-k3s:
     name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [staging-docker-build]
+    needs: [verify-image-tag]
     if: github.ref == 'refs/heads/stage-debugging'
     steps:
       - name: 📥 Checkout Code
@@ -163,7 +203,7 @@ jobs:
       - name: 🎯 Deploy to Staging K3S
         run: |
           # Set staging environment variables
-          export IMAGE_TAG="staging-${{ github.sha }}"
+          export IMAGE_TAG="staging-latest"
           export NAMESPACE="techhy-ecosystem-staging"
           
           # Create staging namespace
@@ -205,4 +245,4 @@ jobs:
           echo "🌐 Staging URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debugging"
           echo "📊 Namespace: techhy-ecosystem-staging"
-          echo "🏷️ Image Tag: staging-${{ github.sha }}" 
+          echo "🏷️ Image Tag: staging-latest" 

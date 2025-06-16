@@ -24,10 +24,12 @@ COPY frontend/ .
 RUN npm run build
 
 # Stage 2: Production runtime
-FROM nginx:alpine AS production
+FROM nginxinc/nginx-unprivileged:alpine AS production
 
 # Install envsubst for runtime environment substitution
+USER root
 RUN apk add --no-cache gettext
+USER 101
 
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
@@ -43,8 +45,11 @@ COPY docker/default.conf /etc/nginx/conf.d/default.conf
 COPY docker/env.template.js /usr/share/nginx/html/env.template.js
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 
-# Make script executable
-RUN chmod +x /docker-entrypoint.sh
+# Make script executable and give nginx user ownership
+USER root
+RUN chmod +x /docker-entrypoint.sh && \
+    chown -R 101:101 /usr/share/nginx/html /docker-entrypoint.sh
+USER 101
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
