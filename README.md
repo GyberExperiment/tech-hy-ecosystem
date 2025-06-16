@@ -1,10 +1,7 @@
 
-<div align="center">
   
   <!-- Hero Banner -->
- <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=24,30,30,35,40&height=300&section=header&text=TECH HY Ecosystem: &fontSize=50&&fontAlignY=35&desc=DeFi Venture Governance Platform&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
-  
-  <br>
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:00F7FF,50:FF6B6B,100:4ECDC4&height=300&section=header&text=TECH%20HY&fontSize=90&fontAlignY=35&desc=Venture%20Governance%20Defi%20Ecosystem&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
   
   <!-- Animated Typing Text -->
   [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=2000&pause=1000&color=7ED321&center=true&vCenter=true&multiline=true&width=900&height=220&lines=🔒+Permanent+LP+Locking;💎+Enterprise+DeFi+Platform;⚡+BSC+Smart+Contracts;🚀+DAO+Governance+System;💰+MEV+Protection+Built-in)](https://git.io/typing-svg)
@@ -13,6 +10,8 @@
 
 <!-- Advanced Badges Section -->
 <div align="center">
+
+  
   
   <h2>🏆 Platform Stats</h2>
   
