@@ -8,7 +8,6 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
-import type { LPLocker } from '../typechain-types/contracts/LPLocker';
 import { LPLocker__factory } from '../typechain-types/factories/contracts/LPLocker__factory';
 
 interface EarnVGWidgetProps {
@@ -144,7 +143,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   // Получаем строго типизированный контракт LPLocker
   const lpLockerTyped = useMemo(() => {
     if (!lpLockerContract) return null;
-    return LPLocker__factory.connect(lpLockerContract.address, signer ?? undefined);
+    let address: string | undefined;
+    if (typeof lpLockerContract === 'string') {
+      address = lpLockerContract;
+    } else if ('address' in lpLockerContract && typeof lpLockerContract.address === 'string') {
+      address = lpLockerContract.address;
+    }
+    if (!address) return null;
+    return LPLocker__factory.connect(address, signer ?? undefined);
   }, [lpLockerContract, signer]);
 
   // Transaction handlers
@@ -506,14 +512,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           if (typeof gasFn === 'function') {
-            if (process.env.NODE_ENV === 'development') {
-              log.info('Calling estimateGas.approve', {
-                component: 'EarnVGWidget',
-                function: 'handleEarnVG'
-              });
-            }
             const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
-            gasLimitOverride = (est * 120n) / 100n; // +20 %
+            gasLimitOverride = (est * 120n) / 100n;
             if (process.env.NODE_ENV === 'development') {
               log.info('Gas estimated', {
                 component: 'EarnVGWidget',
@@ -636,8 +636,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         }
         return;
       }
-
-      const lpLockerWithSigner = lpLockerContract.connect(signer);
 
       toast.loading('Создание LP позиции и получение VG токенов...');
       
