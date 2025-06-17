@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import type { ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { toast } from 'react-hot-toast';
-import { CONTRACTS, BSC_TESTNET } from '../constants/contracts';
+import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints, getCurrentNetworkConfig, RpcHealthMonitor } from '../constants/rpcEndpoints';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 // EIP-6963 imports
 import { usePreferredProvider } from '../hooks/useWalletProviders';
@@ -229,6 +230,17 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         return;
       }
 
+      // ✅ Улучшенная проверка ethereum объекта перед созданием BrowserProvider
+      if (!ethereum || typeof ethereum !== 'object') {
+        throw new Error('Invalid ethereum provider object');
+      }
+
+      // Проверяем наличие необходимых методов
+      if (typeof ethereum.request !== 'function') {
+        throw new Error('Ethereum provider missing request method');
+      }
+
+      // Получаем аккаунты
       let accounts = await ethereum.request({ method: 'eth_accounts' }) as string[];
       
       if (!accounts || accounts.length === 0) {
@@ -239,7 +251,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         }
       }
 
-      const ethProvider = new ethers.BrowserProvider(ethereum);
+      let ethProvider: ethers.BrowserProvider;
+      try {
+        ethProvider = new ethers.BrowserProvider(ethereum);
+      } catch (providerError: any) {
+        log.error('Failed to create BrowserProvider', {
+          component: 'Web3Context',
+          function: 'connectWallet',
+          ethereumType: typeof ethereum,
+          hasRequest: typeof ethereum.request === 'function'
+        }, providerError);
+        throw new Error(`MetaMask provider initialization failed: ${providerError.message}`);
+      }
+
       const ethSigner = await ethProvider.getSigner();
       const network = await ethProvider.getNetwork();
       
@@ -249,6 +273,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setIsConnected(true);
       setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
       setLockedProvider(ethereum); // 🔒 фиксируем провайдер
+      
+      // ✅ Синхронизируем с RPC сервисом
+      rpcService.setWeb3Provider(ethProvider);
       
       log.info('Wallet connected successfully', {
         component: 'Web3Context',
@@ -308,6 +335,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     setAccount(null);
     setIsConnected(false);
     setIsCorrectNetwork(false);
+    setLockedProvider(null);
+    
+    // ✅ Синхронизируем с RPC сервисом
+    rpcService.setWeb3Provider(null);
+    
     toast.success('Кошелёк отключён');
   };
 
@@ -420,7 +452,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
       });
-      toast.success('RPC endpoints обновлены! Теперь используется publicnode.com');
+      toast.success('RPC endpoints обновлены! Теперь используется bnbchain.org');
       return true;
     } catch (error: any) {
       log.error('Failed to update BSC Testnet RPC endpoints', {

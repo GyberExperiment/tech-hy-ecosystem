@@ -13,9 +13,10 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 ];
 
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  'https://bsc-testnet-rpc.publicnode.com',   // ✅ publicnode.com - most reliable
-  'https://data-seed-prebsc-1-s1.binance.org:8545', // ✅ Binance testnet - backup
-  'https://bsc-testnet.public.blastapi.io',   // ⚠️ blastapi.io - last resort (rate limited)
+  'https://bsc-testnet-dataseed.bnbchain.org',     // ✅ Официальный Binance endpoint (primary)
+  'https://bsc-testnet.bnbchain.org',              // ✅ Официальный Binance endpoint (backup)
+  'https://bsc-prebsc-dataseed.bnbchain.org',      // ✅ Официальный Binance endpoint (backup)
+  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - надёжный backup
 ];
 
 // 🎯 Current network configuration
@@ -23,9 +24,15 @@ export const CURRENT_NETWORK = process.env.NODE_ENV === 'production' ? 'mainnet'
 
 // 🔗 Get primary RPC endpoint for current network
 export const getPrimaryRpcEndpoint = (): string => {
-  return CURRENT_NETWORK === 'mainnet' 
-    ? BSC_MAINNET_RPC_ENDPOINTS[0]
-    : BSC_TESTNET_RPC_ENDPOINTS[0];
+  const endpoints = CURRENT_NETWORK === 'mainnet' 
+    ? BSC_MAINNET_RPC_ENDPOINTS
+    : BSC_TESTNET_RPC_ENDPOINTS;
+  
+  if (endpoints.length === 0) {
+    throw new Error(`No RPC endpoints configured for ${CURRENT_NETWORK}`);
+  }
+  
+  return endpoints[0]!; // Non-null assertion since we checked length above
 };
 
 // 🔄 Get all RPC endpoints for current network (with fallbacks)
@@ -97,6 +104,6 @@ export class RpcHealthMonitor {
       console.warn('⚠️ All RPC endpoints unhealthy, using primary');
       return getPrimaryRpcEndpoint();
     }
-    return healthyEndpoints[0];
+    return healthyEndpoints[0]!; // Non-null assertion since we checked length above
   }
 } 

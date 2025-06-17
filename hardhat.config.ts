@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
       accounts: normalizePrivateKey(process.env.PRIVATE_KEY) ? [normalizePrivateKey(process.env.PRIVATE_KEY)!] : [],
     },
     bscTestnet: {
-      url: "https://bsc-testnet-rpc.publicnode.com",
+      url: "https://bsc-testnet-dataseed.bnbchain.org",
       chainId: 97,
       gasPrice: 20000000000,
       accounts: normalizePrivateKey(process.env.PRIVATE_KEY) ? [normalizePrivateKey(process.env.PRIVATE_KEY)!] : [],
