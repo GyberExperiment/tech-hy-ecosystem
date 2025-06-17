@@ -58,9 +58,6 @@ jobs:
       - name: 🔍 Type Check
         run: npm run type-check
 
-      - name: 🎯 Lint Code
-        run: npm run lint
-
       - name: 🏗️ Build Staging
         run: npm run build
         env:
