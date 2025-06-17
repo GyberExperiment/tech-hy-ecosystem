@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface EarnVGWidgetProps {
   className?: string;
@@ -100,7 +101,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
       }
       
-      const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+      const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
       const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
         "function allowance(address owner, address spender) view returns (uint256)"
       ], readOnlyProvider);
@@ -274,7 +275,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       let vaultVGBalance: bigint;
       try {
         // Создаем read-only VG контракт для проверки баланса
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
           "function balanceOf(address) view returns (uint256)"
         ], readOnlyProvider);
@@ -358,7 +359,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       // Check allowance with read-only contract
       let allowance: bigint;
       try {
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)",
           "function approve(address spender, uint256 amount) returns (bool)"

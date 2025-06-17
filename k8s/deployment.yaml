@@ -49,7 +49,7 @@ spec:
         env:
         # Network Configuration
         - name: REACT_APP_BSC_RPC_URL
-          value: "https://bsc-dataseed.binance.org/"
+          value: "https://bsc-rpc.publicnode.com"
         - name: REACT_APP_BSC_CHAIN_ID
           value: "56"
         - name: REACT_APP_ENVIRONMENT

@@ -1,15 +1,12 @@
-// BSC Testnet Configuration
+import { getAllRpcEndpoints, getCurrentNetworkConfig } from './rpcEndpoints';
+
+// BSC Testnet Configuration - Updated to use centralized RPC config
 export const BSC_TESTNET = {
   chainId: 97,
   name: 'BSC Testnet',
   currency: 'tBNB',
-  rpcUrl: 'https://bsc-testnet-rpc.publicnode.com',
-  fallbackRpcUrls: [
-    'https://bsc-testnet-rpc.publicnode.com',
-    'https://bsc-testnet.public.blastapi.io',
-    'https://endpoints.omniatech.io/v1/bsc/testnet/public',
-    'https://bsc-testnet.blockpi.network/v1/rpc/public',
-  ],
+  rpcUrl: getAllRpcEndpoints()[0], // ✅ publicnode.com primary
+  fallbackRpcUrls: getAllRpcEndpoints(), // ✅ All centralized endpoints
   blockExplorer: 'https://testnet.bscscan.com',
 };
 

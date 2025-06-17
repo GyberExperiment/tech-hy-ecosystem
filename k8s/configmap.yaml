@@ -11,8 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: github-actions
     environment: production
 data:
-  # Network Configuration
-  bsc.rpc.url: "https://bsc-dataseed.binance.org/"
+  # Network Configuration - Updated to use publicnode.com
+  bsc.rpc.url: "https://bsc-rpc.publicnode.com"
   bsc.chain.id: "56"
   
   # Smart Contract Addresses
@@ -58,13 +58,8 @@ metadata:
     app.kubernetes.io/managed-by: github-actions
     environment: production
 type: Opaque
-data:
-  # Analytics keys (base64 encoded)
-  analytics.id: ""  # Add your analytics ID here (base64 encoded)
-  sentry.dsn: ""    # Add your Sentry DSN here (base64 encoded)
-  
-  # API keys for external services
-  bsc.api.key: ""   # BSC API key if needed (base64 encoded)
-  
-  # JWT secret for session management (if backend is added)
-  jwt.secret: ""    # JWT secret (base64 encoded) 
+stringData:
+  # API Keys and sensitive data
+  bsc.api.key: ""
+  sentry.dsn: ""
+  analytics.key: "" 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap, BarChart3 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { CardSkeleton } from './LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface PoolData {
   totalLockedLP: string;
@@ -48,6 +49,9 @@ const StakingStats: React.FC = () => {
       }
     };
   }, []);
+
+  // ✅ Use centralized RPC configuration
+  const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
   const fetchPoolStats = useCallback(async (isRefresh = false) => {
     // Prevent multiple simultaneous requests
@@ -96,14 +100,7 @@ const StakingStats: React.FC = () => {
 
     try {
       // Create fallback provider with multiple RPC endpoints
-      const fallbackRpcUrls = [
-        'https://bsc-testnet.public.blastapi.io',  // ✅ Первый - самый надежный
-        'https://endpoints.omniatech.io/v1/bsc/testnet/public',
-        'https://bsc-testnet-rpc.publicnode.com',  // ✅ Переместили в конец из-за CORS
-        // ❌ УБРАЛИ СЛОМАННЫЕ binance.org endpoints
-        // 'https://data-seed-prebsc-1-s1.binance.org:8545',
-        // 'https://data-seed-prebsc-2-s1.binance.org:8545',
-      ];
+      const fallbackRpcUrls = FALLBACK_RPC_URLS;
       
       const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
       const activeProvider = provider || fallbackProvider;

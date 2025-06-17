@@ -2,8 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import type { ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { toast } from 'react-hot-toast';
-import { CONTRACTS } from '../constants/contracts';
+import { CONTRACTS, BSC_TESTNET } from '../constants/contracts';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints, getCurrentNetworkConfig, RpcHealthMonitor } from '../constants/rpcEndpoints';
 
 // EIP-6963 imports
 import { usePreferredProvider } from '../hooks/useWalletProviders';
@@ -120,7 +121,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       symbol: 'tBNB',
       decimals: 18,
     },
-    rpcUrls: ['https://bsc-testnet-rpc.publicnode.com'],
+    rpcUrls: getAllRpcEndpoints(), // ✅ Use centralized RPC endpoints
     blockExplorerUrls: ['https://testnet.bscscan.com'],
   };
 
