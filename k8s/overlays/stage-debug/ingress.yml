@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: techhy-ecosystem-stage-ingress
-  namespace: techhy-ecosystem-staging
+  name: techhy-ecosystem-stage-debug-ingress
+  namespace: techhy-ecosystem-stage-debug
   labels:
-    app: techhy-ecosystem-stage
-    environment: staging
+    app: techhy-ecosystem-stage-debug
+    environment: stage-debug
     component: frontend
   annotations:
     kubernetes.io/ingress.class: traefik
@@ -17,16 +17,16 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - stage.techhyecosystem.build.infra.gyber.org
-    secretName: techhy-ecosystem-stage-tls
+    - stage-debug.techhyecosystem.build.infra.gyber.org
+    secretName: techhy-ecosystem-stage-debug-tls
   rules:
-  - host: stage.techhyecosystem.build.infra.gyber.org
+  - host: stage-debug.techhyecosystem.build.infra.gyber.org
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: techhy-ecosystem-stage-service
+            name: techhy-ecosystem-stage-debug-service
             port:
               number: 80 

@@ -68,6 +68,10 @@ elif [[ "$ENVIRONMENT" == "staging" ]]; then
     NAMESPACE="techhy-ecosystem-staging"
     IMAGE_TAG="${IMAGE_TAG:-staging-latest}"
     print_info "Deploying to STAGING environment"
+elif [[ "$ENVIRONMENT" == "stage-debug" ]]; then
+    NAMESPACE="techhy-ecosystem-stage-debug"
+    IMAGE_TAG="${IMAGE_TAG:-stage-debug-latest}"
+    print_info "Deploying to STAGE-DEBUG environment"
 else
     NAMESPACE="techhy-ecosystem"
     IMAGE_TAG="${IMAGE_TAG:-latest}"
@@ -155,11 +159,12 @@ if [[ "$DRY_RUN" != "true" ]]; then
     echo -e "${GREEN}🌐 Access URLs:${NC}"
     if [[ "$ENVIRONMENT" == "production" ]]; then
         echo -e "   Production: ${CYAN}https://ecosystem.techhy.me${NC}"
-        echo -e "   Staging: ${CYAN}https://stage.techhyecosystem.build.infra.gyber.org${NC}"
     elif [[ "$ENVIRONMENT" == "development" ]]; then
         echo -e "   Development: ${CYAN}https://dev.stage.techhyecosystem.build.infra.gyber.org${NC}"
-    else
-        echo -e "   Staging: ${CYAN}https://staging.stage.techhyecosystem.build.infra.gyber.org${NC}"
+    elif [[ "$ENVIRONMENT" == "staging" ]]; then
+        echo -e "   Staging: ${CYAN}https://stage.techhyecosystem.build.infra.gyber.org${NC}"
+    elif [[ "$ENVIRONMENT" == "stage-debug" ]]; then
+        echo -e "   Stage Debug: ${CYAN}https://stage-debug.techhyecosystem.build.infra.gyber.org${NC}"
     fi
     
     echo ""

@@ -10,7 +10,7 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "🌍 Environment Variables:"
-	@echo "  ENVIRONMENT  - deployment environment (production|development|staging)"
+	@echo "  ENVIRONMENT  - deployment environment (production|development|staging|stage-debug)"
 	@echo "  NAMESPACE    - kubernetes namespace"
 	@echo "  IMAGE_TAG    - docker image tag"
 
@@ -72,10 +72,10 @@ deploy-prod: ## Deploy to production K3S
 	ENVIRONMENT=production ./scripts/k8s/deploy.sh
 	@echo "✅ Production deployment completed!"
 
-deploy-staging: ## Deploy to staging K3S
-	@echo "🎭 Deploying to staging..."
-	ENVIRONMENT=staging ./scripts/k8s/deploy.sh
-	@echo "✅ Staging deployment completed!"
+deploy-stage-debug: ## Deploy to stage-debug K3S
+	@echo "🎭 Deploying to stage-debug..."
+	ENVIRONMENT=stage-debug ./scripts/k8s/deploy.sh
+	@echo "✅ Stage-debug deployment completed!"
 
 deploy-dev: ## Deploy to development K3S
 	@echo "🧪 Deploying to development..."
@@ -92,9 +92,9 @@ monitor: ## Monitor K3S deployment
 	@echo "📊 Monitoring deployment..."
 	./scripts/k8s/monitor.sh
 
-monitor-staging: ## Monitor staging deployment
-	@echo "📊 Monitoring staging deployment..."
-	NAMESPACE=techhy-ecosystem-staging ./scripts/k8s/monitor.sh
+monitor-stage-debug: ## Monitor stage-debug deployment
+	@echo "📊 Monitoring stage-debug deployment..."
+	NAMESPACE=techhy-ecosystem-stage-debug ./scripts/k8s/monitor.sh
 
 monitor-dev: ## Monitor development deployment
 	@echo "📊 Monitoring development deployment..."
@@ -104,9 +104,9 @@ logs: ## Show application logs
 	@echo "📋 Showing application logs..."
 	kubectl logs -f deployment/techhy-ecosystem-frontend -n techhy-ecosystem
 
-logs-staging: ## Show staging logs
-	@echo "📋 Showing staging logs..."
-	kubectl logs -f deployment/techhy-ecosystem-frontend -n techhy-ecosystem-staging
+logs-stage-debug: ## Show stage-debug logs
+	@echo "📋 Showing stage-debug logs..."
+	kubectl logs -f deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
 
 logs-dev: ## Show development logs
 	@echo "📋 Showing development logs..."
@@ -117,9 +117,9 @@ health: ## Check application health
 	@echo "🔍 Checking health..."
 	curl -f https://ecosystem.techhy.me/health || echo "❌ Health check failed"
 
-health-staging: ## Check staging health
-	@echo "🔍 Checking staging health..."
-	curl -f https://stage.techhyecosystem.build.infra.gyber.org/health || echo "❌ Staging health check failed"
+health-stage-debug: ## Check stage-debug health
+	@echo "🔍 Checking stage-debug health..."
+	curl -f https://stage-debug.techhyecosystem.build.infra.gyber.org/health || echo "❌ Stage-debug health check failed"
 
 health-local: ## Check local health via port-forward
 	@echo "🔍 Checking local health..."
@@ -157,8 +157,8 @@ status: ## Show all deployment status
 	@echo "📊 Production Status:"
 	kubectl get pods,svc,ingress -n techhy-ecosystem || echo "❌ Production not deployed"
 	@echo ""
-	@echo "📊 Staging Status:"
-	kubectl get pods,svc,ingress -n techhy-ecosystem-staging || echo "❌ Staging not deployed"
+	@echo "📊 Stage Debug Status:"
+	kubectl get pods,svc,ingress -n techhy-ecosystem-stage-debug || echo "❌ Stage Debug not deployed"
 	@echo ""
 	@echo "📊 Development Status:"
 	kubectl get pods,svc,ingress -n techhy-ecosystem-dev || echo "❌ Development not deployed"

@@ -1,4 +1,4 @@
-name: 🎭 TECH HY Staging Deploy
+name: 🎭 TECH HY Stage Debug Deploy
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ main-with-advanced-cicd ]
 
-# Prevent concurrent deployments to staging environment
+# Prevent concurrent deployments to stage-debug environment
 concurrency:
-  group: staging-environment-${{ github.repository }}
+  group: stage-debug-environment-${{ github.repository }}
   cancel-in-progress: true
 
 env:
@@ -16,9 +16,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 🧪 Smart Contracts Testing for Staging
-  # staging-contracts-test:
-  #   name: 🔗 Staging Contracts Tests
+  # 🧪 Smart Contracts Testing for Stage Debug
+  # stage-debug-contracts-test:
+  #   name: 🔗 Stage Debug Contracts Tests
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: 📥 Checkout Code
@@ -39,9 +39,9 @@ jobs:
   #     - name: 🧪 Run Tests
   #       run: npm run test
 
-  # 🎨 Frontend Build for Staging
-  staging-frontend-build:
-    name: 🎨 Staging Frontend Build
+  # 🎨 Frontend Build for Stage Debug
+  stage-debug-frontend-build:
+    name: 🎨 Stage Debug Frontend Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -63,24 +63,24 @@ jobs:
       - name: 🔍 Type Check
         run: npm run type-check
 
-      - name: 🏗️ Build Staging
+      - name: 🏗️ Build Stage Debug
         run: npm run build
         env:
           NODE_ENV: production
-          REACT_APP_ENVIRONMENT: staging
+          REACT_APP_ENVIRONMENT: stage-debug
 
-      - name: 📦 Upload Staging Build
+      - name: 📦 Upload Stage Debug Build
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-staging-dist
+          name: frontend-stage-debug-dist
           path: frontend/dist/
           retention-days: 7
 
-  # 🐳 Docker Build & Push for Staging
-  staging-docker-build:
-    name: 🐳 Staging Docker Build
+  # 🐳 Docker Build & Push for Stage Debug
+  stage-debug-docker-build:
+    name: 🐳 Stage Debug Docker Build
     runs-on: ubuntu-latest
-    needs: [staging-frontend-build]
+    needs: [stage-debug-frontend-build]
     if: github.ref == 'refs/heads/main-with-advanced-cicd'
     permissions:
       contents: read
@@ -92,7 +92,7 @@ jobs:
       - name: 📦 Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: frontend-staging-dist
+          name: frontend-stage-debug-dist
           path: frontend/dist/
 
       - name: 🐳 Set up Docker Buildx
@@ -111,9 +111,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-staging
-            type=sha,prefix=staging-
-            type=raw,value=staging-latest
+            type=ref,event=branch,suffix=-stage-debug
+            type=sha,prefix=stage-debug-
+            type=raw,value=stage-debug-latest
 
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v6.9.0
@@ -127,11 +127,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 🚀 Deploy to Staging K3S
-  deploy-staging-k3s:
-    name: 🚀 Deploy to Staging
+  # 🚀 Deploy to Stage Debug K3S
+  deploy-stage-debug-k3s:
+    name: 🚀 Deploy to Stage Debug
     runs-on: ubuntu-latest
-    needs: [staging-docker-build]
+    needs: [stage-debug-docker-build]
     if: github.ref == 'refs/heads/main-with-advanced-cicd'
     steps:
       - name: 📥 Checkout Code
@@ -160,19 +160,19 @@ jobs:
             --docker-username="${{ secrets.GHCR_USERNAME }}" \
             --docker-password="${{ secrets.GHCR_TOKEN }}" \
             --docker-email="dev@techhy.me" \
-            -n techhy-ecosystem-staging --dry-run=client -o yaml | kubectl apply -f -
+            -n techhy-ecosystem-stage-debug --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: 🎯 Deploy to Staging K3S
+      - name: 🎯 Deploy to Stage Debug K3S
         run: |
-          # Set staging environment variables
-          export IMAGE_TAG="staging-latest"
-          export NAMESPACE="techhy-ecosystem-staging"
+          # Set stage-debug environment variables
+          export IMAGE_TAG="stage-debug-latest"
+          export NAMESPACE="techhy-ecosystem-stage-debug"
           
-          # Create staging namespace
+          # Create stage-debug namespace
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
-          # Apply staging configurations using kustomize
-          kubectl apply -k k8s/overlays/stage/
+          # Apply stage-debug configurations using kustomize
+          kubectl apply -k k8s/overlays/stage-debug/
 
       - name: 🔍 Comprehensive Health Check & Rollback Protection
         run: |
@@ -180,7 +180,7 @@ jobs:
           
           # Function to check application health
           check_health() {
-            local url="https://stage.techhyecosystem.build.infra.gyber.org/health"
+            local url="https://stage-debug.techhyecosystem.build.infra.gyber.org/health"
             local max_attempts=10
             local wait_time=30
             
@@ -205,9 +205,9 @@ jobs:
           
           # Wait for pods to be ready
           echo "⏳ Waiting for deployment rollout..."
-          if ! kubectl rollout status deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging --timeout=300s; then
+          if ! kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s; then
             echo "💥 Deployment rollout failed! Initiating rollback..."
-            kubectl rollout undo deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging
+            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
             exit 1
           fi
           
@@ -220,16 +220,16 @@ jobs:
             echo "💥 Health check validation FAILED! Initiating automatic rollback..."
             
             # Get current deployment revision
-            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging --revision=0 | tail -n1 | awk '{print $1}')
+            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --revision=0 | tail -n1 | awk '{print $1}')
             echo "📊 Current revision: $current_revision"
             
             # Rollback to previous version
             echo "🔙 Rolling back to previous working version..."
-            kubectl rollout undo deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging
+            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
             
             # Wait for rollback to complete
             echo "⏳ Waiting for rollback to complete..."
-            kubectl rollout status deployment/techhy-ecosystem-stage-deployment -n techhy-ecosystem-staging --timeout=300s
+            kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s
             
             # Verify rollback health
             echo "🔍 Verifying rollback health..."
@@ -249,12 +249,12 @@ jobs:
       - name: ✅ Final Deployment Validation
         run: |
           echo "📊 Final deployment status validation..."
-          kubectl get pods -n techhy-ecosystem-staging -l app=techhy-ecosystem-stage
-          kubectl get services -n techhy-ecosystem-staging  
-          kubectl get ingress -n techhy-ecosystem-staging
+          kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug
+          kubectl get services -n techhy-ecosystem-stage-debug  
+          kubectl get ingress -n techhy-ecosystem-stage-debug
           
           # Verify all pods are running
-          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-staging -l app=techhy-ecosystem-stage --field-selector=status.phase=Running --no-headers | wc -l)
+          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug --field-selector=status.phase=Running --no-headers | wc -l)
           EXPECTED_PODS=2
           
           if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
@@ -263,11 +263,11 @@ jobs:
             echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
           fi
 
-      - name: 🎉 Staging Deployment Success
+      - name: 🎉 Stage Debug Deployment Success
         if: success()
         run: |
-          echo "🎉 TECH HY Ecosystem successfully deployed to Staging!"
-          echo "🌐 Staging URL: https://stage.techhyecosystem.build.infra.gyber.org"
+          echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
+          echo "🌐 Stage Debug URL: https://stage-debug.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: main-with-advanced-cicd"
-          echo "📊 Namespace: techhy-ecosystem-staging"
-          echo "🏷️ Image Tag: staging-latest" 
+          echo "📊 Namespace: techhy-ecosystem-stage-debug"
+          echo "🏷️ Image Tag: stage-debug-latest" 
