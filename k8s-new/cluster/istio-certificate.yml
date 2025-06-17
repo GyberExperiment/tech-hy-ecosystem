@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: techhy-ecosystem-prod-istio-tls
+  namespace: istio-system
+  labels:
+    app: techhy-ecosystem-prod
+    environment: production
+    component: certificate
+spec:
+  secretName: techhy-ecosystem-prod-istio-tls
+  duration: 2160h  # 90 days
+  renewBefore: 720h  # 30 days
+  dnsNames:
+  - ecosystem.techhy.me
+  - www.ecosystem.techhy.me
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+    group: cert-manager.io
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth 

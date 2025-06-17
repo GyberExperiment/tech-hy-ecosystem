@@ -1,0 +1,6 @@
+resources:
+  - ../../addons
+  - ../../cluster
+  - deployment.yml
+  - service.yml
+  - ingress.yml 

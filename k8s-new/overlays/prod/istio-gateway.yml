@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: techhy-ecosystem-prod-gateway
+  namespace: default
+  labels:
+    app: techhy-ecosystem-prod
+    environment: production
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - ecosystem.techhy.me
+    - www.ecosystem.techhy.me
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: techhy-ecosystem-prod-istio-tls
+    hosts:
+    - ecosystem.techhy.me
+    - www.ecosystem.techhy.me 
