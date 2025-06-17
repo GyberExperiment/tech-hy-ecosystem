@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ main-with-advanced-cicd ]
 
-# Prevent concurrent deployments to staging
+# Prevent concurrent deployments to staging environment
 concurrency:
-  group: staging-deployment
+  group: staging-environment-${{ github.repository }}
   cancel-in-progress: true
 
 env:

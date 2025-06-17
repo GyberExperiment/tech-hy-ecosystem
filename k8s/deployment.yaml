@@ -102,6 +102,11 @@ spec:
             cpu: 100m
             memory: 128Mi
         
+        # Volume mounts for nginx temp files
+        volumeMounts:
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        
         # Security Context
         securityContext:
           allowPrivilegeEscalation: false
@@ -118,6 +123,11 @@ spec:
       # Image pull secrets for GHCR
       imagePullSecrets:
       - name: ghcr-login
+      
+      # Volumes for nginx temp files
+      volumes:
+      - name: nginx-cache
+        emptyDir: {}
       
       # Restart policy
       restartPolicy: Always

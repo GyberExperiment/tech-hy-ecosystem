@@ -3,6 +3,7 @@ name: 🚀 TECH HY Ecosystem CI/CD
 on:
   push:
     branches: [ main, stage-debugging, prod ]
+    branches-ignore: [ main-with-advanced-cicd ]
   pull_request:
     branches: [ main ]
 
