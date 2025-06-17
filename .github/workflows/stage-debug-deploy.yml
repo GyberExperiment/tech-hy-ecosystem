@@ -132,7 +132,7 @@ jobs:
     name: 🚀 Deploy to Stage Debug
     runs-on: ubuntu-latest
     needs: [stage-debug-docker-build]
-    if: github.ref == 'refs/heads/main-with-advanced-cicd'
+    if: github.ref == 'refs/heads/stage-debug'
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -268,6 +268,6 @@ jobs:
         run: |
           echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
           echo "🌐 Stage Debug URL: https://stage-debug.techhyecosystem.build.infra.gyber.org"
-          echo "🔧 Branch: main-with-advanced-cicd"
+          echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
           echo "🏷️ Image Tag: stage-debug-latest" 
