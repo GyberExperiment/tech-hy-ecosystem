@@ -2,7 +2,7 @@ name: 🚀 TECH HY Ecosystem CI/CD
 
 on:
   push:
-    branches: [ main, stage-debugging, prod ]
+    branches: [ main, main-with-advanced-cicd, stage-debugging, prod ]
   pull_request:
     branches: [ main ]
 
@@ -68,8 +68,8 @@ jobs:
   docker-build:
     name: 🐳 Docker Build & Push
     runs-on: ubuntu-latest
-    needs: [ frontend-build]
-    if: github.ref == 'refs/heads/stage-debugging' || github.ref == 'refs/heads/prod'
+    needs: [frontend-build]
+    if: github.ref == 'refs/heads/main-with-advanced-cicd' || github.ref == 'refs/heads/prod'
     permissions:
       contents: read
       packages: write
@@ -103,7 +103,7 @@ jobs:
             type=ref,event=pr
             type=sha,prefix={{branch}}-
             type=raw,value=production-latest,enable=${{ github.ref == 'refs/heads/prod' }}
-            type=raw,value=staging-latest,enable=${{ github.ref == 'refs/heads/stage-debugging' }}
+            type=raw,value=staging-latest,enable=${{ github.ref == 'refs/heads/main-with-advanced-cicd' }}
 
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v6.9.0
@@ -162,7 +162,7 @@ jobs:
     name: 🎯 Deploy to Staging
     runs-on: ubuntu-latest
     needs: [docker-build]
-    if: github.ref == 'refs/heads/stage-debugging'
+    if: github.ref == 'refs/heads/main-with-advanced-cicd'
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
