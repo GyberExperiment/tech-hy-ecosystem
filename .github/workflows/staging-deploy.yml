@@ -178,26 +178,93 @@ jobs:
           envsubst < k8s/service.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | kubectl apply -f -
           envsubst < k8s/ingress.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | kubectl apply -f -
 
-      - name: 🕒 Wait for Staging Deployment
+      - name: 🔍 Comprehensive Health Check & Rollback Protection
         run: |
-          kubectl rollout status deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging --timeout=600s
-
-      - name: ✅ Verify Staging Deployment
-        run: |
-          kubectl get pods -n techhy-ecosystem-staging
-          kubectl get services -n techhy-ecosystem-staging
-          kubectl get ingress -n techhy-ecosystem-staging
-
-      - name: 🔍 Health Check
-        run: |
-          echo "⏳ Waiting for application to be ready..."
-          sleep 30
+          echo "🔍 Starting comprehensive health validation..."
           
-          # Check if the staging URL is accessible
-          if curl -f -s --max-time 10 "https://stage.techhyecosystem.build.infra.gyber.org/health" > /dev/null; then
-            echo "✅ Staging health check passed!"
+          # Function to check application health
+          check_health() {
+            local url="https://stage.techhyecosystem.build.infra.gyber.org/health"
+            local max_attempts=10
+            local wait_time=30
+            
+            for i in $(seq 1 $max_attempts); do
+              echo "📊 Health check attempt $i/$max_attempts..."
+              
+              if curl -f -s --max-time 10 "$url" | grep -q "OK"; then
+                echo "✅ Health check passed on attempt $i"
+                return 0
+              else
+                echo "❌ Health check failed on attempt $i"
+                if [ $i -lt $max_attempts ]; then
+                  echo "⏳ Waiting ${wait_time}s before retry..."
+                  sleep $wait_time
+                fi
+              fi
+            done
+            
+            echo "💥 Health check failed after $max_attempts attempts"
+            return 1
+          }
+          
+          # Wait for pods to be ready
+          echo "⏳ Waiting for deployment rollout..."
+          if ! kubectl rollout status deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging --timeout=300s; then
+            echo "💥 Deployment rollout failed! Initiating rollback..."
+            kubectl rollout undo deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging
+            exit 1
+          fi
+          
+          # Additional wait for service to be fully ready
+          echo "⏳ Waiting for service to be ready..."
+          sleep 60
+          
+          # Perform health checks
+          if ! check_health; then
+            echo "💥 Health check validation FAILED! Initiating automatic rollback..."
+            
+            # Get current deployment revision
+            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging --revision=0 | tail -n1 | awk '{print $1}')
+            echo "📊 Current revision: $current_revision"
+            
+            # Rollback to previous version
+            echo "🔙 Rolling back to previous working version..."
+            kubectl rollout undo deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging
+            
+            # Wait for rollback to complete
+            echo "⏳ Waiting for rollback to complete..."
+            kubectl rollout status deployment/techhy-ecosystem-staging-frontend -n techhy-ecosystem-staging --timeout=300s
+            
+            # Verify rollback health
+            echo "🔍 Verifying rollback health..."
+            sleep 30
+            if check_health; then
+              echo "✅ Rollback successful - application is healthy"
+              echo "💡 Deployment failed but was automatically rolled back to working state"
+              exit 1  # Still fail the pipeline to indicate deployment issue
+            else
+              echo "💥 CRITICAL: Rollback also failed! Manual intervention required!"
+              exit 1
+            fi
+          fi
+          
+          echo "🎉 Health check validation PASSED! Deployment is healthy and ready."
+
+      - name: ✅ Final Deployment Validation
+        run: |
+          echo "📊 Final deployment status validation..."
+          kubectl get pods -n techhy-ecosystem-staging -l app.kubernetes.io/name=techhy-ecosystem-staging
+          kubectl get services -n techhy-ecosystem-staging  
+          kubectl get ingress -n techhy-ecosystem-staging
+          
+          # Verify all pods are running
+          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-staging -l app.kubernetes.io/name=techhy-ecosystem-staging --field-selector=status.phase=Running --no-headers | wc -l)
+          EXPECTED_PODS=2
+          
+          if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
+            echo "✅ All $EXPECTED_PODS pods are running successfully"
           else
-            echo "⚠️ Health check failed, but deployment completed"
+            echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
           fi
 
       - name: 🎉 Staging Deployment Success
