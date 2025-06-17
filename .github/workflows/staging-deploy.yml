@@ -176,7 +176,7 @@ jobs:
           envsubst < k8s/configmap.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | kubectl apply -f -
           envsubst < k8s/deployment.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | sed 's/production/staging/g' | kubectl apply -f -
           envsubst < k8s/service.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | kubectl apply -f -
-          envsubst < k8s/ingress.yaml | sed 's/techhy-ecosystem/techhy-ecosystem-staging/g' | kubectl apply -f -
+          kubectl apply -f k8s/staging-ingress.yaml
 
       - name: 🔍 Comprehensive Health Check & Rollback Protection
         run: |
