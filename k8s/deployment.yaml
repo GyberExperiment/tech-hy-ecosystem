@@ -96,29 +96,31 @@ spec:
         # Resource Management
         resources:
           limits:
-            cpu: 500m
-            memory: 256Mi
-          requests:
-            cpu: 100m
+            cpu: 200m
             memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         
         # Volume mounts for nginx temp files
         volumeMounts:
         - name: nginx-cache
           mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
         
         # Security Context
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: false
-          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 101
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
             - ALL
       
       # Pod Security and Scheduling
-      securityContext:
-        runAsNonRoot: false
+      # (No pod-level securityContext needed)
       
       # Image pull secrets for GHCR
       imagePullSecrets:
@@ -127,6 +129,8 @@ spec:
       # Volumes for nginx temp files
       volumes:
       - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
         emptyDir: {}
       
       # Restart policy
