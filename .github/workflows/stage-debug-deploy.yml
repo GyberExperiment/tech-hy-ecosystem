@@ -153,23 +153,22 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
-      - name: 🗝️ Create GHCR imagePullSecret
-        run: |
-          kubectl create secret docker-registry ghcr-login \
-            --docker-server=ghcr.io \
-            --docker-username="${{ secrets.GHCR_USERNAME }}" \
-            --docker-password="${{ secrets.GHCR_TOKEN }}" \
-            --docker-email="dev@techhy.me" \
-            -n techhy-ecosystem-stage-debug --dry-run=client -o yaml | kubectl apply -f -
-
       - name: 🎯 Deploy to Stage Debug K3S
         run: |
           # Set stage-debug environment variables
           export IMAGE_TAG="stage-debug-latest"
           export NAMESPACE="techhy-ecosystem-stage-debug"
           
-          # Create stage-debug namespace
+          # Create stage-debug namespace first
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create GHCR imagePullSecret after namespace exists
+          kubectl create secret docker-registry ghcr-login \
+            --docker-server=ghcr.io \
+            --docker-username="${{ secrets.GHCR_USERNAME }}" \
+            --docker-password="${{ secrets.GHCR_TOKEN }}" \
+            --docker-email="dev@techhy.me" \
+            -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           # Apply stage-debug configurations using kustomize
           kubectl apply -k k8s/overlays/stage-debug/
