@@ -116,6 +116,10 @@ spec:
       securityContext:
         fsGroup: 101
       
+      # Image pull secrets for GHCR
+      imagePullSecrets:
+      - name: ghcr-login
+      
       # Restart policy
       restartPolicy: Always
       
