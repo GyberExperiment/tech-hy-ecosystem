@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main-with-advanced-cicd ]
 
+# Prevent concurrent deployments to staging
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
