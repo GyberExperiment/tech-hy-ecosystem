@@ -2,9 +2,9 @@ name: 🎭 TECH HY Stage Debug Deploy
 
 on:
   push:
-    branches: [ main-with-advanced-cicd ]
+    branches: [ stage-debug ]
   pull_request:
-    branches: [ main-with-advanced-cicd ]
+    branches: [ stage-debug ]
 
 # Prevent concurrent deployments to stage-debug environment
 concurrency:
@@ -81,7 +81,7 @@ jobs:
     name: 🐳 Stage Debug Docker Build
     runs-on: ubuntu-latest
     needs: [stage-debug-frontend-build]
-    if: github.ref == 'refs/heads/main-with-advanced-cicd'
+    if: github.ref == 'refs/heads/stage-debug'
     permissions:
       contents: read
       packages: write
