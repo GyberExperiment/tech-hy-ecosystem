@@ -372,6 +372,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           return await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
         });
         
+
         if (process.env.NODE_ENV === 'development') {
           log.info('Current VC allowance', {
             component: 'EarnVGWidget',

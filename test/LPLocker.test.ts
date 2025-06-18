@@ -113,15 +113,15 @@ describe("LPLocker", () => {
     const VG_REWARD = EXPECTED_LP * 10n;
 
     beforeEach(async () => {
-      // Настройка VC токенов для пользователя (используем боевой VCToken с преминчеными токенами)
-      await vcToken.transfer(await user.getAddress(), VC_AMOUNT * 10n);
+      // Подготовка VC токенов для пользователя
+      await vcToken.mint(await user.getAddress(), VC_AMOUNT * 10n);
       await vcToken.connect(user).approve(await lpLocker.getAddress(), VC_AMOUNT * 10n);
       
       // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
-      await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
+      await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 1000n);
       
-      // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
-      await lpLocker.depositVGTokens(VG_REWARD * 50n);
+      // ✅ ИСПРАВЛЕНИЕ: Увеличиваем депозит VG токенов чтобы хватало для всех тестов
+      await lpLocker.depositVGTokens(VG_REWARD * 500n);
 
       await pancakeRouter.setAddLiquidityResult(0, 0, EXPECTED_LP);
     });
@@ -219,10 +219,10 @@ describe("LPLocker", () => {
       await lpToken.connect(user).approve(await lpLocker.getAddress(), LP_AMOUNT * 10n);
       
       // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
-      await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 100n);
+      await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 1000n);
       
-      // ✅ ВАЖНО: Депонируем VG токены в контракт для выдачи наград
-      await lpLocker.depositVGTokens(VG_REWARD * 50n);
+      // ✅ ИСПРАВЛЕНИЕ: Увеличиваем депозит VG токенов чтобы хватало для всех тестов
+      await lpLocker.depositVGTokens(VG_REWARD * 500n);
     });
 
     it("Успешно блокирует LP токены и выдает VG награды", async () => {
@@ -438,6 +438,7 @@ describe("LPLocker", () => {
       expect((await lpLocker.config()).authority).to.eq(await user.getAddress());
       
       // Проверяем что новый authority может вызывать функции
+      await vgToken.connect(owner).transfer(await user.getAddress(), MIN_VC);
       await vgToken.connect(user).approve(await lpLocker.getAddress(), MIN_VC);
       await expect(
         lpLocker.connect(user).depositVGTokens(MIN_VC)
