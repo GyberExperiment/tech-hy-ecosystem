@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
-import { CONTRACTS, TOKEN_INFO, BSC_CONFIG } from '../constants/contracts';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
 import { 
   Activity, 
   Coins, 
@@ -221,7 +221,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <a
-                  href={`${BSC_CONFIG.blockExplorer}/token/${token.address}`}
+                  href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -286,7 +286,7 @@ const Dashboard: React.FC = () => {
             <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium text-slate-200">{token.name}</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${token.address}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"

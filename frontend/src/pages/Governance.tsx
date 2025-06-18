@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_CONFIG } from '../constants/contracts';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
 import GovernanceProposals from '../components/GovernanceProposals';
 import TransactionHistory from '../components/TransactionHistory';
 import { 
@@ -700,7 +700,7 @@ const Governance: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium text-slate-200">VG Token</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -712,7 +712,7 @@ const Governance: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium text-slate-200">VG Votes</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -724,7 +724,7 @@ const Governance: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium text-slate-200">Timelock</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/address/${CONTRACTS.TIMELOCK}`}
+                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.TIMELOCK}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -736,7 +736,7 @@ const Governance: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
               <span className="font-medium text-slate-200">Governor</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/address/${CONTRACTS.GOVERNOR}`}
+                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.GOVERNOR}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"

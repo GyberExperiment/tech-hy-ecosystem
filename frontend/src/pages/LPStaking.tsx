@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_CONFIG } from '../constants/contracts';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
 import EarnVGWidget from '../components/EarnVGWidget';
 import VGConverter from '../components/VGConverter';
 import LPPoolManager from '../components/LPPoolManager';
@@ -691,7 +691,7 @@ const LPLocking: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">LP Locker</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
+                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -704,7 +704,7 @@ const LPLocking: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">LP Token (VC/BNB)</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -717,7 +717,7 @@ const LPLocking: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">VG Token</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
@@ -730,7 +730,7 @@ const LPLocking: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">VG Votes</span>
               <a
-                href={`${BSC_CONFIG.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
+                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
