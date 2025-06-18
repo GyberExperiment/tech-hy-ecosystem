@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
@@ -8,7 +8,7 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
-import { LPLocker__factory } from '../typechain-types/factories/contracts/LPLocker__factory';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface EarnVGWidgetProps {
   className?: string;
@@ -101,14 +101,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
       }
       
-      const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+      const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
       const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
         "function allowance(address owner, address spender) view returns (uint256)"
-      ], readOnlyProvider) as ethers.Contract & {
-        allowance(owner: string, spender: string): Promise<bigint>;
-      };
+      ], readOnlyProvider);
       
-      const allowance = await readOnlyVCContract.allowance(account, CONTRACTS.LP_LOCKER);
+      const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
       const allowanceFormatted = ethers.formatEther(allowance);
       
       setCurrentAllowance(allowanceFormatted);
@@ -126,32 +124,19 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       } else {
         toast.success('Approve не выполнен. Allowance: 0 VC');
       }
-    } catch (error) {
+    } catch (error: any) {
       if (process.env.NODE_ENV === 'development') {
         log.error('Failed to check VC allowance', {
           component: 'EarnVGWidget',
           function: 'checkCurrentAllowance',
           address: account
-        }, error as Error);
+        }, error);
       }
       toast.error('Ошибка проверки allowance');
     } finally {
       setCheckingAllowance(false);
     }
   };
-
-  // Получаем строго типизированный контракт LPLocker
-  const lpLockerTyped = useMemo(() => {
-    if (!lpLockerContract) return null;
-    let address: string | undefined;
-    if (typeof lpLockerContract === 'string') {
-      address = lpLockerContract;
-    } else if ('address' in lpLockerContract && typeof lpLockerContract.address === 'string') {
-      address = lpLockerContract.address;
-    }
-    if (!address) return null;
-    return LPLocker__factory.connect(address, signer ?? undefined);
-  }, [lpLockerContract, signer]);
 
   // Transaction handlers
   const handleEarnVG = async () => {
@@ -290,14 +275,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       let vaultVGBalance: bigint;
       try {
         // Создаем read-only VG контракт для проверки баланса
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
           "function balanceOf(address) view returns (uint256)"
-        ], readOnlyProvider) as ethers.Contract & {
-          balanceOf(address: string): Promise<bigint>;
-        };
+        ], readOnlyProvider);
         
-        vaultVGBalance = await readOnlyVGContract.balanceOf(stakingVault);
+        vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
         if (process.env.NODE_ENV === 'development') {
           log.info('VG vault balance retrieved', {
             component: 'EarnVGWidget',
@@ -376,16 +359,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       // Check allowance with read-only contract
       let allowance: bigint;
       try {
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)",
           "function approve(address spender, uint256 amount) returns (bool)"
-        ], readOnlyProvider) as ethers.Contract & {
-          allowance(owner: string, spender: string): Promise<bigint>;
-          approve(spender: string, amount: string | bigint): Promise<any>;
-        };
+        ], readOnlyProvider);
         
-        allowance = await readOnlyVCContract.allowance(account, CONTRACTS.LP_LOCKER);
+        allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
         if (process.env.NODE_ENV === 'development') {
           log.info('Current VC allowance', {
             component: 'EarnVGWidget',
@@ -422,7 +402,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           log.info('Connection confirmed', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            address: `${account.slice(0, 6)}...`
+            address: account.slice(0, 6) + '...'
           });
         }
 
@@ -432,14 +412,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-        const vcContractWithSigner = vcContract.connect(signer) as ethers.Contract & {
-          approve(spender: string, amount: string | bigint, overrides?: any): Promise<any>;
-          estimateGas?: {
-            approve(spender: string, amount: string | bigint): Promise<bigint>;
-          };
-          target?: string;
-          interface?: unknown;
-        };
+        const vcContractWithSigner = vcContract.connect(signer);
         if (process.env.NODE_ENV === 'development') {
           log.info('VC contract with signer created', {
             component: 'EarnVGWidget',
@@ -456,14 +429,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             contractAddress: CONTRACTS.VC_TOKEN,
             signerAddress: await signer.getAddress(),
             signerProvider: !!signer.provider,
-            contractTarget: vcContractWithSigner.target,
-            contractInterface: !!vcContractWithSigner.interface
+            contractTarget: (vcContractWithSigner as any).target,
+            contractInterface: !!(vcContractWithSigner as any).interface
           });
         }
         
         // Проверяем что approve функция существует
         try {
-          const approveFn = vcContractWithSigner.approve;
+          const approveFn = (vcContractWithSigner as any).approve;
           if (process.env.NODE_ENV === 'development') {
             log.info('Approve function exists', {
               component: 'EarnVGWidget',
@@ -503,7 +476,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         }
         let gasLimitOverride: bigint | undefined;
         try {
-          const gasFn = vcContractWithSigner.estimateGas?.approve;
+          const gasFn = (vcContractWithSigner as any).estimateGas?.approve;
           if (process.env.NODE_ENV === 'development') {
             log.info('Gas estimation function exists', {
               component: 'EarnVGWidget',
@@ -511,9 +484,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               exists: !!gasFn
             });
           }
-          if (typeof gasFn === 'function') {
+          if (gasFn) {
+            if (process.env.NODE_ENV === 'development') {
+              log.info('Calling estimateGas.approve', {
+                component: 'EarnVGWidget',
+                function: 'handleEarnVG'
+              });
+            }
             const est: bigint = await gasFn(CONTRACTS.LP_LOCKER, MAX_UINT256);
-            gasLimitOverride = (est * 120n) / 100n;
+            gasLimitOverride = (est * 120n) / 100n; // +20 %
             if (process.env.NODE_ENV === 'development') {
               log.info('Gas estimated', {
                 component: 'EarnVGWidget',
@@ -554,7 +533,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
         
         // Добавляем timeout для approve операции
-        const approvePromise = vcContractWithSigner.approve(
+        const approvePromise = (vcContractWithSigner as any).approve(
           CONTRACTS.LP_LOCKER,
           MAX_UINT256,
           gasLimitOverride ? { gasLimit: gasLimitOverride } : {}
@@ -570,13 +549,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-        const approveTx = await Promise.race([approvePromise, timeoutPromise]) as ethers.ContractTransactionResponse;
+        const approveTx = await Promise.race([approvePromise, timeoutPromise]);
 
         if (process.env.NODE_ENV === 'development') {
           log.info('Approve TX hash', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            hash: approveTx.hash
+            hash: (approveTx as any).hash
           });
           log.info('Waiting for approve transaction confirmation', {
             component: 'EarnVGWidget',
@@ -584,11 +563,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           });
         }
 
-        const receiptPromise = approveTx.wait();
+        const receiptPromise = (approveTx as any).wait();
         const receiptTimeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Approve receipt timeout after 60 seconds')), 60000)
         );
-        const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]) as Awaited<ReturnType<typeof approveTx.wait>>;
+
+        const approveReceipt = await Promise.race([receiptPromise, receiptTimeoutPromise]);
 
         if (process.env.NODE_ENV === 'development') {
           log.info('Approve receipt received', {
@@ -597,7 +577,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             receipt: !!approveReceipt
           });
         }
-        if (!approveReceipt || approveReceipt.status !== 1) throw new Error('Approve transaction failed');
+        if ((approveReceipt as any).status !== 1) throw new Error('Approve transaction failed');
 
         if (process.env.NODE_ENV === 'development') {
           log.info('VC tokens approved', {
@@ -605,37 +585,38 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             function: 'handleEarnVG'
           });
         }
-      } catch (approveError: unknown) {
-        const err = approveError as Error & { message?: string; code?: string; data?: unknown; stack?: string };
+      } catch (approveError: any) {
         if (process.env.NODE_ENV === 'development') {
           log.error('Approve failed', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            error: err
-          }, err);
+            error: approveError
+          }, approveError as Error);
           log.error('Approve error details', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            message: err.message,
-            code: err.code,
-            data: err.data,
-            stack: err.stack
+            message: approveError.message,
+            code: approveError.code,
+            data: approveError.data,
+            stack: approveError.stack
           });
         }
         
-        if (err.message?.includes('user rejected')) {
+        if (approveError.message?.includes('user rejected')) {
           toast.error('Транзакция отклонена пользователем');
-        } else if (err.message?.includes('insufficient funds')) {
+        } else if (approveError.message?.includes('insufficient funds')) {
           toast.error('Недостаточно средств для approve');
-        } else if (err.message?.includes('timeout')) {
+        } else if (approveError.message?.includes('timeout')) {
           toast.error('Approve не подтверждён в течение 60 с - проверьте MetaMask');
-        } else if (err.message?.includes('execution reverted')) {
+        } else if (approveError.message?.includes('execution reverted')) {
           toast.error('Approve отклонён контрактом - проверьте параметры');
         } else {
-          toast.error(`Ошибка approve: ${err.message || 'Неизвестная ошибка'}`);
+          toast.error(`Ошибка approve: ${approveError.message || 'Неизвестная ошибка'}`);
         }
         return;
       }
+
+      const lpLockerWithSigner = lpLockerContract.connect(signer);
 
       toast.loading('Создание LP позиции и получение VG токенов...');
       
@@ -681,7 +662,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       // Separate try-catch for transaction execution
       try {
-        const tx = await lpLockerTyped!.earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
+        const tx = await (lpLockerWithSigner as any).earnVG(vcAmountWei, bnbAmountWei, finalSlippage, {
           value: bnbAmountWei,
           gasLimit: 500000,
         });
@@ -696,7 +677,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         toast.loading('Ожидание подтверждения транзакции...');
         const receipt = await tx.wait();
 
-        if (!receipt) throw new Error('Transaction failed');
         if (receipt.status === 1) {
           if (process.env.NODE_ENV === 'development') {
             log.info('Transaction successful', {
@@ -724,8 +704,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             // Ищем событие VGEarned
             for (const event of events) {
               try {
-                if (!event) continue;
-                const decoded = lpLockerTyped!.interface.parseLog(event);
+                const decoded = lpLockerWithSigner.interface.parseLog(event);
                 if (decoded && decoded.name === 'VGEarned') {
                   if (process.env.NODE_ENV === 'development') {
                     log.info('VG Earned event', {
@@ -762,46 +741,45 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         } else {
           throw new Error('Transaction failed');
         }
-      } catch (txError: unknown) {
-        const err = txError as Error & { message?: string; code?: string; data?: unknown; transaction?: unknown };
+      } catch (txError: any) {
         if (process.env.NODE_ENV === 'development') {
           log.error('Transaction error', {
             component: 'EarnVGWidget',
             function: 'handleEarnVG',
-            error: err
-          }, err);
+            error: txError
+          }, txError as Error);
         }
         
         // Детальное логирование ошибок транзакции
-        if (err.code) {
+        if (txError.code) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Error Code', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              code: err.code
+              code: txError.code
             });
           }
         }
-        if (err.data) {
+        if (txError.data) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Error Data', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              data: err.data
+              data: txError.data
             });
           }
         }
-        if (err.transaction) {
+        if (txError.transaction) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Transaction', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              transaction: err.transaction
+              transaction: txError.transaction
             });
           }
         }
         
-        if (err.message?.includes('Too frequent transactions')) {
+        if (txError.message?.includes('Too frequent transactions')) {
           if (process.env.NODE_ENV === 'development') {
             log.info('MEV Protection active', {
               component: 'EarnVGWidget',
@@ -809,7 +787,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('MEV Protection: Подождите 5 минут между транзакциями');
-        } else if (err.message?.includes('Slippage exceeded')) {
+        } else if (txError.message?.includes('Slippage exceeded')) {
           if (process.env.NODE_ENV === 'development') {
             log.warn('Slippage exceeded', {
               component: 'EarnVGWidget',
@@ -817,7 +795,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Slippage превышен. Попробуйте позже');
-        } else if (err.message?.includes('insufficient funds')) {
+        } else if (txError.message?.includes('insufficient funds')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('Insufficient funds', {
               component: 'EarnVGWidget',
@@ -825,7 +803,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Недостаточно средств');
-        } else if (err.message?.includes('user rejected')) {
+        } else if (txError.message?.includes('user rejected')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('User rejected transaction', {
               component: 'EarnVGWidget',
@@ -833,7 +811,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             });
           }
           toast.error('Транзакция отклонена пользователем');
-        } else if (err.message?.includes('VG vault empty') || err.message?.includes('Insufficient VG')) {
+        } else if (txError.message?.includes('VG vault empty') || txError.message?.includes('Insufficient VG')) {
           if (process.env.NODE_ENV === 'development') {
             log.error('VG vault problem', {
               component: 'EarnVGWidget',
@@ -846,10 +824,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             log.error('Unknown transaction error', {
               component: 'EarnVGWidget',
               function: 'handleEarnVG',
-              error: err.message
+              error: txError.message
             });
           }
-          toast.error(`Ошибка транзакции: ${err.message || 'Неизвестная ошибка'}`);
+          toast.error(`Ошибка транзакции: ${txError.message || 'Неизвестная ошибка'}`);
         }
       }
     } catch (error: any) {
@@ -1067,16 +1045,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={`bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6 shadow-xl ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className={cn("widget-mobile", className)}>
+      <div className="widget-header-mobile">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500/30 to-purple-500/30">
             <Zap className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">⚡ Получить VG токены</h3>
-            <p className="text-gray-300 text-sm">
+            <h3 className="text-responsive-lg font-bold text-white">⚡ Получить VG токены</h3>
+            <p className="text-gray-300 text-responsive-sm">
               {mode === 'create' 
                 ? 'Создайте LP позицию и получите VG (10:1)'
                 : 'Заблокируйте LP токены и получите VG (10:1)'
@@ -1084,11 +1061,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="mobile-stack">
           {/* Fix RPC Button */}
           <button
             onClick={updateBSCTestnetRPC}
-            className="px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+            className="touch-target px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors mobile-full-width"
             title="Исправить RPC endpoints если есть timeout ошибки"
           >
             Fix RPC
@@ -1097,7 +1074,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={refreshAllData}
             disabled={poolLoading}
-            className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="touch-target p-2 text-blue-400 hover:text-blue-300 transition-colors"
           >
             <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
           </button>
@@ -1105,11 +1082,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </div>
 
       {/* Mode Switcher */}
-      <div className="flex rounded-xl bg-black/40 p-1 border border-gray-600/50 mb-6">
+      <div className="flex rounded-xl bg-black/40 p-1 border border-gray-600/50 mb-4 sm:mb-6">
         <button
           onClick={() => setMode('create')}
           className={cn(
-            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-200 touch-target',
             mode === 'create'
               ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
@@ -1120,7 +1097,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         <button
           onClick={() => setMode('lock')}
           className={cn(
-            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-200 touch-target',
             mode === 'lock'
               ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
@@ -1131,12 +1108,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </div>
 
       {/* Balances */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid-responsive-1-2 mb-4 sm:mb-6">
         {mode === 'create' ? (
           <>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">VC Balance</div>
-              <div className="text-xl font-bold text-blue-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">VC Balance</div>
+              <div className="text-responsive-lg font-bold text-blue-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1144,9 +1121,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 )}
               </div>
             </div>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">BNB Balance</div>
-              <div className="text-xl font-bold text-amber-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">BNB Balance</div>
+              <div className="text-responsive-lg font-bold text-amber-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1157,9 +1134,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </>
         ) : (
           <>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">LP Balance</div>
-              <div className="text-xl font-bold text-purple-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">LP Balance</div>
+              <div className="text-responsive-lg font-bold text-purple-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1167,9 +1144,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 )}
               </div>
             </div>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">VG Balance</div>
-              <div className="text-xl font-bold text-green-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">VG Balance</div>
+              <div className="text-responsive-lg font-bold text-green-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1183,9 +1160,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* Pool Information */}
       {mode === 'create' && (
-        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-blue-500/30 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-white flex items-center gap-2">
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-3 sm:p-4 border border-blue-500/30 mb-4 sm:mb-6">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between mb-3">
+            <span className="text-responsive-sm font-medium text-white flex items-center gap-2">
               <Info className="w-4 h-4 text-blue-400" />
               Pool Information
             </span>
@@ -1196,7 +1173,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid-responsive-1-2 text-responsive-sm">
             <div>
               <div className="text-gray-400 mb-1">VC Reserve</div>
               <div className="font-medium text-white">
@@ -1220,7 +1197,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </div>
           <div className="mt-3 pt-3 border-t border-blue-500/30">
             <div className="text-xs text-gray-400">Current Price</div>
-            <div className="text-sm font-medium text-green-400">
+            <div className="text-responsive-sm font-medium text-green-400">
               {poolLoading ? (
                 <div className="animate-pulse bg-gray-600 h-4 w-24 rounded"></div>
               ) : (
@@ -1232,11 +1209,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       )}
 
       {/* Input Fields */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
         {mode === 'create' ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-white mb-2">VC Amount</label>
+              <label className="block text-responsive-sm font-medium text-white mb-2">VC Amount</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <Coins className="h-4 w-4 text-blue-400" />
@@ -1247,13 +1224,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={vcAmount}
                   onChange={(e) => setVcAmount(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+                  className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors touch-manipulation"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
+              <label className="block text-responsive-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <Coins className="h-4 w-4 text-amber-400" />
@@ -1264,14 +1241,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={bnbAmount}
                   onChange={(e) => setBnbAmount(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
+                  className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors touch-manipulation"
                 />
               </div>
             </div>
           </>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-white mb-2">LP Token Amount</label>
+            <label className="block text-responsive-sm font-medium text-white mb-2">LP Token Amount</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <Coins className="h-4 w-4 text-purple-400" />
@@ -1282,7 +1259,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 value={lpAmount}
                 onChange={(e) => setLpAmount(e.target.value)}
                 disabled={loading}
-                className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors"
+                className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors touch-manipulation"
               />
             </div>
           </div>
@@ -1291,13 +1268,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* VG Reward Preview */}
       {((mode === 'create' && vcAmount && bnbAmount) || (mode === 'lock' && lpAmount)) && (
-        <div className="rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white flex items-center gap-2">
+        <div className="rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between">
+            <span className="text-responsive-sm text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-green-400" />
               Expected VG Reward:
             </span>
-            <span className="text-xl font-bold text-green-400">
+            <span className="text-responsive-lg font-bold text-green-400">
               {calculateVGReward()} VG
             </span>
           </div>
@@ -1310,7 +1287,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={checkCurrentAllowance}
             disabled={checkingAllowance}
-            className="w-full h-10 text-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="touch-target w-full h-12 text-responsive-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
           >
             {checkingAllowance ? (
               <>
@@ -1336,7 +1313,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           (mode === 'lock' && !lpAmount)
         }
         className={cn(
-          "w-full h-12 text-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2",
+          "touch-target w-full h-12 sm:h-14 text-responsive-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation",
           "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
         )}
       >
@@ -1354,9 +1331,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </button>
 
       {/* Information */}
-      <div className="mt-6 space-y-2 bg-black/20 rounded-lg p-4 border border-gray-600/30">
-        <div className="font-medium text-white mb-3">Important Information:</div>
-        <div className="text-sm text-gray-300 space-y-1">
+      <div className="mt-4 sm:mt-6 space-y-2 bg-black/20 rounded-lg p-3 sm:p-4 border border-gray-600/30">
+        <div className="font-medium text-white mb-3 text-responsive-sm">Important Information:</div>
+        <div className="text-responsive-xs text-gray-300 space-y-1">
           <div>• LP токены блокируются навсегда (permanent lock)</div>
           <div>• Получаете 10 VG за каждый 1 LP токен (мгновенно)</div>
           <div>• VG токены можно использовать для governance</div>

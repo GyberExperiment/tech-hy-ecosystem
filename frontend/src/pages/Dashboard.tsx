@@ -116,16 +116,16 @@ const Dashboard: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
-        <div className="text-center py-12">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+      <div className="animate-fade-in px-responsive">
+        <div className="text-center py-8 sm:py-12">
+          <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
+          <h2 className="text-responsive-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('dashboard:welcome')}
           </h2>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+          <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto">
             {t('dashboard:subtitle')}
           </p>
-          <div className="text-lg text-gray-300">
+          <div className="text-responsive-base text-gray-300">
             {t('common:messages.connectWallet')}
           </div>
         </div>
@@ -135,13 +135,13 @@ const Dashboard: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
-        <div className="text-center py-12">
-          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-3xl font-bold mb-4 text-red-400">
+      <div className="animate-fade-in px-responsive">
+        <div className="text-center py-8 sm:py-12">
+          <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400" />
+          <h2 className="text-responsive-2xl font-bold mb-4 text-red-400">
             {t('dashboard:errors.wrongNetwork')}
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8">
             {t('common:messages.wrongNetwork')}
           </p>
         </div>
@@ -150,19 +150,19 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+    <div className="animate-fade-in space-y-responsive px-responsive">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+      <div className="text-center space-y-3 sm:space-y-4">
+        <h1 className="text-responsive-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
           {t('dashboard:title')}
         </h1>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <p className="text-responsive-lg text-gray-300 max-w-2xl mx-auto">
           {t('dashboard:subtitle')}
         </p>
         {refreshing && (
           <div className="flex items-center justify-center space-x-2 text-blue-400">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-            <span className="text-sm">{t('common:labels.refreshing')}</span>
+            <span className="text-responsive-sm">{t('common:labels.refreshing')}</span>
           </div>
         )}
       </div>
@@ -179,22 +179,22 @@ const Dashboard: React.FC = () => {
       <TokenStats />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid-responsive-1-2-4">
         {stats.map((stat, index) => (
           <div key={index} className="card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">{stat.title}</p>
+                <p className="text-responsive-xs text-gray-400">{stat.title}</p>
                 <div className="flex items-baseline space-x-2">
-                  <p className="text-2xl font-bold text-slate-100">
+                  <p className="text-responsive-lg font-bold text-slate-100">
                     {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : stat.value}
                   </p>
                   {stat.unit && (
-                    <p className="text-sm text-gray-400">{stat.unit}</p>
+                    <p className="text-responsive-xs text-gray-400">{stat.unit}</p>
                   )}
                 </div>
               </div>
-              <stat.icon className={`w-8 h-8 ${stat.color}`} />
+              <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`} />
             </div>
           </div>
         ))}

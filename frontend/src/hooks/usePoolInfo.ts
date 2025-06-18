@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface PoolInfo {
   vcReserve: string;
@@ -25,14 +26,8 @@ const PAIR_ABI = [
   "function totalSupply() view returns (uint256)"
 ];
 
-// Fallback RPC URLs
-const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://data-seed-prebsc-1-s1.binance.org:8545',
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public'
-];
+// ✅ Use centralized RPC configuration
+const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
 // Global cache for pool info
 const poolInfoCache = new Map<string, { data: PoolInfo; timestamp: number }>();

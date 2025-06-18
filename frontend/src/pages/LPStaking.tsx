@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
@@ -32,13 +32,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
-// Fallback RPC providers для надёжности
-const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet.public.blastapi.io',
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
-  'https://bsc-testnet-rpc.publicnode.com',
-];
+// ✅ Use centralized RPC configuration
+const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",

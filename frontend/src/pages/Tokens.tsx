@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_CONFIG } from '../constants/contracts';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 import { 
   Send, 
   CheckCircle, 
@@ -44,21 +45,17 @@ interface TokenAllowance {
   token: string;
 }
 
-// Fallback RPC providers для надёжности
-const FALLBACK_PROVIDERS = [
-  'https://bsc-testnet-rpc.publicnode.com',
-  'https://bsc-testnet.blockpi.network/v1/rpc/public',
-  'https://bsc-testnet.public.blastapi.io',
-];
+// ✅ Use centralized RPC configuration  
+const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
 const createFallbackProvider = () => {
   try {
-    return new ethers.JsonRpcProvider(FALLBACK_PROVIDERS[0]);
+    return new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[0]);
   } catch (error) {
     log.error('Failed to create fallback provider', {
       component: 'Tokens',
       function: 'createFallbackProvider',
-      provider: FALLBACK_PROVIDERS[0]
+      provider: FALLBACK_RPC_URLS[0]
     }, error as Error);
     return null;
   }
@@ -586,7 +583,7 @@ const Tokens: React.FC = () => {
                             <Copy className="w-3 h-3" />
                           </button>
                           <a
-                            href={`${BSC_CONFIG.blockExplorer}/token/${token.address}`}
+                            href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
@@ -932,7 +929,7 @@ const Tokens: React.FC = () => {
               <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
                 <span className="font-medium text-slate-200">{token.name}</span>
                 <a
-                  href={`${BSC_CONFIG.blockExplorer}/token/${token.address}`}
+                  href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
