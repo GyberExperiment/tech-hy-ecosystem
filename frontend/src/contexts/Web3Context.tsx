@@ -355,6 +355,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         params: [{ chainId: '0x61' }], // BSC Testnet chainId in hex
       });
     } catch (switchError: any) {
+      // ✅ Проверяем код ошибки для правильной обработки
       if (switchError.code === 4902) {
         // Сеть не найдена - добавляем с правильным RPC
         try {
@@ -371,7 +372,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
             ],
           });
           toast.success('BSC Testnet добавлен с обновленными RPC!');
-        } catch (addError) {
+        } catch (addError: any) {
+          // ✅ Обрабатываем ошибку "already pending"
+          if (addError.code === -32002) {
+            toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
+            return;
+          }
           log.error('Failed to add BSC Testnet network', {
             component: 'Web3Context',
             function: 'switchNetwork',
@@ -379,43 +385,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
           }, addError as Error);
           toast.error('Ошибка добавления BSC Testnet');
         }
+      } else if (switchError.code === -32002) {
+        // ✅ Уже есть pending запрос
+        toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
+        return;
       } else {
-        // Возможно старый RPC не работает - пытаемся обновить RPC
-        if (process.env.NODE_ENV === 'development') {
-          log.debug('Switch failed, trying to update RPC URLs', {
-            component: 'Web3Context',
-            function: 'switchNetwork'
-          });
-        }
-        try {
-          // Принудительно обновляем RPC URLs для BSC Testnet
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: '0x61',
-                chainName: BSC_TESTNET_CONFIG.chainName,
-                nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
-                rpcUrls: BSC_TESTNET_CONFIG.rpcUrls, // Обновленные RPC URLs
-                blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
-              },
-            ],
-          });
-          toast.success('RPC endpoints обновлены!');
-          
-          // Теперь пытаемся переключиться снова
-          await ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x61' }],
-          });
-        } catch (updateError) {
-          log.error('Failed to update RPC endpoints', {
-            component: 'Web3Context',
-            function: 'switchNetwork',
-            network: 'BSC_TESTNET'
-          }, updateError as Error);
-          toast.error('Ошибка переключения на BSC Testnet. Проверьте подключение к интернету.');
-        }
+        // ✅ Убираем автоматическое обновление RPC чтобы избежать повторных модалов
+        log.warn('Network switch failed', {
+          component: 'Web3Context',
+          function: 'switchNetwork',
+          errorCode: switchError.code,
+          errorMessage: switchError.message
+        });
+        toast.error('Ошибка переключения сети. Попробуйте вручную в MetaMask.');
       }
     }
   };
@@ -462,10 +444,22 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       // ✅ Убираем toast чтобы не спамить пользователя
       return true;
     } catch (error: any) {
+      // ✅ Специальная обработка для pending запросов
+      if (error.code === -32002) {
+        log.warn('RPC update request already pending', {
+          component: 'Web3Context',
+          function: 'updateBSCTestnetRPC',
+          network: 'BSC_TESTNET'
+        });
+        return false; // Не показываем ошибку пользователю
+      }
+      
       log.error('Failed to update BSC Testnet RPC endpoints', {
         component: 'Web3Context',
         function: 'updateBSCTestnetRPC',
-        network: 'BSC_TESTNET'
+        network: 'BSC_TESTNET',
+        errorCode: error.code,
+        errorMessage: error.message
       }, error);
       // ✅ Тихо игнорируем ошибки обновления RPC
       return false;
