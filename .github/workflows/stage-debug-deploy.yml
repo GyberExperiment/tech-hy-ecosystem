@@ -159,6 +159,12 @@ jobs:
           # Set stage-debug environment variables
           export IMAGE_TAG="stage-debug-latest"
           export NAMESPACE="techhy-ecosystem-stage-debug"
+          # ✅ ДОБАВЛЯЕМ SHORT_SHA для уникальных тегов образов
+          export SHORT_SHA="${{ github.sha }}"
+          export SHORT_SHA_7="${SHORT_SHA:0:7}"
+          export UNIQUE_IMAGE_TAG="stage-debug-${SHORT_SHA_7}"
+          
+          echo "🏷️ Using unique image tag: $UNIQUE_IMAGE_TAG"
           
           # Create stage-debug namespace first
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
@@ -171,8 +177,16 @@ jobs:
             --docker-email="dev@techhy.me" \
             -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
-          # Apply stage-debug configurations using kustomize
+          # ✅ ОБНОВЛЯЕМ deployment с уникальным образом перед применением
+          # Сначала применяем базовые конфигурации
           kubectl apply -k k8s/overlays/stage-debug/
+          
+          # Затем обновляем образ на уникальный SHA-based тег
+          kubectl set image deployment/techhy-ecosystem-stage-debug-deployment \
+            techhy-ecosystem-frontend=ghcr.io/gyberexperiment/tech-hy-ecosystem:${UNIQUE_IMAGE_TAG} \
+            -n $NAMESPACE
+          
+          echo "✅ Deployment updated with unique image: ghcr.io/gyberexperiment/tech-hy-ecosystem:${UNIQUE_IMAGE_TAG}"
 
       - name: 🔍 Comprehensive Health Check & Rollback Protection
         run: |
@@ -249,6 +263,12 @@ jobs:
       - name: ✅ Final Deployment Validation
         run: |
           echo "📊 Final deployment status validation..."
+          
+          # ✅ ДОБАВЛЯЕМ информацию о текущем образе
+          echo "🏷️ Current deployment image:"
+          kubectl get deployment techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug -o jsonpath='{.spec.template.spec.containers[0].image}'
+          echo ""
+          
           kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug
           kubectl get services -n techhy-ecosystem-stage-debug  
           kubectl get ingress -n techhy-ecosystem-stage-debug
@@ -266,8 +286,15 @@ jobs:
       - name: 🎉 Stage Debug Deployment Success
         if: success()
         run: |
+          # ✅ ДОБАВЛЯЕМ информацию о SHA и образе
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA_7="${SHORT_SHA:0:7}"
+          UNIQUE_IMAGE_TAG="stage-debug-${SHORT_SHA_7}"
+          
           echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
           echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
-          echo "🏷️ Image Tag: stage-debug-latest" 
+          echo "🏷️ Image Tag: $UNIQUE_IMAGE_TAG"
+          echo "📝 Commit SHA: ${{ github.sha }}"
+          echo "🔄 This deployment uses unique SHA-based image tags for proper rollouts" 

@@ -24,6 +24,9 @@ spec:
       - name: ghcr-login
       containers:
       - name: techhy-ecosystem-frontend
+        # ✅ ВАЖНО: Этот образ обновляется в CI/CD pipeline через kubectl set image
+        # с уникальными SHA-based тегами (например: stage-debug-06d9a4e)
+        # Базовый тег stage-debug-latest используется только как fallback
         image: ghcr.io/gyberexperiment/tech-hy-ecosystem:stage-debug-latest
         imagePullPolicy: Always
         ports:
