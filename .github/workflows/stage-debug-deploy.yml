@@ -1,0 +1,272 @@
+name: 🎭 TECH HY Stage Debug Deploy
+
+on:
+  push:
+    branches: [ stage-debug ]
+  pull_request:
+    branches: [ stage-debug ]
+
+# Prevent concurrent deployments to stage-debug environment
+concurrency:
+  group: stage-debug-environment-${{ github.repository }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 🧪 Smart Contracts Testing for Stage Debug
+  # stage-debug-contracts-test:
+  #   name: 🔗 Stage Debug Contracts Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 📥 Checkout Code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #
+  #     - name: 🔧 Install Dependencies
+  #       run: npm ci
+  #
+  #     - name: 🔨 Compile Contracts
+  #       run: npm run compile
+  #
+  #     - name: 🧪 Run Tests
+  #       run: npm run test
+
+  # 🎨 Frontend Build for Stage Debug
+  stage-debug-frontend-build:
+    name: 🎨 Stage Debug Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 🔧 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 Type Check
+        run: npm run type-check
+
+      - name: 🏗️ Build Stage Debug
+        run: npm run build
+        env:
+          NODE_ENV: production
+          REACT_APP_ENVIRONMENT: stage-debug
+
+      - name: 📦 Upload Stage Debug Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-stage-debug-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # 🐳 Docker Build & Push for Stage Debug
+  stage-debug-docker-build:
+    name: 🐳 Stage Debug Docker Build
+    runs-on: ubuntu-latest
+    needs: [stage-debug-frontend-build]
+    if: github.ref == 'refs/heads/stage-debug'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-stage-debug-dist
+          path: frontend/dist/
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.0
+
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: 📋 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-stage-debug
+            type=sha,prefix=stage-debug-
+            type=raw,value=stage-debug-latest
+
+      - name: 🏗️ Build and push Docker image
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 🚀 Deploy to Stage Debug K3S
+  deploy-stage-debug-k3s:
+    name: 🚀 Deploy to Stage Debug
+    runs-on: ubuntu-latest
+    needs: [stage-debug-docker-build]
+    if: github.ref == 'refs/heads/stage-debug'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.29.0'
+
+      - name: 📝 Setup Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: 🔍 Verify K3S Connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: 🎯 Deploy to Stage Debug K3S
+        run: |
+          # Set stage-debug environment variables
+          export IMAGE_TAG="stage-debug-latest"
+          export NAMESPACE="techhy-ecosystem-stage-debug"
+          
+          # Create stage-debug namespace first
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create GHCR imagePullSecret after namespace exists
+          kubectl create secret docker-registry ghcr-login \
+            --docker-server=ghcr.io \
+            --docker-username="${{ secrets.GHCR_USERNAME }}" \
+            --docker-password="${{ secrets.GHCR_TOKEN }}" \
+            --docker-email="dev@techhy.me" \
+            -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Apply stage-debug configurations using kustomize
+          kubectl apply -k k8s/overlays/stage-debug/
+
+      - name: 🔍 Comprehensive Health Check & Rollback Protection
+        run: |
+          echo "🔍 Starting comprehensive health validation..."
+          
+          # Function to check application health
+          check_health() {
+            local url="https://stage.techhyecosystem.build.infra.gyber.org/"
+            local max_attempts=10
+            local wait_time=30
+            
+            for i in $(seq 1 $max_attempts); do
+              echo "📊 Health check attempt $i/$max_attempts..."
+              
+              if curl -f -s --max-time 10 "$url" | grep -q "html"; then
+                echo "✅ Health check passed on attempt $i"
+                return 0
+              else
+                echo "❌ Health check failed on attempt $i"
+                if [ $i -lt $max_attempts ]; then
+                  echo "⏳ Waiting ${wait_time}s before retry..."
+                  sleep $wait_time
+                fi
+              fi
+            done
+            
+            echo "💥 Health check failed after $max_attempts attempts"
+            return 1
+          }
+          
+          # Wait for pods to be ready
+          echo "⏳ Waiting for deployment rollout..."
+          if ! kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s; then
+            echo "💥 Deployment rollout failed! Initiating rollback..."
+            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
+            exit 1
+          fi
+          
+          # Additional wait for service to be fully ready
+          echo "⏳ Waiting for service to be ready..."
+          sleep 60
+          
+          # Perform health checks
+          if ! check_health; then
+            echo "💥 Health check validation FAILED! Initiating automatic rollback..."
+            
+            # Get current deployment revision
+            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --revision=0 | tail -n1 | awk '{print $1}')
+            echo "📊 Current revision: $current_revision"
+            
+            # Rollback to previous version
+            echo "🔙 Rolling back to previous working version..."
+            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
+            
+            # Wait for rollback to complete
+            echo "⏳ Waiting for rollback to complete..."
+            kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s
+            
+            # Verify rollback health
+            echo "🔍 Verifying rollback health..."
+            sleep 30
+            if check_health; then
+              echo "✅ Rollback successful - application is healthy"
+              echo "💡 Deployment failed but was automatically rolled back to working state"
+              exit 1  # Still fail the pipeline to indicate deployment issue
+            else
+              echo "💥 CRITICAL: Rollback also failed! Manual intervention required!"
+              exit 1
+            fi
+          fi
+          
+          echo "🎉 Health check validation PASSED! Deployment is healthy and ready."
+
+      - name: ✅ Final Deployment Validation
+        run: |
+          echo "📊 Final deployment status validation..."
+          kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug
+          kubectl get services -n techhy-ecosystem-stage-debug  
+          kubectl get ingress -n techhy-ecosystem-stage-debug
+          
+          # Verify all pods are running
+          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug --field-selector=status.phase=Running --no-headers | wc -l)
+          EXPECTED_PODS=2
+          
+          if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
+            echo "✅ All $EXPECTED_PODS pods are running successfully"
+          else
+            echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
+          fi
+
+      - name: 🎉 Stage Debug Deployment Success
+        if: success()
+        run: |
+          echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
+          echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
+          echo "🔧 Branch: stage-debug"
+          echo "📊 Namespace: techhy-ecosystem-stage-debug"
+          echo "🏷️ Image Tag: stage-debug-latest" 

@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: techhy-ecosystem-prod-ingress
+  namespace: techhy-ecosystem-production
+  labels:
+    app: techhy-ecosystem-prod
+    environment: production
+    component: frontend
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/redirect-scheme: https
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - ecosystem.techhy.me
+    secretName: techhy-ecosystem-prod-tls
+  rules:
+  - host: ecosystem.techhy.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: techhy-ecosystem-prod-service
+            port:
+              number: 80 

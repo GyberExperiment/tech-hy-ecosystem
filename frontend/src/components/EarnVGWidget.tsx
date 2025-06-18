@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface EarnVGWidgetProps {
   className?: string;
@@ -100,7 +101,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
       }
       
-      const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+      const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
       const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
         "function allowance(address owner, address spender) view returns (uint256)"
       ], readOnlyProvider);
@@ -274,7 +275,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       let vaultVGBalance: bigint;
       try {
         // Создаем read-only VG контракт для проверки баланса
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
           "function balanceOf(address) view returns (uint256)"
         ], readOnlyProvider);
@@ -358,7 +359,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       // Check allowance with read-only contract
       let allowance: bigint;
       try {
-        const readOnlyProvider = new ethers.JsonRpcProvider('https://bsc-testnet-rpc.publicnode.com');
+        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
         const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)",
           "function approve(address spender, uint256 amount) returns (bool)"
@@ -1044,16 +1045,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={`bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-600/50 rounded-xl p-6 shadow-xl ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className={cn("widget-mobile", className)}>
+      <div className="widget-header-mobile">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500/30 to-purple-500/30">
             <Zap className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">⚡ Получить VG токены</h3>
-            <p className="text-gray-300 text-sm">
+            <h3 className="text-responsive-lg font-bold text-white">⚡ Получить VG токены</h3>
+            <p className="text-gray-300 text-responsive-sm">
               {mode === 'create' 
                 ? 'Создайте LP позицию и получите VG (10:1)'
                 : 'Заблокируйте LP токены и получите VG (10:1)'
@@ -1061,11 +1061,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="mobile-stack">
           {/* Fix RPC Button */}
           <button
             onClick={updateBSCTestnetRPC}
-            className="px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors"
+            className="touch-target px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors mobile-full-width"
             title="Исправить RPC endpoints если есть timeout ошибки"
           >
             Fix RPC
@@ -1074,7 +1074,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={refreshAllData}
             disabled={poolLoading}
-            className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="touch-target p-2 text-blue-400 hover:text-blue-300 transition-colors"
           >
             <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
           </button>
@@ -1082,11 +1082,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </div>
 
       {/* Mode Switcher */}
-      <div className="flex rounded-xl bg-black/40 p-1 border border-gray-600/50 mb-6">
+      <div className="flex rounded-xl bg-black/40 p-1 border border-gray-600/50 mb-4 sm:mb-6">
         <button
           onClick={() => setMode('create')}
           className={cn(
-            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-200 touch-target',
             mode === 'create'
               ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
@@ -1097,7 +1097,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         <button
           onClick={() => setMode('lock')}
           className={cn(
-            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-200 touch-target',
             mode === 'lock'
               ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
@@ -1108,12 +1108,12 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </div>
 
       {/* Balances */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid-responsive-1-2 mb-4 sm:mb-6">
         {mode === 'create' ? (
           <>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">VC Balance</div>
-              <div className="text-xl font-bold text-blue-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">VC Balance</div>
+              <div className="text-responsive-lg font-bold text-blue-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1121,9 +1121,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 )}
               </div>
             </div>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">BNB Balance</div>
-              <div className="text-xl font-bold text-amber-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">BNB Balance</div>
+              <div className="text-responsive-lg font-bold text-amber-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1134,9 +1134,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </>
         ) : (
           <>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">LP Balance</div>
-              <div className="text-xl font-bold text-purple-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">LP Balance</div>
+              <div className="text-responsive-lg font-bold text-purple-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1144,9 +1144,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 )}
               </div>
             </div>
-            <div className="text-center p-4 rounded-lg bg-black/30 border border-gray-600/50">
-              <div className="text-sm text-gray-400 mb-1">VG Balance</div>
-              <div className="text-xl font-bold text-green-400">
+            <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
+              <div className="text-responsive-xs text-gray-400 mb-1">VG Balance</div>
+              <div className="text-responsive-lg font-bold text-green-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1160,9 +1160,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* Pool Information */}
       {mode === 'create' && (
-        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-blue-500/30 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-white flex items-center gap-2">
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-3 sm:p-4 border border-blue-500/30 mb-4 sm:mb-6">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between mb-3">
+            <span className="text-responsive-sm font-medium text-white flex items-center gap-2">
               <Info className="w-4 h-4 text-blue-400" />
               Pool Information
             </span>
@@ -1173,7 +1173,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid-responsive-1-2 text-responsive-sm">
             <div>
               <div className="text-gray-400 mb-1">VC Reserve</div>
               <div className="font-medium text-white">
@@ -1197,7 +1197,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </div>
           <div className="mt-3 pt-3 border-t border-blue-500/30">
             <div className="text-xs text-gray-400">Current Price</div>
-            <div className="text-sm font-medium text-green-400">
+            <div className="text-responsive-sm font-medium text-green-400">
               {poolLoading ? (
                 <div className="animate-pulse bg-gray-600 h-4 w-24 rounded"></div>
               ) : (
@@ -1209,11 +1209,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       )}
 
       {/* Input Fields */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
         {mode === 'create' ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-white mb-2">VC Amount</label>
+              <label className="block text-responsive-sm font-medium text-white mb-2">VC Amount</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <Coins className="h-4 w-4 text-blue-400" />
@@ -1224,13 +1224,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={vcAmount}
                   onChange={(e) => setVcAmount(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+                  className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors touch-manipulation"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
+              <label className="block text-responsive-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <Coins className="h-4 w-4 text-amber-400" />
@@ -1241,14 +1241,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={bnbAmount}
                   onChange={(e) => setBnbAmount(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors"
+                  className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors touch-manipulation"
                 />
               </div>
             </div>
           </>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-white mb-2">LP Token Amount</label>
+            <label className="block text-responsive-sm font-medium text-white mb-2">LP Token Amount</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <Coins className="h-4 w-4 text-purple-400" />
@@ -1259,7 +1259,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 value={lpAmount}
                 onChange={(e) => setLpAmount(e.target.value)}
                 disabled={loading}
-                className="w-full pl-10 pr-4 py-3 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors"
+                className="mobile-input w-full pl-10 pr-4 bg-black/40 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors touch-manipulation"
               />
             </div>
           </div>
@@ -1268,13 +1268,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* VG Reward Preview */}
       {((mode === 'create' && vcAmount && bnbAmount) || (mode === 'lock' && lpAmount)) && (
-        <div className="rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white flex items-center gap-2">
+        <div className="rounded-xl bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/40 p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between">
+            <span className="text-responsive-sm text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-green-400" />
               Expected VG Reward:
             </span>
-            <span className="text-xl font-bold text-green-400">
+            <span className="text-responsive-lg font-bold text-green-400">
               {calculateVGReward()} VG
             </span>
           </div>
@@ -1287,7 +1287,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={checkCurrentAllowance}
             disabled={checkingAllowance}
-            className="w-full h-10 text-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="touch-target w-full h-12 text-responsive-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
           >
             {checkingAllowance ? (
               <>
@@ -1313,7 +1313,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           (mode === 'lock' && !lpAmount)
         }
         className={cn(
-          "w-full h-12 text-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2",
+          "touch-target w-full h-12 sm:h-14 text-responsive-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation",
           "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
         )}
       >
@@ -1331,9 +1331,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </button>
 
       {/* Information */}
-      <div className="mt-6 space-y-2 bg-black/20 rounded-lg p-4 border border-gray-600/30">
-        <div className="font-medium text-white mb-3">Important Information:</div>
-        <div className="text-sm text-gray-300 space-y-1">
+      <div className="mt-4 sm:mt-6 space-y-2 bg-black/20 rounded-lg p-3 sm:p-4 border border-gray-600/30">
+        <div className="font-medium text-white mb-3 text-responsive-sm">Important Information:</div>
+        <div className="text-responsive-xs text-gray-300 space-y-1">
           <div>• LP токены блокируются навсегда (permanent lock)</div>
           <div>• Получаете 10 VG за каждый 1 LP токен (мгновенно)</div>
           <div>• VG токены можно использовать для governance</div>

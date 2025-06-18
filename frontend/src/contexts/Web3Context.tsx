@@ -4,6 +4,8 @@ import { ethers } from 'ethers';
 import { toast } from 'react-hot-toast';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 // EIP-6963 imports
 import { usePreferredProvider } from '../hooks/useWalletProviders';
@@ -120,7 +122,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       symbol: 'tBNB',
       decimals: 18,
     },
-    rpcUrls: ['https://bsc-testnet-rpc.publicnode.com'],
+    rpcUrls: getAllRpcEndpoints(), // ✅ Use centralized RPC endpoints
     blockExplorerUrls: ['https://testnet.bscscan.com'],
   };
 
@@ -228,6 +230,17 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         return;
       }
 
+      // ✅ Улучшенная проверка ethereum объекта перед созданием BrowserProvider
+      if (!ethereum || typeof ethereum !== 'object') {
+        throw new Error('Invalid ethereum provider object');
+      }
+
+      // Проверяем наличие необходимых методов
+      if (typeof ethereum.request !== 'function') {
+        throw new Error('Ethereum provider missing request method');
+      }
+
+      // Получаем аккаунты
       let accounts = await ethereum.request({ method: 'eth_accounts' }) as string[];
       
       if (!accounts || accounts.length === 0) {
@@ -238,7 +251,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         }
       }
 
-      const ethProvider = new ethers.BrowserProvider(ethereum);
+      let ethProvider: ethers.BrowserProvider;
+      try {
+        ethProvider = new ethers.BrowserProvider(ethereum);
+      } catch (providerError: any) {
+        log.error('Failed to create BrowserProvider', {
+          component: 'Web3Context',
+          function: 'connectWallet',
+          ethereumType: typeof ethereum,
+          hasRequest: typeof ethereum.request === 'function'
+        }, providerError);
+        throw new Error(`MetaMask provider initialization failed: ${providerError.message}`);
+      }
+
       const ethSigner = await ethProvider.getSigner();
       const network = await ethProvider.getNetwork();
       
@@ -248,6 +273,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setIsConnected(true);
       setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
       setLockedProvider(ethereum); // 🔒 фиксируем провайдер
+      
+      // ✅ Синхронизируем с RPC сервисом
+      rpcService.setWeb3Provider(ethProvider);
       
       log.info('Wallet connected successfully', {
         component: 'Web3Context',
@@ -259,11 +287,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       
       toast.success('Кошелёк подключён!');
       
-      // ✅ АВТОМАТИЧЕСКИ ОБНОВЛЯЕМ RPC ENDPOINTS ПОСЛЕ ПОДКЛЮЧЕНИЯ
-      if (Number(network.chainId) === 97) {
-        // Если уже в BSC Testnet - обновляем RPC в фоне
-        setTimeout(() => updateBSCTestnetRPC(), 1000);
-      } else {
+      // ✅ НЕ ВЫЗЫВАЕМ АВТОМАТИЧЕСКИ RPC UPDATE ЧТОБЫ НЕ ОТКРЫВАТЬ MODAL
+      // Пользователь может обновить RPC вручную если нужно
+      if (Number(network.chainId) !== 97) {
         toast.error('Переключитесь на BSC Testnet');
       }
     } catch (error: any) {
@@ -307,6 +333,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     setAccount(null);
     setIsConnected(false);
     setIsCorrectNetwork(false);
+    setLockedProvider(null);
+    
+    // ✅ Синхронизируем с RPC сервисом
+    rpcService.setWeb3Provider(null);
+    
     toast.success('Кошелёк отключён');
   };
 
@@ -394,13 +425,22 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     if (!ethereum) return false;
 
     try {
-      log.info('Forcefully updating BSC Testnet RPC endpoints', {
+      log.info('Updating BSC Testnet RPC endpoints', {
         component: 'Web3Context',  
         function: 'updateBSCTestnetRPC',
         network: 'BSC_TESTNET'
       });
       
-      // Принудительно обновляем/добавляем BSC Testnet с новыми RPC
+      // ✅ ТИХОЕ ОБНОВЛЕНИЕ БЕЗ МОДАЛЬНОГО ОКНА
+      // Сначала проверяем текущую сеть
+      const chainId = await ethereum.request({ method: 'eth_chainId' });
+      if (chainId !== '0x61') {
+        // Не в BSC Testnet - не обновляем RPC
+        return false;
+      }
+
+      // ✅ Обновляем RPC только если пользователь УЖЕ в BSC Testnet
+      // Это не откроет modal, так как сеть уже добавлена
       await ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [
@@ -419,7 +459,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
       });
-      toast.success('RPC endpoints обновлены! Теперь используется publicnode.com');
+      // ✅ Убираем toast чтобы не спамить пользователя
       return true;
     } catch (error: any) {
       log.error('Failed to update BSC Testnet RPC endpoints', {
@@ -427,9 +467,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         network: 'BSC_TESTNET'
       }, error);
-      if (error.code !== 4001) { // Игнорируем "пользователь отклонил"
-        toast.error('Ошибка обновления RPC endpoints');
-      }
+      // ✅ Тихо игнорируем ошибки обновления RPC
       return false;
     }
   };

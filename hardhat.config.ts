@@ -26,8 +26,14 @@ const config: HardhatUserConfig = {
     localhost: {
       url: "http://127.0.0.1:8545"
     },
+    bsc: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+      gasPrice: 5000000000, // 5 gwei
+      accounts: normalizePrivateKey(process.env.PRIVATE_KEY) ? [normalizePrivateKey(process.env.PRIVATE_KEY)!] : [],
+    },
     bscTestnet: {
-      url: "https://bsc-testnet-rpc.publicnode.com",
+      url: "https://bsc-testnet-dataseed.bnbchain.org",
       chainId: 97,
       gasPrice: 20000000000,
       accounts: normalizePrivateKey(process.env.PRIVATE_KEY) ? [normalizePrivateKey(process.env.PRIVATE_KEY)!] : [],
@@ -35,6 +41,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      bsc: process.env.BSCSCAN_API_KEY || "",
       bscTestnet: process.env.BSCSCAN_API_KEY || ""
     }
   }

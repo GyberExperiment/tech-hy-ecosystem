@@ -1,0 +1,51 @@
+# 🚀 Modern Gateway API Configuration
+# Replaces traditional Ingress with next-gen Gateway API
+
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: techhy-ecosystem-gateway
+  namespace: techhy-ecosystem-stage-debug
+spec:
+  gatewayClassName: cilium
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    hostname: stage.techhyecosystem.build.infra.gyber.org
+  - name: https
+    port: 443
+    protocol: HTTPS
+    hostname: stage.techhyecosystem.build.infra.gyber.org
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: techhy-ecosystem-stage-debug-tls
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: techhy-ecosystem-route
+  namespace: techhy-ecosystem-stage-debug
+spec:
+  parentRefs:
+  - name: techhy-ecosystem-gateway
+  hostnames:
+  - stage.techhyecosystem.build.infra.gyber.org
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: techhy-ecosystem-stage-debug-service
+      port: 80
+      weight: 100
+    filters:
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        set:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-Content-Type-Options
+          value: nosniff 

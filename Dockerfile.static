@@ -1,0 +1,63 @@
+# 🚀 TECH HY Ecosystem Frontend Dockerfile
+# Optimized static file serving without nginx
+
+# Stage 1: Build the application
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache git
+
+# Copy package files
+COPY frontend/package*.json ./
+COPY frontend/.npmrc* ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY frontend/ .
+
+# Build the application
+RUN npm run build
+
+# Stage 2: Static file server
+FROM httpd:2.4-alpine AS production
+
+# Remove default content
+RUN rm -rf /usr/local/apache2/htdocs/*
+
+# Copy built assets from builder stage
+COPY --from=builder /app/dist /usr/local/apache2/htdocs/
+
+# Create simple Apache config for SPA
+RUN echo 'ErrorDocument 404 /index.html' > /usr/local/apache2/htdocs/.htaccess && \
+    echo 'LoadModule rewrite_module modules/mod_rewrite.so' >> /usr/local/apache2/conf/httpd.conf && \
+    echo 'LoadModule headers_module modules/mod_headers.so' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '<Directory "/usr/local/apache2/htdocs">' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    AllowOverride All' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    Options Indexes FollowSymLinks' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    Require all granted' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    RewriteEngine On' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-f' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    RewriteCond %{REQUEST_FILENAME} !-d' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '    RewriteRule . /index.html [L]' >> /usr/local/apache2/conf/httpd.conf && \
+    echo '</Directory>' >> /usr/local/apache2/conf/httpd.conf
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+
+# Expose port
+EXPOSE 80
+
+# Labels for better container management
+LABEL maintainer="TECH HY Team <i@techhy.me>"
+LABEL version="1.0.0"
+LABEL description="TECH HY Ecosystem DeFi Frontend - Static Files"
+LABEL org.opencontainers.image.source="https://github.com/GyberExperiment/tech-hy-ecosystem"
+
+# Start Apache
+CMD ["httpd-foreground"] 

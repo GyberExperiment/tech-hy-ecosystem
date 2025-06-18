@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints, RpcHealthMonitor } from '../constants/rpcEndpoints';
 
 export interface TokenData {
   symbol: string;
@@ -25,15 +26,8 @@ export interface TokenBalances {
   BNB: string;
 }
 
-// Fallback RPC providers для надёжности
-const FALLBACK_RPC_URLS = [
-  'https://bsc-testnet.public.blastapi.io',  // ✅ Первый - самый надежный
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
-  'https://bsc-testnet-rpc.publicnode.com',  // ✅ Переместили в конец из-за CORS в некоторых браузерах
-  // ❌ УБРАЛИ СЛОМАННЫЕ binance.org endpoints
-  // 'https://data-seed-prebsc-1-s1.binance.org:8545',
-  // 'https://data-seed-prebsc-2-s1.binance.org:8545',
-];
+// ✅ Use centralized RPC configuration instead of hardcoded URLs
+const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",

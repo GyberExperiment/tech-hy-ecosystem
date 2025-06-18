@@ -21,6 +21,7 @@ import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
 import { BSCScanAPI, convertBSCScanToTransaction } from '../utils/bscscanApi';
 import { log } from '../utils/logger';
+import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
 
 interface Transaction {
   id: string;
@@ -56,6 +57,9 @@ const TransactionHistory: React.FC = () => {
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
+
+  // ✅ Use centralized RPC configuration
+  const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -379,17 +383,9 @@ const TransactionHistory: React.FC = () => {
 
   // Helper function to try multiple RPC endpoints (fallback method)
   const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-    const fallbackRpcUrls = [
-      'https://bsc-testnet-rpc.publicnode.com',
-      'https://data-seed-prebsc-1-s1.binance.org:8545',
-      'https://data-seed-prebsc-2-s1.binance.org:8545',
-      'https://bsc-testnet.public.blastapi.io',
-      'https://endpoints.omniatech.io/v1/bsc/testnet/public'
-    ];
-    
     let lastError: Error | null = null;
     
-    for (const rpcUrl of fallbackRpcUrls) {
+    for (const rpcUrl of FALLBACK_RPC_URLS) {
       try {
         log.debug('Trying RPC endpoint', {
           component: 'TransactionHistory',

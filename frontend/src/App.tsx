@@ -45,10 +45,10 @@ function App() {
                 v7_relativeSplatPath: true,
               }}
             >
-              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pb-safe">
                 <Header />
                 
-                <main className="container mx-auto px-4 py-8">
+                <main className="container-mobile py-4 sm:py-6 lg:py-8">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/tokens" element={<Tokens />} />
@@ -66,6 +66,7 @@ function App() {
                       background: '#1f2937',
                       color: '#f9fafb',
                       border: '1px solid #374151',
+                      fontSize: '14px',
                     },
                     success: {
                       iconTheme: {

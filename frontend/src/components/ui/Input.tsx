@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils/cn'
 
 const inputVariants = cva(
-  'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation tap-highlight-none',
   {
     variants: {
       variant: {
@@ -12,10 +12,11 @@ const inputVariants = cva(
         success: 'border-green-500 focus-visible:ring-green-500',
       },
       size: {
-        default: 'h-10',
-        sm: 'h-9 px-2 text-xs',
-        lg: 'h-11 px-4',
-        xl: 'h-12 px-4 text-base',
+        default: 'h-10 min-h-[44px] text-base',
+        sm: 'h-9 px-2 text-xs min-h-[40px]',
+        lg: 'h-11 px-4 min-h-[48px] text-base',
+        xl: 'h-12 px-4 text-base min-h-[52px]',
+        mobile: 'h-12 px-4 text-base min-h-[48px]',
       },
     },
     defaultVariants: {
