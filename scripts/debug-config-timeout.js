@@ -5,7 +5,7 @@ const FALLBACK_RPC_URLS = [
   'https://bsc-testnet-rpc.publicnode.com',
   'https://data-seed-prebsc-1-s1.binance.org:8545',
   'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://bsc-testnet.public.blastapi.io',
+  'https://bsc-testnet.drpc.org',
   'https://endpoints.omniatech.io/v1/bsc/testnet/public'
 ];
 

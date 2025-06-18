@@ -90,12 +90,23 @@ class RpcService {
   /**
    * Try multiple RPC endpoints with fallback and health monitoring
    * ✅ УЛУЧШЕННАЯ ЛОГИКА: При rate limiting переключаемся на read-only режим
+   * ✅ БЛОКИРОВКА ПРОБЛЕМНЫХ ENDPOINTS
    */
   async withFallback<T>(
     operation: (provider: ethers.Provider) => Promise<T>,
     timeoutMs: number = 15000
   ): Promise<T> {
     let provider = await this.getProvider();
+    
+    // ✅ ПРИНУДИТЕЛЬНАЯ БЛОКИРОВКА blastapi.io
+    if (this.isProblematicEndpoint(provider)) {
+      log.warn('Detected problematic RPC endpoint, forcing read-only mode', {
+        component: 'RpcService',
+        function: 'withFallback',
+        reason: 'blastapi_blocked'
+      });
+      provider = await this.getProvider(true); // Принудительно read-only
+    }
     
     // Helper function for timeout
     const withTimeout = <T>(promise: Promise<T>, timeout: number): Promise<T> => {
@@ -271,6 +282,47 @@ class RpcService {
       component: 'RpcService',
       function: 'cleanup'
     });
+  }
+
+  /**
+   * ✅ ПРОВЕРКА ПРОБЛЕМНЫХ RPC ENDPOINTS
+   * Блокирует известные проблемные endpoints типа blastapi.io
+   */
+  private isProblematicEndpoint(provider: ethers.Provider): boolean {
+    try {
+      // Проверяем JsonRpcProvider
+      if (provider instanceof ethers.JsonRpcProvider) {
+        const url = (provider as any)._getConnection?.()?.url || '';
+        
+        // ✅ БЛОКИРУЕМ ИЗВЕСТНЫЕ ПРОБЛЕМНЫЕ ENDPOINTS
+        const problematicDomains = [
+          'blastapi.io',
+          'blast-api.io', 
+          'blast.api.io'
+        ];
+        
+        const isProblematic = problematicDomains.some(domain => url.includes(domain));
+        
+        if (isProblematic) {
+          log.warn('Blocked problematic RPC endpoint', {
+            component: 'RpcService',
+            function: 'isProblematicEndpoint',
+            url: url,
+            reason: 'rate_limiting_issues'
+          });
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      log.debug('Error checking problematic endpoint', {
+        component: 'RpcService',
+        function: 'isProblematicEndpoint',
+        error: (error as Error).message
+      });
+      return false;
+    }
   }
 }
 
