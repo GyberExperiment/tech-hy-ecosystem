@@ -1,0 +1,7 @@
+
+> tech-hy-ecosystem@1.0.0 test
+> hardhat test --grep Should handle complete VC --reporter json
+
+Error HH305: Unrecognized param --reporter
+
+For more info go to https://hardhat.org/HH305 or run Hardhat with --show-stack-traces
