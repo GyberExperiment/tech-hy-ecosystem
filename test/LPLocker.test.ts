@@ -15,7 +15,7 @@ describe("LPLocker", () => {
   
   const MIN_BNB = ethers.parseEther("0.01");
   const MIN_VC = ethers.parseUnits("1", 18);
-  const LP_DIVISOR = 10n ** 6n;
+  const LP_DIVISOR = 10n ** 18n;
   
   beforeEach(async () => {
     [owner, authority, user] = await ethers.getSigners();
@@ -120,8 +120,8 @@ describe("LPLocker", () => {
       // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 1000n);
       
-      // ✅ ИСПРАВЛЕНИЕ: Увеличиваем депозит VG токенов чтобы хватало для всех тестов
-      await lpLocker.depositVGTokens(VG_REWARD * 500n);
+      // ✅ ИСПРАВЛЕНИЕ: Уменьшаем депозит VG токенов чтобы не превысить баланс owner'а (10M VG)
+      await lpLocker.depositVGTokens(VG_REWARD * 50n);
 
       await pancakeRouter.setAddLiquidityResult(0, 0, EXPECTED_LP);
     });
@@ -221,8 +221,8 @@ describe("LPLocker", () => {
       // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
       await vgToken.connect(owner).approve(await lpLocker.getAddress(), VG_REWARD * 1000n);
       
-      // ✅ ИСПРАВЛЕНИЕ: Увеличиваем депозит VG токенов чтобы хватало для всех тестов
-      await lpLocker.depositVGTokens(VG_REWARD * 500n);
+      // ✅ ИСПРАВЛЕНИЕ: Уменьшаем депозит VG токенов чтобы не превысить баланс owner'а (10M VG)
+      await lpLocker.depositVGTokens(VG_REWARD * 50n);
     });
 
     it("Успешно блокирует LP токены и выдает VG награды", async () => {
