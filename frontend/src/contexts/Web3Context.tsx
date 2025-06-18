@@ -101,50 +101,67 @@ interface Web3ProviderProps {
 }
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-  // State
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
-  // Зафиксированный EIP-1193 провайдер после первого успешного подключения
-  const [lockedProvider, setLockedProvider] = useState<EIP1193Provider | null>(null);
-
-  // ✅ ДОБАВЛЯЕМ защиту от множественных запросов
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
   const [isUpdatingRPC, setIsUpdatingRPC] = useState(false);
-
-  // ✅ ГЛОБАЛЬНАЯ ЗАЩИТА: Предотвращаем множественные одновременные MetaMask запросы
-  const [pendingMetaMaskRequests, setPendingMetaMaskRequests] = useState<Set<string>>(new Set());
-
-  const createRequestGuard = (requestType: string) => {
-    return {
-      canProceed: () => {
-        if (pendingMetaMaskRequests.has(requestType)) {
-          log.debug(`MetaMask request already pending: ${requestType}`, {
-            component: 'Web3Context',
-            requestType,
-            pendingRequests: Array.from(pendingMetaMaskRequests)
-          });
-          return false;
-        }
-        return true;
-      },
-      start: () => {
-        setPendingMetaMaskRequests(prev => new Set([...prev, requestType]));
-      },
-      end: () => {
-        setPendingMetaMaskRequests(prev => {
-          const next = new Set(prev);
-          next.delete(requestType);
-          return next;
-        });
-      }
-    };
-  };
+  const [lockedProvider, setLockedProvider] = useState<any>(null);
+  
+  // ✅ Используем Map для хранения времени последних запросов
+  const [pendingRequests] = useState(new Map<string, number>());
 
   // EIP-6963 hooks
   const preferredProvider = usePreferredProvider();
+
+  const createRequestGuard = (requestType: string) => {
+    const key = `${requestType}_${Date.now()}`;
+    const TIMEOUT = 15000; // ✅ Увеличиваем timeout до 15 секунд
+    
+    return {
+      canProceed: () => {
+        const now = Date.now();
+        const lastRequest = pendingRequests.get(requestType);
+        
+        // ✅ Проверяем что прошло достаточно времени с последнего запроса
+        if (lastRequest && (now - lastRequest) < TIMEOUT) {
+          log.debug('Request blocked by guard - too soon', {
+            component: 'Web3Context',
+            function: 'createRequestGuard',
+            requestType,
+            timeSinceLastRequest: now - lastRequest,
+            timeout: TIMEOUT
+          });
+          return false;
+        }
+        
+        return true;
+      },
+      start: () => {
+        pendingRequests.set(requestType, Date.now());
+        log.debug('Request guard started', {
+          component: 'Web3Context',
+          function: 'createRequestGuard',
+          requestType,
+          key
+        });
+      },
+      end: () => {
+        // ✅ Очищаем guard только через небольшую задержку для предотвращения race conditions
+        setTimeout(() => {
+          pendingRequests.delete(requestType);
+          log.debug('Request guard ended', {
+            component: 'Web3Context',
+            function: 'createRequestGuard',
+            requestType,
+            key
+          });
+        }, 1000); // 1 секунда задержка
+      }
+    };
+  };
 
   // BSC Testnet configuration
   const BSC_TESTNET_CONFIG = {
