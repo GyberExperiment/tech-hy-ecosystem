@@ -17,10 +17,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - stage-debug.techhyecosystem.build.infra.gyber.org
+    - stage.techhyecosystem.build.infra.gyber.org
     secretName: techhy-ecosystem-stage-debug-tls
   rules:
-  - host: stage-debug.techhyecosystem.build.infra.gyber.org
+  - host: stage.techhyecosystem.build.infra.gyber.org
     http:
       paths:
       - path: /

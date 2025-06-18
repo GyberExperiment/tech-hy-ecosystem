@@ -179,7 +179,7 @@ jobs:
           
           # Function to check application health
           check_health() {
-            local url="https://stage-debug.techhyecosystem.build.infra.gyber.org/"
+            local url="https://stage.techhyecosystem.build.infra.gyber.org/"
             local max_attempts=10
             local wait_time=30
             
@@ -266,7 +266,7 @@ jobs:
         if: success()
         run: |
           echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
-          echo "🌐 Stage Debug URL: https://stage-debug.techhyecosystem.build.infra.gyber.org"
+          echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
           echo "🏷️ Image Tag: stage-debug-latest" 

@@ -119,7 +119,7 @@ health: ## Check application health
 
 health-stage-debug: ## Check stage-debug health
 	@echo "🔍 Checking stage-debug health..."
-	curl -f https://stage-debug.techhyecosystem.build.infra.gyber.org/health || echo "❌ Stage-debug health check failed"
+	curl -f https://stage.techhyecosystem.build.infra.gyber.org/health || echo "❌ Stage-debug health check failed"
 
 health-local: ## Check local health via port-forward
 	@echo "🔍 Checking local health..."
