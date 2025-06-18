@@ -287,11 +287,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       
       toast.success('Кошелёк подключён!');
       
-      // ✅ АВТОМАТИЧЕСКИ ОБНОВЛЯЕМ RPC ENDPOINTS ПОСЛЕ ПОДКЛЮЧЕНИЯ
-      if (Number(network.chainId) === 97) {
-        // Если уже в BSC Testnet - обновляем RPC в фоне
-        setTimeout(() => updateBSCTestnetRPC(), 1000);
-      } else {
+      // ✅ НЕ ВЫЗЫВАЕМ АВТОМАТИЧЕСКИ RPC UPDATE ЧТОБЫ НЕ ОТКРЫВАТЬ MODAL
+      // Пользователь может обновить RPC вручную если нужно
+      if (Number(network.chainId) !== 97) {
         toast.error('Переключитесь на BSC Testnet');
       }
     } catch (error: any) {
@@ -427,13 +425,22 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     if (!ethereum) return false;
 
     try {
-      log.info('Forcefully updating BSC Testnet RPC endpoints', {
+      log.info('Updating BSC Testnet RPC endpoints', {
         component: 'Web3Context',  
         function: 'updateBSCTestnetRPC',
         network: 'BSC_TESTNET'
       });
       
-      // Принудительно обновляем/добавляем BSC Testnet с новыми RPC
+      // ✅ ТИХОЕ ОБНОВЛЕНИЕ БЕЗ МОДАЛЬНОГО ОКНА
+      // Сначала проверяем текущую сеть
+      const chainId = await ethereum.request({ method: 'eth_chainId' });
+      if (chainId !== '0x61') {
+        // Не в BSC Testnet - не обновляем RPC
+        return false;
+      }
+
+      // ✅ Обновляем RPC только если пользователь УЖЕ в BSC Testnet
+      // Это не откроет modal, так как сеть уже добавлена
       await ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [
@@ -452,7 +459,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
       });
-      toast.success('RPC endpoints обновлены! Теперь используется bnbchain.org');
+      // ✅ Убираем toast чтобы не спамить пользователя
       return true;
     } catch (error: any) {
       log.error('Failed to update BSC Testnet RPC endpoints', {
@@ -460,9 +467,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         network: 'BSC_TESTNET'
       }, error);
-      if (error.code !== 4001) { // Игнорируем "пользователь отклонил"
-        toast.error('Ошибка обновления RPC endpoints');
-      }
+      // ✅ Тихо игнорируем ошибки обновления RPC
       return false;
     }
   };
