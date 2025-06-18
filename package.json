@@ -5,9 +5,10 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "test:unit": "hardhat test --grep \"^(?!.*Integration).*\"",
+    "test:integration": "hardhat test test/integration/FullEcosystem.test.ts",
     "test:production": "npx ts-node test/TestRunner.ts",
     "test:tokens": "hardhat test test/tokens/",
-    "test:integration": "hardhat test test/integration/",
     "test:lpLocker": "hardhat test test/LPLocker.test.ts",
     "test:full": "npm run compile && npm run test:production",
     "coverage": "hardhat coverage",

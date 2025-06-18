@@ -1,0 +1,337 @@
+name: 🚀 TECH HY Production Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Prevent concurrent deployments to production environment
+concurrency:
+  group: production-environment-${{ github.repository }}
+  cancel-in-progress: false  # В production не отменяем деплойменты
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 🧪 Smart Contracts Testing - КРИТИЧЕСКИ ВАЖНО ДЛЯ PRODUCTION
+  production-contracts-test:
+    name: 🔗 Production Contracts Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 🔧 Install Dependencies
+        run: npm ci
+
+      - name: 🔨 Compile Contracts
+        run: npm run compile
+
+      - name: 🧪 Run Unit Tests
+        run: npm run test:unit
+
+      - name: 🌐 Run Integration Tests
+        run: npm run test:integration
+
+      - name: 📊 Generate Test Report
+        if: always()
+        run: |
+          echo "📊 Test Results Summary:"
+          echo "✅ Unit Tests: $(grep -o 'passing' test-report.json | wc -l || echo '0')"
+          echo "✅ Integration Tests: $(grep -o 'passing' test-report.json | wc -l || echo '0')"
+          
+      - name: 🚫 Fail on Test Failures
+        run: |
+          if [ -f test-report.json ]; then
+            FAILURES=$(grep -o '"failures":' test-report.json | wc -l || echo '0')
+            if [ "$FAILURES" -gt 0 ]; then
+              echo "💥 Tests failed! Production deployment blocked."
+              exit 1
+            fi
+          fi
+
+  # 🔒 Security Audit
+  production-security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 🔧 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 Security Audit
+        run: npm audit --audit-level=high
+
+      - name: 🛡️ Contract Security Check
+        run: |
+          echo "🛡️ Running basic security checks..."
+          # Проверяем наличие критических паттернов
+          if grep -r "selfdestruct\|suicide" contracts/ --exclude-dir=mocks; then
+            echo "⚠️ Warning: selfdestruct found in contracts"
+          fi
+          
+          if grep -r "tx.origin" contracts/ --exclude-dir=mocks; then
+            echo "🚫 Error: tx.origin usage found - security risk!"
+            exit 1
+          fi
+
+  # 🎨 Frontend Build for Production
+  production-frontend-build:
+    name: 🎨 Production Frontend Build
+    runs-on: ubuntu-latest
+    needs: [production-contracts-test, production-security-audit]
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 🔧 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 Type Check
+        run: npm run type-check
+
+      - name: 🧪 Frontend Tests
+        run: npm run test
+
+      - name: 🏗️ Build Production
+        run: npm run build
+        env:
+          NODE_ENV: production
+          REACT_APP_ENVIRONMENT: production
+
+      - name: 📦 Upload Production Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-production-dist
+          path: frontend/dist/
+          retention-days: 30  # Больше для production
+
+  # 🐳 Docker Build & Push for Production
+  production-docker-build:
+    name: 🐳 Production Docker Build
+    runs-on: ubuntu-latest
+    needs: [production-frontend-build]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-production-dist
+          path: frontend/dist/
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.0
+
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: 📋 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-production
+            type=sha,prefix=production-
+            type=raw,value=production-latest
+            type=semver,pattern={{version}}
+
+      - name: 🏗️ Build and push Docker image
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 🚀 Deploy to Production K3S
+  deploy-production-k3s:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [production-docker-build]
+    if: github.ref == 'refs/heads/main'
+    environment: production  # Требует manual approval
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.29.0'
+
+      - name: 📝 Setup Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_PROD }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: 🔍 Verify K3S Connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: 🎯 Deploy to Production K3S
+        run: |
+          # Set production environment variables
+          export IMAGE_TAG="production-latest"
+          export NAMESPACE="techhy-ecosystem-production"
+          
+          # Create production namespace first
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Create GHCR imagePullSecret
+          kubectl create secret docker-registry ghcr-login \
+            --docker-server=ghcr.io \
+            --docker-username="${{ secrets.GHCR_USERNAME }}" \
+            --docker-password="${{ secrets.GHCR_TOKEN }}" \
+            --docker-email="support@techhy.me" \
+            -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Apply production configurations using kustomize
+          kubectl apply -k k8s/overlays/prod/
+
+      - name: 🔍 Production Health Check & Rollback Protection
+        run: |
+          echo "🔍 Starting production health validation..."
+          
+          # Function to check application health
+          check_health() {
+            local url="https://techhy.me/"
+            local max_attempts=15  # Больше попыток для production
+            local wait_time=30
+            
+            for i in $(seq 1 $max_attempts); do
+              echo "📊 Production health check attempt $i/$max_attempts..."
+              
+              if curl -f -s --max-time 15 "$url" | grep -q "html"; then
+                echo "✅ Production health check passed on attempt $i"
+                return 0
+              else
+                echo "❌ Production health check failed on attempt $i"
+                if [ $i -lt $max_attempts ]; then
+                  echo "⏳ Waiting ${wait_time}s before retry..."
+                  sleep $wait_time
+                fi
+              fi
+            done
+            
+            echo "💥 Production health check failed after $max_attempts attempts"
+            return 1
+          }
+          
+          # Wait for pods to be ready
+          echo "⏳ Waiting for production deployment rollout..."
+          if ! kubectl rollout status deployment/techhy-ecosystem-production-deployment -n techhy-ecosystem-production --timeout=600s; then
+            echo "💥 Production deployment rollout failed! Initiating rollback..."
+            kubectl rollout undo deployment/techhy-ecosystem-production-deployment -n techhy-ecosystem-production
+            exit 1
+          fi
+          
+          # Additional wait for service to be fully ready
+          echo "⏳ Waiting for production service to be ready..."
+          sleep 120  # Больше времени для production
+          
+          # Perform health checks
+          if ! check_health; then
+            echo "💥 CRITICAL: Production health check FAILED! Initiating automatic rollback..."
+            
+            # Get current deployment revision
+            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-production-deployment -n techhy-ecosystem-production --revision=0 | tail -n1 | awk '{print $1}')
+            echo "📊 Current production revision: $current_revision"
+            
+            # Rollback to previous version
+            echo "🔙 Rolling back production to previous working version..."
+            kubectl rollout undo deployment/techhy-ecosystem-production-deployment -n techhy-ecosystem-production
+            
+            # Wait for rollback to complete
+            echo "⏳ Waiting for production rollback to complete..."
+            kubectl rollout status deployment/techhy-ecosystem-production-deployment -n techhy-ecosystem-production --timeout=600s
+            
+            # Verify rollback health
+            echo "🔍 Verifying production rollback health..."
+            sleep 60
+            if check_health; then
+              echo "✅ Production rollback successful - application is healthy"
+              echo "💡 Production deployment failed but was automatically rolled back"
+              exit 1
+            else
+              echo "💥 CRITICAL EMERGENCY: Production rollback also failed! IMMEDIATE MANUAL INTERVENTION REQUIRED!"
+              # Отправляем уведомление в Slack/Discord
+              curl -X POST -H 'Content-type: application/json' \
+                --data '{"text":"🚨 CRITICAL: TECH HY Production deployment AND rollback failed! Manual intervention required immediately!"}' \
+                ${{ secrets.SLACK_WEBHOOK_URL }} || true
+              exit 1
+            fi
+          fi
+          
+          echo "🎉 Production health check validation PASSED! Deployment is healthy and ready."
+
+      - name: ✅ Final Production Validation
+        run: |
+          echo "📊 Final production deployment status validation..."
+          kubectl get pods -n techhy-ecosystem-production -l app=techhy-ecosystem-production
+          kubectl get services -n techhy-ecosystem-production  
+          kubectl get ingress -n techhy-ecosystem-production
+          
+          # Verify all pods are running
+          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-production -l app=techhy-ecosystem-production --field-selector=status.phase=Running --no-headers | wc -l)
+          EXPECTED_PODS=3  # Production имеет больше реплик
+          
+          if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
+            echo "✅ All $EXPECTED_PODS production pods are running successfully"
+          else
+            echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
+          fi
+
+      - name: 🎉 Production Deployment Success
+        if: success()
+        run: |
+          echo "🎉 TECH HY Ecosystem successfully deployed to PRODUCTION!"
+          echo "🌐 Live at: https://techhy.me/"
+          
+          # Отправляем уведомление об успешном деплойменте
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🎉 TECH HY Ecosystem successfully deployed to production! 🚀"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }} || true 

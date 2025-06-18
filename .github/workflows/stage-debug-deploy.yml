@@ -17,32 +17,33 @@ env:
 
 jobs:
   # 🧪 Smart Contracts Testing for Stage Debug
-  # stage-debug-contracts-test:
-  #   name: 🔗 Stage Debug Contracts Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 📥 Checkout Code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: 📦 Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-  #
-  #     - name: 🔧 Install Dependencies
-  #       run: npm ci
-  #
-  #     - name: 🔨 Compile Contracts
-  #       run: npm run compile
-  #
-  #     - name: 🧪 Run Tests
-  #       run: npm run test
+  stage-debug-contracts-test:
+    name: 🔗 Stage Debug Contracts Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 🔧 Install Dependencies
+        run: npm ci
+
+      - name: 🔨 Compile Contracts
+        run: npm run compile
+
+      - name: 🧪 Run Tests
+        run: npm run test
 
   # 🎨 Frontend Build for Stage Debug
   stage-debug-frontend-build:
     name: 🎨 Stage Debug Frontend Build
     runs-on: ubuntu-latest
+    needs: [stage-debug-contracts-test]
     defaults:
       run:
         working-directory: ./frontend

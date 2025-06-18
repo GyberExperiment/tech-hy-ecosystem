@@ -644,7 +644,7 @@ describe("Full Ecosystem Integration", function () {
                 });
                 
                 if (i < users.length - 1) {
-                    await time.increase(301);
+                await time.increase(301);
                 }
             }
 
