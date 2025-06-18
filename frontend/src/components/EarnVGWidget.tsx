@@ -8,7 +8,7 @@ import { cn } from '@/utils/cn';
 import { useTokenData } from '../hooks/useTokenData';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 interface EarnVGWidgetProps {
   className?: string;
@@ -101,12 +101,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         });
       }
       
-      const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
-      const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
-        "function allowance(address owner, address spender) view returns (uint256)"
-      ], readOnlyProvider);
+      const allowance = await rpcService.withFallback(async (provider) => {
+        const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+          "function allowance(address owner, address spender) view returns (uint256)"
+        ], provider);
+        
+        return await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+      });
       
-      const allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
       const allowanceFormatted = ethers.formatEther(allowance);
       
       setCurrentAllowance(allowanceFormatted);
@@ -274,13 +276,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       
       let vaultVGBalance: bigint;
       try {
-        // Создаем read-only VG контракт для проверки баланса
-        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
-        const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
-          "function balanceOf(address) view returns (uint256)"
-        ], readOnlyProvider);
+        // ✅ Используем rpcService вместо создания собственного provider
+        vaultVGBalance = await rpcService.withFallback(async (provider) => {
+          const readOnlyVGContract = new ethers.Contract(CONTRACTS.VG_TOKEN, [
+            "function balanceOf(address) view returns (uint256)"
+          ], provider);
+          
+          return await (readOnlyVGContract as any).balanceOf(stakingVault);
+        });
         
-        vaultVGBalance = await (readOnlyVGContract as any).balanceOf(stakingVault);
         if (process.env.NODE_ENV === 'development') {
           log.info('VG vault balance retrieved', {
             component: 'EarnVGWidget',
@@ -359,13 +363,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       // Check allowance with read-only contract
       let allowance: bigint;
       try {
-        const readOnlyProvider = new ethers.JsonRpcProvider(getAllRpcEndpoints()[0]);
-        const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
-          "function allowance(address owner, address spender) view returns (uint256)",
-          "function approve(address spender, uint256 amount) returns (bool)"
-        ], readOnlyProvider);
+        allowance = await rpcService.withFallback(async (provider) => {
+          const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+            "function allowance(address owner, address spender) view returns (uint256)",
+            "function approve(address spender, uint256 amount) returns (bool)"
+          ], provider);
+          
+          return await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        });
         
-        allowance = await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
         if (process.env.NODE_ENV === 'development') {
           log.info('Current VC allowance', {
             component: 'EarnVGWidget',

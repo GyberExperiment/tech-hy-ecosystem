@@ -6,7 +6,7 @@ import { CardSkeleton } from './LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 interface PoolData {
   totalLockedLP: string;
@@ -49,9 +49,6 @@ const StakingStats: React.FC = () => {
       }
     };
   }, []);
-
-  // ✅ Use centralized RPC configuration
-  const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
   const fetchPoolStats = useCallback(async (isRefresh = false) => {
     // Prevent multiple simultaneous requests
@@ -99,55 +96,56 @@ const StakingStats: React.FC = () => {
     const signal = abortControllerRef.current.signal;
 
     try {
+      // ✅ Используем rpcService вместо создания fallback provider
       // Create fallback provider with multiple RPC endpoints
-      const fallbackRpcUrls = FALLBACK_RPC_URLS;
-      
-      const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
-      const activeProvider = provider || fallbackProvider;
+      // const fallbackRpcUrls = FALLBACK_RPC_URLS;
+      // 
+      // const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
+      // const activeProvider = provider || fallbackProvider;
 
       // Helper function for timeout
-      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-        return Promise.race([
-          promise,
-          new Promise<T>((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-          )
-        ]);
-      };
+      // const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+      //   return Promise.race([
+      //     promise,
+      //     new Promise<T>((_, reject) => 
+      //       setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+      //     )
+      //   ]);
+      // };
 
-      // Helper function to try multiple RPC endpoints
-      const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-        let lastError: Error | null = null;
-        
-        for (const rpcUrl of fallbackRpcUrls) {
-          try {
-            log.debug('Trying RPC endpoint', {
-              component: 'StakingStats',
-              function: 'tryMultipleRpc',
-              rpcUrl
-            });
-            const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-            const result = await withTimeout(operation(rpcProvider), 15000);
-            log.info('RPC endpoint success', {
-              component: 'StakingStats',
-              function: 'tryMultipleRpc',
-              rpcUrl
-            });
-            return result;
-          } catch (error: any) {
-            log.warn('RPC endpoint failed', {
-              component: 'StakingStats',
-              function: 'tryMultipleRpc',
-              rpcUrl,
-              error: error.message
-            });
-            lastError = error;
-            continue;
-          }
-        }
-        
-        throw lastError || new Error('All RPC endpoints failed');
-      };
+      // ✅ УБИРАЕМ дублированную tryMultipleRpc функцию - используем rpcService.withFallback()
+      // const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
+      //   let lastError: Error | null = null;
+      //   
+      //   for (const rpcUrl of fallbackRpcUrls) {
+      //     try {
+      //       log.debug('Trying RPC endpoint', {
+      //         component: 'StakingStats',
+      //         function: 'tryMultipleRpc',
+      //         rpcUrl
+      //       });
+      //       const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+      //       const result = await withTimeout(operation(rpcProvider), 15000);
+      //       log.info('RPC endpoint success', {
+      //         component: 'StakingStats',
+      //         function: 'tryMultipleRpc',
+      //         rpcUrl
+      //       });
+      //       return result;
+      //     } catch (error: any) {
+      //       log.warn('RPC endpoint failed', {
+      //         component: 'StakingStats',
+      //         function: 'tryMultipleRpc',
+      //         rpcUrl,
+      //         error: error.message
+      //       });
+      //       lastError = error;
+      //       continue;
+      //     }
+      //   }
+      //   
+      //   throw lastError || new Error('All RPC endpoints failed');
+      // };
 
       // Contract ABIs
       const LPLOCKER_ABI = [
@@ -163,12 +161,6 @@ const StakingStats: React.FC = () => {
       const LP_LOCKER_ADDRESS = CONTRACTS.LP_LOCKER;
       const VC_TOKEN_ADDRESS = CONTRACTS.VC_TOKEN;
 
-      // Fetch data with multiple RPC fallback
-      let poolInfo = [0, 0, 0, 0];
-      let config = { lpToVgRatio: '10', lpDivisor: '1000000000000000000000' };
-      let userVCBalance = '0';
-      let userBNBBalance = '0';
-
       // Skip Web3Context contracts - use direct RPC calls for reliability
       log.info('Using direct RPC calls for reliability', {
         component: 'StakingStats',
@@ -177,11 +169,11 @@ const StakingStats: React.FC = () => {
       
       try {
         // Pool info from LPLocker
-        const poolInfoData = await tryMultipleRpc(async (rpcProvider) => {
+        const poolInfoData = await rpcService.withFallback(async (rpcProvider) => {
           const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
           return await (lpLockerContract.getPoolInfo as any)();
         });
-        poolInfo = poolInfoData;
+        const poolInfo = poolInfoData;
         log.info('Pool info retrieved via direct RPC', {
           component: 'StakingStats',
           function: 'fetchPoolStats',
@@ -197,7 +189,7 @@ const StakingStats: React.FC = () => {
 
       // Используем статические значения конфигурации вместо дублированного config() вызова
       // чтобы избежать конфликта с EarnVGWidget
-      config = {
+      const config = {
         maxSlippageBps: 1000,
         mevEnabled: false,
         lpToVgRatio: 10,
@@ -213,7 +205,7 @@ const StakingStats: React.FC = () => {
 
       try {
         // VC balance
-        userVCBalance = await tryMultipleRpc(async (rpcProvider) => {
+        const userVCBalance = await rpcService.withFallback(async (rpcProvider) => {
           const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
           const vcBalance = await (vcContract.balanceOf as any)(account);
           return ethers.formatEther(vcBalance);
@@ -233,7 +225,7 @@ const StakingStats: React.FC = () => {
 
       try {
         // BNB balance
-        userBNBBalance = await tryMultipleRpc(async (rpcProvider) => {
+        const userBNBBalance = await rpcService.withFallback(async (rpcProvider) => {
           const bnbBalance = await rpcProvider.getBalance(account);
           return ethers.formatEther(bnbBalance);
         });

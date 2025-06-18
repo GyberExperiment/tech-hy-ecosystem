@@ -21,7 +21,7 @@ import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
 import { BSCScanAPI, convertBSCScanToTransaction } from '../utils/bscscanApi';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 interface Transaction {
   id: string;
@@ -57,9 +57,6 @@ const TransactionHistory: React.FC = () => {
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
-
-  // ✅ Use centralized RPC configuration
-  const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -381,40 +378,6 @@ const TransactionHistory: React.FC = () => {
     }
   };
 
-  // Helper function to try multiple RPC endpoints (fallback method)
-  const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-    let lastError: Error | null = null;
-    
-    for (const rpcUrl of FALLBACK_RPC_URLS) {
-      try {
-        log.debug('Trying RPC endpoint', {
-          component: 'TransactionHistory',
-          function: 'tryMultipleRpc',
-          rpcUrl
-        });
-        const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-        const result = await operation(rpcProvider);
-        log.info('RPC endpoint success', {
-          component: 'TransactionHistory',
-          function: 'tryMultipleRpc',
-          rpcUrl
-        });
-        return result;
-      } catch (error: any) {
-        log.warn('RPC endpoint failed', {
-          component: 'TransactionHistory',
-          function: 'tryMultipleRpc',
-          rpcUrl,
-          error: error.message
-        });
-        lastError = error;
-        continue;
-      }
-    }
-    
-    throw lastError || new Error('All RPC endpoints failed');
-  };
-
   // Parse known transactions by hash (backup method)
   const parseKnownTransactions = async (rpcProvider: ethers.JsonRpcProvider): Promise<Transaction[]> => {
     const transactions: Transaction[] = [];
@@ -590,7 +553,7 @@ const TransactionHistory: React.FC = () => {
           function: 'fetchRecentTransactions',
           address: account
         });
-        const knownTxs = await tryMultipleRpc(parseKnownTransactions);
+        const knownTxs = await rpcService.withFallback(parseKnownTransactions);
         
         // Add known transactions that aren't already in the list
         for (const knownTx of knownTxs) {

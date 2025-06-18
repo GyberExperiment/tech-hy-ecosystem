@@ -32,10 +32,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
-
-// ✅ Use centralized RPC configuration
-const FALLBACK_RPC_URLS = getAllRpcEndpoints();
+import { rpcService } from '../services/rpcService';
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -71,65 +68,6 @@ interface UserBalances {
   LP: string;
   BNB: string;
 }
-
-// Utility functions
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
-
-const withRetry = async <T,>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
-): Promise<T> => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await operation();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-    }
-  }
-  throw new Error('Max retries exceeded');
-};
-
-const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-  let lastError: Error | null = null;
-  
-  for (const rpcUrl of FALLBACK_RPC_URLS) {
-    try {
-      log.debug('LPStaking: Trying RPC endpoint', {
-        component: 'LPStaking',
-        function: 'tryMultipleRpc',
-        rpcUrl
-      });
-      const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-      const result = await withTimeout(operation(rpcProvider), 15000);
-      log.info('LPStaking: RPC endpoint success', {
-        component: 'LPStaking',
-        function: 'tryMultipleRpc',
-        rpcUrl
-      });
-      return result;
-    } catch (error: any) {
-      log.warn('LPStaking: RPC endpoint failed', {
-        component: 'LPStaking',
-        function: 'tryMultipleRpc',
-        rpcUrl,
-        error: error.message
-      });
-      lastError = error;
-      continue;
-    }
-  }
-  
-  throw lastError || new Error('All RPC endpoints failed');
-};
 
 const LPLocking: React.FC = () => {
   const { t } = useTranslation(['locking', 'common']);
@@ -238,7 +176,7 @@ const LPLocking: React.FC = () => {
           address: account
         });
         
-        const balance = await tryMultipleRpc(async (rpcProvider) => {
+        const balance = await rpcService.withFallback(async (rpcProvider) => {
           return await rpcProvider.getBalance(account);
         });
         newBalances.BNB = ethers.formatEther(balance);
@@ -276,12 +214,12 @@ const LPLocking: React.FC = () => {
             tokenAddress: tokenInfo.address
           });
           
-          const balance = await tryMultipleRpc(async (rpcProvider) => {
+          const balance = await rpcService.withFallback(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
             return await contract.balanceOf(account);
           });
 
-          const decimals = await tryMultipleRpc(async (rpcProvider) => {
+          const decimals = await rpcService.withFallback(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
             return await contract.decimals();
           });
@@ -354,7 +292,7 @@ const LPLocking: React.FC = () => {
         function: 'fetchLPLockerStats'
       });
       
-      const stats = await tryMultipleRpc(async (rpcProvider) => {
+      const stats = await rpcService.withFallback(async (rpcProvider) => {
         const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
         
         const [poolInfo, totalUsers] = await Promise.all([
@@ -378,14 +316,14 @@ const LPLocking: React.FC = () => {
       // Fetch active users from events (last 30 days)
       let activeUsersCount = '0';
       try {
-        const currentBlock = await tryMultipleRpc(async (rpcProvider) => {
+        const currentBlock = await rpcService.withFallback(async (rpcProvider) => {
           return await rpcProvider.getBlockNumber();
         });
         
         const blocksPerDay = 28800; // ~28800 blocks per day on BSC (3 sec per block)
         const fromBlock = Math.max(0, currentBlock - (30 * blocksPerDay)); // 30 days ago
         
-        const uniqueUsers = await tryMultipleRpc(async (rpcProvider) => {
+        const uniqueUsers = await rpcService.withFallback(async (rpcProvider) => {
           const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
           
           const [vgEvents, lpEvents] = await Promise.all([

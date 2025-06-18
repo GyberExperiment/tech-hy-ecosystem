@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 interface PoolInfo {
   vcReserve: string;
@@ -26,9 +26,6 @@ const PAIR_ABI = [
   "function totalSupply() view returns (uint256)"
 ];
 
-// ✅ Use centralized RPC configuration
-const FALLBACK_RPC_URLS = getAllRpcEndpoints();
-
 // Global cache for pool info
 const poolInfoCache = new Map<string, { data: PoolInfo; timestamp: number }>();
 const CACHE_DURATION = 300000; // 5 minutes
@@ -41,37 +38,6 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => 
       setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
     )
   ]);
-};
-
-const tryMultipleRpc = async <T,>(
-  operation: (provider: ethers.JsonRpcProvider) => Promise<T>
-): Promise<T> => {
-  for (const rpcUrl of FALLBACK_RPC_URLS) {
-    try {
-      log.debug('usePoolInfo: Trying RPC endpoint', {
-        component: 'usePoolInfo',
-        function: 'tryMultipleRpc',
-        rpcUrl
-      });
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const result = await withTimeout(operation(provider), 10000);
-      log.info('usePoolInfo: RPC endpoint success', {
-        component: 'usePoolInfo',
-        function: 'tryMultipleRpc',
-        rpcUrl
-      });
-      return result;
-    } catch (error: any) {
-      log.warn('usePoolInfo: RPC endpoint failed', {
-        component: 'usePoolInfo',
-        function: 'tryMultipleRpc',
-        rpcUrl,
-        error: error.message
-      });
-      continue;
-    }
-  }
-  throw new Error('All RPC endpoints failed');
 };
 
 export const usePoolInfo = (): UsePoolInfoReturn => {
@@ -130,11 +96,11 @@ export const usePoolInfo = (): UsePoolInfoReturn => {
     setError(null);
 
     try {
-      const result = await tryMultipleRpc(async (rpcProvider) => {
+      const result = await rpcService.withFallback(async (provider) => {
         const lpPairContract = new ethers.Contract(
           CONTRACTS.LP_TOKEN, 
           PAIR_ABI, 
-          rpcProvider
+          provider
         );
 
         const [reserves, token0] = await Promise.all([

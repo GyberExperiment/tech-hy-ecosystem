@@ -6,14 +6,15 @@
  */
 
 import { ethers } from 'ethers';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { getAllRpcEndpoints, RpcHealthMonitor } from '../constants/rpcEndpoints';
 import { log } from '../utils/logger';
 
 // Singleton pattern for RPC service
 class RpcService {
   private static instance: RpcService;
   private web3Provider: ethers.BrowserProvider | null = null;
-  private fallbackProvider: ethers.JsonRpcProvider | null = null;
+  private fallbackProviders: Map<string, ethers.JsonRpcProvider> = new Map();
+  private primaryFallbackProvider: ethers.JsonRpcProvider | null = null;
 
   private constructor() {}
 
@@ -36,6 +37,21 @@ class RpcService {
   }
 
   /**
+   * Get or create fallback provider for specific endpoint
+   */
+  private getFallbackProvider(rpcUrl: string): ethers.JsonRpcProvider {
+    if (!this.fallbackProviders.has(rpcUrl)) {
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      this.fallbackProviders.set(rpcUrl, provider);
+      log.debug('RPC Service: Created new fallback provider', {
+        component: 'RpcService',
+        endpoint: rpcUrl
+      });
+    }
+    return this.fallbackProviders.get(rpcUrl)!;
+  }
+
+  /**
    * Get provider - prefer Web3 (MetaMask), fallback to read-only
    */
   async getProvider(): Promise<ethers.Provider> {
@@ -45,61 +61,119 @@ class RpcService {
     }
 
     // 2. Fallback to read-only provider for disconnected state
-    if (!this.fallbackProvider) {
+    if (!this.primaryFallbackProvider) {
       const rpcEndpoints = getAllRpcEndpoints();
-      this.fallbackProvider = new ethers.JsonRpcProvider(rpcEndpoints[0]);
-      log.info('RPC Service: Created fallback provider', {
+      this.primaryFallbackProvider = this.getFallbackProvider(rpcEndpoints[0]);
+      log.info('RPC Service: Set primary fallback provider', {
         component: 'RpcService',
         endpoint: rpcEndpoints[0]
       });
     }
 
-    return this.fallbackProvider;
+    return this.primaryFallbackProvider;
   }
 
   /**
-   * Try multiple RPC endpoints with fallback
+   * Try multiple RPC endpoints with fallback and health monitoring
    */
   async withFallback<T>(
-    operation: (provider: ethers.Provider) => Promise<T>
+    operation: (provider: ethers.Provider) => Promise<T>,
+    timeoutMs: number = 15000
   ): Promise<T> {
     const provider = await this.getProvider();
     
+    // Helper function for timeout
+    const withTimeout = <T>(promise: Promise<T>, timeout: number): Promise<T> => {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) => 
+          setTimeout(() => reject(new Error(`Operation timeout after ${timeout}ms`)), timeout)
+        )
+      ]);
+    };
+    
     try {
-      return await operation(provider);
+      const result = await withTimeout(operation(provider), timeoutMs);
+      
+      // Mark success if using fallback provider
+      if (!this.web3Provider && this.primaryFallbackProvider) {
+        const rpcEndpoints = getAllRpcEndpoints();
+        RpcHealthMonitor.markSuccess(rpcEndpoints[0]);
+      }
+      
+      return result;
     } catch (error) {
-      log.error('RPC operation failed', {
+      log.error('RPC operation failed with primary provider', {
         component: 'RpcService',
-        function: 'withFallback'
+        function: 'withFallback',
+        isWeb3Provider: !!this.web3Provider,
+        error: (error as Error).message
       }, error as Error);
 
-      // If using fallback provider, try other endpoints
-      if (!this.web3Provider && this.fallbackProvider) {
-        const rpcEndpoints = getAllRpcEndpoints();
+      // If using Web3 provider, don't try fallbacks (user should handle wallet issues)
+      if (this.web3Provider) {
+        throw error;
+      }
+
+      // Try other endpoints only if using fallback providers
+      const rpcEndpoints = getAllRpcEndpoints();
+      
+      // Mark primary endpoint failure
+      RpcHealthMonitor.markFailure(rpcEndpoints[0]);
+      
+      let lastError = error;
+      
+      for (let i = 1; i < rpcEndpoints.length; i++) {
+        const rpcUrl = rpcEndpoints[i];
         
-        for (let i = 1; i < rpcEndpoints.length; i++) {
-          try {
-            const fallbackProvider = new ethers.JsonRpcProvider(rpcEndpoints[i]);
-            const result = await operation(fallbackProvider);
-            
-            log.info('RPC fallback successful', {
-              component: 'RpcService',
-              endpoint: rpcEndpoints[i],
-              attemptNumber: i + 1
-            });
-            
-            return result;
-          } catch (fallbackError) {
-            log.warn('RPC fallback failed', {
-              component: 'RpcService',
-              endpoint: rpcEndpoints[i],
-              error: (fallbackError as Error).message
-            });
+        try {
+          log.debug('RPC Service: Trying fallback endpoint', {
+            component: 'RpcService',
+            function: 'withFallback',
+            endpoint: rpcUrl,
+            attemptNumber: i + 1
+          });
+          
+          // Add delay between attempts to avoid rate limiting
+          if (i > 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * i));
+          }
+          
+          const fallbackProvider = this.getFallbackProvider(rpcUrl);
+          const result = await withTimeout(operation(fallbackProvider), timeoutMs);
+          
+          log.info('RPC Service: Fallback successful', {
+            component: 'RpcService',
+            function: 'withFallback',
+            endpoint: rpcUrl,
+            attemptNumber: i + 1
+          });
+          
+          // Mark success and update primary provider
+          RpcHealthMonitor.markSuccess(rpcUrl);
+          this.primaryFallbackProvider = fallbackProvider;
+          
+          return result;
+        } catch (fallbackError) {
+          log.warn('RPC Service: Fallback failed', {
+            component: 'RpcService',
+            function: 'withFallback',
+            endpoint: rpcUrl,
+            error: (fallbackError as Error).message
+          });
+          
+          RpcHealthMonitor.markFailure(rpcUrl);
+          lastError = fallbackError;
+          
+          // Extra delay after rate limiting errors
+          if ((fallbackError as Error).message?.includes('429') || 
+              (fallbackError as Error).message?.includes('Too Many Requests')) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
           }
         }
       }
 
-      throw error;
+      throw lastError;
     }
   }
 
@@ -126,6 +200,18 @@ class RpcService {
    */
   hasWeb3Provider(): boolean {
     return !!this.web3Provider;
+  }
+
+  /**
+   * Clean up providers (useful for testing/reset)
+   */
+  cleanup(): void {
+    this.fallbackProviders.clear();
+    this.primaryFallbackProvider = null;
+    log.info('RPC Service: Cleaned up fallback providers', {
+      component: 'RpcService',
+      function: 'cleanup'
+    });
   }
 }
 

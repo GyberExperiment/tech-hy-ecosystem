@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO } from '../constants/contracts';
 import { toast } from 'react-hot-toast';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints, RpcHealthMonitor } from '../constants/rpcEndpoints';
+import { rpcService } from '../services/rpcService';
 
 export interface TokenData {
   symbol: string;
@@ -26,8 +26,8 @@ export interface TokenBalances {
   BNB: string;
 }
 
-// ✅ Use centralized RPC configuration instead of hardcoded URLs
-const FALLBACK_RPC_URLS = getAllRpcEndpoints();
+// ✅ Убираем дублированную FALLBACK_RPC_URLS - используем rpcService
+// const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -85,55 +85,56 @@ export const useTokenData = () => {
     ]);
   };
 
-  const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-    let lastError: Error | null = null;
-    
-    for (let i = 0; i < FALLBACK_RPC_URLS.length; i++) {
-      const rpcUrl = FALLBACK_RPC_URLS[i];
-      try {
-        log.debug('useTokenData: Trying RPC endpoint', {
-          component: 'useTokenData',
-          function: 'tryMultipleRpc',
-          rpcUrl
-        });
-        
-        // ✅ ДОБАВЛЯЕМ DELAY между попытками для rate limiting protection
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000 * i)); // 2s, 4s, 6s delays
-        }
-        
-        const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-        const result = await withTimeout(operation(rpcProvider), 15000);
-        log.info('useTokenData: RPC endpoint success', {
-          component: 'useTokenData',
-          function: 'tryMultipleRpc',
-          rpcUrl
-        });
-        return result;
-      } catch (error: any) {
-        log.warn('useTokenData: RPC endpoint failed', {
-          component: 'useTokenData',
-          function: 'tryMultipleRpc',
-          rpcUrl,
-          error: error.message
-        });
-        lastError = error;
-        
-        // ✅ Больше delay после 429 ошибок
-        if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
-          log.info('Rate limited, waiting 5 seconds before next RPC', {
-            component: 'useTokenData',
-            function: 'tryMultipleRpc',
-            rpcUrl
-          });
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-        continue;
-      }
-    }
-    
-    throw lastError || new Error('All RPC endpoints failed');
-  };
+  // ✅ УБИРАЕМ дублированную tryMultipleRpc функцию - используем rpcService.withFallback()
+  // const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
+  //   let lastError: Error | null = null;
+  //   
+  //   for (let i = 0; i < FALLBACK_RPC_URLS.length; i++) {
+  //     const rpcUrl = FALLBACK_RPC_URLS[i];
+  //     try {
+  //       log.debug('useTokenData: Trying RPC endpoint', {
+  //         component: 'useTokenData',
+  //         function: 'tryMultipleRpc',
+  //         rpcUrl
+  //       });
+  //       
+  //       // ✅ ДОБАВЛЯЕМ DELAY между попытками для rate limiting protection
+  //       if (i > 0) {
+  //         await new Promise(resolve => setTimeout(resolve, 2000 * i)); // 2s, 4s, 6s delays
+  //       }
+  //       
+  //       const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+  //       const result = await withTimeout(operation(rpcProvider), 15000);
+  //       log.info('useTokenData: RPC endpoint success', {
+  //         component: 'useTokenData',
+  //         function: 'tryMultipleRpc',
+  //         rpcUrl
+  //       });
+  //       return result;
+  //     } catch (error: any) {
+  //       log.warn('useTokenData: RPC endpoint failed', {
+  //         component: 'useTokenData',
+  //         function: 'tryMultipleRpc',
+  //         rpcUrl,
+  //         error: error.message
+  //       });
+  //       lastError = error;
+  //       
+  //       // ✅ Больше delay после 429 ошибок
+  //       if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
+  //         log.info('Rate limited, waiting 5 seconds before next RPC', {
+  //           component: 'useTokenData',
+  //           function: 'tryMultipleRpc',
+  //           rpcUrl
+  //         });
+  //         await new Promise(resolve => setTimeout(resolve, 5000));
+  //       }
+  //       continue;
+  //     }
+  //   }
+  //   
+  //   throw lastError || new Error('All RPC endpoints failed');
+  // };
 
   const fetchTokenData = useCallback(async (showRefreshToast: boolean = false) => {
     // Prevent multiple simultaneous requests
@@ -193,8 +194,8 @@ export const useTokenData = () => {
           function: 'fetchTokenData',
           address: account
         });
-        const balance = await tryMultipleRpc(async (rpcProvider) => {
-          return await rpcProvider.getBalance(account);
+        const balance = await rpcService.withFallback(async (provider) => {
+          return await provider.getBalance(account);
         });
         newBalances.BNB = ethers.formatEther(balance);
         log.info('useTokenData: BNB balance fetched:', {
@@ -251,8 +252,8 @@ export const useTokenData = () => {
             tokenAddress: tokenInfo.address
           });
           
-          const [balance, decimals, totalSupply] = await tryMultipleRpc(async (rpcProvider) => {
-            const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
+          const [balance, decimals, totalSupply] = await rpcService.withFallback(async (provider) => {
+            const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
             return await Promise.all([
               contract.balanceOf(account),
               contract.decimals(),
