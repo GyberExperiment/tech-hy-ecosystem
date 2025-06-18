@@ -9,6 +9,12 @@ import { ethers } from 'ethers';
 import { getAllRpcEndpoints, RpcHealthMonitor } from '../constants/rpcEndpoints';
 import { log } from '../utils/logger';
 
+// ✅ ДОБАВЛЯЕМ Network import для staticNetwork конфигурации
+const BSC_TESTNET_NETWORK = ethers.Network.from({
+  chainId: 97,
+  name: 'bsc-testnet'
+});
+
 // Singleton pattern for RPC service
 class RpcService {
   private static instance: RpcService;
@@ -38,14 +44,19 @@ class RpcService {
 
   /**
    * Get or create fallback provider for specific endpoint
+   * ✅ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Добавлен staticNetwork параметр
    */
   private getFallbackProvider(rpcUrl: string): ethers.JsonRpcProvider {
     if (!this.fallbackProviders.has(rpcUrl)) {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      // ✅ РЕШЕНИЕ: staticNetwork предотвращает автоматические eth_chainId запросы!
+      const provider = new ethers.JsonRpcProvider(rpcUrl, BSC_TESTNET_NETWORK, {
+        staticNetwork: BSC_TESTNET_NETWORK
+      });
       this.fallbackProviders.set(rpcUrl, provider);
-      log.debug('RPC Service: Created new fallback provider', {
+      log.debug('RPC Service: Created new fallback provider with staticNetwork', {
         component: 'RpcService',
-        endpoint: rpcUrl
+        endpoint: rpcUrl,
+        network: 'BSC Testnet (97)'
       });
     }
     return this.fallbackProviders.get(rpcUrl)!;

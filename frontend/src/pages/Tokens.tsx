@@ -48,19 +48,6 @@ interface TokenAllowance {
 // ✅ Use centralized RPC configuration  
 const FALLBACK_RPC_URLS = getAllRpcEndpoints();
 
-const createFallbackProvider = () => {
-  try {
-    return new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[0]);
-  } catch (error) {
-    log.error('Failed to create fallback provider', {
-      component: 'Tokens',
-      function: 'createFallbackProvider',
-      provider: FALLBACK_RPC_URLS[0]
-    }, error as Error);
-    return null;
-  }
-};
-
 // Utility function для retry логики
 const withRetry = async <T,>(
   operation: () => Promise<T>,

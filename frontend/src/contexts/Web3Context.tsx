@@ -110,6 +110,39 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   // Зафиксированный EIP-1193 провайдер после первого успешного подключения
   const [lockedProvider, setLockedProvider] = useState<EIP1193Provider | null>(null);
 
+  // ✅ ДОБАВЛЯЕМ защиту от множественных запросов
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
+  const [isUpdatingRPC, setIsUpdatingRPC] = useState(false);
+
+  // ✅ ГЛОБАЛЬНАЯ ЗАЩИТА: Предотвращаем множественные одновременные MetaMask запросы
+  const [pendingMetaMaskRequests, setPendingMetaMaskRequests] = useState<Set<string>>(new Set());
+
+  const createRequestGuard = (requestType: string) => {
+    return {
+      canProceed: () => {
+        if (pendingMetaMaskRequests.has(requestType)) {
+          log.debug(`MetaMask request already pending: ${requestType}`, {
+            component: 'Web3Context',
+            requestType,
+            pendingRequests: Array.from(pendingMetaMaskRequests)
+          });
+          return false;
+        }
+        return true;
+      },
+      start: () => {
+        setPendingMetaMaskRequests(prev => new Set([...prev, requestType]));
+      },
+      end: () => {
+        setPendingMetaMaskRequests(prev => {
+          const next = new Set(prev);
+          next.delete(requestType);
+          return next;
+        });
+      }
+    };
+  };
+
   // EIP-6963 hooks
   const preferredProvider = usePreferredProvider();
 
@@ -223,6 +256,19 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   }, [signer, account]);
 
   const connectWallet = async () => {
+    // ✅ ЗАЩИТА ОТ REACT STRICTMODE: Предотвращаем множественные вызовы подключения
+    const guard = createRequestGuard('wallet_connect');
+    
+    if (!guard.canProceed()) {
+      log.debug('Wallet connection already in progress', {
+        component: 'Web3Context',
+        function: 'connectWallet'
+      });
+      return;
+    }
+
+    guard.start();
+    
     try {
       const ethereum = getEthereumProvider();
       if (!ethereum) {
@@ -319,6 +365,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         });
         toast.error('Ошибка подключения к кошельку. Проверьте MetaMask.');
       }
+    } finally {
+      guard.end();
     }
   };
 
@@ -342,55 +390,76 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   };
 
   const switchNetwork = async () => {
+    // ✅ УЛУЧШЕННАЯ ЗАЩИТА: Используем requestGuard для предотвращения дублирующихся запросов
+    const guard = createRequestGuard('wallet_switchEthereumChain');
+    
+    if (!guard.canProceed() || isSwitchingNetwork) {
+      return;
+    }
+
     const ethereum = getEthereumProvider();
     if (!ethereum) {
       toast.error('MetaMask не найден');
       return;
     }
 
+    setIsSwitchingNetwork(true);
+    guard.start();
+    
     try {
       // Сначала пытаемся переключиться на BSC Testnet
       await ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: '0x61' }], // BSC Testnet chainId in hex
       });
+      
+      log.info('Successfully switched to BSC Testnet', {
+        component: 'Web3Context',
+        function: 'switchNetwork'
+      });
+      
     } catch (switchError: any) {
       // ✅ Проверяем код ошибки для правильной обработки
       if (switchError.code === 4902) {
         // Сеть не найдена - добавляем с правильным RPC
-        try {
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: '0x61',
-                chainName: BSC_TESTNET_CONFIG.chainName,
-                nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
-                rpcUrls: BSC_TESTNET_CONFIG.rpcUrls,
-                blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
-              },
-            ],
-          });
-          toast.success('BSC Testnet добавлен с обновленными RPC!');
-        } catch (addError: any) {
-          // ✅ Обрабатываем ошибку "already pending"
-          if (addError.code === -32002) {
-            toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
-            return;
+        const addGuard = createRequestGuard('wallet_addEthereumChain');
+        
+        if (addGuard.canProceed()) {
+          addGuard.start();
+          try {
+            await ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: '0x61',
+                  chainName: BSC_TESTNET_CONFIG.chainName,
+                  nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
+                  rpcUrls: BSC_TESTNET_CONFIG.rpcUrls,
+                  blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
+                },
+              ],
+            });
+            toast.success('BSC Testnet добавлен с обновленными RPC!');
+          } catch (addError: any) {
+            // ✅ Обрабатываем ошибку "already pending"
+            if (addError.code === -32002) {
+              toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
+            } else {
+              log.error('Failed to add BSC Testnet network', {
+                component: 'Web3Context',
+                function: 'switchNetwork',
+                network: 'BSC_TESTNET'
+              }, addError as Error);
+              toast.error('Ошибка добавления BSC Testnet');
+            }
+          } finally {
+            addGuard.end();
           }
-          log.error('Failed to add BSC Testnet network', {
-            component: 'Web3Context',
-            function: 'switchNetwork',
-            network: 'BSC_TESTNET'
-          }, addError as Error);
-          toast.error('Ошибка добавления BSC Testnet');
         }
       } else if (switchError.code === -32002) {
         // ✅ Уже есть pending запрос
         toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
-        return;
       } else {
-        // ✅ Убираем автоматическое обновление RPC чтобы избежать повторных модалов
         log.warn('Network switch failed', {
           component: 'Web3Context',
           function: 'switchNetwork',
@@ -399,13 +468,26 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         });
         toast.error('Ошибка переключения сети. Попробуйте вручную в MetaMask.');
       }
+    } finally {
+      setIsSwitchingNetwork(false);
+      guard.end();
     }
   };
 
   const updateBSCTestnetRPC = async (): Promise<boolean> => {
+    // ✅ УЛУЧШЕННАЯ ЗАЩИТА: Используем requestGuard для предотвращения дублирующихся запросов
+    const guard = createRequestGuard('wallet_addEthereumChain_update');
+    
+    if (!guard.canProceed() || isUpdatingRPC) {
+      return false;
+    }
+
     const ethereum = getEthereumProvider();
     if (!ethereum) return false;
 
+    setIsUpdatingRPC(true);
+    guard.start();
+    
     try {
       log.info('Updating BSC Testnet RPC endpoints', {
         component: 'Web3Context',  
@@ -418,6 +500,11 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       const chainId = await ethereum.request({ method: 'eth_chainId' });
       if (chainId !== '0x61') {
         // Не в BSC Testnet - не обновляем RPC
+        log.debug('Not on BSC Testnet, skipping RPC update', {
+          component: 'Web3Context',
+          function: 'updateBSCTestnetRPC',
+          currentChainId: chainId
+        });
         return false;
       }
 
@@ -441,12 +528,12 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         function: 'updateBSCTestnetRPC',
         rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
       });
-      // ✅ Убираем toast чтобы не спамить пользователя
+      
       return true;
     } catch (error: any) {
       // ✅ Специальная обработка для pending запросов
       if (error.code === -32002) {
-        log.warn('RPC update request already pending', {
+        log.debug('RPC update request already pending - this is expected', {
           component: 'Web3Context',
           function: 'updateBSCTestnetRPC',
           network: 'BSC_TESTNET'
@@ -463,6 +550,9 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       }, error);
       // ✅ Тихо игнорируем ошибки обновления RPC
       return false;
+    } finally {
+      setIsUpdatingRPC(false);
+      guard.end();
     }
   };
 

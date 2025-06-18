@@ -267,9 +267,8 @@ export const useTokenData = () => {
           // Update balances object
           newBalances[tokenInfo.symbol as keyof TokenBalances] = formattedBalance;
           
-          // Create contract instance for transactions
-          const fallbackProvider = new ethers.JsonRpcProvider(FALLBACK_RPC_URLS[0]);
-          const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, fallbackProvider);
+          // ✅ ИСПРАВЛЕНИЕ: Используем rpcService.getContract() вместо прямого создания JsonRpcProvider
+          const contract = await rpcService.getContract(tokenInfo.address, ERC20_ABI, false);
           
           tokenData.push({
             symbol: tokenInfo.symbol,
