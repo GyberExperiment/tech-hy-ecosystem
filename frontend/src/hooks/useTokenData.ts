@@ -267,8 +267,8 @@ export const useTokenData = () => {
           // Update balances object
           newBalances[tokenInfo.symbol as keyof TokenBalances] = formattedBalance;
           
-          // ✅ ИСПРАВЛЕНИЕ: Используем rpcService.getContract() вместо прямого создания JsonRpcProvider
-          const contract = await rpcService.getContract(tokenInfo.address, ERC20_ABI, false);
+          // ✅ ИСПРАВЛЕНИЕ: Используем getReadOnlyContract() для избежания MetaMask RPC rate limiting
+          const contract = await rpcService.getReadOnlyContract(tokenInfo.address, ERC20_ABI);
           
           tokenData.push({
             symbol: tokenInfo.symbol,

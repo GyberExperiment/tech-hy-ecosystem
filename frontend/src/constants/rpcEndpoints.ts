@@ -13,11 +13,11 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 ];
 
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  'https://bsc-testnet-dataseed.bnbchain.org',     // ✅ Официальный Binance endpoint (primary)
-  'https://data-seed-prebsc-1-s1.binance.org:8545', // ✅ Официальный Binance endpoint (backup)
-  'https://bsc-testnet.bnbchain.org',              // ✅ Официальный Binance endpoint (backup)
+  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - самый надёжный (ПЕРВЫЙ)
+  'https://data-seed-prebsc-1-s1.binance.org:8545', // ✅ Официальный Binance endpoint
   'https://bsc-testnet.drpc.org',                  // ✅ dRPC - надёжный провайдер
-  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - надёжный backup
+  'https://bsc-testnet-dataseed.bnbchain.org',     // ✅ Официальный Binance endpoint
+  'https://bsc-testnet.bnbchain.org',              // ✅ Официальный Binance endpoint (backup)
 ];
 
 // 🎯 Current network configuration

@@ -64,34 +64,38 @@ class RpcService {
 
   /**
    * Get provider - prefer Web3 (MetaMask), fallback to read-only
+   * ✅ ДОБАВЛЯЕМ опцию принудительного использования fallback для избежания rate limiting
    */
-  async getProvider(): Promise<ethers.Provider> {
+  async getProvider(forceReadOnly: boolean = false): Promise<ethers.Provider> {
+    // ✅ НОВАЯ ЛОГИКА: Если forceReadOnly или MetaMask RPC проблематичен, используем fallback
+    if (forceReadOnly || !this.web3Provider) {
+      // 2. Fallback to read-only provider for disconnected state
+      if (!this.primaryFallbackProvider) {
+        const rpcEndpoints = getAllRpcEndpoints();
+        this.primaryFallbackProvider = this.getFallbackProvider(rpcEndpoints[0]);
+        log.info('RPC Service: Set primary fallback provider', {
+          component: 'RpcService',
+          endpoint: rpcEndpoints[0],
+          reason: forceReadOnly ? 'forceReadOnly' : 'no_web3_provider'
+        });
+      }
+
+      return this.primaryFallbackProvider;
+    }
+
     // 1. Prefer MetaMask provider (proper DApp architecture)
-    if (this.web3Provider) {
-      return this.web3Provider;
-    }
-
-    // 2. Fallback to read-only provider for disconnected state
-    if (!this.primaryFallbackProvider) {
-      const rpcEndpoints = getAllRpcEndpoints();
-      this.primaryFallbackProvider = this.getFallbackProvider(rpcEndpoints[0]);
-      log.info('RPC Service: Set primary fallback provider', {
-        component: 'RpcService',
-        endpoint: rpcEndpoints[0]
-      });
-    }
-
-    return this.primaryFallbackProvider;
+    return this.web3Provider;
   }
 
   /**
    * Try multiple RPC endpoints with fallback and health monitoring
+   * ✅ УЛУЧШЕННАЯ ЛОГИКА: При rate limiting переключаемся на read-only режим
    */
   async withFallback<T>(
     operation: (provider: ethers.Provider) => Promise<T>,
     timeoutMs: number = 15000
   ): Promise<T> {
-    const provider = await this.getProvider();
+    let provider = await this.getProvider();
     
     // Helper function for timeout
     const withTimeout = <T>(promise: Promise<T>, timeout: number): Promise<T> => {
@@ -114,11 +118,44 @@ class RpcService {
       
       return result;
     } catch (error) {
+      const errorMessage = (error as Error).message;
+      
+      // ✅ СПЕЦИАЛЬНАЯ ОБРАБОТКА: При rate limiting переключаемся на read-only
+      if (errorMessage?.includes('429') || errorMessage?.includes('Too Many Requests')) {
+        log.warn('RPC rate limiting detected, switching to read-only mode', {
+          component: 'RpcService',
+          function: 'withFallback',
+          error: errorMessage,
+          switchingToReadOnly: true
+        });
+        
+        try {
+          // Принудительно используем read-only провайдер
+          const readOnlyProvider = await this.getProvider(true);
+          const result = await withTimeout(operation(readOnlyProvider), timeoutMs);
+          
+          log.info('RPC Service: Read-only fallback successful', {
+            component: 'RpcService',
+            function: 'withFallback',
+            mode: 'read-only'
+          });
+          
+          return result;
+        } catch (readOnlyError) {
+          log.error('RPC Service: Read-only fallback also failed', {
+            component: 'RpcService',
+            function: 'withFallback',
+            error: (readOnlyError as Error).message
+          });
+          // Продолжаем с обычной fallback логикой
+        }
+      }
+      
       log.error('RPC operation failed with primary provider', {
         component: 'RpcService',
         function: 'withFallback',
         isWeb3Provider: !!this.web3Provider,
-        error: (error as Error).message
+        error: errorMessage
       }, error as Error);
 
       // If using Web3 provider, don't try fallbacks (user should handle wallet issues)
@@ -204,6 +241,17 @@ class RpcService {
     }
 
     return new ethers.Contract(address, abi, provider);
+  }
+
+  /**
+   * ✅ НОВЫЙ МЕТОД: Get contract instance with read-only provider (избегает MetaMask RPC)
+   */
+  async getReadOnlyContract(
+    address: string, 
+    abi: any[]
+  ): Promise<ethers.Contract> {
+    const readOnlyProvider = await this.getProvider(true);
+    return new ethers.Contract(address, abi, readOnlyProvider);
   }
 
   /**
