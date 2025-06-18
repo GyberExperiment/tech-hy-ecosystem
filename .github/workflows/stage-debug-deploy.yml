@@ -81,6 +81,7 @@ jobs:
   stage-debug-docker-build:
     name: 🐳 Stage Debug Docker Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # 🚀 Максимум 15 минут для Docker Build
     needs: [stage-debug-frontend-build]
     if: github.ref == 'refs/heads/stage-debug'
     permissions:
@@ -121,7 +122,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
