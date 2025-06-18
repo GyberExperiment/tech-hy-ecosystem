@@ -114,7 +114,7 @@ describe("LPLocker", () => {
 
     beforeEach(async () => {
       // Подготовка VC токенов для пользователя
-      await vcToken.mint(await user.getAddress(), VC_AMOUNT * 10n);
+      await vcToken.mintTo(await user.getAddress(), VC_AMOUNT * 10n);
       await vcToken.connect(user).approve(await lpLocker.getAddress(), VC_AMOUNT * 10n);
       
       // Подготовка VG токенов - используем уже существующие преминченные токены (10M у owner)
@@ -177,7 +177,7 @@ describe("LPLocker", () => {
       
       await pancakeRouter.setAddLiquidityResult(vcAmountSmall, BNB_AMOUNT, lowLiquidity);
       
-      await vcToken.mint(await user.getAddress(), vcAmountSmall);
+      await vcToken.mintTo(await user.getAddress(), vcAmountSmall);
       await vcToken.connect(user).approve(await lpLocker.getAddress(), vcAmountSmall);
       
       // Низкий slippage (2%) при очень низком LP должен вызвать ошибку
