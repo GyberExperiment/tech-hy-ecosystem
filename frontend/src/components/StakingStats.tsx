@@ -96,57 +96,6 @@ const StakingStats: React.FC = () => {
     const signal = abortControllerRef.current.signal;
 
     try {
-      // ✅ Используем rpcService вместо создания fallback provider
-      // Create fallback provider with multiple RPC endpoints
-      // const fallbackRpcUrls = FALLBACK_RPC_URLS;
-      // 
-      // const fallbackProvider = new ethers.JsonRpcProvider(fallbackRpcUrls[0]);
-      // const activeProvider = provider || fallbackProvider;
-
-      // Helper function for timeout
-      // const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-      //   return Promise.race([
-      //     promise,
-      //     new Promise<T>((_, reject) => 
-      //       setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-      //     )
-      //   ]);
-      // };
-
-      // ✅ УБИРАЕМ дублированную tryMultipleRpc функцию - используем rpcService.withFallback()
-      // const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-      //   let lastError: Error | null = null;
-      //   
-      //   for (const rpcUrl of fallbackRpcUrls) {
-      //     try {
-      //       log.debug('Trying RPC endpoint', {
-      //         component: 'StakingStats',
-      //         function: 'tryMultipleRpc',
-      //         rpcUrl
-      //       });
-      //       const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-      //       const result = await withTimeout(operation(rpcProvider), 15000);
-      //       log.info('RPC endpoint success', {
-      //         component: 'StakingStats',
-      //         function: 'tryMultipleRpc',
-      //         rpcUrl
-      //       });
-      //       return result;
-      //     } catch (error: any) {
-      //       log.warn('RPC endpoint failed', {
-      //         component: 'StakingStats',
-      //         function: 'tryMultipleRpc',
-      //         rpcUrl,
-      //         error: error.message
-      //       });
-      //       lastError = error;
-      //       continue;
-      //     }
-      //   }
-      //   
-      //   throw lastError || new Error('All RPC endpoints failed');
-      // };
-
       // Contract ABIs
       const LPLOCKER_ABI = [
         "function getPoolInfo() view returns (uint256 totalLocked, uint256 totalIssued, uint256 totalDeposited, uint256 availableVG)",
@@ -161,86 +110,45 @@ const StakingStats: React.FC = () => {
       const LP_LOCKER_ADDRESS = CONTRACTS.LP_LOCKER;
       const VC_TOKEN_ADDRESS = CONTRACTS.VC_TOKEN;
 
-      // Skip Web3Context contracts - use direct RPC calls for reliability
-      log.info('Using direct RPC calls for reliability', {
-        component: 'StakingStats',
-        function: 'fetchPoolStats'
+      // ✅ ИСПРАВЛЯЕМ: Pool info from LPLocker
+      const poolInfo = await rpcService.withFallback(async (rpcProvider) => {
+        const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
+        return await (lpLockerContract.getPoolInfo as any)();
       });
       
-      try {
-        // Pool info from LPLocker
-        const poolInfoData = await rpcService.withFallback(async (rpcProvider) => {
-          const lpLockerContract = new ethers.Contract(LP_LOCKER_ADDRESS, LPLOCKER_ABI, rpcProvider);
-          return await (lpLockerContract.getPoolInfo as any)();
-        });
-        const poolInfo = poolInfoData;
-        log.info('Pool info retrieved via direct RPC', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          poolInfo
-        });
-      } catch (error: any) {
-        log.warn('Pool info retrieval failed', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          error: error.message
-        });
-      }
-
-      // Используем статические значения конфигурации вместо дублированного config() вызова
-      // чтобы избежать конфликта с EarnVGWidget
-      const config = {
-        maxSlippageBps: 1000,
-        mevEnabled: false,
-        lpToVgRatio: 10,
-        minVCAmount: '100000000000000000', // 0.1 VC 
-        maxVCAmount: '10000000000000000000000', // 10,000 VC
-        lpDivisor: '1000000000000000000000' // Статическое значение по умолчанию (исправленное)
-      };
-      log.info('Config loaded with static values', {
+      log.info('Pool info retrieved', {
         component: 'StakingStats',
         function: 'fetchPoolStats',
-        config
+        totalLocked: ethers.formatEther(poolInfo[0] || 0),
+        totalIssued: ethers.formatEther(poolInfo[1] || 0),
+        availableVG: ethers.formatEther(poolInfo[3] || 0)
       });
 
-      try {
-        // VC balance
-        const userVCBalance = await rpcService.withFallback(async (rpcProvider) => {
-          const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
-          const vcBalance = await (vcContract.balanceOf as any)(account);
-          return ethers.formatEther(vcBalance);
-        });
-        log.info('VC balance retrieved via direct RPC', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          userVCBalance
-        });
-      } catch (error: any) {
-        log.warn('VC balance retrieval failed', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          error: error.message
-        });
-      }
+      // Используем статические значения конфигурации
+      const config = {
+        lpToVgRatio: 10,
+        lpDivisor: '1000000000000000000000' // 1e21
+      };
 
-      try {
-        // BNB balance
-        const userBNBBalance = await rpcService.withFallback(async (rpcProvider) => {
-          const bnbBalance = await rpcProvider.getBalance(account);
-          return ethers.formatEther(bnbBalance);
-        });
-        log.info('BNB balance retrieved via direct RPC', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          userBNBBalance
-        });
-      } catch (error: any) {
-        log.warn('BNB balance retrieval failed', {
-          component: 'StakingStats',
-          function: 'fetchPoolStats',
-          error: error.message
-        });
-      }
+      // ✅ ИСПРАВЛЯЕМ: VC balance
+      const userVCBalance = await rpcService.withFallback(async (rpcProvider) => {
+        const vcContract = new ethers.Contract(VC_TOKEN_ADDRESS, ERC20_ABI, rpcProvider);
+        const vcBalance = await (vcContract.balanceOf as any)(account);
+        return ethers.formatEther(vcBalance);
+      });
+
+      // ✅ ИСПРАВЛЯЕМ: BNB balance
+      const userBNBBalance = await rpcService.withFallback(async (rpcProvider) => {
+        const bnbBalance = await rpcProvider.getBalance(account);
+        return ethers.formatEther(bnbBalance);
+      });
+
+      log.info('Balances retrieved', {
+        component: 'StakingStats',
+        function: 'fetchPoolStats',
+        userVCBalance,
+        userBNBBalance
+      });
 
       const newPoolData = {
         totalLockedLP: ethers.formatEther(poolInfo[0] || 0),
@@ -356,7 +264,7 @@ const StakingStats: React.FC = () => {
       <div className="card text-center text-gray-400">
         <TrendingUp className="mx-auto mb-4" size={48} />
         <h3 className="text-lg font-semibold mb-2 text-slate-100">Ошибка загрузки</h3>
-        <button onClick={fetchPoolStats} className="btn-primary mt-4">
+        <button onClick={() => fetchPoolStats(true)} className="btn-primary mt-4">
           Попробовать снова
         </button>
       </div>
@@ -412,7 +320,7 @@ const StakingStats: React.FC = () => {
           <div className="flex items-center space-x-4">
           <h3 className="text-xl font-semibold flex items-center text-slate-100">
             <TrendingUp className="mr-3 text-blue-400" />
-            Статистика LP → VG экосистемы
+            Статистика экосистемы
           </h3>
             {refreshing && (
               <div className="flex items-center space-x-2 text-blue-400">
