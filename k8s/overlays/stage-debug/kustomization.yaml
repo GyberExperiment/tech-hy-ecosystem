@@ -1,4 +1,1 @@
-resources:
-  - deployment.yml
-  - service.yml
-  - ingress.yml 
+давай дабавим 

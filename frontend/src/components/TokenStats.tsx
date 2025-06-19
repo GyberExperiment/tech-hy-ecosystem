@@ -18,8 +18,13 @@ const TokenStats: React.FC<TokenStatsProps> = ({
     loading 
   } = useTokenData();
 
-  // Calculate total allowances (placeholder for now)
-  const totalAllowances = 0; // TODO: Add allowances calculation
+  // Calculate total allowances from available token data
+  const totalAllowances = React.useMemo(() => {
+    return tokensWithBalance.reduce((total, token) => {
+      // Count tokens with positive allowances to contracts
+      return total + (token.allowance && parseFloat(token.allowance) > 0 ? 1 : 0);
+    }, 0);
+  }, [tokensWithBalance]);
 
   if (loading && tokens.length === 0) {
     return (

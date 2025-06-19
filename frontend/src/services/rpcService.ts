@@ -69,16 +69,16 @@ class RpcService {
   async getProvider(forceReadOnly: boolean = false): Promise<ethers.Provider> {
     // ✅ НОВАЯ ЛОГИКА: Если forceReadOnly или MetaMask RPC проблематичен, используем fallback
     if (forceReadOnly || !this.web3Provider) {
-      // 2. Fallback to read-only provider for disconnected state
+    // 2. Fallback to read-only provider for disconnected state
       if (!this.primaryFallbackProvider) {
-        const rpcEndpoints = getAllRpcEndpoints();
+      const rpcEndpoints = getAllRpcEndpoints();
         this.primaryFallbackProvider = this.getFallbackProvider(rpcEndpoints[0]);
         log.info('RPC Service: Set primary fallback provider', {
-          component: 'RpcService',
+        component: 'RpcService',
           endpoint: rpcEndpoints[0],
           reason: forceReadOnly ? 'forceReadOnly' : 'no_web3_provider'
-        });
-      }
+      });
+    }
 
       return this.primaryFallbackProvider;
     }
@@ -175,8 +175,8 @@ class RpcService {
       }
 
       // Try other endpoints only if using fallback providers
-      const rpcEndpoints = getAllRpcEndpoints();
-      
+        const rpcEndpoints = getAllRpcEndpoints();
+        
       // Mark primary endpoint failure
       RpcHealthMonitor.markFailure(rpcEndpoints[0]);
       
@@ -200,26 +200,26 @@ class RpcService {
           
           const fallbackProvider = this.getFallbackProvider(rpcUrl);
           const result = await withTimeout(operation(fallbackProvider), timeoutMs);
-          
+            
           log.info('RPC Service: Fallback successful', {
-            component: 'RpcService',
+              component: 'RpcService',
             function: 'withFallback',
             endpoint: rpcUrl,
-            attemptNumber: i + 1
-          });
+              attemptNumber: i + 1
+            });
           
           // Mark success and update primary provider
           RpcHealthMonitor.markSuccess(rpcUrl);
           this.primaryFallbackProvider = fallbackProvider;
-          
-          return result;
-        } catch (fallbackError) {
+            
+            return result;
+          } catch (fallbackError) {
           log.warn('RPC Service: Fallback failed', {
-            component: 'RpcService',
+              component: 'RpcService',
             function: 'withFallback',
             endpoint: rpcUrl,
-            error: (fallbackError as Error).message
-          });
+              error: (fallbackError as Error).message
+            });
           
           RpcHealthMonitor.markFailure(rpcUrl);
           lastError = fallbackError;

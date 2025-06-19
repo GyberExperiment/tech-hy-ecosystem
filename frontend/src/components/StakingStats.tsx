@@ -408,7 +408,7 @@ const StakingStats: React.FC = () => {
               Формула: LP = (VC × BNB) / {formatNumber(poolData.lpDivisor)}, VG = LP × {poolData.lpToVgRatio}
             </div>
             <a href="/staking" className="btn-primary">
-              Начать зарабатывать VG
+              Earn VG
             </a>
           </div>
         </div>

@@ -207,7 +207,7 @@ const WalletTroubleshoot: React.FC = () => {
 
       <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
         <p className="text-sm text-blue-300">
-          <strong>Совет:</strong> Если у вас установлен Phantom кошелек, временно отключите его в настройках браузера, 
+          <strong>Совет:</strong> Если у вас установлен Phantom кошелек, отключите его в настройках браузера, 
           чтобы избежать конфликтов с MetaMask при работе с BSC сетью.
         </p>
       </div>

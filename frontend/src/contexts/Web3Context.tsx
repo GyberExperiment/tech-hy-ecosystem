@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { toast } from 'react-hot-toast';
 import { CONTRACTS } from '../constants/contracts';
 import { log } from '../utils/logger';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { getTestnetRpcEndpoints } from '../constants/rpcEndpoints';
 import { rpcService } from '../services/rpcService';
 
 // EIP-6963 imports
@@ -172,7 +172,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       symbol: 'tBNB',
       decimals: 18,
     },
-    rpcUrls: getAllRpcEndpoints(), // ✅ Use centralized RPC endpoints
+    rpcUrls: getTestnetRpcEndpoints(), // ✅ Use ONLY testnet endpoints
     blockExplorerUrls: ['https://testnet.bscscan.com'],
   };
 
@@ -184,7 +184,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     // Если кошелёк уже выбран – всегда возвращаем его
     if (lockedProvider) return lockedProvider;
 
-    // 🧪 ВРЕМЕННО: Принудительно используем legacy для тестирования Arc browser popup проблемы
+    // Check for forced legacy mode (can be enabled in localStorage for debugging)
     const forceLegacy = localStorage.getItem('forceLegacyProvider') === 'true';
     if (forceLegacy) {
       if (process.env.NODE_ENV === 'development') {

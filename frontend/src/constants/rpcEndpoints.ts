@@ -8,8 +8,11 @@
 // 🏆 Primary RPC endpoints (most reliable)
 export const BSC_MAINNET_RPC_ENDPOINTS = [
   'https://bsc-rpc.publicnode.com',           // ✅ publicnode.com - most reliable
-  'https://bsc-dataseed.binance.org/',        // ✅ Binance official - backup
-  'https://rpc.ankr.com/bsc',                 // ✅ Ankr - backup
+  'https://bsc-dataseed.bnbchain.org',
+  'https://bsc-dataseed1-defi.binance.org',
+  'https://bsc-dataseed2-defi.binance.org',
+  'https://bsc-rpc.publicnode.com',
+  'https://endpoints.omniatech.io/v1/bsc/mainnet/public'
 ];
 
 export const BSC_TESTNET_RPC_ENDPOINTS = [
@@ -38,9 +41,12 @@ export const getPrimaryRpcEndpoint = (): string => {
 
 // 🔄 Get all RPC endpoints for current network (with fallbacks)
 export const getAllRpcEndpoints = (): string[] => {
-  return CURRENT_NETWORK === 'mainnet' 
-    ? BSC_MAINNET_RPC_ENDPOINTS
-    : BSC_TESTNET_RPC_ENDPOINTS;
+  // Check if we're targeting testnet (default for development)
+  const isTestnet = process.env.NODE_ENV === 'development' || 
+                   window.location.hostname.includes('stage') ||
+                   window.location.hostname.includes('testnet');
+  
+  return isTestnet ? BSC_TESTNET_RPC_ENDPOINTS : BSC_MAINNET_RPC_ENDPOINTS;
 };
 
 // 🌍 Network configuration
@@ -107,4 +113,8 @@ export class RpcHealthMonitor {
     }
     return healthyEndpoints[0]!; // Non-null assertion since we checked length above
   }
-} 
+}
+
+// Explicit functions for each network
+export const getTestnetRpcEndpoints = (): string[] => BSC_TESTNET_RPC_ENDPOINTS;
+export const getMainnetRpcEndpoints = (): string[] => BSC_MAINNET_RPC_ENDPOINTS; 
