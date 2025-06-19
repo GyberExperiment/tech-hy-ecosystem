@@ -1,1 +1,9 @@
-давай дабавим 
+resources:
+  - deployment.yml
+  - service.yml
+  - ingress.yml
+
+namePrefix: stage-debug-
+commonLabels:
+  environment: stage-debug
+  app: techhy-ecosystem 
