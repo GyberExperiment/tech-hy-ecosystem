@@ -386,6 +386,8 @@ export function convertBSCScanToTransaction(
   bscscanTx: BSCScanTransaction | BSCScanTokenTransfer | BSCScanEventLog,
   type: 'normal' | 'token' | 'event'
 ): any {
+  console.log('🔍 DEBUG: Converting BSCScan transaction:', { bscscanTx, type });
+  
   const baseTransaction = {
     id: `bscscan-${bscscanTx.hash}-${bscscanTx.transactionIndex || '0'}`,
     hash: bscscanTx.hash,
@@ -398,7 +400,7 @@ export function convertBSCScanToTransaction(
 
   if (type === 'normal') {
     const tx = bscscanTx as BSCScanTransaction;
-    return {
+    const result = {
       ...baseTransaction,
       type: 'transfer' as const,
       amount: (parseFloat(tx.value) / 1e18).toString(),
@@ -407,6 +409,8 @@ export function convertBSCScanToTransaction(
       to: tx.to,
       value: `${(parseFloat(tx.value) / 1e18).toFixed(4)} BNB`
     };
+    console.log('🔍 DEBUG: Normal transaction converted:', result);
+    return result;
   }
 
   if (type === 'token') {
@@ -414,7 +418,7 @@ export function convertBSCScanToTransaction(
     const decimals = parseInt(tx.tokenDecimal) || 18;
     const amount = parseFloat(tx.value) / Math.pow(10, decimals);
     
-    return {
+    const result = {
       ...baseTransaction,
       type: 'transfer' as const,
       amount: amount.toString(),
@@ -423,6 +427,8 @@ export function convertBSCScanToTransaction(
       to: tx.to,
       value: `${amount.toFixed(4)} ${tx.tokenSymbol}`
     };
+    console.log('🔍 DEBUG: Token transaction converted:', result);
+    return result;
   }
 
   if (type === 'event') {
@@ -434,7 +440,7 @@ export function convertBSCScanToTransaction(
       eventType = 'earn_vg' as const;
     }
     
-    return {
+    const result = {
       ...baseTransaction,
       type: eventType,
       amount: '0',
@@ -443,7 +449,10 @@ export function convertBSCScanToTransaction(
       to: log.address,
       value: 'Contract Event'
     };
+    console.log('🔍 DEBUG: Event transaction converted:', result);
+    return result;
   }
 
+  console.log('🔍 DEBUG: Returning base transaction:', baseTransaction);
   return baseTransaction;
 } 
