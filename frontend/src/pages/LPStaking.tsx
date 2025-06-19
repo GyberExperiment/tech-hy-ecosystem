@@ -515,19 +515,19 @@ const LPLocking: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+    <div className="animate-fade-in space-y-6 md:space-y-8 px-4 md:px-8 lg:px-12">
       {/* Contract Status */}
       <ContractStatus />
 
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-3 md:space-y-4">
         <div className="flex items-center justify-center space-x-3">
-          <Rocket className="w-8 h-8 text-green-400" />
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+          <Rocket className="w-7 h-7 md:w-8 md:h-8 text-green-400" />
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
             {t('locking:title')}
         </h1>
         </div>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
           {t('locking:subtitle')}
         </p>
         {refreshing && (
@@ -539,7 +539,7 @@ const LPLocking: React.FC = () => {
         <button
           onClick={refreshData}
           disabled={loading || refreshing}
-          className="btn-secondary p-2"
+          className="btn-secondary p-2 tablet-button"
           title="Обновить данные"
         >
           <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
@@ -548,77 +548,64 @@ const LPLocking: React.FC = () => {
 
       {/* Your Stats */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <BarChart3 className="mr-3 text-blue-400" />
-          Ваши активы
+          Ваша статистика
         </h2>
-        
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <div key={index} className="card group hover:scale-105 transition-transform duration-200">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-400">{stat.title}</p>
-                  <div className="flex items-baseline space-x-2">
-                    <div className="text-2xl font-bold text-slate-100">
-                      {loading ? (
-                        <div className="animate-pulse bg-gray-600 h-6 w-16 rounded"></div>
-                      ) : (
-                        stat.value
-                      )}
-                    </div>
-                    {stat.unit && (
-                      <p className="text-sm text-gray-400">{stat.unit}</p>
-                    )}
-          </div>
-                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
-        </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
-        </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="card text-center tablet-compact">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-r from-blue-500/30 to-purple-500/30">
+                    <Icon className={`w-6 h-6 md:w-8 md:h-8 ${stat.color}`} />
+                  </div>
+                </div>
+                <h3 className="text-base md:text-lg font-bold text-white mb-2">{stat.title}</h3>
+                <div className="text-xl md:text-2xl font-bold mb-2">
+                  <span className={stat.color}>{stat.value}</span>
+                  <span className="text-gray-400 text-sm md:text-base ml-1">{stat.unit}</span>
+                </div>
+                <p className="text-xs md:text-sm text-gray-400">{stat.description}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Ecosystem Stats */}
-                <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-purple-400" />
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
+          <TrendingUp className="mr-3 text-green-400" />
           Статистика экосистемы
         </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {ecosystemStats.map((stat, index) => (
-            <div key={index} className="card group hover:scale-105 transition-transform duration-200">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-400">{stat.title}</p>
-                  <div className="flex items-baseline space-x-2">
-                    <div className="text-2xl font-bold text-slate-100">
-                      {loading ? (
-                        <div className="animate-pulse bg-gray-600 h-6 w-16 rounded"></div>
-                      ) : (
-                        stat.value
-                      )}
-                    </div>
-                    {stat.unit && (
-                      <p className="text-sm text-gray-400">{stat.unit}</p>
-                    )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {ecosystemStats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="card text-center tablet-compact">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-r from-green-500/30 to-blue-500/30">
+                    <Icon className={`w-6 h-6 md:w-8 md:h-8 ${stat.color}`} />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <h3 className="text-base md:text-lg font-bold text-white mb-2">{stat.title}</h3>
+                <div className="text-xl md:text-2xl font-bold mb-2">
+                  <span className={stat.color}>{stat.value}</span>
+                  <span className="text-gray-400 text-sm md:text-base ml-1">{stat.unit}</span>
                 </div>
-            </div>
-          ))}
-          </div>
+                <p className="text-xs md:text-sm text-gray-400">{stat.description}</p>
+              </div>
+            );
+          })}
         </div>
-
-      {/* Main Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* Earn VG Widget */}
       <div>
-          <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
             <Zap className="mr-3 text-yellow-400" />
             Получить VG токены
           </h2>
@@ -627,7 +614,7 @@ const LPLocking: React.FC = () => {
 
         {/* VG Converter */}
                 <div>
-          <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
             <Vote className="mr-3 text-purple-400" />
             Governance токены
         </h2>
@@ -637,7 +624,7 @@ const LPLocking: React.FC = () => {
 
       {/* LP Pool Manager */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Activity className="mr-3 text-green-400" />
           Управление ликвидностью
         </h2>
@@ -645,99 +632,103 @@ const LPLocking: React.FC = () => {
       </div>
 
       {/* How it Works */}
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+      <div className="card tablet-compact">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Info className="mr-3 text-blue-400" />
           Как это работает
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Coins className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Coins className="w-7 h-7 md:w-8 md:h-8 text-white" />
             </div>
-            <h3 className="text-lg font-bold mb-2 text-slate-100">1. Создайте LP</h3>
+            <h3 className="text-base md:text-lg font-bold mb-2 text-slate-100">1. Создайте LP</h3>
             <p className="text-gray-400 text-sm">
               Добавьте VC + BNB в пул ликвидности PancakeSwap или используйте готовые LP токены
             </p>
           </div>
           
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-7 h-7 md:w-8 md:h-8 text-white" />
             </div>
-            <h3 className="text-lg font-bold mb-2 text-slate-100">2. Заблокируйте навсегда</h3>
+            <h3 className="text-base md:text-lg font-bold mb-2 text-slate-100">2. Заблокируйте навсегда</h3>
             <p className="text-gray-400 text-sm">
               LP токены блокируются навсегда в контракте - это обеспечивает постоянную ликвидность
             </p>
           </div>
           
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Gift className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Gift className="w-7 h-7 md:w-8 md:h-8 text-white" />
             </div>
-            <h3 className="text-lg font-bold mb-2 text-slate-100">3. Получите VG</h3>
+            <h3 className="text-base md:text-lg font-bold mb-2 text-slate-100">3. Получите VG</h3>
             <p className="text-gray-400 text-sm">
-              Мгновенно получите VG токены как награду. Используйте их для governance или конвертируйте в VGVotes
+              Получите VG токены мгновенно (соотношение 10:1) для участия в управлении экосистемой
             </p>
           </div>
         </div>
       </div>
 
-      {/* Contract Information */}
-          <div className="card">
-        <h3 className="text-xl font-bold mb-4 text-slate-100">Информация о контрактах</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
+      {/* Contract Addresses */}
+      <div className="card tablet-compact">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
+          <Shield className="mr-3 text-green-400" />
+          Адреса контрактов
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-sm">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">LP Locker</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.LP_LOCKER.slice(0, 6)}...${CONTRACTS.LP_LOCKER.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.LP_LOCKER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.LP_LOCKER.slice(0, 6)}...${CONTRACTS.LP_LOCKER.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">LP Token (VC/BNB)</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.LP_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.LP_TOKEN.slice(0, 6)}...${CONTRACTS.LP_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">VG Token</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN.slice(0, 6)}...${CONTRACTS.VG_TOKEN.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.VG_TOKEN.slice(0, 6)}...${CONTRACTS.VG_TOKEN.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
+          <div className="flex justify-between items-center p-3 rounded bg-white/5">
             <span className="font-medium text-slate-200">VG Votes</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN_VOTES.slice(0, 6)}...${CONTRACTS.VG_TOKEN_VOTES.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <a
+              href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+            >
+              <span>{`${CONTRACTS.VG_TOKEN_VOTES.slice(0, 6)}...${CONTRACTS.VG_TOKEN_VOTES.slice(-4)}`}</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         </div>
       </div>

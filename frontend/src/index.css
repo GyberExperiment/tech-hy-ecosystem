@@ -124,30 +124,30 @@
 
   .btn-primary {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
-           text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 
+           text-white font-bold py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
            focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[44px] text-base;
+           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
 
   .btn-secondary {
     @apply bg-white/10 hover:bg-white/20 text-white border border-white/20 
-           font-medium py-3 px-4 rounded-lg transition-all duration-200 
+           font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
            focus:ring-2 focus:ring-white/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[44px] text-base;
+           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
 
   .btn-danger {
     @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 
-           text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 
+           text-white font-bold py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
            focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[44px] text-base;
+           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
 
   .input-field {
-    @apply bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-white placeholder-gray-400
+    @apply bg-white/10 border border-white/20 rounded-lg px-3 py-2 sm:py-2.5 md:py-3 text-white placeholder-gray-400
            focus:ring-2 focus:ring-blue-500 focus:border-transparent 
            transition-all duration-200 backdrop-blur-sm
-           min-h-[44px] text-base;
+           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
 
   .loading-spinner {
@@ -160,11 +160,11 @@
 
   /* Touch-friendly elements */
   .touch-target {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px];
   }
 
   .mobile-input {
-    @apply h-12 text-base px-4;
+    @apply h-10 sm:h-12 text-sm sm:text-base px-3 sm:px-4;
   }
 
   /* Responsive text utilities */
@@ -335,5 +335,69 @@
   
   .landscape-header {
     @apply h-12;
+  }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-compact {
+    @apply py-2 px-3;
+  }
+  
+  .tablet-button {
+    @apply h-10 text-sm;
+  }
+  
+  .tablet-spacing {
+    @apply space-y-3;
+  }
+  
+  /* Reduce padding for better space utilization */
+  .card {
+    @apply p-4;
+  }
+  
+  .widget-mobile {
+    @apply p-4;
+  }
+  
+  /* Optimize grid layouts for tablets */
+  .grid-responsive-1-2 {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .grid-responsive-1-2-3 {
+    @apply grid-cols-3 gap-3;
+  }
+  
+  /* Better text sizing for tablets */
+  .text-responsive-lg {
+    @apply text-xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-2xl;
+  }
+}
+
+/* Portrait tablet specific */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .tablet-portrait-grid {
+    @apply grid-cols-2;
+  }
+  
+  .tablet-portrait-spacing {
+    @apply space-y-4;
+  }
+}
+
+/* Landscape tablet specific */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .tablet-landscape-grid {
+    @apply grid-cols-3;
+  }
+  
+  .tablet-landscape-compact {
+    @apply py-1.5 px-2.5;
   }
 }

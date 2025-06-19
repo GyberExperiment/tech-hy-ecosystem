@@ -244,7 +244,14 @@ const TransactionHistory: React.FC = () => {
         page: pageToFetch
       }, error);
       
-      setError('Не удалось загрузить транзакции. Попробуйте позже.');
+      // More specific error messages
+      if (error.message.includes('API Key')) {
+        setError('Для загрузки истории транзакций требуется API ключ BSCScan. Пожалуйста, добавьте API ключ в настройки.');
+      } else if (error.message.includes('rate limit')) {
+        setError('Превышен лимит запросов к BSCScan API. Попробуйте позже.');
+      } else {
+        setError('Не удалось загрузить транзакции. Проверьте подключение к интернету.');
+      }
       
     } finally {
       if (isMountedRef.current) {
@@ -396,6 +403,58 @@ const TransactionHistory: React.FC = () => {
             <XCircle size={16} />
             <span>{error}</span>
           </div>
+          {error.includes('API ключ') && (
+            <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <p className="text-sm text-blue-300 mb-2">
+                💡 <strong>Как получить BSCScan API ключ:</strong>
+              </p>
+              <ol className="text-xs text-blue-200 space-y-1 ml-4">
+                <li>1. Перейдите на <a href="https://bscscan.com/register" target="_blank" rel="noopener noreferrer" className="underline">bscscan.com/register</a></li>
+                <li>2. Создайте аккаунт и войдите в систему</li>
+                <li>3. Перейдите в раздел "API-Keys" в профиле</li>
+                <li>4. Создайте новый API ключ (бесплатно)</li>
+                <li>5. Добавьте ключ в файл <code className="bg-slate-700 px-1 rounded">frontend/src/utils/bscscanApi.ts</code></li>
+              </ol>
+              <button
+                onClick={() => {
+                  // Add mock data for demonstration
+                  const mockTransactions = [
+                    {
+                      id: 'mock-1',
+                      hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                      type: 'transfer' as const,
+                      status: 'confirmed' as const,
+                      timestamp: Date.now() - 3600000,
+                      amount: '100',
+                      token: 'VG',
+                      value: '100.0000 VG',
+                      gasUsed: '21000',
+                      from: account,
+                      to: '0x742d35Cc6634C0532925a3b8D369D7763F4b2d66'
+                    },
+                    {
+                      id: 'mock-2',
+                      hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+                      type: 'lock_lp' as const,
+                      status: 'confirmed' as const,
+                      timestamp: Date.now() - 7200000,
+                      amount: '50',
+                      token: 'LP',
+                      value: '50.0000 LP',
+                      gasUsed: '45000',
+                      from: account,
+                      to: CONTRACTS.LP_LOCKER
+                    }
+                  ];
+                  setTransactions(mockTransactions);
+                  setError(null);
+                }}
+                className="mt-3 btn-secondary text-xs"
+              >
+                📊 Показать демо-данные
+              </button>
+            </div>
+          )}
         </div>
       )}
 

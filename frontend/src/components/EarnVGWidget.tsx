@@ -1294,7 +1294,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={checkCurrentAllowance}
             disabled={checkingAllowance}
-            className="touch-target w-full h-12 text-responsive-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
+            className="touch-target w-full h-10 sm:h-12 text-responsive-sm font-medium rounded-lg transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
           >
             {checkingAllowance ? (
               <>
@@ -1320,7 +1320,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           (mode === 'lock' && !lpAmount)
         }
         className={cn(
-          "touch-target w-full h-12 sm:h-14 text-responsive-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation",
+          "touch-target w-full h-11 sm:h-12 md:h-14 text-responsive-base font-semibold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation",
           "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
         )}
       >

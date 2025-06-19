@@ -58,8 +58,25 @@ interface BSCScanEventLog {
   transactionIndex: string;
 }
 
-const BSCSCAN_API_KEY = ''; // No API key - use free tier
+/*
+ * BSCScan API Configuration
+ * 
+ * To enable transaction history, you need a BSCScan API key:
+ * 
+ * 1. Go to https://bscscan.com/register and create an account
+ * 2. Login and go to https://bscscan.com/myapikey
+ * 3. Create a new API key (free tier allows 5 calls/second, 100,000 calls/day)
+ * 4. Copy your API key and replace the empty string below
+ * 
+ * Example: const BSCSCAN_API_KEY = 'YourApiKeyHere123456789';
+ * 
+ * Note: The same API key works for both mainnet and testnet
+ */
+const BSCSCAN_API_KEY = ''; // Add your BSCScan API key here
 const BSCSCAN_BASE_URL = 'https://api-testnet.bscscan.com/api';
+
+// Add warning about API key requirement
+console.warn('⚠️ BSCScan API Key is missing. Please add your API key to enable transaction history.');
 
 export class BSCScanAPI {
   private static async fetchWithRetry(url: string, retries = 2): Promise<any> {
@@ -74,9 +91,14 @@ export class BSCScanAPI {
         
         const data = await response.json();
         
-        // BSCScan returns status: "0" for errors, but sometimes still has data
-        if (data.status === '0' && data.message === 'NOTOK' && !data.result) {
-          throw new Error(data.result || 'BSCScan API error - no API key');
+        // BSCScan returns status: "0" for errors
+        if (data.status === '0') {
+          if (data.message === 'NOTOK' && data.result === 'Missing/Invalid API Key') {
+            throw new Error('BSCScan API Key is required. Please add your API key to enable transaction history.');
+          }
+          if (data.message === 'NOTOK') {
+            throw new Error(data.result || 'BSCScan API error');
+          }
         }
         
         return data;
@@ -89,6 +111,11 @@ export class BSCScanAPI {
           retries
         }, error as Error);
         lastError = error as Error;
+        
+        // Don't retry on API key errors
+        if ((error as Error).message.includes('API Key')) {
+          break;
+        }
         
         // Wait before retry (exponential backoff)
         if (i < retries - 1) {
