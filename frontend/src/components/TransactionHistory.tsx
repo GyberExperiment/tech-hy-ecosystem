@@ -82,7 +82,7 @@ const TransactionHistory: React.FC = () => {
       if (stored) {
         const storedTxs = JSON.parse(stored);
         if (Array.isArray(storedTxs) && storedTxs.length > 0) {
-          setTransactions(storedTxs);
+        setTransactions(storedTxs);
           setLoading(false);
           log.info('Loaded cached transactions', {
             component: 'TransactionHistory',
@@ -132,7 +132,7 @@ const TransactionHistory: React.FC = () => {
       setRefreshing(true);
     } else if (loadMore) {
       setLoadingMore(true);
-    } else {
+          } else {
       setLoading(true);
     }
     
@@ -220,7 +220,7 @@ const TransactionHistory: React.FC = () => {
         setTransactions(uniqueTransactions);
         saveTransactions(uniqueTransactions);
         setHasMore(moreAvailable);
-        setCurrentPage(pageToFetch);
+          setCurrentPage(pageToFetch);
         
         log.info('Transactions updated', {
           component: 'TransactionHistory',
@@ -346,12 +346,12 @@ const TransactionHistory: React.FC = () => {
     <div className="card">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <h3 className="text-xl font-semibold text-slate-100">История транзакций</h3>
+        <h3 className="text-xl font-semibold text-slate-100">История транзакций</h3>
           {transactions.length > 0 && (
-            <div className="text-sm text-gray-400">
+          <div className="text-sm text-gray-400">
               Загружено: {transactions.length} транзакций
             </div>
-          )}
+            )}
           {refreshing && (
             <div className="flex items-center space-x-2 text-blue-400">
               <Loader2 className="animate-spin" size={16} />
@@ -362,9 +362,9 @@ const TransactionHistory: React.FC = () => {
         <button
           onClick={handleRefresh}
           className="btn-secondary p-2"
-          disabled={refreshing}
+            disabled={refreshing}
         >
-          <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
+            <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
         </button>
       </div>
 
@@ -476,14 +476,14 @@ const TransactionHistory: React.FC = () => {
             </>
           ) : (
             <>
-              <p>Транзакций не найдено</p>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="btn-secondary mt-4"
-                >
-                  Очистить поиск
-                </button>
+          <p>Транзакций не найдено</p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="btn-secondary mt-4"
+            >
+              Очистить поиск
+            </button>
               )}
             </>
           )}
@@ -612,4 +612,4 @@ export const useTransactionHistory = () => {
   };
 
   return { addTransaction, updateTransactionStatus };
-}; 
+};
