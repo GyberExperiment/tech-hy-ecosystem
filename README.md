@@ -347,7 +347,6 @@
   
   <h3>🔥 Core Technologies</h3>
   
-  
   <table>
     <tr>
       <td align="center" width="20%">
