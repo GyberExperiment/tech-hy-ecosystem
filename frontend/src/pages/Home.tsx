@@ -73,11 +73,11 @@ const Home: React.FC = () => {
       <div className="text-center space-y-6">
         <div className="flex items-center justify-center space-x-3">
           <Rocket className="w-12 h-12 text-blue-400" />
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="hero-title text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             LP Locking Ecosystem
           </h1>
         </div>
-        <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+        <p className="hero-subtitle text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
           Блокируйте LP позиции навсегда и получайте VG токены мгновенно для участия в governance
         </p>
       </div>
@@ -89,7 +89,7 @@ const Home: React.FC = () => {
 
       {/* Quick Navigation */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 text-center">
+        <h2 className="section-title text-2xl font-bold mb-6 text-center">
           Навигация по экосистеме
         </h2>
         
@@ -98,7 +98,7 @@ const Home: React.FC = () => {
             <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Coins className="w-8 h-8 text-blue-400" />
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Token Management</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">Token Management</h3>
             <p className="text-gray-300">
               Управляйте своими токенами, делайте переводы и настраивайте разрешения
             </p>
@@ -108,7 +108,7 @@ const Home: React.FC = () => {
             <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Vote className="w-8 h-8 text-purple-400" />
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Governance</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">Governance</h3>
             <p className="text-gray-300">
               Участвуйте в управлении протоколом через децентрализованное голосование
             </p>
@@ -118,7 +118,7 @@ const Home: React.FC = () => {
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Rocket className="w-8 h-8 text-green-400" />
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">LP Locking</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">LP Locking</h3>
             <p className="text-gray-300">
               Заблокируйте LP токены навсегда и получайте VG награды мгновенно
             </p>
@@ -128,7 +128,7 @@ const Home: React.FC = () => {
 
       {/* How it Works */}
       <div className="text-center space-y-8">
-        <h2 className="text-2xl font-bold mb-6 flex items-center justify-center text-slate-100">
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center justify-center text-slate-100">
           <Target className="mr-3 text-blue-400" />
           Как это работает
         </h2>
@@ -138,7 +138,7 @@ const Home: React.FC = () => {
             <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-lg">1</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Создайте LP</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">Создайте LP</h3>
             <p className="text-gray-300 text-sm">
               Добавьте VC + BNB в пул ликвидности PancakeSwap и получите LP токены
             </p>
@@ -148,7 +148,7 @@ const Home: React.FC = () => {
             <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-lg">2</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Заблокируйте навсегда</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">Заблокируйте навсегда</h3>
             <p className="text-gray-300 text-sm">
               LP токены блокируются навсегда в смарт-контракте для обеспечения постоянной ликвидности
             </p>
@@ -158,7 +158,7 @@ const Home: React.FC = () => {
             <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-lg">3</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-100 mb-2">Участвуйте в DAO</h3>
+            <h3 className="card-title text-lg font-bold text-slate-100 mb-2">Участвуйте в DAO</h3>
             <p className="text-gray-300 text-sm">
               Получайте VG токены мгновенно и используйте их для голосования в DAO
             </p>
@@ -168,14 +168,14 @@ const Home: React.FC = () => {
 
       {/* Features */}
       <div className="text-center space-y-8">
-        <h2 className="text-2xl font-bold mb-6 text-center text-slate-100">
+        <h2 className="section-title text-2xl font-bold mb-6 text-center text-slate-100">
           Ключевые особенности
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card text-center tablet-compact">
             <Shield className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="font-bold mb-2 text-slate-100">Безопасность</h3>
+            <h3 className="card-title font-bold mb-2 text-slate-100">Безопасность</h3>
             <p className="text-gray-300 text-sm">
               Аудированные смарт-контракты с защитой от MEV и временными блокировками
             </p>
@@ -183,7 +183,7 @@ const Home: React.FC = () => {
           
           <div className="card text-center tablet-compact">
             <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
-            <h3 className="font-bold mb-2 text-slate-100">Мгновенность</h3>
+            <h3 className="card-title font-bold mb-2 text-slate-100">Мгновенность</h3>
             <p className="text-gray-300 text-sm">
               Получайте VG токены мгновенно после блокировки LP токенов
             </p>
@@ -191,7 +191,7 @@ const Home: React.FC = () => {
           
           <div className="card text-center tablet-compact">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="font-bold mb-2 text-slate-100">Governance</h3>
+            <h3 className="card-title font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-300 text-sm">
               Участвуйте в управлении протоколом через децентрализованное голосование
             </p>
@@ -199,7 +199,7 @@ const Home: React.FC = () => {
           
           <div className="card text-center tablet-compact">
             <TrendingUp className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="font-bold mb-2 text-slate-100">Ликвидность</h3>
+            <h3 className="card-title font-bold mb-2 text-slate-100">Ликвидность</h3>
             <p className="text-gray-300 text-sm">
               Обеспечивайте постоянную ликвидность для экосистемы и получайте награды
             </p>
@@ -209,7 +209,7 @@ const Home: React.FC = () => {
 
       {/* Network Info */}
       <div className="card">
-        <h2 className="text-xl font-bold mb-4 text-center text-slate-100">Информация о сети</h2>
+        <h2 className="section-title text-xl font-bold mb-4 text-center text-slate-100">Информация о сети</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="flex justify-between items-center p-2 rounded bg-white/5">
             <span className="text-gray-400">Сеть:</span>
@@ -231,7 +231,7 @@ const Home: React.FC = () => {
       {/* CTA */}
       <div className="text-center space-y-6">
         <div className="card max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4 text-slate-100">Готовы начать?</h2>
+          <h2 className="section-title text-2xl font-bold mb-4 text-slate-100">Готовы начать?</h2>
           <p className="text-gray-300 mb-6">
             Подключите кошелёк и начните зарабатывать VG токены уже сегодня
           </p>

@@ -64,6 +64,49 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* ✅ ИСПРАВЛЕНИЕ: Улучшенные стили заголовков для читаемости */
+  h1, h2, h3, h4, h5, h6 {
+    color: white !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 600;
+  }
+
+  /* Основные заголовки */
+  h1 {
+    color: white !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    font-weight: 700;
+  }
+
+  h2 {
+    color: white !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    font-weight: 600;
+  }
+
+  h3 {
+    color: white !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 600;
+  }
+
+  /* Контент заголовки */
+  .text-center h1,
+  .text-center h2,
+  .text-center h3 {
+    color: white !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Градиентные заголовки остаются читаемыми */
+  .bg-gradient-to-r.bg-clip-text.text-transparent {
+    background: linear-gradient(to right, #60A5FA, #A78BFA) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+  }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
@@ -100,11 +143,15 @@
 
 @layer components {
   .glass-panel {
-    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-xl;
+    @apply backdrop-blur-xl bg-white/10 shadow-xl;
+    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку */
+    border: none !important;
   }
 
   .dark .glass-panel {
-    @apply bg-black/20 border-white/10;
+    @apply bg-black/20;
+    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку */
+    border: none !important;
   }
 
   .gradient-bg {
@@ -115,11 +162,41 @@
   }
 
   .card {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4 sm:p-6 shadow-lg;
+    @apply bg-white/5 backdrop-blur-md rounded-lg p-4 sm:p-6 shadow-lg;
+    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку карточек */
+    border: none !important;
   }
 
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-accent/50;
+  }
+
+  /* ✅ ИСПРАВЛЕНИЕ: Улучшенные заголовки для hero секций */
+  .hero-title {
+    color: white !important;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+
+  .hero-subtitle {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    font-weight: 400;
+  }
+
+  /* ✅ ИСПРАВЛЕНИЕ: Заголовки секций */
+  .section-title {
+    color: white !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    font-weight: 600;
+  }
+
+  /* ✅ ИСПРАВЛЕНИЕ: Заголовки карточек */
+  .card-title {
+    color: white !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 600;
   }
 
   .btn-primary {
@@ -812,4 +889,49 @@
     max-height: 95vh;
     margin: 8px 16px;
   }
+}
+
+/* ✅ ДОПОЛНИТЕЛЬНЫЕ ИСПРАВЛЕНИЯ для читаемости */
+.text-slate-100, 
+.text-slate-200,
+.text-gray-300,
+.text-gray-400 {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Улучшенный контраст для описаний */
+.text-gray-300 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.text-gray-400 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Убираем все рамки с элементов */
+.border,
+.border-white\/10,
+.border-white\/20 {
+  border: none !important;
+}
+
+/* Особые стили для hero секций */
+.text-center.space-y-6 h1 {
+  color: white !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9);
+  font-weight: 700;
+}
+
+.text-center.space-y-6 p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-primary/20 border-t-primary;
+}
+
+.pulse-glow {
+  @apply animate-pulse-glow;
 }

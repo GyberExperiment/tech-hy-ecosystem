@@ -319,7 +319,7 @@ export const useTokenData = () => {
           // Задержка чтобы избежать немедленных циклических обновлений
           setTimeout(() => {
             if (isMountedRef.current) {
-              globalBalanceEmitter.emit();
+        globalBalanceEmitter.emit();
             }
           }, 500);
         }
@@ -407,7 +407,7 @@ export const useTokenData = () => {
     });
     // Немедленное обновление с задержкой для распространения
     setTimeout(() => {
-      globalBalanceEmitter.emit();
+    globalBalanceEmitter.emit();
     }, 100);
   }, [account]);
 
