@@ -173,7 +173,7 @@ const Home: React.FC = () => {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="card text-center">
+          <div className="card text-center tablet-compact">
             <Shield className="w-12 h-12 mx-auto mb-4 text-green-400" />
             <h3 className="font-bold mb-2 text-slate-100">Безопасность</h3>
             <p className="text-gray-300 text-sm">
@@ -181,7 +181,7 @@ const Home: React.FC = () => {
             </p>
           </div>
           
-          <div className="card text-center">
+          <div className="card text-center tablet-compact">
             <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
             <h3 className="font-bold mb-2 text-slate-100">Мгновенность</h3>
             <p className="text-gray-300 text-sm">
@@ -189,7 +189,7 @@ const Home: React.FC = () => {
             </p>
           </div>
           
-          <div className="card text-center">
+          <div className="card text-center tablet-compact">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
             <h3 className="font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-300 text-sm">
@@ -197,7 +197,7 @@ const Home: React.FC = () => {
             </p>
           </div>
           
-          <div className="card text-center">
+          <div className="card text-center tablet-compact">
             <TrendingUp className="w-12 h-12 mx-auto mb-4 text-blue-400" />
             <h3 className="font-bold mb-2 text-slate-100">Ликвидность</h3>
             <p className="text-gray-300 text-sm">

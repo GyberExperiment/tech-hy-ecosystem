@@ -42,19 +42,21 @@ const LanguageSwitcher: React.FC = () => {
   }, [isOpen]);
 
   return (
-    <div className="relative" data-language-switcher>
+    <div className="relative w-full" data-language-switcher>
       {/* Trigger Button */}
       <button
         onClick={toggleDropdown}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-200 border border-white/20 hover:border-white/30"
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-200 border border-white/20 hover:border-white/30 text-sm font-medium"
         aria-label="Change language"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <Globe className="w-4 h-4 text-gray-300" />
-        <span className="text-sm font-medium text-gray-300 hidden sm:block">
-          {SUPPORTED_LANGUAGES[currentLanguage]}
-        </span>
+        <div className="flex items-center space-x-2">
+          <Globe className="w-4 h-4 text-gray-300" />
+          <span className="text-gray-300">
+            {SUPPORTED_LANGUAGES[currentLanguage]}
+          </span>
+        </div>
         <ChevronDown 
           className={`w-4 h-4 text-gray-300 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
@@ -64,7 +66,7 @@ const LanguageSwitcher: React.FC = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in">
+        <div className="absolute top-full right-0 mt-2 w-full min-w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
           <div className="py-1">
             {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => {
               const isSelected = currentLanguage === code;
@@ -80,9 +82,9 @@ const LanguageSwitcher: React.FC = () => {
                   }`}
                   role="menuitem"
                 >
-                  <span className="font-medium text-slate-200">{name}</span>
+                  <span className="font-medium">{name}</span>
                   {isSelected && (
-                    <Check className="w-4 h-4 text-white" />
+                    <Check className="w-4 h-4" />
                   )}
                 </button>
               );

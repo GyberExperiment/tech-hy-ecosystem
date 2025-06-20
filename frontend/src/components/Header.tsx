@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy, Settings, Wallet, Network, Globe } from 'lucide-react';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy, Settings, Wallet, Network } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { log } from '../utils/logger';
 
@@ -25,7 +25,7 @@ const Header: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
   const toggleMobileMenu = () => {
@@ -61,11 +61,10 @@ const Header: React.FC = () => {
     setForceLegacy(newValue);
     localStorage.setItem('forceLegacyProvider', newValue.toString());
     
-    // Если кошелёк подключен - отключаем для применения изменений
     if (isConnected) {
       disconnectWallet();
       setTimeout(() => {
-        window.location.reload(); // Перезагружаем для применения нового режима
+        window.location.reload();
       }, 500);
     }
   };
@@ -75,20 +74,19 @@ const Header: React.FC = () => {
     setIsTestnetMode(!isTestnetMode);
     localStorage.setItem('networkMode', newMode);
     
-    // Если кошелёк подключен - отключаем для применения изменений
     if (isConnected) {
       disconnectWallet();
       setTimeout(() => {
-        window.location.reload(); // Перезагружаем для применения новой сети
+        window.location.reload();
       }, 500);
     }
   };
 
-  // Close wallet menu when clicking outside
+  // Close menus when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('[data-wallet-menu]')) {
+      if (!target.closest('[data-wallet-menu]') && !target.closest('[data-language-switcher]')) {
         setIsWalletMenuOpen(false);
       }
     };
@@ -100,67 +98,69 @@ const Header: React.FC = () => {
   }, [isWalletMenuOpen]);
 
   return (
-    <header className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-40 pt-safe">
-      <div className="container-mobile">
-        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
-          {/* Logo - только текст */}
-          <Link to="/" className="group">
-            <span className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-200">
-              TECH HY Ecosystem
+    <header className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        {/* Main Header */}
+        <div className="flex items-center justify-between h-14 lg:h-16">
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0 group">
+            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-200">
+              <span className="hidden sm:inline">TECH HY Ecosystem</span>
+              <span className="sm:hidden">TECH HY</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-2 px-2 md:px-3 lg:px-4 py-2 rounded-lg transition-all duration-200 touch-target ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
                     isActive(item.href)
                       ? 'bg-blue-600 text-white shadow-lg'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="font-medium text-slate-200 text-sm lg:text-base">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
-            {/* Network Switcher */}
+          <div className="flex items-center space-x-2">
+            {/* Network Switcher - Desktop */}
             <button
               onClick={toggleNetworkMode}
-              className={`hidden sm:flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-2 rounded-lg transition-all duration-200 text-xs touch-target ${
+              className={`hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium border ${
                 isTestnetMode
-                  ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
-                  : 'bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/30'
+                  ? 'bg-orange-600/20 border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
+                  : 'bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30'
               }`}
               title={isTestnetMode ? 'Switch to Mainnet' : 'Switch to Testnet'}
             >
               <Network className="w-3 h-3" />
-              <span className="hidden md:inline">{isTestnetMode ? 'Testnet' : 'Mainnet'}</span>
+              <span className="hidden lg:inline">{isTestnetMode ? 'Testnet' : 'Mainnet'}</span>
             </button>
             
-            {/* Language Switcher - скрыто на очень маленьких экранах */}
-            <div className="hidden xs:block">
+            {/* Language Switcher - Desktop */}
+            <div className="hidden md:block">
               <LanguageSwitcher />
             </div>
             
-            {/* Legacy Mode Toggle - скрыто на маленьких экранах */}
+            {/* Legacy Mode Toggle - Desktop only */}
             <button
               onClick={toggleLegacyMode}
-              className={`hidden lg:flex items-center space-x-2 px-2 lg:px-3 py-2 rounded-lg transition-all duration-200 text-xs touch-target ${
+              className={`hidden xl:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium border ${
                 forceLegacy
-                  ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
-                  : 'bg-gray-600/20 border border-gray-500/30 text-gray-400 hover:bg-gray-600/30'
+                  ? 'bg-orange-600/20 border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
+                  : 'bg-gray-600/20 border-gray-500/30 text-gray-400 hover:bg-gray-600/30'
               }`}
-              title={forceLegacy ? 'Legacy Mode: ON (window.ethereum)' : 'EIP-6963 Mode: ON'}
+              title={forceLegacy ? 'Legacy Mode: ON' : 'EIP-6963 Mode: ON'}
             >
               <Settings className="w-3 h-3" />
               <span>{forceLegacy ? 'Legacy' : 'EIP-6963'}</span>
@@ -169,14 +169,16 @@ const Header: React.FC = () => {
             {/* Wallet Connection */}
             {isConnected ? (
               <div className="relative" data-wallet-menu>
-                {/* Wallet Address Button */}
                 <button
                   onClick={toggleWalletMenu}
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-green-600/20 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-all duration-200 touch-target"
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-600/20 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-all duration-200 text-sm font-medium"
                 >
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs sm:text-sm font-medium text-green-400">
+                  <span className="text-green-400 hidden sm:inline">
                     {formatAddress(account!)}
+                  </span>
+                  <span className="text-green-400 sm:hidden">
+                    {account!.slice(0, 6)}
                   </span>
                   <ChevronDown 
                     className={`w-4 h-4 text-green-400 transition-transform duration-200 ${
@@ -185,34 +187,31 @@ const Header: React.FC = () => {
                   />
                 </button>
 
-                {/* Wallet Dropdown Menu */}
+                {/* Wallet Dropdown */}
                 {isWalletMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in">
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-700">
+                      <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
+                      <p className="text-sm font-mono text-gray-300 break-all">
+                        {account}
+                      </p>
+                    </div>
+                    
                     <div className="py-1">
-                      {/* Full Address */}
-                      <div className="px-4 py-3 border-b border-gray-700">
-                        <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
-                        <p className="text-sm font-mono text-gray-300 break-all">
-                          {account}
-                        </p>
-                      </div>
-                      
-                      {/* Copy Address */}
                       <button
                         onClick={copyAddress}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-150 touch-target"
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       >
                         <Copy className="w-4 h-4" />
-                        <span>{t('buttons.copy')} Address</span>
+                        <span>Copy Address</span>
                       </button>
                       
-                      {/* Disconnect */}
                       <button
                         onClick={handleDisconnect}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-150 touch-target"
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>{t('buttons.disconnect')}</span>
+                        <span>Disconnect</span>
                       </button>
                     </div>
                   </div>
@@ -221,9 +220,9 @@ const Header: React.FC = () => {
             ) : (
               <button
                 onClick={connectWallet}
-                className="px-2 sm:px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium text-xs sm:text-sm md:text-base touch-target touch-manipulation"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium text-sm"
               >
-                <span className="hidden sm:inline">{t('buttons.connect')}</span>
+                <span className="hidden sm:inline">Connect Wallet</span>
                 <span className="sm:hidden">
                   <Wallet className="w-4 h-4" />
                 </span>
@@ -233,13 +232,13 @@ const Header: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200 touch-target touch-manipulation"
+              className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/10"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-5 h-5" />
               ) : (
-                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Menu className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -247,8 +246,9 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-3 sm:py-4 border-t border-white/10 animate-fade-in">
-            <nav className="space-y-1 sm:space-y-2">
+          <div className="lg:hidden border-t border-white/10">
+            {/* Navigation Links */}
+            <nav className="py-4 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -256,88 +256,93 @@ const Header: React.FC = () => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 touch-target touch-manipulation ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                       isActive(item.href)
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium text-slate-200 text-base">{item.name}</span>
+                    <span className="font-medium">{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
             
-            {/* Mobile Network Switcher */}
-            <div className="sm:hidden mt-3 px-3">
-              <button
-                onClick={toggleNetworkMode}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-sm touch-target ${
-                  isTestnetMode
-                    ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400'
-                    : 'bg-green-600/20 border border-green-500/30 text-green-400'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Network className="w-4 h-4" />
-                  <span>Network Mode</span>
+            {/* Mobile Controls */}
+            <div className="py-4 space-y-3 border-t border-white/10">
+              {/* Network Switcher */}
+              <div className="px-4">
+                <button
+                  onClick={toggleNetworkMode}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border ${
+                    isTestnetMode
+                      ? 'bg-orange-600/20 border-orange-500/30 text-orange-400'
+                      : 'bg-green-600/20 border-green-500/30 text-green-400'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Network className="w-4 h-4" />
+                    <span>Network Mode</span>
+                  </div>
+                  <span className="text-xs">
+                    {isTestnetMode ? 'Testnet' : 'Mainnet'}
+                  </span>
+                </button>
+              </div>
+              
+              {/* Language Switcher */}
+              <div className="px-4 md:hidden">
+                <div className="w-full">
+                  <LanguageSwitcher />
                 </div>
-                <span className="text-xs">
-                  {isTestnetMode ? 'Testnet' : 'Mainnet'}
-                </span>
-              </button>
+              </div>
+              
+              {/* Legacy Mode Toggle */}
+              <div className="px-4 xl:hidden">
+                <button
+                  onClick={toggleLegacyMode}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border ${
+                    forceLegacy
+                      ? 'bg-orange-600/20 border-orange-500/30 text-orange-400'
+                      : 'bg-gray-600/20 border-gray-500/30 text-gray-400'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Settings className="w-4 h-4" />
+                    <span>Provider Mode</span>
+                  </div>
+                  <span className="text-xs">
+                    {forceLegacy ? 'Legacy' : 'EIP-6963'}
+                  </span>
+                </button>
+              </div>
             </div>
             
-            {/* Mobile Language Switcher */}
-            <div className="xs:hidden mt-3 px-3">
-              <LanguageSwitcher />
-            </div>
-            
-            {/* Mobile Legacy Mode Toggle */}
-            <div className="lg:hidden mt-3 px-3">
-              <button
-                onClick={toggleLegacyMode}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-sm touch-target ${
-                  forceLegacy
-                    ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400'
-                    : 'bg-gray-600/20 border border-gray-500/30 text-gray-400'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Settings className="w-4 h-4" />
-                  <span>Provider Mode</span>
-                </div>
-                <span className="text-xs">
-                  {forceLegacy ? 'Legacy' : 'EIP-6963'}
-                </span>
-              </button>
-            </div>
-            
-            {/* Mobile Wallet Menu */}
+            {/* Mobile Wallet Info */}
             {isConnected && (
-              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10">
-                <div className="px-3 sm:px-4 py-2">
+              <div className="py-4 px-4 border-t border-white/10">
+                <div className="mb-3">
                   <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
-                  <p className="text-sm font-mono text-gray-300 break-all mb-3">
+                  <p className="text-sm font-mono text-gray-300 break-all">
                     {account}
                   </p>
-                  <div className="mobile-stack">
-                    <button
-                      onClick={copyAddress}
-                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 text-sm touch-target touch-manipulation"
-                    >
-                      <Copy className="w-4 h-4" />
-                      <span>{t('buttons.copy')}</span>
-                    </button>
-                    <button
-                      onClick={handleDisconnect}
-                      className="flex-1 flex items-center justify-center space-x-2 px-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 text-sm touch-target touch-manipulation"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>{t('buttons.disconnect')}</span>
-                    </button>
-                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={copyAddress}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>Copy</span>
+                  </button>
+                  <button
+                    onClick={handleDisconnect}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Disconnect</span>
+                  </button>
                 </div>
               </div>
             )}

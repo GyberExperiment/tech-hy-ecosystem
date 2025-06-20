@@ -400,4 +400,107 @@
   .tablet-landscape-compact {
     @apply py-1.5 px-2.5;
   }
+  
+  /* Header specific optimizations for landscape tablets */
+  header {
+    @apply h-12;
+  }
+  
+  header .flex {
+    @apply h-12;
+  }
+  
+  /* Compact navigation for landscape tablets */
+  header nav a {
+    @apply px-2 py-1.5 text-xs;
+  }
+  
+  /* Smaller buttons for landscape tablets */
+  header button {
+    @apply px-2 py-1.5 text-xs;
+  }
+}
+
+/* Medium screen optimizations (tablets in portrait) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Header navigation breakpoint adjustment */
+  .header-nav-md {
+    @apply hidden;
+  }
+  
+  /* Better spacing for medium screens */
+  .header-spacing-md {
+    @apply space-x-1;
+  }
+  
+  /* Wallet button optimization */
+  .wallet-btn-md {
+    @apply px-2 py-1.5 text-sm;
+  }
+}
+
+/* Small tablet and large phone optimizations */
+@media (min-width: 640px) and (max-width: 767px) {
+  /* Header height optimization */
+  header {
+    @apply h-12;
+  }
+  
+  /* Logo text optimization */
+  .logo-sm {
+    @apply text-sm;
+  }
+  
+  /* Button sizing */
+  .btn-sm-tablet {
+    @apply px-2 py-1.5 text-xs;
+  }
+}
+
+/* Enhanced mobile menu animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Better focus states for accessibility */
+@media (prefers-reduced-motion: no-preference) {
+  .focus-ring {
+    @apply focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover states on touch devices */
+  .no-touch-hover:hover {
+    @apply bg-transparent;
+  }
+  
+  /* Larger touch targets */
+  .touch-optimized {
+    @apply min-h-[48px] min-w-[48px];
+  }
+}
+
+/* High DPI screen optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders and shadows */
+  .high-dpi-border {
+    @apply border-[0.5px];
+  }
+  
+  .high-dpi-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
 }
