@@ -528,6 +528,8 @@
   background: rgba(15, 23, 42, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   animation: modalSlideIn 0.3s ease-out !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
 }
 
 /* Анимация появления модалки */
@@ -548,18 +550,20 @@
   backdrop-filter: blur(4px) !important;
 }
 
-/* Мобильная адаптация */
+/* Улучшенная мобильная адаптация */
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] {
     position: fixed !important;
     top: auto !important;
-    right: 20px !important;
-    bottom: 20px !important;
-    left: 20px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
     width: auto !important;
     max-width: none !important;
-    border-radius: 20px 20px 8px 8px !important;
+    border-radius: 20px !important;
     animation: modalSlideUp 0.3s ease-out !important;
+    max-height: 85vh !important;
+    padding: 0 !important;
   }
   
   @keyframes modalSlideUp {
@@ -574,11 +578,30 @@
   }
 }
 
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+  [data-rk] div[role="dialog"] {
+    right: 8px !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    border-radius: 16px !important;
+    max-height: 90vh !important;
+  }
+}
+
 /* Стили для содержимого модалки */
 [data-rk] div[role="dialog"] > div {
   background: transparent !important;
   border: none !important;
   border-radius: inherit !important;
+  padding: 20px !important;
+}
+
+/* Мобильная адаптация контента */
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] > div {
+    padding: 16px !important;
+  }
 }
 
 /* Заголовок модалки */
@@ -586,26 +609,81 @@
 [data-rk] div[role="dialog"] h2 {
   color: white !important;
   font-weight: 600 !important;
+  font-size: 1.25rem !important;
+  margin-bottom: 16px !important;
 }
 
-/* Кнопки в модалке */
-[data-rk] div[role="dialog"] button {
-  border-radius: 12px !important;
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] h1,
+  [data-rk] div[role="dialog"] h2 {
+    font-size: 1.125rem !important;
+    margin-bottom: 12px !important;
+  }
+}
+
+/* Группы кошельков */
+[data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
+  color: rgba(255, 255, 255, 0.9) !important;
   font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+  font-size: 0.875rem !important;
+  margin: 16px 0 8px 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
-/* Кнопка подключения кошелька */
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
+    font-size: 0.8rem !important;
+    margin: 12px 0 6px 0 !important;
+  }
+}
+
+/* Кнопки кошельков */
 [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
   color: white !important;
+  padding: 12px 16px !important;
+  margin: 4px 0 !important;
+  width: 100% !important;
+  min-height: 56px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+}
+
+/* Мобильная адаптация кнопок кошельков */
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
+    padding: 14px 16px !important;
+    min-height: 60px !important;
+    border-radius: 14px !important;
+    margin: 6px 0 !important;
+    gap: 14px !important;
+  }
 }
 
 [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(59, 130, 246, 0.5) !important;
   transform: translateY(-1px) !important;
+}
+
+/* Убираем hover эффекты на touch устройствах */
+@media (hover: none) {
+  [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
+    transform: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  [data-rk] div[role="dialog"] button[data-testid*="wallet"]:active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(0.98) !important;
+  }
 }
 
 /* Кнопка закрытия */
@@ -616,6 +694,19 @@
   border-radius: 8px !important;
   width: 32px !important;
   height: 32px !important;
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+}
+
+/* Мобильная кнопка закрытия */
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] button[aria-label*="Close"] {
+    width: 36px !important;
+    height: 36px !important;
+    top: 12px !important;
+    right: 12px !important;
+  }
 }
 
 [data-rk] div[role="dialog"] button[aria-label*="Close"]:hover {
@@ -628,17 +719,30 @@
 [data-rk] div[role="dialog"] p,
 [data-rk] div[role="dialog"] span {
   color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 0.875rem !important;
+}
+
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] p,
+  [data-rk] div[role="dialog"] span {
+    font-size: 0.875rem !important;
+  }
 }
 
 /* Иконки кошельков */
 [data-rk] div[role="dialog"] img {
   border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  flex-shrink: 0 !important;
 }
 
-/* Прокрутка в модалке */
-[data-rk] div[role="dialog"] {
-  max-height: calc(100vh - 120px) !important;
-  overflow-y: auto !important;
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] img {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
 }
 
 /* Кастомные скроллбары для модалки */
@@ -658,4 +762,84 @@
 
 [data-rk] div[role="dialog"]::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Кнопки "Получить" для кошельков */
+[data-rk] div[role="dialog"] button[data-testid*="get"] {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  color: rgb(59, 130, 246) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] button[data-testid*="get"] {
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+    border-radius: 10px !important;
+  }
+}
+
+[data-rk] div[role="dialog"] button[data-testid*="get"]:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Описания кошельков */
+[data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.75rem !important;
+  margin-top: 4px !important;
+}
+
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* QR код страница */
+[data-rk] div[role="dialog"] div[data-testid*="qr"] {
+  padding: 20px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  margin: 16px 0 !important;
+}
+
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] div[data-testid*="qr"] {
+    padding: 16px !important;
+    margin: 12px 0 !important;
+  }
+}
+
+/* Обратная кнопка */
+[data-rk] div[role="dialog"] button[data-testid*="back"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 0.875rem !important;
+  margin-right: auto !important;
+}
+
+/* Загрузочные индикаторы */
+[data-rk] div[role="dialog"] div[data-testid*="loading"] {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Адаптация для landscape на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  [data-rk] div[role="dialog"] {
+    max-height: 95vh !important;
+    right: 16px !important;
+    left: 16px !important;
+    bottom: 8px !important;
+  }
 }
