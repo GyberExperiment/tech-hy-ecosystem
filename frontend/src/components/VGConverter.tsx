@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
@@ -125,7 +125,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
     return (
       <div className={`glass-panel p-6 ${className}`}>
         <div className="text-center">
-          <h3 className="text-xl font-bold text-white mb-4">VG ↔ VGVotes Converter</h3>
+          <h3 className="text-xl font-semibold text-white mb-4">VG ↔ VGVotes Converter</h3>
           <p className="text-gray-300">Подключите кошелёк для конвертации токенов</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       <div className="text-center mb-6">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <RefreshCw className="w-6 h-6 text-blue-400" />
-          <h3 className="text-2xl font-bold text-white">VG ↔ VGVotes</h3>
+          <h3 className="text-2xl font-semibold text-white">VG ↔ VGVotes</h3>
         </div>
         <p className="text-gray-300">
           Конвертируйте VG токены в VGVotes для участия в голосовании DAO
@@ -148,7 +148,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center">
           <p className="text-sm text-gray-400">VG Balance</p>
-          <p className="text-xl font-bold text-purple-400">
+          <p className="text-xl font-semibold text-purple-400">
             {balancesLoading ? (
               <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
             ) : (
@@ -158,7 +158,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
         </div>
         <div className="text-center">
           <p className="text-sm text-gray-400">VGVotes Balance</p>
-          <p className="text-xl font-bold text-green-400">
+          <p className="text-xl font-semibold text-green-400">
             {balancesLoading ? (
               <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
             ) : (
@@ -219,7 +219,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
         <button
           onClick={mode === 'deposit' ? handleDeposit : handleWithdraw}
           disabled={loading || !amount || parseFloat(amount) <= 0}
-          className={`w-full py-4 font-bold rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
+          className={`w-full py-4 font-medium rounded-lg transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
             mode === 'deposit'
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white'
               : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'

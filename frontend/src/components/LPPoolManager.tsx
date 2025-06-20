@@ -1,11 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { useWeb3, PANCAKE_PAIR_ABI } from '../contexts/Web3Context';
+import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS, LP_POOL_CONFIG } from '../constants/contracts';
 import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, BarChart3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PoolInfoSkeleton } from './LoadingSkeleton';
 import { log } from '../utils/logger';
+
+// PancakeSwap Pair ABI (для работы с LP парами)
+const PANCAKE_PAIR_ABI = [
+  "function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+  "function token0() external view returns (address)",
+  "function token1() external view returns (address)",
+  "function totalSupply() external view returns (uint256)",
+  "function balanceOf(address owner) external view returns (uint256)",
+  "function price0CumulativeLast() external view returns (uint256)",
+  "function price1CumulativeLast() external view returns (uint256)",
+  "function kLast() external view returns (uint256)",
+];
 
 // PancakeSwap Router ABI (minimal)
 const PANCAKE_ROUTER_ABI = [

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS } from '../constants/contracts';
@@ -1059,7 +1059,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             <Zap className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-responsive-lg font-bold text-white">⚡ Получить VG токены</h3>
+            <h3 className="text-responsive-lg font-semibold text-white">⚡ Получить VG токены</h3>
             <p className="text-gray-300 text-responsive-sm">
               {mode === 'create' 
                 ? 'Создайте LP позицию и получите VG (10:1)'
@@ -1069,14 +1069,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </div>
         </div>
         <div className="mobile-stack">
-          {/* Fix RPC Button */}
-          <button
-            onClick={updateBSCTestnetRPC}
-            className="touch-target px-3 py-2 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 hover:text-red-300 transition-colors mobile-full-width"
-            title="Исправить RPC endpoints если есть timeout ошибки"
-          >
-            Fix RPC
-          </button>
           {/* Refresh Button */}
           <button
             onClick={refreshAllData}
@@ -1120,7 +1112,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <>
             <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
               <div className="text-responsive-xs text-gray-400 mb-1">VC Balance</div>
-              <div className="text-responsive-lg font-bold text-blue-400">
+              <div className="text-responsive-lg font-semibold text-blue-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1130,7 +1122,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </div>
             <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
               <div className="text-responsive-xs text-gray-400 mb-1">BNB Balance</div>
-              <div className="text-responsive-lg font-bold text-amber-400">
+              <div className="text-responsive-lg font-semibold text-amber-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1143,7 +1135,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <>
             <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
               <div className="text-responsive-xs text-gray-400 mb-1">LP Balance</div>
-              <div className="text-responsive-lg font-bold text-purple-400">
+              <div className="text-responsive-lg font-semibold text-purple-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1153,7 +1145,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </div>
             <div className="text-center p-3 sm:p-4 rounded-lg bg-black/30 border border-gray-600/50">
               <div className="text-responsive-xs text-gray-400 mb-1">VG Balance</div>
-              <div className="text-responsive-lg font-bold text-green-400">
+              <div className="text-responsive-lg font-semibold text-green-400">
                 {balancesLoading ? (
                   <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
@@ -1281,7 +1273,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               <TrendingUp className="w-4 h-4 text-green-400" />
               Expected VG Reward:
             </span>
-            <span className="text-responsive-lg font-bold text-green-400">
+            <span className="text-responsive-lg font-semibold text-green-400">
               {calculateVGReward()} VG
             </span>
           </div>

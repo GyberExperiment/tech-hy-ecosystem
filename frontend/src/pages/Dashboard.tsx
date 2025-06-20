@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWeb3 } from '../contexts/Web3Context';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
@@ -119,7 +119,7 @@ const Dashboard: React.FC = () => {
       <div className="animate-fade-in px-responsive">
         <div className="text-center py-8 sm:py-12">
           <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-responsive-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <h2 className="text-responsive-2xl font-semibold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('dashboard:welcome')}
           </h2>
           <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto">
@@ -138,7 +138,7 @@ const Dashboard: React.FC = () => {
       <div className="animate-fade-in px-responsive">
         <div className="text-center py-8 sm:py-12">
           <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-responsive-2xl font-bold mb-4 text-red-400">
+          <h2 className="text-responsive-2xl font-semibold mb-4 text-red-400">
             {t('dashboard:errors.wrongNetwork')}
           </h2>
           <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8">
@@ -153,7 +153,7 @@ const Dashboard: React.FC = () => {
     <div className="animate-fade-in space-y-responsive px-responsive">
       {/* Header */}
       <div className="text-center space-y-3 sm:space-y-4">
-        <h1 className="text-responsive-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+        <h1 className="text-responsive-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
           {t('dashboard:title')}
         </h1>
         <p className="text-responsive-lg text-gray-300 max-w-2xl mx-auto">
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
               <div>
                 <p className="text-responsive-xs text-gray-400">{stat.title}</p>
                 <div className="flex items-baseline space-x-2">
-                  <p className="text-responsive-lg font-bold text-slate-100">
+                  <p className="text-responsive-lg font-semibold text-slate-100">
                     {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : stat.value}
                   </p>
                   {stat.unit && (
@@ -202,7 +202,7 @@ const Dashboard: React.FC = () => {
 
       {/* Token Balances */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+        <h2 className="text-2xl font-semibold mb-6 flex items-center text-slate-100">
           <Coins className="mr-3 text-blue-400" />
           {t('dashboard:sections.tokenBalances')}
         </h2>
@@ -216,7 +216,7 @@ const Dashboard: React.FC = () => {
                     {token.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-slate-100">{token.symbol}</h3>
+                    <h3 className="font-semibold text-lg text-slate-100">{token.symbol}</h3>
                     <p className="text-sm text-gray-400">{token.name}</p>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
               </div>
               
               <div className="text-right">
-                <p className="text-2xl font-bold text-slate-100">
+                <p className="text-2xl font-semibold text-slate-100">
                   {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : formatBalance(token.balance)}
                 </p>
                 <p className="text-sm text-gray-400">{token.symbol}</p>
@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
+        <h2 className="text-2xl font-semibold mb-6 flex items-center text-slate-100">
           <Activity className="mr-3 text-green-400" />
           {t('dashboard:sections.quickActions')}
         </h2>
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.manageTokens.title')}</h3>
+            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.manageTokens.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.manageTokens.description')}</p>
             <a href="/tokens" className="btn-primary inline-block">
               {t('dashboard:actions.manageTokens.button')}
@@ -260,7 +260,7 @@ const Dashboard: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.lpLocking.title')}</h3>
+            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.lpLocking.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.lpLocking.description')}</p>
             <a href="/staking" className="btn-primary inline-block">
               {t('dashboard:actions.lpLocking.button')}
@@ -269,7 +269,7 @@ const Dashboard: React.FC = () => {
           
           <div className="card text-center group hover:scale-105 transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">{t('dashboard:actions.governance.title')}</h3>
+            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.governance.title')}</h3>
             <p className="text-gray-400 mb-4">{t('dashboard:actions.governance.description')}</p>
             <a href="/governance" className="btn-primary inline-block">
               {t('dashboard:actions.governance.button')}
@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
 
       {/* Contract Addresses */}
       <div className="card">
-        <h3 className="text-xl font-bold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
+        <h3 className="text-xl font-semibold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           {tokenCards.map((token) => (
             <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">

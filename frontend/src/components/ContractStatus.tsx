@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CONTRACTS } from '../constants/contracts';
 
 interface ContractInfo {

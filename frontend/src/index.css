@@ -124,7 +124,7 @@
 
   .btn-primary {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
-           text-white font-bold py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
+           text-white font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
            focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
            min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
@@ -138,7 +138,7 @@
 
   .btn-danger {
     @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 
-           text-white font-bold py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
+           text-white font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
            focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
            min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
   }
@@ -503,4 +503,159 @@
   .high-dpi-shadow {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
+}
+
+/* RainbowKit модалка - кастомное позиционирование */
+[data-rk] {
+  /* Переопределяем позиционирование модалки */
+  --rk-modal-mobile-sheet: none !important;
+}
+
+/* Основной контейнер модалки */
+[data-rk] div[role="dialog"] {
+  position: fixed !important;
+  top: 80px !important; /* Отступ от header */
+  right: 20px !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 420px !important;
+  max-width: calc(100vw - 40px) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 
+              0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  animation: modalSlideIn 0.3s ease-out !important;
+}
+
+/* Анимация появления модалки */
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Фон модалки (overlay) */
+[data-rk] div[role="dialog"] + div {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  [data-rk] div[role="dialog"] {
+    position: fixed !important;
+    top: auto !important;
+    right: 20px !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 20px 20px 8px 8px !important;
+    animation: modalSlideUp 0.3s ease-out !important;
+  }
+  
+  @keyframes modalSlideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Стили для содержимого модалки */
+[data-rk] div[role="dialog"] > div {
+  background: transparent !important;
+  border: none !important;
+  border-radius: inherit !important;
+}
+
+/* Заголовок модалки */
+[data-rk] div[role="dialog"] h1,
+[data-rk] div[role="dialog"] h2 {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Кнопки в модалке */
+[data-rk] div[role="dialog"] button {
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Кнопка подключения кошелька */
+[data-rk] div[role="dialog"] button[data-testid*="wallet"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+[data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Кнопка закрытия */
+[data-rk] div[role="dialog"] button[aria-label*="Close"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+[data-rk] div[role="dialog"] button[aria-label*="Close"]:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: rgb(239, 68, 68) !important;
+}
+
+/* Текст в модалке */
+[data-rk] div[role="dialog"] p,
+[data-rk] div[role="dialog"] span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Иконки кошельков */
+[data-rk] div[role="dialog"] img {
+  border-radius: 8px !important;
+}
+
+/* Прокрутка в модалке */
+[data-rk] div[role="dialog"] {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+}
+
+/* Кастомные скроллбары для модалки */
+[data-rk] div[role="dialog"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-rk] div[role="dialog"]::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+[data-rk] div[role="dialog"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+[data-rk] div[role="dialog"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

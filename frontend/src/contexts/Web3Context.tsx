@@ -1,18 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import type { ReactNode } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { useAccount, useWalletClient, usePublicClient, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
-import { toast } from 'react-hot-toast';
+import { config } from '../config/rainbowkit';
 import { CONTRACTS } from '../constants/contracts';
-import { log } from '../utils/logger';
-import { getTestnetRpcEndpoints } from '../constants/rpcEndpoints';
-import { rpcService } from '../services/rpcService';
+import { bscTestnet, bsc } from 'wagmi/chains';
 
-// EIP-6963 imports
-import { usePreferredProvider } from '../hooks/useWalletProviders';
-import { detectLegacyProvider } from '../hooks/walletStore';
-import type { EIP1193Provider } from '../types/eip6963';
-
-// Contract ABIs
+// ABIs
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)",
@@ -70,6 +66,7 @@ interface Web3ContextType {
   account: string | null;
   isConnected: boolean;
   isCorrectNetwork: boolean;
+  chainId: number | undefined;
   
   // Contracts (memoized)
   vcContract: ethers.Contract | null;
@@ -79,11 +76,10 @@ interface Web3ContextType {
   lpPairContract: ethers.Contract | null;
   lpLockerContract: ethers.Contract | null;
   
-  // Actions
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
-  switchNetwork: () => Promise<void>;
-  updateBSCTestnetRPC: () => Promise<boolean>;
+  // Network switching
+  switchToTestnet: () => Promise<void>;
+  switchToMainnet: () => Promise<void>;
+  updateBSCTestnetRPC: () => Promise<boolean>; // Compatibility
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
@@ -96,595 +92,144 @@ export const useWeb3 = () => {
   return context;
 };
 
-interface Web3ProviderProps {
-  children: ReactNode;
-}
+// Внутренний компонент для работы с Wagmi хуками
+const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { address, isConnected, chainId } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+  const { switchChain } = useSwitchChain();
 
-export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
-  const [account, setAccount] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
-  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
-  const [isUpdatingRPC, setIsUpdatingRPC] = useState(false);
-  const [lockedProvider, setLockedProvider] = useState<any>(null);
-  
-  // ✅ Используем Map для хранения времени последних запросов
-  const [pendingRequests] = useState(new Map<string, number>());
-
-  // EIP-6963 hooks
-  const preferredProvider = usePreferredProvider();
-
-  const createRequestGuard = (requestType: string) => {
-    const key = `${requestType}_${Date.now()}`;
-    const TIMEOUT = 15000; // ✅ Увеличиваем timeout до 15 секунд
-    
-    return {
-      canProceed: () => {
-        const now = Date.now();
-        const lastRequest = pendingRequests.get(requestType);
-        
-        // ✅ Проверяем что прошло достаточно времени с последнего запроса
-        if (lastRequest && (now - lastRequest) < TIMEOUT) {
-          log.debug('Request blocked by guard - too soon', {
-            component: 'Web3Context',
-            function: 'createRequestGuard',
-            requestType,
-            timeSinceLastRequest: now - lastRequest,
-            timeout: TIMEOUT
-          });
-          return false;
-        }
-        
-        return true;
-      },
-      start: () => {
-        pendingRequests.set(requestType, Date.now());
-        log.debug('Request guard started', {
-          component: 'Web3Context',
-          function: 'createRequestGuard',
-          requestType,
-          key
-        });
-      },
-      end: () => {
-        // ✅ Очищаем guard только через небольшую задержку для предотвращения race conditions
-        setTimeout(() => {
-          pendingRequests.delete(requestType);
-          log.debug('Request guard ended', {
-            component: 'Web3Context',
-            function: 'createRequestGuard',
-            requestType,
-            key
-          });
-        }, 1000); // 1 секунда задержка
-      }
-    };
-  };
-
-  // BSC Testnet configuration
-  const BSC_TESTNET_CONFIG = {
-    chainId: '0x61', // 97 in hex
-    chainName: 'BSC Testnet',
-    nativeCurrency: {
-      name: 'tBNB',
-      symbol: 'tBNB',
-      decimals: 18,
-    },
-    rpcUrls: getTestnetRpcEndpoints(), // ✅ Use ONLY testnet endpoints
-    blockExplorerUrls: ['https://testnet.bscscan.com'],
-  };
-
-  /**
-   * Get the best available Ethereum provider
-   * Uses EIP-6963 first, then falls back to legacy detection
-   */
-  const getEthereumProvider = (): EIP1193Provider | null => {
-    // Если кошелёк уже выбран – всегда возвращаем его
-    if (lockedProvider) return lockedProvider;
-
-    // Check for forced legacy mode (can be enabled in localStorage for debugging)
-    const forceLegacy = localStorage.getItem('forceLegacyProvider') === 'true';
-    if (forceLegacy) {
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('FORCE LEGACY MODE - Using window.ethereum directly', { 
-          component: 'Web3Context',
-          function: 'getEthereumProvider'
-        });
-      }
-      const legacyProvider = detectLegacyProvider();
-      if (legacyProvider) {
-        return legacyProvider;
-      }
+  // Создаем ethers provider и signer
+  const { provider, signer } = useMemo(() => {
+    if (!walletClient || !publicClient) {
+      return { provider: null, signer: null };
     }
 
-    // 1. Try EIP-6963 preferred provider (MetaMask prioritized)
-    if (preferredProvider) {
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('Using EIP-6963 provider', {
-          component: 'Web3Context',
-          function: 'getEthereumProvider',
-          providerName: preferredProvider.info.name,
-          providerRdns: preferredProvider.info.rdns
-        });
-      }
-      return preferredProvider.provider;
+    try {
+      // Создаем ethers provider из viem clients
+      // @ts-ignore - walletClient совместим с EIP-1193 provider
+      const ethersProvider = new ethers.BrowserProvider(walletClient);
+      return { 
+        provider: ethersProvider, 
+        signer: ethersProvider.getSigner() as any
+      };
+    } catch (error) {
+      console.error('Failed to create ethers provider/signer:', error);
+      return { provider: null, signer: null };
     }
+  }, [walletClient, publicClient]);
 
-    // 2. Fallback to legacy detection
-    const legacyProvider = detectLegacyProvider();
-    if (legacyProvider) {
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('Using legacy provider detection', { 
-          component: 'Web3Context',
-          function: 'getEthereumProvider'
-        });
-      }
-      return legacyProvider;
-    }
-
-    log.warn('No Ethereum provider found', { 
-      component: 'Web3Context',
-      function: 'getEthereumProvider'
-    });
-    return null;
-  };
+  // Проверяем правильность сети (BSC testnet или mainnet)
+  const isCorrectNetwork = useMemo(() => {
+    if (!chainId) return false;
+    return chainId === bscTestnet.id || chainId === bsc.id;
+  }, [chainId]);
 
   // Helper function to create contract instances
   const getContract = (address: string, abi: any[]): ethers.Contract | null => {
-    if (!signer || !account) return null;
+    if (!signer || !address) return null;
     try {
       return new ethers.Contract(address, abi, signer);
     } catch (error) {
-      log.error('Failed to create contract', {
-        component: 'Web3Context',
-        function: 'getContract',
-        address,
-        account
-      }, error as Error);
+      console.error('Failed to create contract:', error);
       return null;
     }
   };
 
-  // Memoized contracts to prevent unnecessary re-renders
+  // Memoized contracts
   const vcContract = useMemo(() => {
     return getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
   const vgContract = useMemo(() => {
     return getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
   const vgVotesContract = useMemo(() => {
     return getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
   const lpContract = useMemo(() => {
     return getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
   const lpPairContract = useMemo(() => {
     return getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
   const lpLockerContract = useMemo(() => {
     return getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
-  }, [signer, account]);
+  }, [signer]);
 
-  const connectWallet = async () => {
-    // ✅ ЗАЩИТА ОТ REACT STRICTMODE: Предотвращаем множественные вызовы подключения
-    const guard = createRequestGuard('wallet_connect');
-    
-    if (!guard.canProceed()) {
-      log.debug('Wallet connection already in progress', {
-        component: 'Web3Context',
-        function: 'connectWallet'
-      });
-      return;
-    }
-
-    guard.start();
-    
+  // Network switching functions
+  const switchToTestnet = async () => {
     try {
-      const ethereum = getEthereumProvider();
-      if (!ethereum) {
-        toast.error('MetaMask не найден');
-        return;
-      }
-
-      // ✅ Улучшенная проверка ethereum объекта перед созданием BrowserProvider
-      if (!ethereum || typeof ethereum !== 'object') {
-        throw new Error('Invalid ethereum provider object');
-      }
-
-      // Проверяем наличие необходимых методов
-      if (typeof ethereum.request !== 'function') {
-        throw new Error('Ethereum provider missing request method');
-      }
-
-      // Получаем аккаунты
-      let accounts = await ethereum.request({ method: 'eth_accounts' }) as string[];
-      
-      if (!accounts || accounts.length === 0) {
-        accounts = await ethereum.request({ method: 'eth_requestAccounts' }) as string[];
-        if (!accounts || accounts.length === 0) {
-          toast.error('Подключение отменено пользователем');
-          return;
-        }
-      }
-
-      let ethProvider: ethers.BrowserProvider;
-      try {
-        ethProvider = new ethers.BrowserProvider(ethereum);
-      } catch (providerError: any) {
-        log.error('Failed to create BrowserProvider', {
-          component: 'Web3Context',
-          function: 'connectWallet',
-          ethereumType: typeof ethereum,
-          hasRequest: typeof ethereum.request === 'function'
-        }, providerError);
-        throw new Error(`MetaMask provider initialization failed: ${providerError.message}`);
-      }
-
-      const ethSigner = await ethProvider.getSigner();
-      const network = await ethProvider.getNetwork();
-      
-      setProvider(ethProvider);
-      setSigner(ethSigner);
-      setAccount(accounts[0] || null);
-      setIsConnected(true);
-      setIsCorrectNetwork(Number(network.chainId) === 97); // BSC Testnet chainId
-      setLockedProvider(ethereum); // 🔒 фиксируем провайдер
-      
-      // ✅ Синхронизируем с RPC сервисом
-      rpcService.setWeb3Provider(ethProvider);
-      
-      log.info('Wallet connected successfully', {
-        component: 'Web3Context',
-        function: 'connectWallet',
-        address: accounts[0],
-        network: network.name,
-        chainId: Number(network.chainId)
-      });
-      
-      toast.success('Кошелёк подключён!');
-      
-      // ✅ НЕ ВЫЗЫВАЕМ АВТОМАТИЧЕСКИ RPC UPDATE ЧТОБЫ НЕ ОТКРЫВАТЬ MODAL
-      // Пользователь может обновить RPC вручную если нужно
-      if (Number(network.chainId) !== 97) {
-        toast.error('Переключитесь на BSC Testnet');
-      }
-    } catch (error: any) {
-      log.error('Wallet connection failed', {
-        component: 'Web3Context',
-        function: 'connectWallet'
-      }, error);
-      
-      // Better error handling with Phantom conflict detection
-      if (error.code === 4001) {
-        toast.error('Подключение отклонено пользователем');
-      } else if (error.code === -32002) {
-        toast.error('Уже есть запрос на подключение. Проверьте MetaMask.');
-      } else if (error.message?.includes('evmAsk')) {
-        toast.error('Конфликт расширений. Отключите evmAsk или другие кошельки.');
-      } else if (error.message?.includes('phantom') || error.message?.toLowerCase().includes('solana')) {
-        toast.error('Конфликт с Phantom кошельком. Используйте MetaMask для Ethereum/BSC.');
-      } else if (error.message?.includes('User rejected')) {
-        toast.error('Подключение отменено пользователем');
-      } else {
-        log.error('Detailed connection error', {
-          component: 'Web3Context',
-          function: 'connectWallet',
-          errorCode: error.code,
-          errorMessage: error.message,
-          errorData: error.data
-        });
-        toast.error('Ошибка подключения к кошельку. Проверьте MetaMask.');
-      }
-    } finally {
-      guard.end();
-    }
-  };
-
-  const disconnectWallet = () => {
-    log.info('Wallet disconnected', {
-      component: 'Web3Context',
-      function: 'disconnectWallet',
-      address: account
-    });
-    setProvider(null);
-    setSigner(null);
-    setAccount(null);
-    setIsConnected(false);
-    setIsCorrectNetwork(false);
-    setLockedProvider(null);
-    
-    // ✅ Синхронизируем с RPC сервисом
-    rpcService.setWeb3Provider(null);
-    
-    toast.success('Кошелёк отключён');
-  };
-
-  const switchNetwork = async () => {
-    // ✅ УЛУЧШЕННАЯ ЗАЩИТА: Используем requestGuard для предотвращения дублирующихся запросов
-    const guard = createRequestGuard('wallet_switchEthereumChain');
-    
-    if (!guard.canProceed() || isSwitchingNetwork) {
-      return;
-    }
-
-    const ethereum = getEthereumProvider();
-    if (!ethereum) {
-      toast.error('MetaMask не найден');
-      return;
-    }
-
-    setIsSwitchingNetwork(true);
-    guard.start();
-    
-    try {
-      // Сначала пытаемся переключиться на BSC Testnet
-      await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x61' }], // BSC Testnet chainId in hex
-      });
-      
-      log.info('Successfully switched to BSC Testnet', {
-        component: 'Web3Context',
-        function: 'switchNetwork'
-      });
-      
-    } catch (switchError: any) {
-      // ✅ Проверяем код ошибки для правильной обработки
-      if (switchError.code === 4902) {
-        // Сеть не найдена - добавляем с правильным RPC
-        const addGuard = createRequestGuard('wallet_addEthereumChain');
-        
-        if (addGuard.canProceed()) {
-          addGuard.start();
-          try {
-            await ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0x61',
-                  chainName: BSC_TESTNET_CONFIG.chainName,
-                  nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
-                  rpcUrls: BSC_TESTNET_CONFIG.rpcUrls,
-                  blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
-                },
-              ],
-            });
-            toast.success('BSC Testnet добавлен с обновленными RPC!');
-          } catch (addError: any) {
-            // ✅ Обрабатываем ошибку "already pending"
-            if (addError.code === -32002) {
-              toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
-            } else {
-              log.error('Failed to add BSC Testnet network', {
-                component: 'Web3Context',
-                function: 'switchNetwork',
-                network: 'BSC_TESTNET'
-              }, addError as Error);
-              toast.error('Ошибка добавления BSC Testnet');
-            }
-          } finally {
-            addGuard.end();
-          }
-        }
-      } else if (switchError.code === -32002) {
-        // ✅ Уже есть pending запрос
-        toast.error('Запрос уже обрабатывается. Пожалуйста, проверьте MetaMask.');
-      } else {
-        log.warn('Network switch failed', {
-          component: 'Web3Context',
-          function: 'switchNetwork',
-          errorCode: switchError.code,
-          errorMessage: switchError.message
-        });
-        toast.error('Ошибка переключения сети. Попробуйте вручную в MetaMask.');
-      }
-    } finally {
-      setIsSwitchingNetwork(false);
-      guard.end();
-    }
-  };
-
-  const updateBSCTestnetRPC = async (): Promise<boolean> => {
-    // ✅ УЛУЧШЕННАЯ ЗАЩИТА: Используем requestGuard для предотвращения дублирующихся запросов
-    const guard = createRequestGuard('wallet_addEthereumChain_update');
-    
-    if (!guard.canProceed() || isUpdatingRPC) {
-      return false;
-    }
-
-    const ethereum = getEthereumProvider();
-    if (!ethereum) return false;
-
-    setIsUpdatingRPC(true);
-    guard.start();
-    
-    try {
-      log.info('Updating BSC Testnet RPC endpoints', {
-        component: 'Web3Context',  
-        function: 'updateBSCTestnetRPC',
-        network: 'BSC_TESTNET'
-      });
-      
-      // ✅ ТИХОЕ ОБНОВЛЕНИЕ БЕЗ МОДАЛЬНОГО ОКНА
-      // Сначала проверяем текущую сеть
-      const chainId = await ethereum.request({ method: 'eth_chainId' });
-      if (chainId !== '0x61') {
-        // Не в BSC Testnet - не обновляем RPC
-        log.debug('Not on BSC Testnet, skipping RPC update', {
-          component: 'Web3Context',
-          function: 'updateBSCTestnetRPC',
-          currentChainId: chainId
-        });
-        return false;
-      }
-
-      // ✅ Обновляем RPC только если пользователь УЖЕ в BSC Testnet
-      // Это не откроет modal, так как сеть уже добавлена
-      await ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [
-          {
-            chainId: BSC_TESTNET_CONFIG.chainId,
-            chainName: BSC_TESTNET_CONFIG.chainName,
-            nativeCurrency: BSC_TESTNET_CONFIG.nativeCurrency,
-            rpcUrls: BSC_TESTNET_CONFIG.rpcUrls, // ✅ Новые рабочие RPC
-            blockExplorerUrls: BSC_TESTNET_CONFIG.blockExplorerUrls,
-          },
-        ],
-      });
-      
-      log.info('BSC Testnet RPC endpoints updated successfully', {
-        component: 'Web3Context',
-        function: 'updateBSCTestnetRPC',
-        rpcUrls: BSC_TESTNET_CONFIG.rpcUrls
-      });
-      
-      return true;
-    } catch (error: any) {
-      // ✅ Специальная обработка для pending запросов
-      if (error.code === -32002) {
-        log.debug('RPC update request already pending - this is expected', {
-          component: 'Web3Context',
-          function: 'updateBSCTestnetRPC',
-          network: 'BSC_TESTNET'
-        });
-        return false; // Не показываем ошибку пользователю
-      }
-      
-      log.error('Failed to update BSC Testnet RPC endpoints', {
-        component: 'Web3Context',
-        function: 'updateBSCTestnetRPC',
-        network: 'BSC_TESTNET',
-        errorCode: error.code,
-        errorMessage: error.message
-      }, error);
-      // ✅ Тихо игнорируем ошибки обновления RPC
-      return false;
-    } finally {
-      setIsUpdatingRPC(false);
-      guard.end();
-    }
-  };
-
-  // Listen for account/chain changes
-  useEffect(() => {
-    const ethereum = getEthereumProvider();
-    if (!ethereum) return;
-
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        disconnectWallet();
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          log.debug('Account changed', {
-            component: 'Web3Context',
-            function: 'handleAccountsChanged',
-            newAccount: accounts[0],
-            previousAccount: account
-          });
-        }
-        setAccount(accounts[0] || null);
-      }
-    };
-
-    const handleChainChanged = (chainId: string) => {
-      const newChainId = parseInt(chainId, 16);
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('Chain changed', {
-          component: 'Web3Context',
-          function: 'handleChainChanged',
-          newChainId,
-          isCorrectNetwork: newChainId === 97
-        });
-      }
-      setIsCorrectNetwork(newChainId === 97);
-      
-      if (newChainId === 97) {
-        toast.success('Переключено на BSC Testnet!');
-      } else {
-        toast.error('Переключитесь на BSC Testnet');
-      }
-    };
-
-    const handleDisconnect = () => {
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('Provider disconnected', {
-          component: 'Web3Context',
-          function: 'handleDisconnect'
-        });
-      }
-      disconnectWallet();
-    };
-
-    // Safe event listener attachment
-    try {
-      if (ethereum.on) {
-        ethereum.on('accountsChanged', handleAccountsChanged);
-        ethereum.on('chainChanged', handleChainChanged);
-        ethereum.on('disconnect', handleDisconnect);
-      }
+      await switchChain({ chainId: bscTestnet.id });
     } catch (error) {
-      log.error('Failed to attach event listeners', {
-        component: 'Web3Context',
-        function: 'useEffect'
-      }, error as Error);
+      console.error('Failed to switch to testnet:', error);
     }
+  };
 
-    return () => {
-      try {
-        if (ethereum.removeListener) {
-          ethereum.removeListener('accountsChanged', handleAccountsChanged);
-          ethereum.removeListener('chainChanged', handleChainChanged);
-          ethereum.removeListener('disconnect', handleDisconnect);
-        }
-      } catch (error) {
-        log.error('Failed to remove event listeners', {
-          component: 'Web3Context',
-          function: 'useEffect-cleanup'
-        }, error as Error);
-      }
-    };
-  }, [account]);
+  const switchToMainnet = async () => {
+    try {
+      await switchChain({ chainId: bsc.id });
+    } catch (error) {
+      console.error('Failed to switch to mainnet:', error);
+    }
+  };
 
-  const value: Web3ContextType = {
+  // Compatibility function
+  const updateBSCTestnetRPC = async (): Promise<boolean> => {
+    // RainbowKit handles RPC automatically
+    return true;
+  };
+
+  const contextValue: Web3ContextType = {
     provider,
     signer,
-    account,
+    account: address || null,
     isConnected,
     isCorrectNetwork,
-    connectWallet,
-    disconnectWallet,
-    switchNetwork,
-    updateBSCTestnetRPC,
+    chainId,
     vcContract,
     vgContract,
     vgVotesContract,
     lpContract,
     lpPairContract,
     lpLockerContract,
+    switchToTestnet,
+    switchToMainnet,
+    updateBSCTestnetRPC,
   };
 
   return (
-    <Web3Context.Provider value={value}>
+    <Web3Context.Provider value={contextValue}>
       {children}
     </Web3Context.Provider>
   );
 };
 
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    ethereum?: any;
-    evmproviders?: any;
-  }
-}
+// Создаем QueryClient
+const queryClient = new QueryClient();
 
-// Export ABI for use in other components
-export { PANCAKE_PAIR_ABI }; 
+// Главный провайдер
+export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={darkTheme({
+            accentColor: '#7c3aed',
+            accentColorForeground: 'white',
+            borderRadius: 'medium',
+          })}
+          initialChain={bscTestnet.id}
+        >
+          <Web3ContextProvider>
+            {children}
+          </Web3ContextProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}; 

@@ -349,7 +349,7 @@ const StakingStats: React.FC = () => {
                 <stat.icon className={`${stat.color}`} size={20} />
                 <span className="text-xs text-gray-400">{stat.unit}</span>
               </div>
-              <div className="text-2xl font-bold text-slate-100 mb-1">
+              <div className="text-2xl font-semibold text-slate-100 mb-1">
                 {stat.value}
               </div>
               <div className="text-sm text-gray-400">
@@ -366,7 +366,7 @@ const StakingStats: React.FC = () => {
               <DollarSign className="text-blue-400" size={16} />
               <span className="text-sm text-gray-400">Ваш VC баланс</span>
             </div>
-            <div className="text-xl font-bold text-slate-100">{formatNumber(poolData.userVCBalance)} VC</div>
+            <div className="text-xl font-semibold text-slate-100">{formatNumber(poolData.userVCBalance)} VC</div>
             <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
 
@@ -375,7 +375,7 @@ const StakingStats: React.FC = () => {
               <Zap className="text-green-400" size={16} />
               <span className="text-sm text-gray-400">Ваш BNB баланс</span>
             </div>
-            <div className="text-xl font-bold text-slate-100">{formatNumber(poolData.userBNBBalance)} BNB</div>
+            <div className="text-xl font-semibold text-slate-100">{formatNumber(poolData.userBNBBalance)} BNB</div>
             <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
         </div>
@@ -393,7 +393,7 @@ const StakingStats: React.FC = () => {
                 <div className="text-sm text-gray-400 mb-2">
                   {example.vc} VC + {example.bnb} BNB
                 </div>
-                <div className="text-xl font-bold text-yellow-400">
+                <div className="text-xl font-semibold text-yellow-400">
                   ≈ {formatNumber(example.vg)} VG
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -420,7 +420,7 @@ const StakingStats: React.FC = () => {
               <Clock className="text-green-400" size={16} />
               <span className="text-sm text-gray-400">Статус системы</span>
             </div>
-            <div className="text-lg font-bold text-green-400">
+            <div className="text-lg font-semibold text-green-400">
               {parseFloat(poolData.availableVG) > 0 ? 'Активна' : 'Недостаточно VG'}
             </div>
             <div className="text-xs text-gray-500">
@@ -435,7 +435,7 @@ const StakingStats: React.FC = () => {
               <Users className="text-blue-400" size={16} />
               <span className="text-sm text-gray-400">LP токены навсегда заблокированы</span>
             </div>
-            <div className="text-lg font-bold text-blue-400">
+            <div className="text-lg font-semibold text-blue-400">
               {formatNumber(poolData.totalLockedLP)}
             </div>
             <div className="text-xs text-gray-500">

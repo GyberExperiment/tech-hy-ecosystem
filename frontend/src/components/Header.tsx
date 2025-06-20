@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useWeb3 } from '../contexts/Web3Context';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, ChevronDown, LogOut, Copy, Settings, Wallet, Network } from 'lucide-react';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
-import { log } from '../utils/logger';
+import { bscTestnet, bsc } from 'wagmi/chains';
 
 const Header: React.FC = () => {
   const { t } = useTranslation('common');
   const location = useLocation();
-  const { account, isConnected, connectWallet, disconnectWallet } = useWeb3();
+  const { chainId, switchToTestnet, switchToMainnet } = useWeb3();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false);
-  const [forceLegacy, setForceLegacy] = useState(localStorage.getItem('forceLegacyProvider') === 'true');
-  const [isTestnetMode, setIsTestnetMode] = useState(localStorage.getItem('networkMode') !== 'mainnet');
 
   const navigation = [
     { name: t('navigation.dashboard'), href: '/', icon: BarChart3 },
@@ -24,78 +22,53 @@ const Header: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
-  };
-
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const toggleWalletMenu = () => {
-    setIsWalletMenuOpen(!isWalletMenuOpen);
-  };
+  const isTestnet = chainId === bscTestnet.id;
+  const isMainnet = chainId === bsc.id;
 
-  const copyAddress = async () => {
-    if (account) {
-      try {
-        await navigator.clipboard.writeText(account);
-        // You could add a toast notification here
-      } catch (error) {
-        log.error('Failed to copy address to clipboard', {
-          component: 'Header',
-          function: 'copyToClipboard',
-          address: account
-        }, error as Error);
-      }
+  const handleNetworkSwitch = () => {
+    if (isTestnet) {
+      switchToMainnet();
+    } else {
+      switchToTestnet();
     }
   };
 
-  const handleDisconnect = () => {
-    disconnectWallet();
-    setIsWalletMenuOpen(false);
+  // Красивая кнопка переключения сети
+  const NetworkSwitcher = ({ isMobile = false }: { isMobile?: boolean }) => {
+    const networkName = isTestnet ? 'Testnet' : isMainnet ? 'Mainnet' : 'Unknown';
+    const networkColor = isTestnet 
+      ? 'from-orange-500 to-red-500 border-orange-500/30' 
+      : isMainnet 
+      ? 'from-green-500 to-emerald-500 border-green-500/30'
+      : 'from-gray-500 to-slate-500 border-gray-500/30';
+
+    return (
+      <button
+        onClick={handleNetworkSwitch}
+        className={`group relative overflow-hidden rounded-lg border bg-gradient-to-r ${networkColor} p-[1px] transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+          isMobile ? 'w-full' : ''
+        }`}
+        title={isTestnet ? 'Switch to Mainnet' : 'Switch to Testnet'}
+      >
+        <div className="relative flex items-center space-x-2 rounded-lg bg-black/80 px-3 py-2 text-xs font-normal backdrop-blur-sm transition-all duration-300 group-hover:bg-black/60">
+          <div className="relative">
+            <Network className="h-3 w-3" />
+            <div className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${
+              isTestnet ? 'bg-orange-400' : isMainnet ? 'bg-green-400' : 'bg-gray-400'
+            } animate-pulse`} />
+          </div>
+          <span className="text-white font-normal">{networkName}</span>
+          {!isMobile && (
+            <Wifi className="h-3 w-3 text-white/60 group-hover:text-white transition-colors" />
+          )}
+        </div>
+      </button>
+    );
   };
-
-  const toggleLegacyMode = () => {
-    const newValue = !forceLegacy;
-    setForceLegacy(newValue);
-    localStorage.setItem('forceLegacyProvider', newValue.toString());
-    
-    if (isConnected) {
-      disconnectWallet();
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-  };
-
-  const toggleNetworkMode = () => {
-    const newMode = isTestnetMode ? 'mainnet' : 'testnet';
-    setIsTestnetMode(!isTestnetMode);
-    localStorage.setItem('networkMode', newMode);
-    
-    if (isConnected) {
-      disconnectWallet();
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-  };
-
-  // Close menus when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('[data-wallet-menu]') && !target.closest('[data-language-switcher]')) {
-        setIsWalletMenuOpen(false);
-      }
-    };
-
-    if (isWalletMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [isWalletMenuOpen]);
 
   return (
     <header className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
@@ -103,8 +76,8 @@ const Header: React.FC = () => {
         {/* Main Header */}
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0 group">
-            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-200">
+          <Link to="/" className="flex-shrink-0 group mr-6 lg:mr-12">
+            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-200">
               <span className="hidden sm:inline">TECH HY Ecosystem</span>
               <span className="sm:hidden">TECH HY</span>
             </span>
@@ -118,9 +91,9 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-normal ${
                     isActive(item.href)
-                      ? 'bg-blue-600 text-white shadow-lg'
+                      ? 'bg-blue-600 text-white shadow-lg font-medium'
                       : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -132,102 +105,79 @@ const Header: React.FC = () => {
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {/* Network Switcher - Desktop */}
-            <button
-              onClick={toggleNetworkMode}
-              className={`hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium border ${
-                isTestnetMode
-                  ? 'bg-orange-600/20 border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
-                  : 'bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30'
-              }`}
-              title={isTestnetMode ? 'Switch to Mainnet' : 'Switch to Testnet'}
-            >
-              <Network className="w-3 h-3" />
-              <span className="hidden lg:inline">{isTestnetMode ? 'Testnet' : 'Mainnet'}</span>
-            </button>
+            <div className="hidden md:block">
+              <NetworkSwitcher />
+            </div>
             
             {/* Language Switcher - Desktop */}
             <div className="hidden md:block">
               <LanguageSwitcher />
             </div>
             
-            {/* Legacy Mode Toggle - Desktop only */}
-            <button
-              onClick={toggleLegacyMode}
-              className={`hidden xl:flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium border ${
-                forceLegacy
-                  ? 'bg-orange-600/20 border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
-                  : 'bg-gray-600/20 border-gray-500/30 text-gray-400 hover:bg-gray-600/30'
-              }`}
-              title={forceLegacy ? 'Legacy Mode: ON' : 'EIP-6963 Mode: ON'}
-            >
-              <Settings className="w-3 h-3" />
-              <span>{forceLegacy ? 'Legacy' : 'EIP-6963'}</span>
-            </button>
-            
-            {/* Wallet Connection */}
-            {isConnected ? (
-              <div className="relative" data-wallet-menu>
-                <button
-                  onClick={toggleWalletMenu}
-                  className="flex items-center space-x-2 px-3 py-2 bg-green-600/20 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-all duration-200 text-sm font-medium"
-                >
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 hidden sm:inline">
-                    {formatAddress(account!)}
-                  </span>
-                  <span className="text-green-400 sm:hidden">
-                    {account!.slice(0, 6)}
-                  </span>
-                  <ChevronDown 
-                    className={`w-4 h-4 text-green-400 transition-transform duration-200 ${
-                      isWalletMenuOpen ? 'rotate-180' : ''
-                    }`} 
-                  />
-                </button>
+            {/* RainbowKit Connect Button - скрываем информацию о сети */}
+            <ConnectButton.Custom>
+              {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                authenticationStatus,
+                mounted,
+              }) => {
+                // NOTE: If your app doesn't use authentication, you
+                // can remove all 'authenticationStatus' checks
+                const ready = mounted && authenticationStatus !== 'loading';
+                const connected =
+                  ready &&
+                  account &&
+                  chain &&
+                  (!authenticationStatus ||
+                    authenticationStatus === 'authenticated');
 
-                {/* Wallet Dropdown */}
-                {isWalletMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-700">
-                      <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
-                      <p className="text-sm font-mono text-gray-300 break-all">
-                        {account}
-                      </p>
-                    </div>
-                    
-                    <div className="py-1">
-                      <button
-                        onClick={copyAddress}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                      >
-                        <Copy className="w-4 h-4" />
-                        <span>Copy Address</span>
-                      </button>
-                      
-                      <button
-                        onClick={handleDisconnect}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Disconnect</span>
-                      </button>
-                    </div>
+                return (
+                  <div
+                    {...(!ready && {
+                      'aria-hidden': true,
+                      'style': {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!connected) {
+                        return (
+                          <button 
+                            onClick={openConnectModal} 
+                            type="button"
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-normal py-2 px-4 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm"
+                          >
+                            Connect Wallet
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <button
+                          onClick={openAccountModal}
+                          type="button"
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-normal py-2 px-4 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 text-sm"
+                        >
+                          {account.displayName}
+                          {account.displayBalance
+                            ? ` (${account.displayBalance})`
+                            : ''}
+                        </button>
+                      );
+                    })()}
                   </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={connectWallet}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium text-sm"
-              >
-                <span className="hidden sm:inline">Connect Wallet</span>
-                <span className="sm:hidden">
-                  <Wallet className="w-4 h-4" />
-                </span>
-              </button>
-            )}
+                );
+              }}
+            </ConnectButton.Custom>
 
             {/* Mobile Menu Button */}
             <button
@@ -258,12 +208,12 @@ const Header: React.FC = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                       isActive(item.href)
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:text-white hover:bg-white/10'
+                        ? 'bg-blue-600 text-white font-medium'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10 font-normal'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.name}</span>
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
@@ -271,81 +221,18 @@ const Header: React.FC = () => {
             
             {/* Mobile Controls */}
             <div className="py-4 space-y-3 border-t border-white/10">
-              {/* Network Switcher */}
+              {/* Network Switcher - Mobile */}
               <div className="px-4">
-                <button
-                  onClick={toggleNetworkMode}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border ${
-                    isTestnetMode
-                      ? 'bg-orange-600/20 border-orange-500/30 text-orange-400'
-                      : 'bg-green-600/20 border-green-500/30 text-green-400'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Network className="w-4 h-4" />
-                    <span>Network Mode</span>
-                  </div>
-                  <span className="text-xs">
-                    {isTestnetMode ? 'Testnet' : 'Mainnet'}
-                  </span>
-                </button>
+                <NetworkSwitcher isMobile />
               </div>
               
-              {/* Language Switcher */}
+              {/* Language Switcher - Mobile */}
               <div className="px-4 md:hidden">
                 <div className="w-full">
                   <LanguageSwitcher />
                 </div>
               </div>
-              
-              {/* Legacy Mode Toggle */}
-              <div className="px-4 xl:hidden">
-                <button
-                  onClick={toggleLegacyMode}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium border ${
-                    forceLegacy
-                      ? 'bg-orange-600/20 border-orange-500/30 text-orange-400'
-                      : 'bg-gray-600/20 border-gray-500/30 text-gray-400'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Settings className="w-4 h-4" />
-                    <span>Provider Mode</span>
-                  </div>
-                  <span className="text-xs">
-                    {forceLegacy ? 'Legacy' : 'EIP-6963'}
-                  </span>
-                </button>
-              </div>
             </div>
-            
-            {/* Mobile Wallet Info */}
-            {isConnected && (
-              <div className="py-4 px-4 border-t border-white/10">
-                <div className="mb-3">
-                  <p className="text-xs text-gray-400 mb-1">Wallet Address</p>
-                  <p className="text-sm font-mono text-gray-300 break-all">
-                    {account}
-                  </p>
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={copyAddress}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    <Copy className="w-4 h-4" />
-                    <span>Copy</span>
-                  </button>
-                  <button
-                    onClick={handleDisconnect}
-                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Disconnect</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
