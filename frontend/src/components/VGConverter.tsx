@@ -147,24 +147,24 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       {/* Балансы */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center">
-          <p className="text-sm text-gray-400">VG Balance</p>
-          <p className="text-xl font-semibold text-purple-400">
+          <div className="text-sm text-gray-400">VG Balance</div>
+          <div className="text-xl font-semibold text-purple-400">
             {balancesLoading ? (
               <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
             ) : (
               formatBalance(balances.VG || '0')
             )}
-          </p>
+          </div>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-400">VGVotes Balance</p>
-          <p className="text-xl font-semibold text-green-400">
+          <div className="text-sm text-gray-400">VGVotes Balance</div>
+          <div className="text-xl font-semibold text-green-400">
             {balancesLoading ? (
               <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
             ) : (
               formatBalance(balances.VGVotes || '0')
             )}
-          </p>
+          </div>
         </div>
       </div>
 

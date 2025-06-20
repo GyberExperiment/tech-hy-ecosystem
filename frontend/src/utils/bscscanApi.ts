@@ -75,11 +75,17 @@ interface BSCScanEventLog {
 const BSCSCAN_API_KEY = ''; // Add your BSCScan API key here
 const BSCSCAN_BASE_URL = 'https://api-testnet.bscscan.com/api';
 
-// Add warning about API key requirement
-console.warn('⚠️ BSCScan API Key is missing. Please add your API key to enable transaction history.');
+// Add warning about API key requirement ONLY when API is called
+let apiKeyWarningShown = false;
 
 export class BSCScanAPI {
   private static async fetchWithRetry(url: string, retries = 2): Promise<any> {
+    // Show API key warning only once
+    if (!BSCSCAN_API_KEY && !apiKeyWarningShown) {
+      console.warn('⚠️ BSCScan API Key is missing. Please add your API key to enable transaction history.');
+      apiKeyWarningShown = true;
+    }
+    
     let lastError: Error;
     
     for (let i = 0; i < retries; i++) {

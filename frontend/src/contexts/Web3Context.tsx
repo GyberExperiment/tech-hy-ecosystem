@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext } from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { useAccount, useWalletClient, usePublicClient, useSwitchChain } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { useAccount, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
-import { config } from '../config/rainbowkit';
+import { config, customTheme } from '../config/rainbowkit';
 import { CONTRACTS } from '../constants/contracts';
 import { bscTestnet, bsc } from 'wagmi/chains';
+import { useEthersProvider, useEthersSigner } from '../utils/ethers';
 
 // ABIs
 const ERC20_ABI = [
@@ -61,7 +62,7 @@ const PANCAKE_PAIR_ABI = [
 
 interface Web3ContextType {
   // Connection state
-  provider: ethers.BrowserProvider | null;
+  provider: ethers.JsonRpcProvider | ethers.FallbackProvider | null;
   signer: ethers.JsonRpcSigner | null;
   account: string | null;
   isConnected: boolean;
@@ -95,35 +96,14 @@ export const useWeb3 = () => {
 // Внутренний компонент для работы с Wagmi хуками
 const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address, isConnected, chainId } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
   const { switchChain } = useSwitchChain();
-
-  // Создаем ethers provider и signer
-  const { provider, signer } = useMemo(() => {
-    if (!walletClient || !publicClient) {
-      return { provider: null, signer: null };
-    }
-
-    try {
-      // Создаем ethers provider из viem clients
-      // @ts-ignore - walletClient совместим с EIP-1193 provider
-      const ethersProvider = new ethers.BrowserProvider(walletClient);
-      return { 
-        provider: ethersProvider, 
-        signer: ethersProvider.getSigner() as any
-      };
-    } catch (error) {
-      console.error('Failed to create ethers provider/signer:', error);
-      return { provider: null, signer: null };
-    }
-  }, [walletClient, publicClient]);
+  
+  // Используем официальные ethers.js адаптеры от Wagmi
+  const provider = useEthersProvider({ chainId });
+  const signer = useEthersSigner({ chainId });
 
   // Проверяем правильность сети (BSC testnet или mainnet)
-  const isCorrectNetwork = useMemo(() => {
-    if (!chainId) return false;
-    return chainId === bscTestnet.id || chainId === bsc.id;
-  }, [chainId]);
+  const isCorrectNetwork = chainId === bscTestnet.id || chainId === bsc.id;
 
   // Helper function to create contract instances
   const getContract = (address: string, abi: any[]): ethers.Contract | null => {
@@ -137,29 +117,12 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Memoized contracts
-  const vcContract = useMemo(() => {
-    return getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
-  }, [signer]);
-
-  const vgContract = useMemo(() => {
-    return getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
-  }, [signer]);
-
-  const vgVotesContract = useMemo(() => {
-    return getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
-  }, [signer]);
-
-  const lpContract = useMemo(() => {
-    return getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
-  }, [signer]);
-
-  const lpPairContract = useMemo(() => {
-    return getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
-  }, [signer]);
-
-  const lpLockerContract = useMemo(() => {
-    return getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
-  }, [signer]);
+  const vcContract = getContract(CONTRACTS.VC_TOKEN, ERC20_ABI);
+  const vgContract = getContract(CONTRACTS.VG_TOKEN, ERC20_ABI);
+  const vgVotesContract = getContract(CONTRACTS.VG_TOKEN_VOTES, VGVOTES_ABI);
+  const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
+  const lpPairContract = getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
+  const lpLockerContract = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
 
   // Network switching functions
   const switchToTestnet = async () => {
@@ -218,11 +181,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: '#7c3aed',
-            accentColorForeground: 'white',
-            borderRadius: 'medium',
-          })}
+          theme={customTheme}
           initialChain={bscTestnet.id}
         >
           <Web3ContextProvider>
