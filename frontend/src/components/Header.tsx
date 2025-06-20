@@ -55,9 +55,9 @@ const Header: React.FC = () => {
         title={isTestnet ? 'Switch to Mainnet' : 'Switch to Testnet'}
       >
         <div className="relative flex items-center space-x-2 rounded-lg bg-black/80 px-3 py-2 text-xs font-normal backdrop-blur-sm transition-all duration-300 group-hover:bg-black/60">
-          <div className="relative">
+          <div className="relative flex items-center justify-center">
             <Network className="h-3 w-3" />
-            <div className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${
+            <div className={`absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full ${
               isTestnet ? 'bg-orange-400' : isMainnet ? 'bg-green-400' : 'bg-gray-400'
             } animate-pulse`} />
           </div>

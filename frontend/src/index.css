@@ -842,4 +842,142 @@
     left: 16px !important;
     bottom: 8px !important;
   }
+  
+  /* ИСПРАВЛЕНИЕ: Принудительно вертикальное размещение контента */
+  [data-rk] div[role="dialog"] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 12px !important;
+  }
+  
+  /* Контейнер со списком кошельков */
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-list"],
+  [data-rk] div[role="dialog"] > div > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  
+  /* Заголовки в landscape */
+  [data-rk] div[role="dialog"] h1,
+  [data-rk] div[role="dialog"] h2 {
+    font-size: 1rem !important;
+    margin-bottom: 8px !important;
+    text-align: center !important;
+  }
+  
+  /* Группы кошельков в landscape */
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
+    font-size: 0.75rem !important;
+    margin: 8px 0 4px 0 !important;
+  }
+  
+  /* Компактные кнопки кошельков в landscape */
+  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
+    padding: 8px 12px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    margin: 2px 0 !important;
+    gap: 8px !important;
+    font-size: 0.8rem !important;
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+  }
+  
+  /* Иконки кошельков в landscape */
+  [data-rk] div[role="dialog"] img {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Кнопки "Получить" в landscape */
+  [data-rk] div[role="dialog"] button[data-testid*="get"] {
+    padding: 4px 8px !important;
+    font-size: 0.7rem !important;
+    border-radius: 6px !important;
+  }
+  
+  /* Компактная кнопка закрытия в landscape */
+  [data-rk] div[role="dialog"] button[aria-label*="Close"] {
+    width: 28px !important;
+    height: 28px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+}
+
+/* Дополнительная адаптация для очень маленьких landscape экранов */
+@media (max-width: 640px) and (orientation: landscape) and (max-height: 400px) {
+  [data-rk] div[role="dialog"] {
+    max-height: 98vh !important;
+    top: 1vh !important;
+    bottom: 1vh !important;
+    right: 8px !important;
+    left: 8px !important;
+  }
+  
+  /* Ещё более компактное содержимое */
+  [data-rk] div[role="dialog"] > div {
+    padding: 8px !important;
+  }
+  
+  /* Компактные заголовки */
+  [data-rk] div[role="dialog"] h1,
+  [data-rk] div[role="dialog"] h2 {
+    font-size: 0.9rem !important;
+    margin-bottom: 6px !important;
+  }
+  
+  /* Ультра-компактные кнопки кошельков */
+  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
+    padding: 6px 10px !important;
+    min-height: 38px !important;
+    margin: 1px 0 !important;
+    gap: 6px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Маленькие иконки */
+  [data-rk] div[role="dialog"] img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  /* Компактные группы */
+  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
+    font-size: 0.7rem !important;
+    margin: 6px 0 2px 0 !important;
+  }
+}
+
+/* Принудительное вертикальное размещение для всех устройств */
+[data-rk] div[role="dialog"] {
+  /* Убеждаемся что основной контейнер всегда flex column */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-rk] div[role="dialog"] > div {
+  /* Убеждаемся что содержимое всегда flex column */
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+}
+
+/* Все вложенные контейнеры тоже должны быть вертикальными */
+[data-rk] div[role="dialog"] > div > div,
+[data-rk] div[role="dialog"] div[data-testid*="wallet-list"] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }

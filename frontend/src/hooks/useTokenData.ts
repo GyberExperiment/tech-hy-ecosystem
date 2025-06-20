@@ -6,6 +6,22 @@ import { toast } from 'react-hot-toast';
 import { log } from '../utils/logger';
 import { rpcService } from '../services/rpcService';
 
+// ✅ Глобальный event emitter для синхронизации обновлений балансов
+class TokenBalanceEventEmitter {
+  private listeners: Set<() => void> = new Set();
+  
+  subscribe(callback: () => void) {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+  
+  emit() {
+    this.listeners.forEach(callback => callback());
+  }
+}
+
+const globalBalanceEmitter = new TokenBalanceEventEmitter();
+
 export interface TokenData {
   symbol: string;
   name: string;
@@ -75,6 +91,22 @@ export const useTokenData = () => {
     };
   }, []);
 
+  // ✅ Подписываемся на глобальные обновления балансов
+  useEffect(() => {
+    const unsubscribe = globalBalanceEmitter.subscribe(() => {
+      // Принудительно обновляем данные когда другие компоненты сообщают об изменениях
+      if (account && isConnected && isCorrectNetwork) {
+        log.info('useTokenData: Received global balance update event, refreshing...', {
+          component: 'useTokenData',
+          account
+        });
+        fetchTokenData(false); // Обновляем без toast, так как это фоновое обновление
+      }
+    });
+
+    return unsubscribe;
+  }, [account, isConnected, isCorrectNetwork]);
+
   // Helper functions
   const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
     return Promise.race([
@@ -142,6 +174,7 @@ export const useTokenData = () => {
       abortControllerRef.current.abort();
     }
     
+    // ✅ ИСПРАВЛЕНИЕ: При showRefreshToast=true принудительно обновляем данные
     // Cache check - не запрашиваем чаще чем раз в 30 секунд для rate limiting protection
     const now = Date.now();
     if (!showRefreshToast && now - lastFetchTime < 30000) {
@@ -330,6 +363,9 @@ export const useTokenData = () => {
         if (showRefreshToast) {
           toast.success('Данные токенов обновлены!', { id: 'refresh-tokens' });
         }
+
+        // ✅ Уведомляем другие компоненты об обновлении данных
+        globalBalanceEmitter.emit();
       }
     } catch (error) {
       log.error('useTokenData: Error fetching token data', {
@@ -373,6 +409,15 @@ export const useTokenData = () => {
     return `${(num / 1000000).toFixed(1)}M`;
   }, []);
 
+  // ✅ Функция для принудительного глобального обновления всех компонентов
+  const triggerGlobalRefresh = useCallback(() => {
+    log.info('useTokenData: Triggering global balance refresh for all components', {
+      component: 'useTokenData',
+      account
+    });
+    globalBalanceEmitter.emit();
+  }, [account]);
+
   return {
     balances,
     tokens,
@@ -384,7 +429,8 @@ export const useTokenData = () => {
     // Computed values
     tokensWithBalance: tokens.filter(token => parseFloat(token.balance) > 0),
     totalTokens: tokens.length,
-    hasAnyBalance: tokens.some(token => parseFloat(token.balance) > 0)
+    hasAnyBalance: tokens.some(token => parseFloat(token.balance) > 0),
+    triggerGlobalRefresh
   };
 };
 

@@ -15,7 +15,7 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
   const { account, signer, isConnected, vgContract, vgVotesContract } = useWeb3();
   
   // Use centralized token data hook
-  const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
+  const { balances, loading: balancesLoading, fetchTokenData, triggerGlobalRefresh } = useTokenData();
   
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -62,9 +62,9 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       toast.error('Ошибка депозита');
     } finally {
       setLoading(false);
-      // Refresh balances after transaction
+      // ✅ Обновляем данные во ВСЕХ компонентах глобально
       setTimeout(() => {
-        fetchTokenData(true);
+        triggerGlobalRefresh();
       }, 2000);
     }
   };
@@ -99,9 +99,9 @@ const VGConverter: React.FC<VGConverterProps> = ({ className = '' }) => {
       toast.error('Ошибка вывода');
     } finally {
       setLoading(false);
-      // Refresh balances after transaction
+      // ✅ Обновляем данные во ВСЕХ компонентах глобально
       setTimeout(() => {
-        fetchTokenData(true);
+        triggerGlobalRefresh();
       }, 2000);
     }
   };

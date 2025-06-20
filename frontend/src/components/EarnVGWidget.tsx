@@ -18,7 +18,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   const { account, signer, isConnected, vcContract, lpLockerContract, vgContract, updateBSCTestnetRPC } = useWeb3();
   
   // Use centralized hooks
-  const { balances, loading: balancesLoading, fetchTokenData } = useTokenData();
+  const { balances, loading: balancesLoading, fetchTokenData, triggerGlobalRefresh } = useTokenData();
   const { poolInfo, loading: poolLoading, refreshPoolInfo } = usePoolInfo();
   
   // State management
@@ -737,11 +737,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           
           toast.success('VG токены успешно получены!');
           
-          // Refresh data
-          setTimeout(() => {
-            fetchTokenData(true);
-            refreshPoolInfo();
-          }, 2000);
+          // ✅ Глобальное обновление всех компонентов
+          triggerGlobalRefresh();
 
           setVcAmount('');
           setBnbAmount('');
@@ -958,7 +955,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
         if (receipt.status === 1) {
           toast.success('LP токены заблокированы!');
-          fetchTokenData(true);
+          // ✅ Глобальное обновление всех компонентов
+          triggerGlobalRefresh();
           setLpAmount('');
         }
       }
@@ -1033,7 +1031,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         function: 'refreshAllData'
       });
     }
-    await fetchTokenData(true);
+    // ✅ Глобальное обновление всех компонентов
+    triggerGlobalRefresh();
     await refreshPoolInfo();
   };
 
