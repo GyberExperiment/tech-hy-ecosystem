@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Tokens from './pages/Tokens';
 import LPLocking from './pages/LPStaking';
 import Governance from './pages/Governance';
+import WalletDebug from './components/WalletDebug';
 import './index.css';
 
 // Initialize i18n
@@ -45,6 +46,9 @@ function App() {
                   <Route path="/governance" element={<Governance />} />
                 </Routes>
               </main>
+              
+              {/* Debug компонент для разработки */}
+              <WalletDebug />
               
               {/* Toast notifications */}
               <Toaster

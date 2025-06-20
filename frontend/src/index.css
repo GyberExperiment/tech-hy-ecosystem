@@ -505,31 +505,24 @@
   }
 }
 
-/* RainbowKit модалка - кастомное позиционирование */
+/* RainbowKit модалка - упрощенные стили */
 [data-rk] {
-  /* Переопределяем позиционирование модалки */
-  --rk-modal-mobile-sheet: none !important;
+  /* Убираем агрессивные переопределения */
+  --rk-radii-modal: 16px;
+  --rk-colors-modalBackground: rgba(15, 23, 42, 0.95);
+  --rk-colors-modalBorder: rgba(255, 255, 255, 0.1);
 }
 
-/* Основной контейнер модалки */
+/* Основной контейнер модалки - убираем !important */
 [data-rk] div[role="dialog"] {
-  position: fixed !important;
-  top: 80px !important; /* Отступ от header */
-  right: 20px !important;
-  left: auto !important;
-  bottom: auto !important;
-  transform: none !important;
-  width: 420px !important;
-  max-width: calc(100vw - 40px) !important;
-  border-radius: 16px !important;
+  border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 
-              0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(20px) !important;
-  background: rgba(15, 23, 42, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  animation: modalSlideIn 0.3s ease-out !important;
-  max-height: calc(100vh - 120px) !important;
-  overflow-y: auto !important;
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 /* Анимация появления модалки */
@@ -546,202 +539,181 @@
 
 /* Фон модалки (overlay) */
 [data-rk] div[role="dialog"] + div {
-  background: rgba(0, 0, 0, 0.4) !important;
-  backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
 
 /* Улучшенная мобильная адаптация */
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] {
-    position: fixed !important;
-    top: auto !important;
-    right: 12px !important;
-    bottom: 12px !important;
-    left: 12px !important;
-    width: auto !important;
-    max-width: none !important;
-    border-radius: 20px !important;
-    animation: modalSlideUp 0.3s ease-out !important;
-    max-height: 85vh !important;
-    padding: 0 !important;
-  }
-  
-  @keyframes modalSlideUp {
-    0% {
-      opacity: 0;
-      transform: translateY(100%);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    border-radius: 20px;
+    max-height: 85vh;
+    margin: 12px;
   }
 }
 
 /* Очень маленькие экраны (до 480px) */
 @media (max-width: 480px) {
   [data-rk] div[role="dialog"] {
-    right: 8px !important;
-    bottom: 8px !important;
-    left: 8px !important;
-    border-radius: 16px !important;
-    max-height: 90vh !important;
+    border-radius: 16px;
+    max-height: 90vh;
+    margin: 8px;
   }
 }
 
 /* Стили для содержимого модалки */
 [data-rk] div[role="dialog"] > div {
-  background: transparent !important;
-  border: none !important;
-  border-radius: inherit !important;
-  padding: 20px !important;
+  background: transparent;
+  border: none;
+  border-radius: inherit;
+  padding: 20px;
 }
 
 /* Мобильная адаптация контента */
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] > div {
-    padding: 16px !important;
+    padding: 16px;
   }
 }
 
 /* Заголовок модалки */
 [data-rk] div[role="dialog"] h1,
 [data-rk] div[role="dialog"] h2 {
-  color: white !important;
-  font-weight: 600 !important;
-  font-size: 1.25rem !important;
-  margin-bottom: 16px !important;
+  color: white;
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] h1,
   [data-rk] div[role="dialog"] h2 {
-    font-size: 1.125rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.125rem;
+    margin-bottom: 12px;
   }
 }
 
 /* Группы кошельков */
 [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-  color: rgba(255, 255, 255, 0.9) !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
-  margin: 16px 0 8px 0 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin: 16px 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-    font-size: 0.8rem !important;
-    margin: 12px 0 6px 0 !important;
+    font-size: 0.8rem;
+    margin: 12px 0 6px 0;
   }
 }
 
 /* Кнопки кошельков */
 [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px !important;
-  color: white !important;
-  padding: 12px 16px !important;
-  margin: 4px 0 !important;
-  width: 100% !important;
-  min-height: 56px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  padding: 12px 16px;
+  margin: 4px 0;
+  width: 100%;
+  min-height: 56px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 /* Мобильная адаптация кнопок кошельков */
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-    padding: 14px 16px !important;
-    min-height: 60px !important;
-    border-radius: 14px !important;
-    margin: 6px 0 !important;
-    gap: 14px !important;
+    padding: 14px 16px;
+    min-height: 60px;
+    border-radius: 14px;
+    margin: 6px 0;
+    gap: 14px;
   }
 }
 
 [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
 }
 
 /* Убираем hover эффекты на touch устройствах */
 @media (hover: none) {
   [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
-    transform: none !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    transform: none;
+    background: rgba(255, 255, 255, 0.05);
   }
   
   [data-rk] div[role="dialog"] button[data-testid*="wallet"]:active {
-    background: rgba(255, 255, 255, 0.1) !important;
-    transform: scale(0.98) !important;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.98);
   }
 }
 
 /* Кнопка закрытия */
 [data-rk] div[role="dialog"] button[aria-label*="Close"] {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  border-radius: 8px !important;
-  width: 32px !important;
-  height: 32px !important;
-  position: absolute !important;
-  top: 16px !important;
-  right: 16px !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 
 /* Мобильная кнопка закрытия */
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] button[aria-label*="Close"] {
-    width: 36px !important;
-    height: 36px !important;
-    top: 12px !important;
-    right: 12px !important;
+    width: 36px;
+    height: 36px;
+    top: 12px;
+    right: 12px;
   }
 }
 
 [data-rk] div[role="dialog"] button[aria-label*="Close"]:hover {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
-  color: rgb(239, 68, 68) !important;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: rgb(239, 68, 68);
 }
 
 /* Текст в модалке */
 [data-rk] div[role="dialog"] p,
 [data-rk] div[role="dialog"] span {
-  color: rgba(255, 255, 255, 0.8) !important;
-  font-size: 0.875rem !important;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] p,
   [data-rk] div[role="dialog"] span {
-    font-size: 0.875rem !important;
+    font-size: 0.875rem;
   }
 }
 
 /* Иконки кошельков */
 [data-rk] div[role="dialog"] img {
-  border-radius: 8px !important;
-  width: 32px !important;
-  height: 32px !important;
-  flex-shrink: 0 !important;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] img {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 10px !important;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 }
 
@@ -766,218 +738,78 @@
 
 /* Кнопки "Получить" для кошельков */
 [data-rk] div[role="dialog"] button[data-testid*="get"] {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border: 1px solid rgba(59, 130, 246, 0.3) !important;
-  color: rgb(59, 130, 246) !important;
-  border-radius: 8px !important;
-  padding: 6px 12px !important;
-  font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  margin-left: auto !important;
-  flex-shrink: 0 !important;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: rgb(59, 130, 246);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] button[data-testid*="get"] {
-    padding: 8px 14px !important;
-    font-size: 0.8rem !important;
-    border-radius: 10px !important;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    border-radius: 10px;
   }
 }
 
 [data-rk] div[role="dialog"] button[data-testid*="get"]:hover {
-  background: rgba(59, 130, 246, 0.2) !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 /* Описания кошельков */
 [data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-size: 0.75rem !important;
-  margin-top: 4px !important;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
-    font-size: 0.7rem !important;
+    font-size: 0.7rem;
   }
 }
 
 /* QR код страница */
 [data-rk] div[role="dialog"] div[data-testid*="qr"] {
-  padding: 20px !important;
-  background: white !important;
-  border-radius: 12px !important;
-  margin: 16px 0 !important;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  margin: 16px 0;
 }
 
 @media (max-width: 768px) {
   [data-rk] div[role="dialog"] div[data-testid*="qr"] {
-    padding: 16px !important;
-    margin: 12px 0 !important;
+    padding: 16px;
+    margin: 12px 0;
   }
 }
 
 /* Обратная кнопка */
 [data-rk] div[role="dialog"] button[data-testid*="back"] {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  font-size: 0.875rem !important;
-  margin-right: auto !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  margin-right: auto;
 }
 
 /* Загрузочные индикаторы */
 [data-rk] div[role="dialog"] div[data-testid*="loading"] {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-/* Адаптация для landscape на мобильных */
+/* Адаптация для landscape на мобильных - упрощенные стили */
 @media (max-width: 768px) and (orientation: landscape) {
   [data-rk] div[role="dialog"] {
-    max-height: 95vh !important;
-    right: 16px !important;
-    left: 16px !important;
-    bottom: 8px !important;
+    max-height: 95vh;
+    margin: 8px 16px;
   }
-  
-  /* ИСПРАВЛЕНИЕ: Принудительно вертикальное размещение контента */
-  [data-rk] div[role="dialog"] > div {
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 12px !important;
-  }
-  
-  /* Контейнер со списком кошельков */
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-list"],
-  [data-rk] div[role="dialog"] > div > div {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-  }
-  
-  /* Заголовки в landscape */
-  [data-rk] div[role="dialog"] h1,
-  [data-rk] div[role="dialog"] h2 {
-    font-size: 1rem !important;
-    margin-bottom: 8px !important;
-    text-align: center !important;
-  }
-  
-  /* Группы кошельков в landscape */
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] {
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-    font-size: 0.75rem !important;
-    margin: 8px 0 4px 0 !important;
-  }
-  
-  /* Компактные кнопки кошельков в landscape */
-  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-    padding: 8px 12px !important;
-    min-height: 44px !important;
-    border-radius: 10px !important;
-    margin: 2px 0 !important;
-    gap: 8px !important;
-    font-size: 0.8rem !important;
-    width: 100% !important;
-    flex-direction: row !important;
-    justify-content: flex-start !important;
-    align-items: center !important;
-  }
-  
-  /* Иконки кошельков в landscape */
-  [data-rk] div[role="dialog"] img {
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 8px !important;
-    flex-shrink: 0 !important;
-  }
-  
-  /* Кнопки "Получить" в landscape */
-  [data-rk] div[role="dialog"] button[data-testid*="get"] {
-    padding: 4px 8px !important;
-    font-size: 0.7rem !important;
-    border-radius: 6px !important;
-  }
-  
-  /* Компактная кнопка закрытия в landscape */
-  [data-rk] div[role="dialog"] button[aria-label*="Close"] {
-    width: 28px !important;
-    height: 28px !important;
-    top: 8px !important;
-    right: 8px !important;
-  }
-}
-
-/* Дополнительная адаптация для очень маленьких landscape экранов */
-@media (max-width: 640px) and (orientation: landscape) and (max-height: 400px) {
-  [data-rk] div[role="dialog"] {
-    max-height: 98vh !important;
-    top: 1vh !important;
-    bottom: 1vh !important;
-    right: 8px !important;
-    left: 8px !important;
-  }
-  
-  /* Ещё более компактное содержимое */
-  [data-rk] div[role="dialog"] > div {
-    padding: 8px !important;
-  }
-  
-  /* Компактные заголовки */
-  [data-rk] div[role="dialog"] h1,
-  [data-rk] div[role="dialog"] h2 {
-    font-size: 0.9rem !important;
-    margin-bottom: 6px !important;
-  }
-  
-  /* Ультра-компактные кнопки кошельков */
-  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-    padding: 6px 10px !important;
-    min-height: 38px !important;
-    margin: 1px 0 !important;
-    gap: 6px !important;
-    font-size: 0.75rem !important;
-  }
-  
-  /* Маленькие иконки */
-  [data-rk] div[role="dialog"] img {
-    width: 24px !important;
-    height: 24px !important;
-  }
-  
-  /* Компактные группы */
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-    font-size: 0.7rem !important;
-    margin: 6px 0 2px 0 !important;
-  }
-}
-
-/* Принудительное вертикальное размещение для всех устройств */
-[data-rk] div[role="dialog"] {
-  /* Убеждаемся что основной контейнер всегда flex column */
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-[data-rk] div[role="dialog"] > div {
-  /* Убеждаемся что содержимое всегда flex column */
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 !important;
-  overflow-y: auto !important;
-}
-
-/* Все вложенные контейнеры тоже должны быть вертикальными */
-[data-rk] div[role="dialog"] > div > div,
-[data-rk] div[role="dialog"] div[data-testid*="wallet-list"] {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
 }
