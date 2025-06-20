@@ -79,6 +79,8 @@ export const useTokenData = () => {
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialFetchRef = useRef(true);
 
   // Cleanup
   useEffect(() => {
@@ -88,24 +90,11 @@ export const useTokenData = () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
     };
   }, []);
-
-  // ✅ Подписываемся на глобальные обновления балансов
-  useEffect(() => {
-    const unsubscribe = globalBalanceEmitter.subscribe(() => {
-      // Принудительно обновляем данные когда другие компоненты сообщают об изменениях
-      if (account && isConnected && isCorrectNetwork) {
-        log.info('useTokenData: Received global balance update event, refreshing...', {
-          component: 'useTokenData',
-          account
-        });
-        fetchTokenData(false); // Обновляем без toast, так как это фоновое обновление
-      }
-    });
-
-    return unsubscribe;
-  }, [account, isConnected, isCorrectNetwork]);
 
   // Helper functions
   const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
@@ -117,87 +106,48 @@ export const useTokenData = () => {
     ]);
   };
 
-  // ✅ УБИРАЕМ дублированную tryMultipleRpc функцию - используем rpcService.withFallback()
-  // const tryMultipleRpc = async <T,>(operation: (provider: ethers.JsonRpcProvider) => Promise<T>): Promise<T> => {
-  //   let lastError: Error | null = null;
-  //   
-  //   for (let i = 0; i < FALLBACK_RPC_URLS.length; i++) {
-  //     const rpcUrl = FALLBACK_RPC_URLS[i];
-  //     try {
-  //       log.debug('useTokenData: Trying RPC endpoint', {
-  //         component: 'useTokenData',
-  //         function: 'tryMultipleRpc',
-  //         rpcUrl
-  //       });
-  //       
-  //       // ✅ ДОБАВЛЯЕМ DELAY между попытками для rate limiting protection
-  //       if (i > 0) {
-  //         await new Promise(resolve => setTimeout(resolve, 2000 * i)); // 2s, 4s, 6s delays
-  //       }
-  //       
-  //       const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
-  //       const result = await withTimeout(operation(rpcProvider), 15000);
-  //       log.info('useTokenData: RPC endpoint success', {
-  //         component: 'useTokenData',
-  //         function: 'tryMultipleRpc',
-  //         rpcUrl
-  //       });
-  //       return result;
-  //     } catch (error: any) {
-  //       log.warn('useTokenData: RPC endpoint failed', {
-  //         component: 'useTokenData',
-  //         function: 'tryMultipleRpc',
-  //         rpcUrl,
-  //         error: error.message
-  //       });
-  //       lastError = error;
-  //       
-  //       // ✅ Больше delay после 429 ошибок
-  //       if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
-  //         log.info('Rate limited, waiting 5 seconds before next RPC', {
-  //           component: 'useTokenData',
-  //           function: 'tryMultipleRpc',
-  //           rpcUrl
-  //         });
-  //         await new Promise(resolve => setTimeout(resolve, 5000));
-  //       }
-  //       continue;
-  //     }
-  //   }
-  //   
-  //   throw lastError || new Error('All RPC endpoints failed');
-  // };
-
-  const fetchTokenData = useCallback(async (showRefreshToast: boolean = false) => {
+  // ✅ ИСПРАВЛЕНИЕ: Убираем lastFetchTime из зависимостей чтобы избежать цикла
+  const fetchTokenData = useCallback(async (showRefreshToast: boolean = false, force: boolean = false) => {
     // Prevent multiple simultaneous requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
-    // ✅ ИСПРАВЛЕНИЕ: При showRefreshToast=true принудительно обновляем данные
-    // Cache check - не запрашиваем чаще чем раз в 30 секунд для rate limiting protection
+    // ✅ ИСПРАВЛЕНИЕ: Более строгая проверка кеша для предотвращения спама запросов
     const now = Date.now();
-    if (!showRefreshToast && now - lastFetchTime < 30000) {
+    const timeSinceLastFetch = now - lastFetchTime;
+    
+    // Не делаем запросы чаще чем раз в 10 секунд, кроме принудительных обновлений
+    if (!force && !showRefreshToast && timeSinceLastFetch < 10000) {
       log.debug('useTokenData: Skipping fetch - cached data is fresh', {
         component: 'useTokenData',
         function: 'fetchTokenData',
-        timeSinceLastFetch: now - lastFetchTime
+        timeSinceLastFetch,
+        force,
+        showRefreshToast
       });
       return;
     }
     
     if (!account || !isConnected || !isCorrectNetwork) {
-      log.debug('useTokenData: Skipping fetch', {
+      log.debug('useTokenData: Skipping fetch - not ready', {
         component: 'useTokenData',
         function: 'fetchTokenData',
-        account: account ? 'connected' : 'not connected',
+        account: !!account,
         isConnected,
         isCorrectNetwork
       });
       return;
     }
     
-    log.info('useTokenData: Starting token data fetch for account:', account);
+    log.info('useTokenData: Starting token data fetch', {
+      component: 'useTokenData',
+      function: 'fetchTokenData', 
+      address: account,
+      force,
+      showRefreshToast,
+      timeSinceLastFetch
+    });
     
     if (showRefreshToast) {
       setRefreshing(true);
@@ -231,14 +181,14 @@ export const useTokenData = () => {
           return await provider.getBalance(account);
         });
         newBalances.BNB = ethers.formatEther(balance);
-        log.info('useTokenData: BNB balance fetched:', {
+        log.info('useTokenData: BNB balance fetched', {
           component: 'useTokenData',
           function: 'fetchTokenData',
           address: account,
           balance: newBalances.BNB
         });
       } catch (error: any) {
-        log.error('useTokenData: Error fetching BNB balance:', {
+        log.error('useTokenData: Error fetching BNB balance', {
           component: 'useTokenData',
           function: 'fetchTokenData',
           address: account
@@ -300,7 +250,7 @@ export const useTokenData = () => {
           // Update balances object
           newBalances[tokenInfo.symbol as keyof TokenBalances] = formattedBalance;
           
-          // ✅ ИСПРАВЛЕНИЕ: Используем getReadOnlyContract() для избежания MetaMask RPC rate limiting
+          // ✅ Используем getReadOnlyContract() для избежания MetaMask RPC rate limiting
           const contract = await rpcService.getReadOnlyContract(tokenInfo.address, ERC20_ABI);
           
           tokenData.push({
@@ -351,21 +301,28 @@ export const useTokenData = () => {
         setTokens(tokenData);
         setLastFetchTime(now);
         
-        log.info('useTokenData: Updated balances', {
+        log.info('useTokenData: Successfully updated token data', {
           component: 'useTokenData',
           function: 'fetchTokenData',
           address: account,
-          tokenCount: tokenData.length,
-          balances: Object.keys(newBalances)
+          tokenCount: tokenData.length
         });
-        log.info('useTokenData: Updated tokens:', tokenData.length, 'tokens');
         
         if (showRefreshToast) {
           toast.success('Данные токенов обновлены!', { id: 'refresh-tokens' });
         }
 
-        // ✅ Уведомляем другие компоненты об обновлении данных
-        globalBalanceEmitter.emit();
+        // ✅ ИСПРАВЛЕНИЕ: Уведомляем другие компоненты только при первом успешном обновлении
+        // чтобы избежать циклических обновлений
+        if (isInitialFetchRef.current || showRefreshToast) {
+          isInitialFetchRef.current = false;
+          // Задержка чтобы избежать немедленных циклических обновлений
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              globalBalanceEmitter.emit();
+            }
+          }, 500);
+        }
       }
     } catch (error) {
       log.error('useTokenData: Error fetching token data', {
@@ -373,8 +330,8 @@ export const useTokenData = () => {
         function: 'fetchTokenData',
         address: account
       }, error as Error);
-      const errorMessage = 'Ошибка загрузки данных токенов';
       
+      const errorMessage = 'Ошибка загрузки данных токенов';
       if (showRefreshToast) {
         toast.error(errorMessage, { id: 'refresh-tokens' });
       } else {
@@ -386,17 +343,50 @@ export const useTokenData = () => {
         setRefreshing(false);
       }
     }
-  }, [account, isConnected, isCorrectNetwork, lastFetchTime]);
+  }, [account, isConnected, isCorrectNetwork]); // ✅ Убираем lastFetchTime из зависимостей
 
-  // Auto-fetch on mount and account change
+  // ✅ ИСПРАВЛЕНИЕ: Подписываемся на глобальные обновления балансов с дебаунсом
   useEffect(() => {
-    if (isConnected && isCorrectNetwork && account) {
-      fetchTokenData();
-    }
+    let debounceTimeout: NodeJS.Timeout;
+    
+    const unsubscribe = globalBalanceEmitter.subscribe(() => {
+      // Дебаунс для предотвращения слишком частых обновлений
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        if (account && isConnected && isCorrectNetwork && isMountedRef.current) {
+          log.info('useTokenData: Received global balance update event (debounced)', {
+            component: 'useTokenData',
+            account
+          });
+          fetchTokenData(false, false); // Фоновое обновление без принуждения
+        }
+      }, 2000); // 2 секунды дебаунс
+    });
+
+    return () => {
+      unsubscribe();
+      clearTimeout(debounceTimeout);
+    };
   }, [account, isConnected, isCorrectNetwork, fetchTokenData]);
 
+  // ✅ ИСПРАВЛЕНИЕ: Убираем fetchTokenData из зависимостей useEffect для предотвращения цикла
+  useEffect(() => {
+    // Дебаунс для предотвращения слишком частых инициализаций
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    if (isConnected && isCorrectNetwork && account) {
+      fetchTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          fetchTokenData(false, true); // Первоначальная загрузка с force=true
+        }
+      }, 500); // 500ms задержка для предотвращения спама
+    }
+  }, [account, isConnected, isCorrectNetwork]); // ✅ Убираем fetchTokenData из зависимостей
+
   const refreshData = useCallback(() => {
-    fetchTokenData(true);
+    fetchTokenData(true, true); // Принудительное обновление с toast
   }, [fetchTokenData]);
 
   const formatBalance = useCallback((balance: string): string => {
@@ -415,7 +405,10 @@ export const useTokenData = () => {
       component: 'useTokenData',
       account
     });
-    globalBalanceEmitter.emit();
+    // Немедленное обновление с задержкой для распространения
+    setTimeout(() => {
+      globalBalanceEmitter.emit();
+    }, 100);
   }, [account]);
 
   return {
