@@ -26,6 +26,42 @@
     --radius: 0.75rem;
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* 🌟 ULTRA MODERN GLASSMORPHISM 2025 SYSTEM 🌟 */
+    
+    /* Core Glass Properties */
+    --glass-blur-radius: 24px;
+    --glass-blur-intensity: 1.5;
+    --glass-brightness: 120%;
+    --glass-saturation: 140%;
+    --glass-contrast: 110%;
+    --glass-opacity: 0.15;
+    --glass-edge-opacity: 0.25;
+    --glass-thickness: 6px;
+    
+    /* Depth & Layering */
+    --glass-depth-near: 200%;
+    --glass-depth-far: 150%;
+    --glass-mask-fade: 50%;
+    
+    /* Color Themes */
+    --glass-primary: rgba(99, 102, 241, var(--glass-opacity));
+    --glass-secondary: rgba(168, 85, 247, var(--glass-opacity));
+    --glass-accent: rgba(59, 130, 246, var(--glass-opacity));
+    --glass-neutral: rgba(255, 255, 255, var(--glass-opacity));
+    --glass-dark: rgba(15, 23, 42, var(--glass-opacity));
+    
+    /* Border & Highlights */
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-border-dark: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.5);
+    --glass-shadow: rgba(0, 0, 0, 0.25);
+    
+    /* Animation Properties */
+    --glass-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-hover-scale: 1.02;
+    --glass-hover-blur: 32px;
+    --glass-hover-brightness: 130%;
   }
 
   .dark {
@@ -48,6 +84,13 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 94.1%;
+
+    /* Dark Mode Glass Adjustments */
+    --glass-opacity: 0.12;
+    --glass-brightness: 110%;
+    --glass-saturation: 120%;
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-highlight: rgba(255, 255, 255, 0.3);
   }
 
   * {
@@ -60,878 +103,863 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevent zoom on iOS when focusing inputs */
     -webkit-text-size-adjust: 100%;
   }
 
-  /* ✅ ИСПРАВЛЕНИЕ: Улучшенные стили заголовков для читаемости */
+  /* 🎨 ENHANCED TYPOGRAPHY FOR GLASSMORPHISM */
   h1, h2, h3, h4, h5, h6 {
     color: white !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8), 0 4px 24px rgba(0, 0, 0, 0.4);
     font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
-  /* Основные заголовки */
   h1 {
     color: white !important;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), 0 8px 32px rgba(0, 0, 0, 0.5);
     font-weight: 700;
+    letter-spacing: -0.04em;
   }
 
   h2 {
     color: white !important;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8), 0 6px 24px rgba(0, 0, 0, 0.4);
     font-weight: 600;
+    letter-spacing: -0.03em;
   }
 
   h3 {
     color: white !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 4px 16px rgba(0, 0, 0, 0.3);
     font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
-  /* Контент заголовки */
-  .text-center h1,
-  .text-center h2,
-  .text-center h3 {
-    color: white !important;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  }
-
-  /* Градиентные заголовки остаются читаемыми */
+  /* Enhanced Gradient Text */
   .bg-gradient-to-r.bg-clip-text.text-transparent {
-    background: linear-gradient(to right, #60A5FA, #A78BFA) !important;
+    background: linear-gradient(135deg, #60A5FA 0%, #A78BFA 50%, #F472B6 100%) !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     text-shadow: none !important;
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease-in-out infinite;
   }
 
-  /* Custom scrollbar */
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Enhanced Scrollbar with Glass Effect */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    border-radius: 6px;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-lg;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.3) 0%, 
+      rgba(168, 85, 247, 0.3) 100%);
+    backdrop-filter: blur(12px);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--glass-transition);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.5) 0%, 
+      rgba(168, 85, 247, 0.5) 100%);
+    backdrop-filter: blur(16px);
+    transform: scale(1.1);
   }
 
-  /* Focus styles */
+  /* Enhanced Focus & Selection */
   :focus {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid rgba(99, 102, 241, 0.6);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
   }
 
-  :focus:not(:focus-visible) {
-    outline: none;
-  }
-
-  /* Selection styles */
   ::selection {
-    @apply bg-primary/20 text-primary-foreground;
+    background: rgba(99, 102, 241, 0.3);
+    color: white;
+    backdrop-filter: blur(8px);
   }
 }
 
 @layer components {
-  .glass-panel {
-    @apply backdrop-blur-xl bg-white/10 shadow-xl;
-    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку */
+  /* 🚀 ULTRA MODERN GLASSMORPHISM COMPONENTS 2025 🚀 */
+
+  /* ✨ Base Glass System */
+  .glass-ultra {
+    position: relative;
+    background: var(--glass-neutral);
+    backdrop-filter: blur(var(--glass-blur-radius)) 
+                     brightness(var(--glass-brightness)) 
+                     saturate(var(--glass-saturation)) 
+                     contrast(var(--glass-contrast));
+    -webkit-backdrop-filter: blur(var(--glass-blur-radius)) 
+                             brightness(var(--glass-brightness)) 
+                             saturate(var(--glass-saturation)) 
+                             contrast(var(--glass-contrast));
+    border: 1px solid var(--glass-border);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 var(--glass-highlight),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    transition: var(--glass-transition);
+    pointer-events: auto;
+  }
+
+  /* 🌟 Advanced Glass Backdrop with Extended Coverage */
+  .glass-backdrop {
+    position: absolute;
+    inset: 0;
+    height: var(--glass-depth-near);
+    backdrop-filter: blur(var(--glass-blur-radius)) 
+                     brightness(var(--glass-brightness)) 
+                     saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur-radius)) 
+                             brightness(var(--glass-brightness)) 
+                             saturate(var(--glass-saturation));
+    background: linear-gradient(
+      to bottom,
+      var(--glass-neutral) 0%,
+      transparent var(--glass-mask-fade)%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      black 0% var(--glass-mask-fade)%,
+      transparent var(--glass-mask-fade)% 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0% var(--glass-mask-fade)%,
+      transparent var(--glass-mask-fade)% 100%
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* 💎 3D Glass Edge Effect */
+  .glass-edge {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    transform: translateY(100%);
+    background: var(--glass-neutral);
+    backdrop-filter: blur(calc(var(--glass-blur-radius) * 0.75)) 
+                     brightness(calc(var(--glass-brightness) * 1.1));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur-radius) * 0.75)) 
+                             brightness(calc(var(--glass-brightness) * 1.1));
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black var(--glass-thickness),
+      transparent var(--glass-thickness)
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black var(--glass-thickness),
+      transparent var(--glass-thickness)
+    );
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  /* 🎭 Glass Panel Variants */
+  .glass-panel-ultra {
+    @apply glass-ultra rounded-2xl p-6;
+    background: var(--glass-neutral);
     border: none !important;
   }
 
-  .dark .glass-panel {
-    @apply bg-black/20;
-    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку */
-    border: none !important;
+  .glass-panel-ultra::before {
+    content: '';
+    @apply glass-backdrop;
   }
 
-  .gradient-bg {
-    background: linear-gradient(135deg, 
-      hsl(var(--primary) / 0.1) 0%, 
-      hsl(var(--secondary) / 0.05) 50%, 
-      hsl(var(--accent) / 0.1) 100%);
+  .glass-panel-ultra::after {
+    content: '';
+    @apply glass-edge;
   }
 
+  /* Primary Glass Theme */
+  .glass-primary {
+    background: var(--glass-primary);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(99, 102, 241, 0.3),
+      0 4px 16px rgba(99, 102, 241, 0.2),
+      inset 0 1px 0 rgba(99, 102, 241, 0.5);
+  }
+
+  /* Secondary Glass Theme */
+  .glass-secondary {
+    background: var(--glass-secondary);
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(168, 85, 247, 0.3),
+      0 4px 16px rgba(168, 85, 247, 0.2),
+      inset 0 1px 0 rgba(168, 85, 247, 0.5);
+  }
+
+  /* Accent Glass Theme */
+  .glass-accent {
+    background: var(--glass-accent);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(59, 130, 246, 0.3),
+      0 4px 16px rgba(59, 130, 246, 0.2),
+      inset 0 1px 0 rgba(59, 130, 246, 0.5);
+  }
+
+  /* 🌈 Interactive Glass States */
+  .glass-ultra:hover {
+    transform: scale(var(--glass-hover-scale));
+    backdrop-filter: blur(var(--glass-hover-blur)) 
+                     brightness(var(--glass-hover-brightness)) 
+                     saturate(calc(var(--glass-saturation) * 1.1));
+    -webkit-backdrop-filter: blur(var(--glass-hover-blur)) 
+                             brightness(var(--glass-hover-brightness)) 
+                             saturate(calc(var(--glass-saturation) * 1.1));
+    box-shadow: 
+      0 16px 64px rgba(0, 0, 0, 0.4),
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 2px 0 var(--glass-highlight),
+      inset 0 -2px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* 🎯 Modern Card System */
+  .card-ultra {
+    @apply glass-panel-ultra;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-ultra:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+      0 24px 64px rgba(0, 0, 0, 0.4),
+      0 12px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Legacy card compatibility */
   .card {
-    @apply bg-white/5 backdrop-blur-md rounded-lg p-4 sm:p-6 shadow-lg;
-    /* ✅ ИСПРАВЛЕНИЕ: Убираем рамку карточек */
-    border: none !important;
+    @apply card-ultra;
   }
 
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-accent/50;
+  .glass-panel {
+    @apply glass-panel-ultra;
   }
 
-  /* ✅ ИСПРАВЛЕНИЕ: Улучшенные заголовки для hero секций */
+  /* 🎨 Enhanced Buttons */
+  .btn-primary {
+    @apply glass-primary rounded-xl py-3 px-6 font-medium text-white transition-all duration-300 text-base;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.9) 0%, 
+      rgba(168, 85, 247, 0.9) 100%);
+    backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.2) 0%, 
+      transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 
+      0 12px 32px rgba(99, 102, 241, 0.4),
+      0 6px 16px rgba(99, 102, 241, 0.3);
+  }
+
+  .btn-secondary {
+    @apply glass-ultra rounded-xl py-3 px-6 font-medium text-white transition-all duration-300 text-base;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) brightness(105%) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .btn-danger {
+    @apply rounded-xl py-3 px-6 font-medium text-white transition-all duration-300 text-base;
+    background: linear-gradient(135deg, 
+      rgba(239, 68, 68, 0.9) 0%, 
+      rgba(220, 38, 38, 0.9) 100%);
+    backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 
+      0 12px 32px rgba(239, 68, 68, 0.4),
+      0 6px 16px rgba(239, 68, 68, 0.3);
+  }
+
+  /* 📝 Enhanced Input Fields */
+  .input-field {
+    @apply glass-ultra rounded-xl px-4 py-3 text-white placeholder-gray-300 transition-all duration-300 text-base;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px) brightness(105%) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .input-field:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 
+      0 0 0 4px rgba(99, 102, 241, 0.2),
+      0 8px 24px rgba(99, 102, 241, 0.3);
+  }
+
+  /* ⚡ Enhanced Typography Classes */
   .hero-title {
     color: white !important;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    text-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.9), 
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 12px 48px rgba(0, 0, 0, 0.3);
     font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
   }
 
   .hero-subtitle {
     color: rgba(255, 255, 255, 0.9) !important;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    text-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.8), 
+      0 4px 16px rgba(0, 0, 0, 0.4);
     font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
-  /* ✅ ИСПРАВЛЕНИЕ: Заголовки секций */
   .section-title {
     color: white !important;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    text-shadow: 
+      0 3px 12px rgba(0, 0, 0, 0.8), 
+      0 6px 24px rgba(0, 0, 0, 0.4);
     font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
-  /* ✅ ИСПРАВЛЕНИЕ: Заголовки карточек */
   .card-title {
     color: white !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.7), 
+      0 4px 16px rgba(0, 0, 0, 0.3);
     font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
-  .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
-           text-white font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
-           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
+  /* 🎨 Enhanced Layout Components */
+  .gradient-bg {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.15) 0%, 
+      rgba(168, 85, 247, 0.1) 25%,
+      rgba(59, 130, 246, 0.15) 50%,
+      rgba(147, 51, 234, 0.1) 75%,
+      rgba(99, 102, 241, 0.15) 100%);
+    background-size: 400% 400%;
+    animation: gradient-flow 15s ease-in-out infinite;
   }
 
-  .btn-secondary {
-    @apply bg-white/10 hover:bg-white/20 text-white border border-white/20 
-           font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
-           focus:ring-2 focus:ring-white/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
+  @keyframes gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    25% { background-position: 100% 50%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 0% 100%; }
   }
 
-  .btn-danger {
-    @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 
-           text-white font-medium py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 
-           focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
+  /* 🌟 Special Glass Utilities */
+  .glass-intense {
+    backdrop-filter: blur(32px) brightness(125%) saturate(150%) contrast(115%);
+    -webkit-backdrop-filter: blur(32px) brightness(125%) saturate(150%) contrast(115%);
   }
 
-  .input-field {
-    @apply bg-white/10 border border-white/20 rounded-lg px-3 py-2 sm:py-2.5 md:py-3 text-white placeholder-gray-400
-           focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-           transition-all duration-200 backdrop-blur-sm
-           min-h-[40px] sm:min-h-[44px] text-sm sm:text-base;
+  .glass-subtle {
+    backdrop-filter: blur(12px) brightness(105%) saturate(110%);
+    -webkit-backdrop-filter: blur(12px) brightness(105%) saturate(110%);
   }
 
-  .loading-spinner {
-    @apply animate-spin rounded-full border-2 border-primary/20 border-t-primary;
+  .glass-frosted {
+    backdrop-filter: blur(48px) brightness(130%) saturate(160%);
+    -webkit-backdrop-filter: blur(48px) brightness(130%) saturate(160%);
   }
 
-  .pulse-glow {
-    @apply animate-pulse-glow;
+  /* 🎭 Modern Animation Enhancements */
+  .animate-glass-float {
+    animation: glass-float 6s ease-in-out infinite;
   }
 
-  /* Touch-friendly elements */
+  @keyframes glass-float {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg);
+      backdrop-filter: blur(24px) brightness(120%) saturate(140%);
+    }
+    50% { 
+      transform: translateY(-20px) rotate(1deg);
+      backdrop-filter: blur(32px) brightness(125%) saturate(150%);
+    }
+  }
+
+  .animate-glass-pulse {
+    animation: glass-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glass-pulse {
+    0%, 100% { 
+      backdrop-filter: blur(24px) brightness(120%) saturate(140%);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    50% { 
+      backdrop-filter: blur(32px) brightness(130%) saturate(160%);
+      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* 📱 Mobile & Touch Optimizations */
   .touch-target {
-    @apply min-h-[40px] sm:min-h-[44px] min-w-[40px] sm:min-w-[44px];
+    @apply min-h-[44px] min-w-[44px];
   }
 
   .mobile-input {
-    @apply h-10 sm:h-12 text-sm sm:text-base px-3 sm:px-4;
+    @apply h-12 text-base px-4;
   }
 
-  /* Responsive text utilities */
-  .text-responsive-xs {
-    @apply text-xs sm:text-sm;
+  /* 🎨 Responsive Text & Spacing */
+  .text-responsive-xs { @apply text-xs sm:text-sm; }
+  .text-responsive-sm { @apply text-sm sm:text-base; }
+  .text-responsive-base { @apply text-base sm:text-lg; }
+  .text-responsive-lg { @apply text-lg sm:text-xl md:text-2xl; }
+  .text-responsive-xl { @apply text-xl sm:text-2xl md:text-3xl; }
+  .text-responsive-2xl { @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl; }
+
+  .space-y-responsive { @apply space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-10; }
+  .px-responsive { @apply px-4 sm:px-6 md:px-8 lg:px-10; }
+  .py-responsive { @apply py-4 sm:px-6 md:px-8 lg:px-10; }
+  .p-responsive { @apply p-4 sm:p-6 md:p-8 lg:p-10; }
+
+  /* 📊 Enhanced Grid Layouts */
+  .grid-responsive-1-2 { @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8; }
+  .grid-responsive-1-2-3 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8; }
+  .grid-responsive-1-2-4 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8; }
+
+  /* 📱 Mobile-Specific Layouts */
+  .mobile-stack { @apply flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6; }
+  .mobile-full-width { @apply w-full sm:w-auto; }
+  .container-mobile { @apply px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl; }
+
+  /* 🎯 Widget Enhancements */
+  .widget-ultra {
+    @apply card-ultra p-6 animate-glass-float;
   }
 
-  .text-responsive-sm {
-    @apply text-sm sm:text-base;
+  .widget-header-ultra {
+    @apply flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between mb-6;
   }
 
-  .text-responsive-base {
-    @apply text-base sm:text-lg;
+  /* 🔥 Ultra Modern Button Effects */
+  .btn-glass-morphic {
+    position: relative;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.2) 0%, 
+      rgba(168, 85, 247, 0.2) 100%);
+    backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 12px 24px;
+    color: white;
+    font-weight: 500;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
   }
 
-  .text-responsive-lg {
-    @apply text-lg sm:text-xl md:text-2xl;
+  .btn-glass-morphic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.3) 50%, 
+      transparent 100%);
+    transition: left 0.6s ease;
   }
 
-  .text-responsive-xl {
-    @apply text-xl sm:text-2xl md:text-3xl;
+  .btn-glass-morphic:hover::before {
+    left: 100%;
   }
 
-  .text-responsive-2xl {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+  .btn-glass-morphic:hover {
+    transform: translateY(-3px) scale(1.05);
+    backdrop-filter: blur(24px) brightness(125%) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) brightness(125%) saturate(150%);
+    box-shadow: 
+      0 16px 40px rgba(99, 102, 241, 0.4),
+      0 8px 20px rgba(99, 102, 241, 0.3),
+      0 4px 10px rgba(99, 102, 241, 0.2);
   }
 
-  /* Improved spacing for mobile */
-  .space-y-responsive {
-    @apply space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8;
+  /* 🎪 Special Header Glass Effects */
+  .header-glass {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px) brightness(110%) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) brightness(110%) saturate(130%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
-  .px-responsive {
-    @apply px-3 sm:px-4 md:px-6 lg:px-8;
+  /* 🌊 Liquid Glass Effects for Containers */
+  .liquid-glass {
+    position: relative;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(25px) brightness(115%) saturate(140%) contrast(105%);
+    -webkit-backdrop-filter: blur(25px) brightness(115%) saturate(140%) contrast(105%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.3),
+      0 6px 20px rgba(0, 0, 0, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -2px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .py-responsive {
-    @apply py-3 sm:py-4 md:py-6 lg:py-8;
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.8) 50%, 
+      transparent 100%);
+    border-radius: 20px 20px 0 0;
   }
 
-  .p-responsive {
-    @apply p-3 sm:p-4 md:p-6 lg:p-8;
-  }
-
-  /* Better grid layouts */
-  .grid-responsive-1-2 {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6;
-  }
-
-  .grid-responsive-1-2-3 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6;
-  }
-
-  .grid-responsive-1-2-4 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6;
-  }
-
-  .grid-responsive-auto {
-    @apply grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6;
-  }
-
-  /* Address display utility */
-  .address-display {
-    @apply font-mono text-xs break-all sm:break-normal;
-  }
-
-  /* Better overflow handling */
-  .overflow-responsive {
-    @apply overflow-hidden sm:overflow-visible;
-  }
-
-  /* Mobile-specific layouts */
-  .mobile-stack {
-    @apply flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4;
-  }
-
-  .mobile-full-width {
-    @apply w-full sm:w-auto;
-  }
-
-  /* Animation improvements */
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-in-from-bottom 0.3s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.2s ease-out;
-  }
-
-  /* Mobile form improvements */
-  .form-group-mobile {
-    @apply space-y-2 sm:space-y-3;
-  }
-
-  .form-row-mobile {
-    @apply flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4;
-  }
-
-  /* Container improvements for mobile */
-  .container-mobile {
-    @apply px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl;
-  }
-
-  /* Widget specific improvements */
-  .widget-mobile {
-    @apply p-4 sm:p-6 rounded-lg bg-white/5 backdrop-blur-md border border-white/10;
-  }
-
-  .widget-header-mobile {
-    @apply flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between mb-4 sm:mb-6;
+  .liquid-glass:hover {
+    transform: translateY(-2px);
+    backdrop-filter: blur(30px) brightness(120%) saturate(150%) contrast(110%);
+    -webkit-backdrop-filter: blur(30px) brightness(120%) saturate(150%) contrast(110%);
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.4),
+      0 10px 30px rgba(0, 0, 0, 0.3),
+      inset 0 3px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -3px 0 rgba(255, 255, 255, 0.1);
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-pretty {
-    text-wrap: pretty;
-  }
-
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+  
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
 
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Safe area utilities */
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .pl-safe {
-    padding-left: env(safe-area-inset-left);
-  }
-
-  .pr-safe {
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* Mobile-specific utilities */
-  .touch-manipulation {
-    touch-action: manipulation;
-  }
-
-  .tap-highlight-none {
-    -webkit-tap-highlight-color: transparent;
-  }
-}
-
-/* Landscape orientation optimizations */
-@media (orientation: landscape) and (max-height: 500px) {
-  .landscape-compact {
-    @apply py-2 text-sm;
-  }
+  /* Safe Area & Touch Utilities */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
   
-  .landscape-header {
-    @apply h-12;
+  .touch-manipulation { touch-action: manipulation; }
+  .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+
+  /* Glass Utility Classes */
+  .backdrop-glass-ultra {
+    backdrop-filter: blur(var(--glass-blur-radius)) 
+                     brightness(var(--glass-brightness)) 
+                     saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur-radius)) 
+                             brightness(var(--glass-brightness)) 
+                             saturate(var(--glass-saturation));
+  }
+
+  .border-glass { border: 1px solid var(--glass-border); }
+  .shadow-glass { 
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 var(--glass-highlight);
   }
 }
 
-/* Tablet-specific optimizations */
+/* 📱 RESPONSIVE OPTIMIZATIONS */
+
+/* Tablet Optimizations */
 @media (min-width: 768px) and (max-width: 1024px) {
-  .tablet-compact {
-    @apply py-2 px-3;
-  }
+  .tablet-compact { @apply py-3 px-4; }
+  .tablet-button { @apply h-11 text-sm; }
+  .tablet-spacing { @apply space-y-4; }
   
-  .tablet-button {
-    @apply h-10 text-sm;
-  }
+  .card-ultra { @apply p-5; }
+  .glass-panel-ultra { @apply p-5; }
   
-  .tablet-spacing {
-    @apply space-y-3;
-  }
-  
-  /* Reduce padding for better space utilization */
-  .card {
-    @apply p-4;
-  }
-  
-  .widget-mobile {
-    @apply p-4;
-  }
-  
-  /* Optimize grid layouts for tablets */
-  .grid-responsive-1-2 {
-    @apply grid-cols-2 gap-3;
-  }
-  
-  .grid-responsive-1-2-3 {
-    @apply grid-cols-3 gap-3;
-  }
-  
-  /* Better text sizing for tablets */
-  .text-responsive-lg {
-    @apply text-xl;
-  }
-  
-  .text-responsive-xl {
-    @apply text-2xl;
-  }
+  .grid-responsive-1-2 { @apply grid-cols-2 gap-4; }
+  .grid-responsive-1-2-3 { @apply grid-cols-3 gap-4; }
 }
 
-/* Portrait tablet specific */
+/* Portrait Tablet */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  .tablet-portrait-grid {
-    @apply grid-cols-2;
-  }
-  
-  .tablet-portrait-spacing {
-    @apply space-y-4;
-  }
+  .tablet-portrait-grid { @apply grid-cols-2; }
+  .tablet-portrait-spacing { @apply space-y-5; }
 }
 
-/* Landscape tablet specific */
+/* Landscape Tablet */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  .tablet-landscape-grid {
-    @apply grid-cols-3;
-  }
+  .tablet-landscape-grid { @apply grid-cols-3; }
+  .tablet-landscape-compact { @apply py-2 px-3; }
   
-  .tablet-landscape-compact {
-    @apply py-1.5 px-2.5;
-  }
+  header { @apply h-14; }
+  header .flex { @apply h-14; }
+  header nav a { @apply px-3 py-2 text-sm; }
+  header button { @apply px-3 py-2 text-sm; }
+}
+
+/* Mobile Landscape */
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact { @apply py-2 text-sm; }
+  .landscape-header { @apply h-12; }
   
-  /* Header specific optimizations for landscape tablets */
-  header {
-    @apply h-12;
-  }
-  
-  header .flex {
-    @apply h-12;
-  }
-  
-  /* Compact navigation for landscape tablets */
-  header nav a {
-    @apply px-2 py-1.5 text-xs;
-  }
-  
-  /* Smaller buttons for landscape tablets */
-  header button {
-    @apply px-2 py-1.5 text-xs;
+  :root {
+    --glass-blur-radius: 16px;
+    --glass-thickness: 4px;
   }
 }
 
-/* Medium screen optimizations (tablets in portrait) */
-@media (min-width: 768px) and (max-width: 1023px) {
-  /* Header navigation breakpoint adjustment */
-  .header-nav-md {
-    @apply hidden;
-  }
-  
-  /* Better spacing for medium screens */
-  .header-spacing-md {
-    @apply space-x-1;
-  }
-  
-  /* Wallet button optimization */
-  .wallet-btn-md {
-    @apply px-2 py-1.5 text-sm;
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-border { border-width: 0.5px; }
+  .high-dpi-shadow { 
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2);
   }
 }
 
-/* Small tablet and large phone optimizations */
-@media (min-width: 640px) and (max-width: 767px) {
-  /* Header height optimization */
-  header {
-    @apply h-12;
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .glass-ultra,
+  .card-ultra,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-glass-morphic,
+  .liquid-glass {
+    transition: none;
+    animation: none;
   }
   
-  /* Logo text optimization */
-  .logo-sm {
-    @apply text-sm;
-  }
-  
-  /* Button sizing */
-  .btn-sm-tablet {
-    @apply px-2 py-1.5 text-xs;
+  .animate-glass-float,
+  .animate-glass-pulse,
+  .gradient-shift,
+  .gradient-flow {
+    animation: none;
   }
 }
 
-/* Enhanced mobile menu animations */
-@keyframes slideDown {
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .glass-ultra:hover { transform: none; }
+  .card-ultra:hover { transform: none; }
+  .btn-primary:hover { transform: none; }
+  .btn-secondary:hover { transform: none; }
+  .btn-danger:hover { transform: none; }
+  .btn-glass-morphic:hover { transform: none; }
+  .liquid-glass:hover { transform: none; }
+  
+  .touch-optimized {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+}
+
+/* 🌟 RAINBOWKIT GLASSMORPHISM INTEGRATION */
+
+/* Feature Query Support for Older Browsers */
+@supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+  .glass-ultra,
+  .glass-panel-ultra,
+  .card-ultra,
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .dark .glass-ultra,
+  .dark .glass-panel-ultra,
+  .dark .card-ultra,
+  .dark .liquid-glass {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Enhanced RainbowKit Styling */
+[data-rk] {
+  font-family: var(--font-sans);
+}
+
+[data-rk] div[role="dialog"] {
+  @apply liquid-glass;
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(32px) brightness(110%) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(32px) brightness(110%) saturate(130%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px !important;
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 12px 32px rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 420px !important;
+  width: 90vw !important;
+}
+
+@keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: scale(0.9) translateY(20px);
+    backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(32px) brightness(110%) saturate(130%);
   }
 }
 
-.mobile-menu-enter {
-  animation: slideDown 0.2s ease-out;
-}
-
-/* Better focus states for accessibility */
-@media (prefers-reduced-motion: no-preference) {
-  .focus-ring {
-    @apply focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
-  }
-}
-
-/* Touch device optimizations */
-@media (hover: none) and (pointer: coarse) {
-  /* Remove hover states on touch devices */
-  .no-touch-hover:hover {
-    @apply bg-transparent;
-  }
-  
-  /* Larger touch targets */
-  .touch-optimized {
-    @apply min-h-[48px] min-w-[48px];
-  }
-}
-
-/* High DPI screen optimizations */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  /* Sharper borders and shadows */
-  .high-dpi-border {
-    @apply border-[0.5px];
-  }
-  
-  .high-dpi-shadow {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  }
-}
-
-/* RainbowKit модалка - упрощенные стили */
-[data-rk] {
-  /* Убираем агрессивные переопределения */
-  --rk-radii-modal: 16px;
-  --rk-colors-modalBackground: rgba(15, 23, 42, 0.95);
-  --rk-colors-modalBorder: rgba(255, 255, 255, 0.1);
-}
-
-/* Основной контейнер модалки - убираем !important */
-[data-rk] div[role="dialog"] {
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 
-              0 0 0 1px rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-
-/* Анимация появления модалки */
-@keyframes modalSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Фон модалки (overlay) */
 [data-rk] div[role="dialog"] + div {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Улучшенная мобильная адаптация */
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] {
-    border-radius: 20px;
-    max-height: 85vh;
-    margin: 12px;
-  }
-}
-
-/* Очень маленькие экраны (до 480px) */
-@media (max-width: 480px) {
-  [data-rk] div[role="dialog"] {
-    border-radius: 16px;
-    max-height: 90vh;
-    margin: 8px;
-  }
-}
-
-/* Стили для содержимого модалки */
-[data-rk] div[role="dialog"] > div {
-  background: transparent;
-  border: none;
-  border-radius: inherit;
-  padding: 20px;
-}
-
-/* Мобильная адаптация контента */
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] > div {
-    padding: 16px;
-  }
-}
-
-/* Заголовок модалки */
-[data-rk] div[role="dialog"] h1,
-[data-rk] div[role="dialog"] h2 {
-  color: white;
-  font-weight: 600;
-  font-size: 1.25rem;
-  margin-bottom: 16px;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] h1,
-  [data-rk] div[role="dialog"] h2 {
-    font-size: 1.125rem;
-    margin-bottom: 12px;
-  }
-}
-
-/* Группы кошельков */
-[data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  font-size: 0.875rem;
-  margin: 16px 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-group"] h3 {
-    font-size: 0.8rem;
-    margin: 12px 0 6px 0;
-  }
-}
-
-/* Кнопки кошельков */
 [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: white;
-  padding: 12px 16px;
-  margin: 4px 0;
-  width: 100%;
-  min-height: 56px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-}
-
-/* Мобильная адаптация кнопок кошельков */
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] button[data-testid*="wallet"] {
-    padding: 14px 16px;
-    min-height: 60px;
-    border-radius: 14px;
-    margin: 6px 0;
-    gap: 14px;
-  }
+  @apply liquid-glass;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) brightness(108%) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(20px) brightness(108%) saturate(125%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  padding: 16px !important;
+  margin: 4px 0 !important;
 }
 
 [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(59, 130, 246, 0.5);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(24px) brightness(115%) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(24px) brightness(115%) saturate(135%) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Убираем hover эффекты на touch устройствах */
-@media (hover: none) {
-  [data-rk] div[role="dialog"] button[data-testid*="wallet"]:hover {
-    transform: none;
-    background: rgba(255, 255, 255, 0.05);
-  }
-  
-  [data-rk] div[role="dialog"] button[data-testid*="wallet"]:active {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98);
-  }
+[data-rk] div[role="dialog"] h1,
+[data-rk] div[role="dialog"] h2,
+[data-rk] div[role="dialog"] h3 {
+  color: white !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.025em !important;
 }
 
-/* Кнопка закрытия */
-[data-rk] div[role="dialog"] button[aria-label*="Close"] {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
-
-/* Мобильная кнопка закрытия */
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] button[aria-label*="Close"] {
-    width: 36px;
-    height: 36px;
-    top: 12px;
-    right: 12px;
-  }
-}
-
-[data-rk] div[role="dialog"] button[aria-label*="Close"]:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: rgb(239, 68, 68);
-}
-
-/* Текст в модалке */
 [data-rk] div[role="dialog"] p,
 [data-rk] div[role="dialog"] span {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] p,
-  [data-rk] div[role="dialog"] span {
-    font-size: 0.875rem;
-  }
-}
-
-/* Иконки кошельков */
-[data-rk] div[role="dialog"] img {
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] img {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-  }
-}
-
-/* Кастомные скроллбары для модалки */
-[data-rk] div[role="dialog"]::-webkit-scrollbar {
-  width: 6px;
-}
-
-[data-rk] div[role="dialog"]::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-[data-rk] div[role="dialog"]::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-[data-rk] div[role="dialog"]::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Кнопки "Получить" для кошельков */
-[data-rk] div[role="dialog"] button[data-testid*="get"] {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: rgb(59, 130, 246);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] button[data-testid*="get"] {
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    border-radius: 10px;
-  }
-}
-
-[data-rk] div[role="dialog"] button[data-testid*="get"]:hover {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
-}
-
-/* Описания кошельков */
-[data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.75rem;
-  margin-top: 4px;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] div[data-testid*="wallet-description"] {
-    font-size: 0.7rem;
-  }
-}
-
-/* QR код страница */
-[data-rk] div[role="dialog"] div[data-testid*="qr"] {
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  margin: 16px 0;
-}
-
-@media (max-width: 768px) {
-  [data-rk] div[role="dialog"] div[data-testid*="qr"] {
-    padding: 16px;
-    margin: 12px 0;
-  }
-}
-
-/* Обратная кнопка */
-[data-rk] div[role="dialog"] button[data-testid*="back"] {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.875rem;
-  margin-right: auto;
-}
-
-/* Загрузочные индикаторы */
-[data-rk] div[role="dialog"] div[data-testid*="loading"] {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Адаптация для landscape на мобильных - упрощенные стили */
-@media (max-width: 768px) and (orientation: landscape) {
-  [data-rk] div[role="dialog"] {
-    max-height: 95vh;
-    margin: 8px 16px;
-  }
-}
-
-/* ✅ ДОПОЛНИТЕЛЬНЫЕ ИСПРАВЛЕНИЯ для читаемости */
-.text-slate-100, 
-.text-slate-200,
-.text-gray-300,
-.text-gray-400 {
-  color: white !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-/* Улучшенный контраст для описаний */
-.text-gray-300 {
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-.text-gray-400 {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-/* Убираем все рамки с элементов */
-.border,
-.border-white\/10,
-.border-white\/20 {
-  border: none !important;
-}
-
-/* Особые стили для hero секций */
-.text-center.space-y-6 h1 {
-  color: white !important;
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9);
-  font-weight: 700;
-}
-
-.text-center.space-y-6 p {
   color: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* Enhanced Loading States */
 .loading-spinner {
-  @apply animate-spin rounded-full border-2 border-primary/20 border-t-primary;
+  @apply animate-spin rounded-full border-2;
+  border-color: rgba(99, 102, 241, 0.3);
+  border-top-color: rgb(99, 102, 241);
+  backdrop-filter: blur(8px);
 }
 
 .pulse-glow {
-  @apply animate-pulse-glow;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.8);
+  }
+}
+
+/* Enhanced Text Contrast */
+.text-slate-100, 
+.text-gray-100,
+.text-white {
+  color: white !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.text-gray-300 {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+.text-gray-400 {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Remove Borders from All Glass Elements */
+.border,
+.border-white\/10,
+.border-white\/20,
+.border-gray-200,
+.border-gray-300 {
+  border: none !important;
 }

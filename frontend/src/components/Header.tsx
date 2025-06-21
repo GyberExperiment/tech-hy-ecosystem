@@ -37,29 +37,29 @@ const Header: React.FC = () => {
     }
   };
 
-  // Красивая кнопка переключения сети
+  // Ultra Modern Network Switcher with Liquid Glass
   const NetworkSwitcher = ({ isMobile = false }: { isMobile?: boolean }) => {
     const networkName = isTestnet ? 'Testnet' : isMainnet ? 'Mainnet' : 'Unknown';
     const networkColor = isTestnet 
-      ? 'from-orange-500 to-red-500 border-orange-500/30' 
+      ? 'glass-secondary' 
       : isMainnet 
-      ? 'from-green-500 to-emerald-500 border-green-500/30'
-      : 'from-gray-500 to-slate-500 border-gray-500/30';
+      ? 'glass-accent'
+      : 'glass-ultra';
 
     return (
       <button
         onClick={handleNetworkSwitch}
-        className={`group relative overflow-hidden rounded-lg border bg-gradient-to-r ${networkColor} p-[1px] transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+        className={`liquid-glass group relative overflow-hidden rounded-xl border bg-gradient-to-r p-[1px] transition-all duration-300 hover:scale-105 ${
           isMobile ? 'w-full' : ''
-        }`}
+        } ${networkColor}`}
         title={isTestnet ? 'Switch to Mainnet' : 'Switch to Testnet'}
       >
-        <div className="relative flex items-center space-x-2 rounded-lg bg-black/80 px-3 py-2 text-xs font-normal backdrop-blur-sm transition-all duration-300 group-hover:bg-black/60">
+        <div className="relative flex items-center space-x-2 rounded-xl glass-ultra px-3 py-2 text-xs font-normal backdrop-blur-sm transition-all duration-300">
           <div className="relative flex items-center justify-center">
             <Network className="h-3 w-3" />
             <div className={`absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full ${
               isTestnet ? 'bg-orange-400' : isMainnet ? 'bg-green-400' : 'bg-gray-400'
-            } animate-pulse`} />
+            } animate-glass-pulse`} />
           </div>
           <span className="text-white font-normal">{networkName}</span>
           {!isMobile && (
@@ -71,13 +71,13 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
+    <header className="header-glass sticky top-0 z-40 animate-glass-float">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Main Header */}
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 group mr-6 lg:mr-12">
-            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-200">
+            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:via-purple-400 group-hover:to-pink-300 transition-all duration-300 bg-[length:200%_200%] animate-gradient-shift">
               <span className="hidden sm:inline">TECH HY Ecosystem</span>
               <span className="sm:hidden">TECH HY</span>
             </span>
@@ -91,10 +91,10 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-normal ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 text-sm font-normal ${
                     isActive(item.href)
-                      ? 'bg-blue-600 text-white shadow-lg font-medium'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      ? 'glass-primary text-white shadow-glass font-medium animate-glass-pulse'
+                      : 'glass-ultra text-gray-300 hover:text-white hover:glass-accent'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -113,10 +113,12 @@ const Header: React.FC = () => {
             
             {/* Language Switcher - Desktop */}
             <div className="hidden md:block">
-              <LanguageSwitcher />
+              <div className="liquid-glass rounded-xl p-1">
+                <LanguageSwitcher />
+              </div>
             </div>
             
-            {/* RainbowKit Connect Button - скрываем информацию о сети */}
+            {/* RainbowKit Connect Button - Enhanced with Glassmorphism */}
             <ConnectButton.Custom>
               {({
                 account,
@@ -127,8 +129,6 @@ const Header: React.FC = () => {
                 authenticationStatus,
                 mounted,
               }) => {
-                // NOTE: If your app doesn't use authentication, you
-                // can remove all 'authenticationStatus' checks
                 const ready = mounted && authenticationStatus !== 'loading';
                 const connected =
                   ready &&
@@ -154,7 +154,7 @@ const Header: React.FC = () => {
                           <button 
                             onClick={openConnectModal} 
                             type="button"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-normal py-2 px-4 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm"
+                            className="btn-glass-morphic animate-glass-pulse"
                           >
                             Connect Wallet
                           </button>
@@ -165,7 +165,7 @@ const Header: React.FC = () => {
                         <button
                           onClick={openAccountModal}
                           type="button"
-                          className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-normal py-2 px-4 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 text-sm"
+                          className="liquid-glass hover:glass-accent text-white font-normal py-2 px-4 rounded-xl transition-all duration-300 text-sm"
                         >
                           {account.displayName}
                           {account.displayBalance
@@ -182,7 +182,7 @@ const Header: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
-              className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/10"
+              className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors duration-200 rounded-xl glass-ultra hover:glass-accent"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
@@ -194,9 +194,9 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Enhanced with Glassmorphism */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/10">
+          <div className="lg:hidden liquid-glass rounded-2xl mt-4 p-4 animate-glass-float">
             {/* Navigation Links */}
             <nav className="py-4 space-y-1">
               {navigation.map((item) => {
@@ -206,10 +206,10 @@ const Header: React.FC = () => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                       isActive(item.href)
-                        ? 'bg-blue-600 text-white font-medium'
-                        : 'text-gray-300 hover:text-white hover:bg-white/10 font-normal'
+                        ? 'glass-primary text-white font-medium animate-glass-pulse'
+                        : 'glass-ultra text-gray-300 hover:text-white hover:glass-accent font-normal'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -220,7 +220,7 @@ const Header: React.FC = () => {
             </nav>
             
             {/* Mobile Controls */}
-            <div className="py-4 space-y-3 border-t border-white/10">
+            <div className="py-4 space-y-3 border-t border-glass">
               {/* Network Switcher - Mobile */}
               <div className="px-4">
                 <NetworkSwitcher isMobile />
@@ -228,7 +228,7 @@ const Header: React.FC = () => {
               
               {/* Language Switcher - Mobile */}
               <div className="px-4 md:hidden">
-                <div className="w-full">
+                <div className="w-full liquid-glass rounded-xl p-2">
                   <LanguageSwitcher />
                 </div>
               </div>
