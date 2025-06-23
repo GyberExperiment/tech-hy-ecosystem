@@ -6,8 +6,8 @@
  */
 
 import { ethers } from 'ethers';
-import { getAllRpcEndpoints, RpcHealthMonitor } from '../constants/rpcEndpoints';
-import { log } from '../utils/logger';
+import { getAllRpcEndpoints, RpcHealthMonitor } from '../config/rpcEndpoints';
+import { log } from '../lib/logger';
 
 // ✅ ДОБАВЛЯЕМ Network import для staticNetwork конфигурации
 const BSC_TESTNET_NETWORK = ethers.Network.from({

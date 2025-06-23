@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi } from 'lucide-react';
-import LanguageSwitcher from './LanguageSwitcher';
+import LanguageSwitcher from '../lib/LanguageSwitcher';
 import { bscTestnet, bsc } from 'wagmi/chains';
 
 const Header: React.FC = () => {
   const { t } = useTranslation('common');
   const location = useLocation();
-  const { chainId, switchToTestnet, switchToMainnet } = useWeb3();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -31,9 +32,9 @@ const Header: React.FC = () => {
 
   const handleNetworkSwitch = () => {
     if (isTestnet) {
-      switchToMainnet();
+      switchChain({ chainId: bsc.id });
     } else {
-      switchToTestnet();
+      switchChain({ chainId: bscTestnet.id });
     }
   };
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { useWeb3 } from '../contexts/Web3Context';
-import { CONTRACTS, LP_POOL_CONFIG } from '../constants/contracts';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
+import { CONTRACTS, LP_POOL_CONFIG } from '../../../shared/config/contracts';
 import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, BarChart3 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { PoolInfoSkeleton } from './LoadingSkeleton';
-import { log } from '../utils/logger';
+import { TableSkeleton as PoolInfoSkeleton } from '../../../shared/ui/LoadingSkeleton';
+import { log } from '../../../shared/lib/logger';
 
 // PancakeSwap Pair ABI (для работы с LP парами)
 const PANCAKE_PAIR_ABI = [

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Check } from 'lucide-react';
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n';
-import { log } from '../utils/logger';
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../../i18n';
+import { log } from './logger';
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation();

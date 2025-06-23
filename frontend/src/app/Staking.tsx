@@ -1,98 +1,129 @@
 import React from 'react'
-import { Button } from '../components/ui/button'
+import { Button } from '../shared/ui/Button'
+import { useAccount, useChainId } from 'wagmi'
+import EarnVGWidget from '../widgets/StakingDashboard/ui/EarnVGWidget'
+import LPPoolManager from '../widgets/StakingDashboard/ui/LPPoolManager'
+import StakingStats from '../entities/Staking/ui/StakingStats'
+import { Zap, TrendingUp, BarChart3, AlertTriangle } from 'lucide-react'
 
 const Staking: React.FC = () => {
+  const { address, isConnected } = useAccount()
+  const chainId = useChainId()
+  const isCorrectNetwork = chainId === 97 // BSC Testnet
+
+  if (!isConnected) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="liquid-glass text-center py-12 animate-glass-float">
+          <Zap className="mx-auto mb-4 text-yellow-400 animate-glass-pulse" size={64} />
+          <h1 className="text-3xl font-bold mb-4 text-slate-100">Стейкинг и LP Locking</h1>
+          <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+            Заблокируйте LP токены навсегда и получайте VG награды. Участвуйте в управлении протоколом через DAO голосования.
+          </p>
+          <p className="text-gray-400">Подключите кошелёк для доступа к стейкингу</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isCorrectNetwork) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="liquid-glass text-center py-12 animate-glass-float">
+          <AlertTriangle className="mx-auto mb-4 text-red-400 animate-glass-pulse" size={64} />
+          <h1 className="text-3xl font-bold mb-4 text-slate-100">Неправильная сеть</h1>
+          <p className="text-gray-400 mb-6">
+            Переключитесь на BSC Testnet для использования стейкинга
+          </p>
+          <Button variant="orange" className="animate-glass-pulse">
+            Переключить сеть
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="hero-title text-4xl md:text-5xl font-bold">
-          💎 Staking Platform
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4 text-slate-100 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+          Стейкинг и LP Locking
         </h1>
-        <p className="hero-subtitle text-lg md:text-xl max-w-2xl mx-auto">
-          Заработайте вознаграждения, участвуя в стейкинге токенов
+        <p className="text-gray-400 max-w-3xl mx-auto">
+          Постоянная блокировка LP токенов с мгновенными VG наградами. Получайте 10 VG за каждый заблокированный LP токен.
         </p>
       </div>
 
-      {/* Staking Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card-ultra">
-          <h3 className="card-title text-xl font-semibold mb-4">VG Token Staking</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">APR:</span>
-              <span className="text-green-400 font-medium">12.5%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Total Staked:</span>
-              <span className="text-white">1,250,000 VG</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Lock Period:</span>
-              <span className="text-white">30 days</span>
-            </div>
-            <Button variant="orange" size="lg" className="w-full">
-              Stake VG
-            </Button>
+      {/* Stats Overview */}
+      <StakingStats />
+
+      {/* Main Staking Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Burn & Earn Widget */}
+        <div className="liquid-glass animate-glass-float">
+          <div className="flex items-center mb-6">
+            <Zap className="mr-3 text-yellow-400 animate-glass-pulse" size={24} />
+            <h2 className="text-2xl font-bold text-slate-100">Burn & Earn VG</h2>
           </div>
+          <EarnVGWidget />
         </div>
 
-        <div className="card-ultra">
-          <h3 className="card-title text-xl font-semibold mb-4">LP Token Staking</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">APR:</span>
-              <span className="text-green-400 font-medium">18.3%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Total Staked:</span>
-              <span className="text-white">500,000 LP</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Lock Period:</span>
-              <span className="text-white">90 days</span>
-            </div>
-            <Button variant="blue" size="lg" className="w-full">
-              Stake LP
-            </Button>
+        {/* LP Pool Manager */}
+        <div className="liquid-glass animate-glass-float">
+          <div className="flex items-center mb-6">
+            <TrendingUp className="mr-3 text-blue-400 animate-glass-pulse" size={24} />
+            <h2 className="text-2xl font-bold text-slate-100">LP Pool Manager</h2>
           </div>
+          <LPPoolManager />
         </div>
+      </div>
 
-        <div className="card-ultra">
-          <h3 className="card-title text-xl font-semibold mb-4">Flexible Staking</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">APR:</span>
-              <span className="text-green-400 font-medium">8.7%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Total Staked:</span>
-              <span className="text-white">750,000 VG</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">Lock Period:</span>
-              <span className="text-green-400">Flexible</span>
-            </div>
-            <Button variant="green" size="lg" className="w-full">
-              Stake Now
-            </Button>
+      {/* How It Works */}
+      <div className="liquid-glass animate-glass-float">
+        <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
+          <BarChart3 className="mr-3 text-green-400" size={24} />
+          Как это работает
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+            <div className="text-3xl mb-4">1️⃣</div>
+            <h3 className="text-lg font-semibold mb-2 text-slate-100">Создайте LP токены</h3>
+            <p className="text-gray-400 text-sm">
+              Добавьте ликвидность VC + BNB в PancakeSwap пул и получите LP токены
+            </p>
+          </div>
+
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+            <div className="text-3xl mb-4">2️⃣</div>
+            <h3 className="text-lg font-semibold mb-2 text-slate-100">Заблокируйте навсегда</h3>
+            <p className="text-gray-400 text-sm">
+              Заблокируйте LP токены в смарт-контракте без возможности вывода
+            </p>
+          </div>
+
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+            <div className="text-3xl mb-4">3️⃣</div>
+            <h3 className="text-lg font-semibold mb-2 text-slate-100">Получите VG награды</h3>
+            <p className="text-gray-400 text-sm">
+              Мгновенно получите 10 VG токенов за каждый заблокированный LP
+            </p>
           </div>
         </div>
       </div>
 
-      {/* My Staking */}
-      <div className="glass-panel-ultra space-y-6">
-        <h2 className="section-title text-2xl font-semibold">My Staking Positions</h2>
-        
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📈</div>
-          <h3 className="card-title text-lg mb-2">No Active Positions</h3>
-          <p className="text-white/70 mb-6">
-            Start staking to earn rewards and participate in governance
-          </p>
-          <Button variant="fire" size="lg">
-            Start Staking
-          </Button>
+      {/* Risk Warning */}
+      <div className="glass-ultra border border-yellow-500/20 bg-yellow-500/5 p-6 rounded-lg animate-glass-pulse">
+        <div className="flex items-start space-x-3">
+          <AlertTriangle className="text-yellow-400 mt-1 flex-shrink-0" size={20} />
+          <div>
+            <h3 className="font-semibold text-yellow-400 mb-2">Важное предупреждение</h3>
+            <p className="text-gray-300 text-sm">
+              LP токены блокируются <strong>навсегда</strong> без возможности вывода. Это необратимая операция. 
+              Убедитесь, что понимаете риски перед использованием функции Burn & Earn.
+            </p>
+          </div>
         </div>
       </div>
     </div>

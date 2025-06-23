@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACTS } from '../constants/contracts';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { CONTRACTS } from '../../../shared/config/contracts';
+import { log } from '../../../shared/lib/logger';
+import { rpcService } from '../../../shared/api/rpcService';
 
 interface PoolInfo {
   vcReserve: string;
@@ -29,16 +29,6 @@ const PAIR_ABI = [
 // Global cache for pool info
 const poolInfoCache = new Map<string, { data: PoolInfo; timestamp: number }>();
 const CACHE_DURATION = 300000; // 5 minutes
-
-// Utility functions
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
-    )
-  ]);
-};
 
 export const usePoolInfo = (): UsePoolInfoReturn => {
   const [poolInfo, setPoolInfo] = useState<PoolInfo>({

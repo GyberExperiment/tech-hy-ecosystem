@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO } from '../constants/contracts';
+import { CONTRACTS, TOKEN_INFO } from '../../../shared/config/contracts';
 import { toast } from 'react-hot-toast';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { log } from '../../../shared/lib/logger';
+import { rpcService } from '../../../shared/api/rpcService';
 
 // ✅ Глобальный event emitter для синхронизации обновлений балансов
 class TokenBalanceEventEmitter {
@@ -32,6 +32,7 @@ export interface TokenData {
   contract: any;
   icon?: React.ReactNode;
   color?: string;
+  allowance?: string;
 }
 
 export interface TokenBalances {

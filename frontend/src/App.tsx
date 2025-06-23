@@ -4,19 +4,19 @@ import './index.css';
 
 // Import Providers
 import { I18nProvider } from './i18n/I18nProvider';
-import { Web3Provider } from './contexts/Web3Context';
+import { Web3Provider } from './shared/lib/Web3Context';
 
 // Import Layout Components
-import Header from './components/Header';
+import Header from './shared/ui/Header';
 
 // Import Pages
-import Home from './pages/Home';
-import Tokens from './pages/Tokens';
-import Staking from './pages/Staking';
-import Governance from './pages/Governance';
+import Home from './app/Home';
+import Tokens from './app/Tokens';
+import Staking from './app/Staking';
+import Governance from './app/Governance';
 
 // Import Showcase Component
-import { StyleShowcase } from './components/StyleShowcase';
+import { StyleShowcase } from './shared/ui/StyleShowcase';
 // import { WaveTransition } from './components/ui/wave-transition';
 
 // Import Debug Components (if needed)

@@ -1,6 +1,6 @@
-import { useWeb3 } from '../contexts/Web3Context';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { CONTRACTS } from '../constants/contracts';
+import { useAccount, useChainId, usePublicClient } from 'wagmi';
+import { CONTRACTS, BSC_TESTNET } from '../config/contracts';
 
 interface ContractInfo {
   address: string;
@@ -21,23 +21,29 @@ const contractList = [
 ];
 
 export const ContractStatus: React.FC = () => {
-  const { provider, isConnected, isCorrectNetwork } = useWeb3();
+  const { address } = useAccount();
+  const chainId = useChainId();
+  const publicClient = usePublicClient();
+  
+  const isConnected = !!address;
+  const isCorrectNetwork = chainId === BSC_TESTNET.chainId;
+  
   const [contracts, setContracts] = useState<ContractInfo[]>([]);
   const [checking, setChecking] = useState(false);
 
   const checkContracts = useCallback(async () => {
-    if (!provider || !isConnected || !isCorrectNetwork) return;
+    if (!publicClient || !isConnected || !isCorrectNetwork) return;
 
     setChecking(true);
     const results: ContractInfo[] = [];
 
     for (const contract of contractList) {
       try {
-        const code = await provider.getCode(contract.address);
+        const code = await publicClient.getBytecode({ address: contract.address as `0x${string}` });
         results.push({
           address: contract.address,
           name: contract.name,
-          exists: code !== '0x',
+          exists: !!code && code !== '0x',
           loading: false,
         });
       } catch (error: unknown) {
@@ -53,7 +59,7 @@ export const ContractStatus: React.FC = () => {
 
     setContracts(results);
     setChecking(false);
-  }, [provider, isConnected, isCorrectNetwork]);
+  }, [publicClient, isConnected, isCorrectNetwork]);
 
   useEffect(() => {
     if (isConnected && isCorrectNetwork) {

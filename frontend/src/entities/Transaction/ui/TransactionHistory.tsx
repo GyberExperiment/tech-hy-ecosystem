@@ -14,15 +14,15 @@ import {
   Zap,
   Loader2
 } from 'lucide-react';
-import { useWeb3 } from '../contexts/Web3Context';
-import { TableSkeleton } from './LoadingSkeleton';
+import { useAccount } from 'wagmi';
+import { TableSkeleton } from '../../../shared/ui/LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
 import { ethers } from 'ethers';
-import { CONTRACTS } from '../constants/contracts';
-import { BSCScanAPI, convertBSCScanToTransaction } from '../utils/bscscanApi';
-import { formatTimeAgo, formatTxHash, formatTokenAmount } from '../utils/formatters';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { CONTRACTS } from '../../../shared/config/contracts';
+import { BSCScanAPI, convertBSCScanToTransaction } from '../../../shared/lib/bscscanApi';
+import { formatTimeAgo, formatTxHash, formatTokenAmount } from '../../../shared/lib/formatters';
+import { log } from '../../../shared/lib/logger';
+import { rpcService } from '../../../shared/api/rpcService';
 
 interface Transaction {
   id: string;
@@ -42,7 +42,7 @@ interface Transaction {
 
 const TransactionHistory: React.FC = () => {
   const { t } = useTranslation(['common']);
-  const { account } = useWeb3();
+  const { account } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -572,7 +572,7 @@ export default TransactionHistory;
 
 // Hook for managing transactions
 export const useTransactionHistory = () => {
-  const { account } = useWeb3();
+  const { account } = useAccount();
   
   const addTransaction = (tx: Omit<Transaction, 'id' | 'timestamp'>) => {
     if (!account) return;

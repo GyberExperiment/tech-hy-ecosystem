@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import { useWeb3 } from '../contexts/Web3Context';
-import { CONTRACTS } from '../constants/contracts';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
+import { CONTRACTS } from '../../../shared/config/contracts';
 import { toast } from 'react-hot-toast';
 import { Coins, Zap, TrendingUp, Wallet, Info, RefreshCw, AlertCircle } from 'lucide-react';
-import { cn } from '@/utils/cn';
-import { useTokenData } from '../hooks/useTokenData';
-import { usePoolInfo } from '../hooks/usePoolInfo';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { cn } from '../../../shared/lib/cn';
+import { useTokenData } from '../../../entities/Token/model/useTokenData';
+import { usePoolInfo } from '../../../entities/Staking/model/usePoolInfo';
+import { log } from '../../../shared/lib/logger';
+import { rpcService } from '../../../shared/api/rpcService';
 
 interface EarnVGWidgetProps {
   className?: string;

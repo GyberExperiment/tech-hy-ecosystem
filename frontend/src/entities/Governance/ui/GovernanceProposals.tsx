@@ -6,19 +6,15 @@ import {
   CheckCircle, 
   XCircle, 
   TrendingUp,
-  TrendingDown,
   Users,
   FileText,
-  ExternalLink,
-  AlertTriangle,
-  Filter,
-  Calendar
+  AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
-import { TableSkeleton } from './LoadingSkeleton';
-import { log } from '../utils/logger';
+import { TableSkeleton } from '../../../shared/ui/LoadingSkeleton';
+import { log } from '../../../shared/lib/logger';
 
 interface Proposal {
   id: string;
@@ -69,7 +65,7 @@ const GovernanceProposals: React.FC = () => {
     
     try {
       const currentBlock = await provider.getBlockNumber();
-      const power = await vgVotesContract.getPastVotes(account, currentBlock - 1);
+      const power = await vgVotesContract?.getPastVotes?.(account, currentBlock - 1);
       setVotingPower(power ? ethers.formatEther(power) : '0');
     } catch (error: any) {
       log.error('Failed to fetch voting power', {
@@ -160,8 +156,8 @@ const GovernanceProposals: React.FC = () => {
     try {
       toast.loading('Отправка голоса...', { id: 'vote' });
       
-      const tx = await governorContract.castVote(proposalId, support);
-      await tx.wait();
+      const tx = await governorContract?.castVote?.(proposalId, support);
+      await tx?.wait?.();
       
       toast.success('Голос успешно отправлен!', { id: 'vote' });
       fetchProposals(); // Refresh proposals
@@ -188,13 +184,13 @@ const GovernanceProposals: React.FC = () => {
     try {
       toast.loading('Создание предложения...', { id: 'create' });
       
-      const tx = await governorContract.propose(
+      const tx = await governorContract?.propose?.(
         newProposal.targets,
         newProposal.values,
         newProposal.calldatas,
         `${newProposal.title}\n\n${newProposal.description}`
       );
-      await tx.wait();
+      await tx?.wait?.();
       
       toast.success('Предложение успешно создано!', { id: 'create' });
       setShowCreateProposal(false);

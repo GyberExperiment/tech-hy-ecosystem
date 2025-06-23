@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart3, Coins, Activity, TrendingUp, Shield } from 'lucide-react';
-import { useTokenData } from '../hooks/useTokenData';
+import { useTokenData } from '../model/useTokenData';
 
 interface TokenStatsProps {
   showTitle?: boolean;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, RefreshCw, Zap, BarChart3 } from 'lucide-react';
-import { CardSkeleton } from './LoadingSkeleton';
+import { TableSkeleton as CardSkeleton } from '../../../shared/ui/LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
-import { CONTRACTS } from '../constants/contracts';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { CONTRACTS } from '../../../shared/config/contracts';
+import { log } from '../../../shared/lib/logger';
+import { rpcService } from '../../../shared/api/rpcService';
 
 interface PoolData {
   totalLockedLP: string;

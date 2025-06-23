@@ -1,6 +1,6 @@
 import React from 'react'
-import { Button } from './ui/button'
-import { WaveTransition } from './ui/wave-transition'
+import { Button } from './Button'
+import { WaveTransition } from './wave-transition'
 
 export const StyleShowcase: React.FC = () => {
   return (

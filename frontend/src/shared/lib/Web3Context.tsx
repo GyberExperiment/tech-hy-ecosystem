@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
-import { config, customTheme } from '../config/rainbowkit';
-import { CONTRACTS } from '../constants/contracts';
+import { config, customTheme } from '../../config/rainbowkit';
+import { CONTRACTS } from '../config/contracts';
 import { bscTestnet, bsc } from 'wagmi/chains';
-import { useEthersProvider, useEthersSigner } from '../utils/ethers';
+import { useEthersProvider, useEthersSigner } from './ethers';
 
 // ABIs
 const ERC20_ABI = [
@@ -60,6 +60,21 @@ const PANCAKE_PAIR_ABI = [
   "function kLast() external view returns (uint256)",
 ];
 
+const GOVERNOR_ABI = [
+  "function propose(address[] targets, uint256[] values, bytes[] calldatas, string description) returns (uint256)",
+  "function castVote(uint256 proposalId, uint8 support) returns (uint256)",
+  "function castVoteWithReason(uint256 proposalId, uint8 support, string reason) returns (uint256)",
+  "function proposalVotes(uint256 proposalId) view returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)",
+  "function state(uint256 proposalId) view returns (uint8)",
+  "function proposalSnapshot(uint256 proposalId) view returns (uint256)",
+  "function proposalDeadline(uint256 proposalId) view returns (uint256)",
+  "function getVotes(address account, uint256 blockNumber) view returns (uint256)",
+  "function quorum(uint256 blockNumber) view returns (uint256)",
+  "function proposalThreshold() view returns (uint256)",
+  "function votingDelay() view returns (uint256)",
+  "function votingPeriod() view returns (uint256)"
+];
+
 interface Web3ContextType {
   // Connection state
   provider: ethers.JsonRpcProvider | ethers.FallbackProvider | null;
@@ -76,6 +91,7 @@ interface Web3ContextType {
   lpContract: ethers.Contract | null;
   lpPairContract: ethers.Contract | null;
   lpLockerContract: ethers.Contract | null;
+  governorContract: ethers.Contract | null;
   
   // Network switching
   switchToTestnet: () => Promise<void>;
@@ -99,8 +115,8 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { switchChain } = useSwitchChain();
   
   // Используем официальные ethers.js адаптеры от Wagmi
-  const provider = useEthersProvider({ chainId });
-  const signer = useEthersSigner({ chainId });
+  const provider = useEthersProvider(chainId ? { chainId } : {});
+  const signer = useEthersSigner(chainId ? { chainId } : {});
 
   // Проверяем правильность сети (BSC testnet или mainnet)
   const isCorrectNetwork = chainId === bscTestnet.id || chainId === bsc.id;
@@ -123,6 +139,7 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const lpContract = getContract(CONTRACTS.LP_TOKEN, ERC20_ABI);
   const lpPairContract = getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
   const lpLockerContract = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
+  const governorContract = getContract(CONTRACTS.GOVERNOR, GOVERNOR_ABI);
 
   // Network switching functions
   const switchToTestnet = async () => {
@@ -148,8 +165,8 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const contextValue: Web3ContextType = {
-    provider,
-    signer,
+    provider: provider || null,
+    signer: signer || null,
     account: address || null,
     isConnected,
     isCorrectNetwork,
@@ -160,6 +177,7 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lpContract,
     lpPairContract,
     lpLockerContract,
+    governorContract,
     switchToTestnet,
     switchToMainnet,
     updateBSCTestnetRPC,

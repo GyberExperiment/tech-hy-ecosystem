@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import GovernanceProposals from '../components/GovernanceProposals';
-import TransactionHistory from '../components/TransactionHistory';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../shared/config/contracts';
+import GovernanceProposals from '../entities/Governance/ui/GovernanceProposals';
+import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
 import { 
   Vote, 
   Users, 
@@ -31,7 +31,7 @@ import {
   Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { log } from '../utils/logger';
+import { log } from '../shared/lib/logger';
 
 interface ProposalData {
   id: number;
@@ -49,15 +49,17 @@ interface ProposalData {
 
 const Governance: React.FC = () => {
   const { t } = useTranslation(['governance', 'common']);
-  const { 
-    account, 
-    isConnected, 
-    isCorrectNetwork, 
-    vgContract, 
-    vgVotesContract, 
-    governorContract,
-    provider
-  } = useWeb3();
+  const { address } = useAccount();
+  const chainId = useChainId();
+  
+  // TODO: Интегрировать контракты через wagmi
+  const isConnected = !!address;
+  const isCorrectNetwork = chainId === BSC_TESTNET.chainId;
+  
+  // Временные заглушки для контрактов (TODO: заменить на wagmi)
+  const vgContract = null;
+  const vgVotesContract = null;
+  const governorContract = null;
 
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [proposals, setProposals] = useState<ProposalData[]>([]);
@@ -112,41 +114,22 @@ const Governance: React.FC = () => {
   ];
 
   const fetchBalances = async () => {
-    if (!vgContract || !vgVotesContract || !account) return;
+    if (!address) return;
 
     try {
       setLoading(true);
       
-      const balancePromises = [
-        {
-          symbol: 'VG',
-          promise: vgContract.balanceOf(account)
-        },
-        {
-          symbol: 'VGV',
-          promise: vgVotesContract.balanceOf(account)
-        }
-      ].map(async ({ symbol, promise }) => {
-        const balance = await promise;
-        return {
-          symbol,
-          balance: (parseFloat(balance.toString()) / Math.pow(10, 18)).toFixed(6)
-        };
+      // TODO: Реализовать когда контракты будут интегрированы
+      // Временно устанавливаем заглушки
+      setBalances({
+        VG: '0',
+        VGV: '0'
       });
-
-      const results = await Promise.all(balancePromises);
-      const newBalances: Record<string, string> = {};
-      
-      results.forEach(result => {
-        newBalances[result.symbol] = result.balance;
-      });
-
-      setBalances(newBalances);
     } catch (error) {
       log.error('Failed to fetch governance balances', {
         component: 'Governance',
         function: 'fetchBalances',
-        address: account
+        address: address
       }, error as Error);
     } finally {
       setLoading(false);
@@ -175,7 +158,7 @@ const Governance: React.FC = () => {
       fetchGovernanceStats();
       fetchProposals();
     }
-  }, [account, isConnected, isCorrectNetwork]);
+  }, [address, isConnected, isCorrectNetwork]);
 
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
@@ -209,69 +192,25 @@ const Governance: React.FC = () => {
   };
 
   const handleVote = async (proposalId: number, support: boolean) => {
-    if (!voteAmount || !account || !governorContract || !vgVotesContract) {
+    if (!voteAmount || !address) {
       toast.error('Введите количество голосов или подключите кошелек');
       return;
     }
 
     try {
-      toast.loading('Отправка голоса...', { id: 'vote' });
-      
-      // ✅ Проверяем voting power пользователя
-      const proposalSnapshot = await governorContract.proposalSnapshot(proposalId);
-      const votingPower = await vgVotesContract.getPastVotes(account, proposalSnapshot);
-      
-      if (votingPower === 0n) {
-        throw new Error('У вас нет voting power для голосования');
-      }
-      
-      // ✅ Отправляем реальный голос в Governor контракт
-      const supportValue = support ? 1 : 0; // 0=Against, 1=For, 2=Abstain
-      const tx = await governorContract.castVote(proposalId, supportValue);
-      
-      toast.loading('Подтверждение транзакции...', { id: 'vote' });
-      await tx.wait();
-      
-      log.transaction('Governance vote cast successfully', tx.hash, {
-        proposalId,
-        support,
-        votingPower: votingPower.toString(),
-        voter: account
-      });
-      
-      toast.success(`Голос ${support ? 'ЗА' : 'ПРОТИВ'} успешно подан!`, { id: 'vote' });
-      
-      // Обновляем данные после голосования
-      await fetchProposals();
-      await fetchGovernanceStats();
-      
-      setVoteAmount('');
-      setVoteSupport(null);
-      setSelectedProposal(null);
-      
+      // TODO: Реализовать голосование когда контракты будут интегрированы
+      toast.error('Голосование временно недоступно - контракты не интегрированы');
     } catch (error: any) {
       log.error('Governance vote failed', {
         component: 'Governance',
         function: 'handleVote',
         proposalId,
         support,
-        address: account,
+        address: address,
         errorMessage: error.message
       }, error);
       
-      let errorMessage = 'Ошибка голосования';
-      
-      if (error.message?.includes('insufficient voting power')) {
-        errorMessage = 'Недостаточно voting power';
-      } else if (error.message?.includes('already voted')) {
-        errorMessage = 'Вы уже голосовали по этому предложению';
-      } else if (error.message?.includes('proposal not active')) {
-        errorMessage = 'Предложение неактивно для голосования';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'vote' });
+      toast.error('Ошибка голосования', { id: 'vote' });
     }
   };
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import { getAllRpcEndpoints } from '../constants/rpcEndpoints';
+import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../shared/config/contracts';
+import { getAllRpcEndpoints } from '../shared/config/rpcEndpoints';
 import { 
   Send, 
   CheckCircle, 
@@ -31,12 +31,12 @@ import {
   Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import TransactionHistory from '../components/TransactionHistory';
-import { ContractStatus } from '../components/ContractStatus';
-import TokenStats from '../components/TokenStats';
-import { useTokenData } from '../hooks/useTokenData';
-import type { TokenData } from '../hooks/useTokenData';
-import { log } from '../utils/logger';
+import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
+import { ContractStatus } from '../shared/lib/ContractStatus';
+import TokenStats from '../entities/Token/ui/TokenStats';
+import { useTokenData } from '../entities/Token/model/useTokenData';
+import type { TokenData } from '../entities/Token/model/useTokenData';
+import { log } from '../shared/lib/logger';
 
 interface TokenAllowance {
   spender: string;
@@ -77,17 +77,8 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => 
 
 const Tokens: React.FC = () => {
   const { t } = useTranslation(['tokens', 'common']);
-  const { 
-    account, 
-    isConnected, 
-    isCorrectNetwork, 
-    vcContract, 
-    vgContract, 
-    vgVotesContract, 
-    lpContract,
-    provider,
-    signer 
-  } = useWeb3();
+  const { address } = useAccount();
+  const chainId = useChainId();
 
   // Use shared token data hook
   const { 
@@ -126,7 +117,7 @@ const Tokens: React.FC = () => {
   }
 
   const fetchAllowances = async () => {
-    if (!account || !isConnected || !isCorrectNetwork || tokens.length === 0) return;
+    if (!address || !chainId || tokens.length === 0) return;
     
     try {
       const allowanceData: TokenAllowance[] = [];
@@ -142,7 +133,7 @@ const Tokens: React.FC = () => {
         for (const spender of spenders) {
           try {
             const allowance = await withTimeout(
-              withRetry(() => token.contract.allowance(account, spender.address)),
+              withRetry(() => token.contract.allowance(address, spender.address)),
               5000
             );
             
@@ -162,7 +153,7 @@ const Tokens: React.FC = () => {
               function: 'fetchAllowances',
               token: token.symbol,
               spender: spender.name,
-              address: account
+              address: address
             }, error as Error);
           }
         }
@@ -173,16 +164,16 @@ const Tokens: React.FC = () => {
       log.error('Failed to fetch all allowances', {
         component: 'Tokens',
         function: 'fetchAllowances',
-        address: account
+        address: address
       }, error as Error);
     }
   };
 
   useEffect(() => {
-    if (isConnected && isCorrectNetwork) {
+    if (address && chainId) {
       fetchAllowances();
     }
-  }, [account, isConnected, isCorrectNetwork]);
+  }, [address, chainId]);
 
   // Filter tokens based on search and filter criteria
   const filteredTokens = tokens.filter(token => {
@@ -224,7 +215,7 @@ const Tokens: React.FC = () => {
   };
 
   const handleTransfer = async () => {
-    if (!selectedToken || !transferTo || !transferAmount || !signer) {
+    if (!selectedToken || !transferTo || !transferAmount || !address) {
       toast.error('Заполните все поля');
       return;
     }
@@ -243,10 +234,10 @@ const Tokens: React.FC = () => {
 
     try {
       const amount = ethers.parseUnits(transferAmount, selectedToken.decimals);
-      const contractWithSigner = selectedToken.contract.connect(signer);
+      const contractWithSigner = selectedToken.contract.connect(ethers.provider.getSigner());
       
       // Проверяем баланс
-      const balance = await selectedToken.contract.balanceOf(account);
+      const balance = await selectedToken.contract.balanceOf(address);
       if (balance < amount) {
         throw new Error('Недостаточно токенов для перевода');
       }
@@ -259,7 +250,7 @@ const Tokens: React.FC = () => {
       const tx = await contractWithSigner.transfer(transferTo, amount, {
         gasLimit,
         // MEV protection: добавляем случайный nonce offset
-        nonce: await signer.getNonce() + Math.floor(Math.random() * 3)
+        nonce: await ethers.provider.getTransactionCount(address) + Math.floor(Math.random() * 3)
       });
       
       toast.loading('Ожидание подтверждения...', { id: 'transfer' });
@@ -271,7 +262,7 @@ const Tokens: React.FC = () => {
           token: selectedToken.symbol,
           amount: transferAmount,
           recipient: transferTo,
-          sender: account
+          sender: address
         });
         
         toast.success(`Перевод ${transferAmount} ${selectedToken.symbol} выполнен успешно!`, { id: 'transfer' });
@@ -293,7 +284,7 @@ const Tokens: React.FC = () => {
         token: selectedToken?.symbol,
         amount: transferAmount,
         recipient: transferTo,
-        sender: account,
+        sender: address,
         errorMessage: error.message
       }, error);
       
@@ -316,7 +307,7 @@ const Tokens: React.FC = () => {
   };
 
   const handleApprove = async () => {
-    if (!selectedToken || !approveTo || !approveAmount || !signer) {
+    if (!selectedToken || !approveTo || !approveAmount || !address) {
       toast.error('Заполните все поля');
       return;
     }
@@ -343,7 +334,7 @@ const Tokens: React.FC = () => {
         amount = ethers.parseUnits(approveAmount, selectedToken.decimals);
       }
       
-      const contractWithSigner = selectedToken.contract.connect(signer);
+      const contractWithSigner = selectedToken.contract.connect(ethers.provider.getSigner());
       
       // Оцениваем gas
       const gasLimit = await estimateGas(contractWithSigner, 'approve', [approveTo, amount]);
@@ -353,7 +344,7 @@ const Tokens: React.FC = () => {
       const tx = await contractWithSigner.approve(approveTo, amount, {
         gasLimit,
         // MEV protection
-        nonce: await signer.getNonce() + Math.floor(Math.random() * 3)
+        nonce: await ethers.provider.getTransactionCount(address) + Math.floor(Math.random() * 3)
       });
       
       toast.loading('Ожидание подтверждения...', { id: 'approve' });
@@ -365,7 +356,7 @@ const Tokens: React.FC = () => {
           token: selectedToken.symbol,
           amount: approveAmount,
           spender: approveTo,
-          owner: account
+          owner: address
         });
         
         toast.success(`Approve для ${selectedToken.symbol} выполнен успешно!`, { id: 'approve' });
@@ -387,7 +378,7 @@ const Tokens: React.FC = () => {
         token: selectedToken?.symbol,
         amount: approveAmount,
         spender: approveTo,
-        owner: account,
+        owner: address,
         errorMessage: error.message
       }, error);
       
@@ -421,7 +412,7 @@ const Tokens: React.FC = () => {
     refreshData();
   };
 
-  if (!isConnected) {
+  if (!address) {
     return (
       <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">
@@ -437,7 +428,7 @@ const Tokens: React.FC = () => {
     );
   }
 
-  if (!isCorrectNetwork) {
+  if (chainId !== BSC_TESTNET.chainId) {
     return (
       <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">

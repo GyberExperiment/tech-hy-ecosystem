@@ -1,5 +1,5 @@
-/* 🌟 TECH HY ECOSYSTEM DESIGN SYSTEM 2025 🌟 */
-/* 🚀 CSS Variables & Design Tokens */
+/* 🌟 TECH HY ECOSYSTEM REFINED DESIGN SYSTEM 2025 🌟 */
+/* 🎨 Professional Grade Variables & Design Tokens */
 
 :root {
   /* ===== TECH HY БРЕНДОВЫЕ ЦВЕТА ===== */
@@ -12,37 +12,44 @@
   --techhy-dark: #0F172A;        /* Deep Dark */
   --techhy-light: #F8FAFC;       /* Light */
   
-  /* ===== ПРЕМИАЛЬНЫЕ CUBIC-BEZIER ПЕРЕМЕННЫЕ ===== */
+  /* ===== REFINED CUBIC-BEZIER ПЕРЕМЕННЫЕ ===== */
   --ease-out-expo: cubic-bezier(0.23, 1, 0.320, 1);
-  --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-in-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --ease-in-out-back: cubic-bezier(0.68, -0.35, 0.265, 1.35);
   --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-in-out-sine: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-subtle: cubic-bezier(0.25, 0.8, 0.25, 1);
   
-  /* ===== ДЛИТЕЛЬНОСТЬ АНИМАЦИЙ ===== */
-  --duration-fast: 0.15s;
-  --duration-normal: 0.3s;
-  --duration-medium: 0.4s;
-  --duration-slow: 0.6s;
-  --duration-slower: 0.8s;
+  /* ===== REFINED ДЛИТЕЛЬНОСТЬ АНИМАЦИЙ ===== */
+  --duration-instant: 0.1s;
+  --duration-fast: 0.2s;
+  --duration-normal: 0.25s;
+  --duration-medium: 0.35s;
+  --duration-slow: 0.5s;
+  --duration-slower: 0.7s;
+  --duration-ambient: 8s;   /* Для фоновых анимаций */
+  --duration-floating: 10s; /* Для floating эффектов */
   
-  /* ===== TECH HY GLASS PROPERTIES ===== */
-  --glass-blur-radius: 28px;
-  --glass-blur-intensity: 1.8;
-  --glass-brightness: 125%;
-  --glass-saturation: 150%;
-  --glass-contrast: 115%;
-  --glass-opacity: 0.18;
-  --glass-edge-opacity: 0.28;
-  --glass-thickness: 8px;
+  /* ===== REFINED TECH HY GLASS PROPERTIES ===== */
+  --glass-blur-radius: 16px;
+  --glass-blur-premium: 20px;
+  --glass-blur-subtle: 12px;
+  --glass-brightness: 105%;
+  --glass-saturation: 110%;
+  --glass-contrast: 102%;
+  --glass-opacity: 0.08;
+  --glass-opacity-premium: 0.10;
+  --glass-opacity-subtle: 0.06;
+  --glass-edge-opacity: 0.15;
+  --glass-thickness: 6px;
   
-  /* ===== DEPTH & LAYERING ===== */
-  --glass-depth-near: 220%;
-  --glass-depth-far: 160%;
-  --glass-mask-fade: 45%;
+  /* ===== REFINED DEPTH & LAYERING ===== */
+  --glass-depth-near: 115%;
+  --glass-depth-far: 105%;
+  --glass-mask-fade: 35%;
   
-  /* ===== TECH HY COLOR THEMES ===== */
+  /* ===== REFINED TECH HY COLOR THEMES ===== */
   --glass-techhy-primary: rgba(30, 58, 138, var(--glass-opacity));
   --glass-techhy-secondary: rgba(59, 130, 246, var(--glass-opacity));
   --glass-techhy-accent: rgba(139, 92, 246, var(--glass-opacity));
@@ -50,17 +57,17 @@
   --glass-neutral: rgba(255, 255, 255, var(--glass-opacity));
   --glass-dark: rgba(15, 23, 42, var(--glass-opacity));
   
-  /* ===== TECH HY PREMIUM BUTTON COLORS ===== */
-  --glass-techhy-blue: rgba(30, 58, 138, 0.25);
-  --glass-techhy-blue-border: rgba(59, 130, 246, 0.4);
-  --glass-techhy-purple: rgba(139, 92, 246, 0.22);
-  --glass-techhy-purple-border: rgba(139, 92, 246, 0.35);
-  --glass-techhy-green: rgba(16, 185, 129, 0.2);
-  --glass-techhy-green-border: rgba(16, 185, 129, 0.35);
-  --glass-techhy-orange: rgba(245, 158, 11, 0.2);
-  --glass-techhy-orange-border: rgba(245, 158, 11, 0.35);
-  --glass-techhy-red: rgba(239, 68, 68, 0.2);
-  --glass-techhy-red-border: rgba(239, 68, 68, 0.35);
+  /* ===== REFINED TECH HY PREMIUM BUTTON COLORS ===== */
+  --glass-techhy-blue: rgba(30, 58, 138, 0.15);
+  --glass-techhy-blue-border: rgba(59, 130, 246, 0.25);
+  --glass-techhy-purple: rgba(139, 92, 246, 0.12);
+  --glass-techhy-purple-border: rgba(139, 92, 246, 0.22);
+  --glass-techhy-green: rgba(16, 185, 129, 0.12);
+  --glass-techhy-green-border: rgba(16, 185, 129, 0.22);
+  --glass-techhy-orange: rgba(245, 158, 11, 0.12);
+  --glass-techhy-orange-border: rgba(245, 158, 11, 0.22);
+  --glass-techhy-red: rgba(239, 68, 68, 0.12);
+  --glass-techhy-red-border: rgba(239, 68, 68, 0.22);
   
   /* ===== LEGACY COMPATIBILITY ===== */
   --glass-orange: var(--glass-techhy-orange);
@@ -72,24 +79,30 @@
   --glass-green: var(--glass-techhy-green);
   --glass-green-border: var(--glass-techhy-green-border);
   
-  /* ===== TECH HY BORDERS & HIGHLIGHTS ===== */
-  --glass-border: rgba(59, 130, 246, 0.25);
-  --glass-border-dark: rgba(30, 58, 138, 0.15);
-  --glass-highlight: rgba(139, 92, 246, 0.4);
-  --glass-shadow: rgba(15, 23, 42, 0.3);
+  /* ===== REFINED TECH HY BORDERS & HIGHLIGHTS ===== */
+  --glass-border: rgba(59, 130, 246, 0.15);
+  --glass-border-dark: rgba(30, 58, 138, 0.1);
+  --glass-highlight: rgba(139, 92, 246, 0.25);
+  --glass-shadow: rgba(15, 23, 42, 0.2);
+  --glass-shadow-soft: rgba(15, 23, 42, 0.1);
   
-  /* ===== TECH HY ANIMATION PROPERTIES ===== */
-  --glass-transition: all var(--duration-medium) var(--ease-out-expo);
-  --glass-transition-fast: all var(--duration-fast) var(--ease-in-out-back);
-  --glass-hover-scale: 1.03;
-  --glass-hover-blur: 36px;
-  --glass-hover-brightness: 135%;
+  /* ===== REFINED TECH HY ANIMATION PROPERTIES ===== */
+  --glass-transition: all var(--duration-normal) var(--ease-subtle);
+  --glass-transition-fast: all var(--duration-fast) var(--ease-out-quad);
+  --glass-hover-scale: 1.02;
+  --glass-hover-scale-subtle: 1.01;
+  --glass-hover-blur: 20px;
+  --glass-hover-brightness: 108%;
   
-  /* ===== TECH HY GRADIENTS ===== */
+  /* ===== REFINED TECH HY GRADIENTS ===== */
   --techhy-gradient-primary: linear-gradient(135deg, var(--techhy-primary) 0%, var(--techhy-secondary) 50%, var(--techhy-accent) 100%);
   --techhy-gradient-glass: linear-gradient(135deg, var(--glass-techhy-primary) 0%, var(--glass-techhy-secondary) 50%, var(--glass-techhy-accent) 100%);
+  --techhy-gradient-subtle: linear-gradient(135deg, 
+    rgba(30, 58, 138, 0.05) 0%, 
+    rgba(59, 130, 246, 0.04) 50%, 
+    rgba(139, 92, 246, 0.03) 100%);
   
-  /* ===== SPACING SYSTEM ===== */
+  /* ===== REFINED SPACING SYSTEM ===== */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -97,8 +110,10 @@
   --space-xl: 2rem;
   --space-2xl: 2.5rem;
   --space-3xl: 3rem;
+  --space-4xl: 4rem;
   
-  /* ===== BORDER RADIUS SYSTEM ===== */
+  /* ===== REFINED BORDER RADIUS SYSTEM ===== */
+  --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -106,14 +121,17 @@
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
   
-  /* ===== SHADOW SYSTEM ===== */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+  /* ===== REFINED SHADOW SYSTEM ===== */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 16px 32px -8px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-glass-premium: 0 8px 32px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-glass-subtle: 0 2px 16px rgba(0, 0, 0, 0.1);
   
-  /* ===== TYPOGRAPHY SYSTEM ===== */
+  /* ===== REFINED TYPOGRAPHY SYSTEM ===== */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   
@@ -126,21 +144,53 @@
   --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
   --text-5xl: 3rem;
+  
+  /* ===== TEXT SHADOW SYSTEM ===== */
+  --text-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --text-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --text-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --text-shadow-xl: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* ===== DARK MODE OVERRIDES ===== */
+/* ===== REFINED DARK MODE OVERRIDES ===== */
 .dark {
-  --glass-opacity: 0.12;
-  --glass-brightness: 110%;
-  --glass-saturation: 120%;
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-highlight: rgba(255, 255, 255, 0.3);
-  --glass-shadow: rgba(0, 0, 0, 0.5);
+  --glass-opacity: 0.06;
+  --glass-opacity-premium: 0.08;
+  --glass-opacity-subtle: 0.04;
+  --glass-brightness: 103%;
+  --glass-saturation: 105%;
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.2);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+  --glass-shadow-soft: rgba(0, 0, 0, 0.15);
 }
 
-/* ===== RESPONSIVE BREAKPOINTS ===== */
+/* ===== REFINED RESPONSIVE BREAKPOINTS ===== */
 @custom-media --mobile (max-width: 639px);
 @custom-media --tablet (min-width: 640px) and (max-width: 1023px);
 @custom-media --desktop (min-width: 1024px);
 @custom-media --large (min-width: 1280px);
-@custom-media --xl (min-width: 1536px); 
+@custom-media --xl (min-width: 1536px);
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0s;
+    --duration-fast: 0s;
+    --duration-normal: 0s;
+    --duration-medium: 0s;
+    --duration-slow: 0s;
+    --duration-slower: 0s;
+    --duration-ambient: 0s;
+    --duration-floating: 0s;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --glass-blur-radius: 12px;
+    --glass-blur-premium: 16px;
+    --glass-blur-subtle: 8px;
+    --glass-hover-scale: 1.01;
+  }
+} 
