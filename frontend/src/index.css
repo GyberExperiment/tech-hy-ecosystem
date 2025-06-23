@@ -345,18 +345,18 @@
 
   .clean-nav-item {
     @apply clean-btn;
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-6);
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: var(--text-gray);
     text-decoration: none;
     border-radius: var(--radius-lg);
     transition: var(--transition-normal);
     border: 1px solid transparent;
-    min-height: 36px;
+    min-height: 44px;
   }
 
   .clean-nav-item:hover {
@@ -370,6 +370,42 @@
     border-color: var(--accent-blue);
     color: var(--pure-white);
   }
+}
+
+/* ===== UTILITY CLASSES FOR COLORS ===== */
+@layer utilities {
+  /* Text Colors */
+  .text-dark-gray { color: var(--dark-gray); }
+  .text-text-gray { color: var(--text-gray); }
+  .text-medium-gray { color: var(--medium-gray); }
+  .text-charcoal { color: var(--charcoal); }
+  .text-pure-white { color: var(--pure-white); }
+  
+  /* Accent Colors */
+  .text-accent-blue { color: var(--accent-blue); }
+  .text-accent-green { color: var(--accent-green); }
+  .text-accent-orange { color: var(--accent-orange); }
+  .text-accent-red { color: var(--accent-red); }
+  .text-accent-purple { color: var(--accent-purple); }
+  .text-accent-teal { color: var(--accent-teal); }
+  
+  /* Background Colors */
+  .bg-pure-white { background-color: var(--pure-white); }
+  .bg-snow-white { background-color: var(--snow-white); }
+  .bg-pearl-white { background-color: var(--pearl-white); }
+  .bg-soft-gray { background-color: var(--soft-gray); }
+  
+  /* Border Colors */
+  .border-border-clean { border-color: var(--border-clean); }
+  .border-border-subtle { border-color: var(--border-subtle); }
+  .border-border-accent { border-color: var(--border-accent); }
+  .border-border-focus { border-color: var(--border-focus); }
+  
+  /* Gradient Backgrounds */
+  .bg-gradient-accent { background: var(--gradient-accent); }
+  .bg-gradient-clean { background: var(--gradient-clean); }
+  .bg-gradient-glass { background: var(--gradient-glass); }
+  .bg-gradient-subtle { background: var(--gradient-subtle); }
 }
 
 /* ===== CLEAN ANIMATIONS ===== */

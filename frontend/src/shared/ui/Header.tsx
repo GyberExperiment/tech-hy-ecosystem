@@ -27,14 +27,26 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const isTestnet = chainId === bscTestnet.id;
-  const isMainnet = chainId === bsc.id;
+  const isTestnet = chainId === 97; // BSC Testnet
+  const isMainnet = chainId === 56; // BSC Mainnet
 
-  const handleNetworkSwitch = () => {
-    if (isTestnet) {
-      switchChain({ chainId: bsc.id });
-    } else {
-      switchChain({ chainId: bscTestnet.id });
+  const handleNetworkSwitch = async () => {
+    try {
+      console.log('Current chainId:', chainId);
+      console.log('isTestnet:', isTestnet, 'isMainnet:', isMainnet);
+      
+      if (isTestnet) {
+        console.log('Switching to BSC Mainnet (56)');
+        await switchChain({ chainId: 56 }); // BSC Mainnet
+      } else {
+        console.log('Switching to BSC Testnet (97)');
+        await switchChain({ chainId: 97 }); // BSC Testnet
+      }
+    } catch (error) {
+      console.error('Failed to switch network:', error);
+      
+      // Показываем пользователю ошибку
+      alert(`Ошибка переключения сети: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     }
   };
 
@@ -51,20 +63,20 @@ const Header: React.FC = () => {
       <button
         onClick={handleNetworkSwitch}
         className={`clean-glass group relative overflow-hidden rounded-xl border transition-all duration-300 hover:scale-105 ${
-          isMobile ? 'w-full' : ''
+          isMobile ? 'w-full' : 'min-w-[120px]'
         } ${networkColor}`}
         title={isTestnet ? 'Switch to Mainnet' : 'Switch to Testnet'}
       >
-        <div className="relative flex items-center space-x-2 rounded-xl px-3 py-2 text-xs font-normal backdrop-blur-sm transition-all duration-300">
+        <div className="relative flex items-center justify-center space-x-2 rounded-xl px-4 py-3 text-sm font-medium backdrop-blur-sm transition-all duration-300">
           <div className="relative flex items-center justify-center">
-            <Network className="h-3 w-3 text-text-gray" />
-            <div className={`absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full ${
+            <Network className="h-4 w-4 text-text-gray" />
+            <div className={`absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full ${
               isTestnet ? 'bg-accent-orange' : isMainnet ? 'bg-accent-green' : 'bg-medium-gray'
             } animate-subtle-glow`} />
           </div>
-          <span className="text-dark-gray font-medium">{networkName}</span>
+          <span className="text-dark-gray font-medium whitespace-nowrap">{networkName}</span>
           {!isMobile && (
-            <Wifi className="h-3 w-3 text-text-gray group-hover:text-dark-gray transition-colors" />
+            <Wifi className="h-4 w-4 text-text-gray group-hover:text-dark-gray transition-colors" />
           )}
         </div>
       </button>
@@ -78,7 +90,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 group mr-6 lg:mr-12">
-            <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium bg-gradient-to-r from-accent-blue via-accent-purple to-accent-teal bg-clip-text text-transparent group-hover:from-accent-blue group-hover:via-accent-purple group-hover:to-accent-teal transition-all duration-300">
+            <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold bg-gradient-to-r from-accent-blue via-accent-purple to-accent-teal bg-clip-text text-transparent group-hover:from-accent-teal group-hover:via-accent-blue group-hover:to-accent-purple transition-all duration-500 tracking-tight">
               <span className="hidden sm:inline">TECH HY Ecosystem</span>
               <span className="sm:hidden">TECH HY</span>
             </span>
@@ -98,7 +110,7 @@ const Header: React.FC = () => {
                       : ''
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -213,7 +225,7 @@ const Header: React.FC = () => {
                         : 'clean-glass text-text-gray hover:text-dark-gray hover:border-accent-blue/30 font-normal'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-6 h-6" />
                     <span>{item.name}</span>
                   </Link>
                 );
