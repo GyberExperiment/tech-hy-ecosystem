@@ -423,13 +423,13 @@ const Tokens: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
+      <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400 animate-glass-pulse" />
+          <h2 className="hero-title text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('common:messages.connectWallet')}
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="hero-subtitle text-xl text-gray-400 mb-8">
             Подключите кошелек для управления токенами
           </p>
         </div>
@@ -439,13 +439,13 @@ const Tokens: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
+      <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">
-          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-3xl font-bold mb-4 text-red-400">
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400 animate-glass-pulse" />
+          <h2 className="hero-title text-3xl font-bold mb-4 text-red-400">
             Неправильная сеть
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="hero-subtitle text-xl text-gray-400 mb-8">
             {t('common:messages.wrongNetwork')}
           </p>
         </div>
@@ -454,19 +454,19 @@ const Tokens: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+    <div className="animate-fade-in space-y-responsive px-responsive">
       {/* Contract Status */}
       <ContractStatus />
 
       {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-3">
-          <Coins className="w-8 h-8 text-blue-400" />
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <Coins className="w-8 h-8 text-blue-400 animate-glass-pulse" />
+          <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('tokens:title')}
           </h1>
         </div>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <p className="hero-subtitle text-xl text-gray-300 max-w-2xl mx-auto">
           {t('tokens:subtitle')}
         </p>
       </div>
@@ -475,7 +475,7 @@ const Tokens: React.FC = () => {
       <TokenStats />
 
       {/* Search and Filter */}
-      <div className="card">
+      <div className="liquid-glass animate-glass-float">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -507,7 +507,7 @@ const Tokens: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={loading || refreshing}
-              className="btn-secondary p-2"
+              className="btn-glass-blue p-2 animate-glass-pulse"
             >
               <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
             </button>
@@ -516,20 +516,20 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-responsive">
         {/* Token List */}
         <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-2xl font-bold flex items-center text-slate-100">
-            <Coins className="mr-3 text-blue-400" />
+          <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
+            <Coins className="mr-3 text-blue-400 animate-glass-pulse" />
             Ваши токены ({filteredTokens.length})
           </h2>
 
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="card animate-pulse">
+                <div key={i} className="liquid-glass animate-pulse">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
+                    <div className="w-12 h-12 bg-gray-600 rounded-full animate-glass-pulse"></div>
                     <div className="flex-1">
                       <div className="h-4 bg-gray-600 rounded w-1/4 mb-2"></div>
                       <div className="h-3 bg-gray-600 rounded w-1/2"></div>
@@ -544,16 +544,16 @@ const Tokens: React.FC = () => {
               {filteredTokens.map((token) => (
                 <div 
                   key={token.symbol} 
-                  className={`card cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.02] animate-glass-float ${
                     selectedToken?.symbol === token.symbol 
-                      ? 'ring-2 ring-blue-500/50 bg-blue-500/10' 
+                      ? 'ring-2 ring-blue-500/50 glass-accent animate-glass-pulse' 
                       : ''
                   }`}
                   onClick={() => setSelectedToken(token)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center`}>
+                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center animate-glass-pulse`}>
                         {token.icon}
                       </div>
                       <div>
@@ -565,7 +565,7 @@ const Tokens: React.FC = () => {
                               e.stopPropagation();
                               copyToClipboard(token.address);
                             }}
-                            className="text-gray-400 hover:text-white transition-colors"
+                            className="text-gray-400 hover:text-white transition-colors duration-300 glass-ultra rounded p-1"
                           >
                             <Copy className="w-3 h-3" />
                           </button>
@@ -574,7 +574,7 @@ const Tokens: React.FC = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-gray-400 hover:text-blue-400 transition-colors"
+                            className="text-gray-400 hover:text-blue-400 transition-colors duration-300 glass-ultra rounded p-1"
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
@@ -592,7 +592,7 @@ const Tokens: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-700">
+                  <div className="mt-4 pt-4 border-t border-gray-700/50">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-400">Total Supply</p>
@@ -612,16 +612,16 @@ const Tokens: React.FC = () => {
 
         {/* Action Panel */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center text-slate-100">
-            <Settings className="mr-3 text-purple-400" />
+          <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
+            <Settings className="mr-3 text-purple-400 animate-glass-pulse" />
             Действия с токенами
           </h2>
 
           {selectedToken ? (
-            <div className="card">
+            <div className="liquid-glass animate-glass-float">
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3`}>
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3 animate-glass-pulse`}>
                     {selectedToken.icon}
                   </div>
                   <h3 className="font-bold text-slate-100 text-lg">{selectedToken.name}</h3>
@@ -630,40 +630,40 @@ const Tokens: React.FC = () => {
                     {formatBalance(selectedToken.balance)} {selectedToken.symbol}
                   </p>
                   {!selectedToken.contract && (
-                    <div className="mt-2 text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded px-2 py-1">
+                    <div className="mt-2 text-xs text-yellow-400 glass-accent border border-yellow-400/20 rounded px-2 py-1">
                       Контракт недоступен
                     </div>
                   )}
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 bg-white/5 rounded-lg p-1">
+                <div className="flex space-x-1 glass-ultra rounded-lg p-1 animate-glass-float">
                   <button
                     onClick={() => setActiveTab('transfer')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'transfer'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
                     Transfer
                   </button>
                   <button
                     onClick={() => setActiveTab('approve')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'approve'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => setActiveTab('allowances')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all text-slate-200 ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'allowances'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
                     Allowances
@@ -688,13 +688,13 @@ const Tokens: React.FC = () => {
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setTransferTo(CONTRACTS.LP_LOCKER)}
-                            className="btn-secondary text-xs py-1 px-2"
+                            className="btn-glass-green text-xs py-1 px-2"
                           >
                             LP Locker
                           </button>
                           <button
                             onClick={() => setTransferTo(CONTRACTS.VG_TOKEN_VOTES)}
-                            className="btn-secondary text-xs py-1 px-2"
+                            className="btn-glass-purple text-xs py-1 px-2"
                           >
                             VG Votes
                           </button>
@@ -720,7 +720,7 @@ const Tokens: React.FC = () => {
                         />
                         <button
                           onClick={setMaxAmount}
-                          className="btn-secondary text-sm px-3"
+                          className="btn-glass-orange text-sm px-3"
                         >
                           MAX
                         </button>
@@ -730,7 +730,7 @@ const Tokens: React.FC = () => {
                     <button
                       onClick={handleTransfer}
                       disabled={!transferTo || !transferAmount || !selectedToken.contract || transactionLoading}
-                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
                     >
                       {transactionLoading ? (
                         <>
@@ -764,13 +764,13 @@ const Tokens: React.FC = () => {
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setApproveTo(CONTRACTS.LP_LOCKER)}
-                            className="btn-secondary text-xs py-1 px-2"
+                            className="btn-glass-green text-xs py-1 px-2"
                           >
                             LP Locker
                           </button>
                           <button
                             onClick={() => setApproveTo(CONTRACTS.PANCAKE_ROUTER)}
-                            className="btn-secondary text-xs py-1 px-2"
+                            className="btn-glass-blue text-xs py-1 px-2"
                           >
                             PancakeSwap
                           </button>
@@ -793,7 +793,7 @@ const Tokens: React.FC = () => {
                         />
                         <button
                           onClick={() => setApproveAmount(ethers.MaxUint256.toString())}
-                          className="btn-secondary text-xs px-3"
+                          className="btn-glass-orange text-xs px-3"
                         >
                           MAX
                         </button>
@@ -803,7 +803,7 @@ const Tokens: React.FC = () => {
                     <button
                       onClick={handleApprove}
                       disabled={!approveTo || !approveAmount || !selectedToken.contract || transactionLoading}
-                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
                     >
                       {transactionLoading ? (
                         <>
@@ -828,7 +828,7 @@ const Tokens: React.FC = () => {
                         {allowances
                           .filter(allowance => allowance.token === selectedToken.symbol)
                           .map((allowance, index) => (
-                            <div key={index} className="bg-white/5 rounded-lg p-3">
+                            <div key={index} className="glass-ultra rounded-lg p-3 animate-glass-float">
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="font-medium text-slate-200 text-sm">{allowance.spenderName}</p>
@@ -846,7 +846,7 @@ const Tokens: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center py-6 text-gray-400">
-                        <Shield className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <Shield className="w-12 h-12 mx-auto mb-2 opacity-50 animate-glass-pulse" />
                         <p>Нет активных allowances</p>
                       </div>
                     )}
@@ -855,8 +855,8 @@ const Tokens: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="card text-center py-12">
-              <div className="text-4xl mb-4">🪙</div>
+            <div className="liquid-glass text-center py-12 animate-glass-float">
+              <div className="text-4xl mb-4 animate-glass-pulse">🪙</div>
               <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите токен</h3>
               <p className="text-gray-400">
                 Выберите токен из списка для выполнения операций
@@ -868,35 +868,35 @@ const Tokens: React.FC = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Zap className="mr-3 text-yellow-400" />
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <Zap className="mr-3 text-yellow-400 animate-glass-pulse" />
           Быстрые действия
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-responsive">
+          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
             <p className="text-gray-400 mb-4">Заблокируйте LP токены и получите VG</p>
-            <a href="/staking" className="btn-primary inline-block">
+            <a href="/staking" className="btn-glass-green inline-block">
               Перейти к LP Locking
             </a>
           </div>
           
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-400 mb-4">Участвуйте в голосовании и управлении</p>
-            <a href="/governance" className="btn-primary inline-block">
+            <a href="/governance" className="btn-glass-purple inline-block">
               Перейти к Governance
             </a>
           </div>
           
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400" />
+          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
             <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
-            <a href="/" className="btn-primary inline-block">
+            <a href="/" className="btn-glass-blue inline-block">
               Перейти к Dashboard
             </a>
           </div>
@@ -905,21 +905,21 @@ const Tokens: React.FC = () => {
 
       {/* Contract Information */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-blue-400" />
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <Shield className="mr-3 text-blue-400 animate-glass-pulse" />
           Информация о контрактах
         </h2>
         
-        <div className="card">
+        <div className="liquid-glass animate-glass-float">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {tokens.map((token) => (
-              <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
+              <div key={token.symbol} className="flex justify-between items-center p-3 rounded glass-ultra">
                 <span className="font-medium text-slate-200">{token.name}</span>
                 <a
                   href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
+                  className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1 transition-colors duration-300"
                 >
                   <span>{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</span>
                   <ExternalLink className="w-3 h-3" />

@@ -172,17 +172,26 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Создаем QueryClient
-const queryClient = new QueryClient();
+// Создаем QueryClient вне компонента
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // Главный провайдер
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
+        <RainbowKitProvider 
           theme={customTheme}
-          initialChain={bscTestnet.id}
+          modalSize="compact"
+          showRecentTransactions={true}
         >
           <Web3ContextProvider>
             {children}

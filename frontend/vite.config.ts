@@ -19,7 +19,8 @@ export default defineConfig({
           web3: ['ethers'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip'],
           animations: ['framer-motion'],
-          query: ['@tanstack/react-query']
+          query: ['@tanstack/react-query'],
+          icons: ['lucide-react']
         }
       }
     }
@@ -40,6 +41,14 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    // Отключаем dev режим для Lit только в production
+    'process.env.LIT_DEV_MODE': JSON.stringify(process.env.NODE_ENV === 'production' ? 'false' : 'true')
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'framer-motion', 'lucide-react']
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom']
   }
 })

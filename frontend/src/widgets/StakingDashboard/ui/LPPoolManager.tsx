@@ -608,10 +608,10 @@ const LPPoolManager: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-100 mb-2">Wallet Not Connected</h3>
+          <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-glass-pulse" />
+          <h3 className="hero-title text-xl font-bold text-slate-100 mb-2">Wallet Not Connected</h3>
           <p className="text-gray-400 mb-6">Please connect your wallet to manage LP tokens</p>
-          <button onClick={connectWallet} className="btn-primary">
+          <button onClick={connectWallet} className="btn-glass-morphic animate-glass-pulse">
             Connect Wallet
           </button>
         </div>
@@ -623,10 +623,10 @@ const LPPoolManager: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-100 mb-2">Wrong Network</h3>
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4 animate-glass-pulse" />
+          <h3 className="hero-title text-xl font-bold text-slate-100 mb-2">Wrong Network</h3>
           <p className="text-gray-400 mb-6">Please switch to BSC Testnet</p>
-          <button onClick={switchNetwork} className="btn-primary">
+          <button onClick={switchNetwork} className="btn-glass-morphic animate-glass-pulse">
             Switch to BSC Testnet
           </button>
         </div>
@@ -635,15 +635,15 @@ const LPPoolManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-responsive">
       {/* ContractStatus виджет удалён по требованию */}
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-responsive">
         {/* Pool Information */}
-        <div className="glass-panel p-6">
+        <div className="liquid-glass p-6 animate-glass-float">
           <div className="flex items-center space-x-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
-            <h3 className="text-xl font-bold text-slate-100">Pool Information</h3>
+            <BarChart3 className="w-5 h-5 text-blue-400 animate-glass-pulse" />
+            <h3 className="section-title text-xl font-bold text-slate-100">Pool Information</h3>
           </div>
           {loading ? (
             <PoolInfoSkeleton />
@@ -675,7 +675,7 @@ const LPPoolManager: React.FC = () => {
                   <p className="font-bold text-slate-100">{parseFloat(poolInfo.totalSupply).toFixed(2)} LP</p>
                 </div>
               </div>
-              <div className="pt-4 border-t border-gray-700">
+              <div className="pt-4 border-t border-gray-700/50">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-400">Your VC Balance</p>
@@ -694,16 +694,16 @@ const LPPoolManager: React.FC = () => {
         </div>
 
         {/* Виджет управления ликвидностью скрыт */}
-        <div className="card">
+        <div className="liquid-glass animate-glass-float">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold flex items-center text-slate-100">
-              <Calculator className="mr-3 text-blue-400" />
+            <h3 className="section-title text-xl font-bold flex items-center text-slate-100">
+              <Calculator className="mr-3 text-blue-400 animate-glass-pulse" />
               LP Pool Management
             </h3>
             <button
               onClick={fetchPoolInfo}
               disabled={loading}
-              className="btn-secondary text-sm flex items-center space-x-2"
+              className="btn-glass-blue text-sm flex items-center space-x-2 animate-glass-pulse"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Обновить</span>
@@ -714,10 +714,10 @@ const LPPoolManager: React.FC = () => {
           <div className="flex space-x-4 mb-6">
             <button
               onClick={() => setActiveTab('add')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                 activeTab === 'add'
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'btn-glass-blue text-blue-400 animate-glass-pulse'
+                  : 'glass-ultra text-gray-400 hover:text-white hover:glass-accent'
               }`}
             >
               <Plus size={16} />
@@ -725,10 +725,10 @@ const LPPoolManager: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('remove')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                 activeTab === 'remove'
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'btn-glass-fire text-red-400 animate-glass-pulse'
+                  : 'glass-ultra text-gray-400 hover:text-white hover:glass-accent'
               }`}
             >
               <Minus size={16} />
@@ -753,7 +753,7 @@ const LPPoolManager: React.FC = () => {
                     />
                     <button
                       onClick={setMaxVC}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-glass-orange text-sm px-2 py-1"
                     >
                       MAX
                     </button>
@@ -777,7 +777,7 @@ const LPPoolManager: React.FC = () => {
                     />
                     <button
                       onClick={setMaxBNB}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-400 text-sm hover:text-blue-300"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-glass-orange text-sm px-2 py-1"
                     >
                       MAX
                     </button>
@@ -798,10 +798,10 @@ const LPPoolManager: React.FC = () => {
                     <button
                       key={value}
                       onClick={() => setSlippage(value)}
-                      className={`px-3 py-1 rounded text-sm ${
+                      className={`px-3 py-1 rounded text-sm transition-all duration-300 ${
                         slippage === value
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                          : 'bg-white/5 text-gray-400 hover:text-white'
+                          ? 'btn-glass-blue text-blue-400 animate-glass-pulse'
+                          : 'glass-ultra text-gray-400 hover:text-white hover:glass-accent'
                       }`}
                     >
                       {value}%
@@ -814,16 +814,16 @@ const LPPoolManager: React.FC = () => {
                     step="0.1"
                     min="0.1"
                     max="50"
-                    className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-sm"
+                    className="w-20 px-2 py-1 glass-ultra border border-white/20 rounded text-sm"
                   />
                 </div>
               </div>
 
               {/* Calculation Preview */}
               {calculation && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <div className="glass-primary p-4 animate-glass-float">
                   <h5 className="font-semibold mb-2 flex items-center text-slate-100">
-                    <Info className="mr-2" size={16} />
+                    <Info className="mr-2 animate-glass-pulse" size={16} />
                     Preview
                   </h5>
                   <div className="space-y-2 text-sm">
@@ -844,7 +844,7 @@ const LPPoolManager: React.FC = () => {
                   </div>
                   {(calculation?.priceImpact || 0) > 2 && (
                     <div className="flex items-center mt-2 text-red-400 text-xs">
-                      <AlertTriangle size={12} className="mr-1" />
+                      <AlertTriangle size={12} className="mr-1 animate-glass-pulse" />
                       High price impact
                     </div>
                   )}
@@ -854,7 +854,7 @@ const LPPoolManager: React.FC = () => {
               {/* Action Buttons */}
               <div className="space-y-3">
                 {!vcApproved && vcInput && parseFloat(vcInput) > 0 && (
-                  <button onClick={approveVC} className="btn-secondary w-full">
+                  <button onClick={approveVC} className="btn-glass-orange w-full animate-glass-pulse">
                     Approve VC Tokens
                   </button>
                 )}
@@ -862,7 +862,7 @@ const LPPoolManager: React.FC = () => {
                 <button
                   onClick={addLiquidity}
                   disabled={!calculation || !vcApproved || parseFloat(vcInput) === 0 || parseFloat(bnbInput) === 0}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
                 >
                   <Plus size={18} />
                   <span>Add Liquidity</span>
@@ -882,10 +882,10 @@ const LPPoolManager: React.FC = () => {
                     <button
                       key={percentage}
                       onClick={() => setRemovePercentageAmount(percentage)}
-                      className={`px-3 py-1 rounded text-sm ${
+                      className={`px-3 py-1 rounded text-sm transition-all duration-300 ${
                         removePercentage === percentage
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : 'bg-white/5 text-gray-400 hover:text-white'
+                          ? 'btn-glass-fire text-red-400 animate-glass-pulse'
+                          : 'glass-ultra text-gray-400 hover:text-white hover:glass-accent'
                       }`}
                     >
                       {percentage}%
@@ -910,7 +910,7 @@ const LPPoolManager: React.FC = () => {
               {/* Action Buttons */}
               <div className="space-y-3">
                 {!lpApproved && lpTokensInput && parseFloat(lpTokensInput) > 0 && (
-                  <button onClick={approveLP} className="btn-secondary w-full">
+                  <button onClick={approveLP} className="btn-glass-orange w-full animate-glass-pulse">
                     Approve LP Tokens
                   </button>
                 )}
@@ -918,7 +918,7 @@ const LPPoolManager: React.FC = () => {
                 <button
                   onClick={removeLiquidity}
                   disabled={!lpApproved || parseFloat(lpTokensInput) === 0}
-                  className="btn-danger w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="btn-glass-fire w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
                 >
                   <Minus size={18} />
                   <span>Remove Liquidity</span>

@@ -72,7 +72,8 @@ interface BSCScanEventLog {
  * 
  * Note: The same API key works for both mainnet and testnet
  */
-const BSCSCAN_API_KEY = ''; // Add your BSCScan API key here
+// ✅ ИСПРАВЛЕНИЕ: Добавляем демо API ключ для тестирования или используем переменную окружения
+const BSCSCAN_API_KEY = process.env.VITE_BSCSCAN_API_KEY || 'YourApiKeyHere'; // Add your BSCScan API key here
 const BSCSCAN_BASE_URL = 'https://api-testnet.bscscan.com/api';
 
 // Add warning about API key requirement ONLY when API is called

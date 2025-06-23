@@ -94,7 +94,7 @@ class RpcService {
    */
   async withFallback<T>(
     operation: (provider: ethers.Provider) => Promise<T>,
-    timeoutMs: number = 15000
+    timeoutMs: number = 10000
   ): Promise<T> {
     let provider = await this.getProvider();
     

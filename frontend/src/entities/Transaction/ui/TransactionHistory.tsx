@@ -114,6 +114,14 @@ const TransactionHistory: React.FC = () => {
   const fetchTransactions = useCallback(async (isRefresh = false, loadMore = false) => {
     if (!account) return;
     
+    if (loading && !isRefresh && !loadMore) {
+      log.debug('TransactionHistory: Skipping fetch - already loading', {
+        component: 'TransactionHistory',
+        address: account
+      });
+      return;
+    }
+    
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -334,8 +342,8 @@ const TransactionHistory: React.FC = () => {
 
   if (!account) {
     return (
-      <div className="card text-center text-gray-400">
-        <Clock className="mx-auto mb-4" size={48} />
+      <div className="liquid-glass text-center text-gray-400 animate-glass-float">
+        <Clock className="mx-auto mb-4 animate-glass-pulse" size={48} />
         <h3 className="text-lg font-semibold mb-2">История транзакций</h3>
         <p>Подключите кошелёк для просмотра истории транзакций</p>
       </div>
@@ -343,17 +351,17 @@ const TransactionHistory: React.FC = () => {
   }
 
   return (
-    <div className="card">
+    <div className="liquid-glass animate-glass-float">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-        <h3 className="text-xl font-semibold text-slate-100">История транзакций</h3>
+        <h3 className="section-title text-xl font-semibold text-slate-100">История транзакций</h3>
           {transactions.length > 0 && (
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-gray-400 glass-ultra px-2 py-1 rounded-lg">
               Загружено: {transactions.length} транзакций
             </div>
             )}
           {refreshing && (
-            <div className="flex items-center space-x-2 text-blue-400">
+            <div className="flex items-center space-x-2 text-blue-400 glass-ultra px-2 py-1 rounded-lg animate-glass-pulse">
               <Loader2 className="animate-spin" size={16} />
               <span className="text-sm">Обновление...</span>
             </div>
@@ -361,7 +369,7 @@ const TransactionHistory: React.FC = () => {
         </div>
         <button
           onClick={handleRefresh}
-          className="btn-secondary p-2"
+          className="btn-glass-blue p-2 animate-glass-pulse"
             disabled={refreshing}
         >
             <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={16} />
@@ -374,7 +382,7 @@ const TransactionHistory: React.FC = () => {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+            className="input-field"
           >
             <option value="all">Все транзакции</option>
             <option value="transfer">Переводы</option>
@@ -392,19 +400,19 @@ const TransactionHistory: React.FC = () => {
             placeholder="Поиск по хешу или типу..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm flex-1"
+            className="input-field flex-1"
           />
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
+        <div className="glass-accent border border-red-500/30 rounded-lg p-4 mb-6 animate-glass-pulse">
           <div className="flex items-center space-x-2 text-red-400">
             <XCircle size={16} />
             <span>{error}</span>
           </div>
           {error.includes('API ключ') && (
-            <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div className="mt-4 p-3 glass-ultra border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-300 mb-2">
                 💡 <strong>Как получить BSCScan API ключ:</strong>
               </p>
@@ -413,7 +421,7 @@ const TransactionHistory: React.FC = () => {
                 <li>2. Создайте аккаунт и войдите в систему</li>
                 <li>3. Перейдите в раздел "API-Keys" в профиле</li>
                 <li>4. Создайте новый API ключ (бесплатно)</li>
-                <li>5. Добавьте ключ в файл <code className="bg-slate-700 px-1 rounded">frontend/src/utils/bscscanApi.ts</code></li>
+                <li>5. Добавьте ключ в файл <code className="glass-ultra px-1 rounded">frontend/src/utils/bscscanApi.ts</code></li>
               </ol>
               <button
                 onClick={() => {
@@ -449,7 +457,7 @@ const TransactionHistory: React.FC = () => {
                   setTransactions(mockTransactions);
                   setError(null);
                 }}
-                className="mt-3 btn-secondary text-xs"
+                className="mt-3 btn-glass-green text-xs"
               >
                 📊 Показать демо-данные
               </button>
@@ -462,7 +470,7 @@ const TransactionHistory: React.FC = () => {
         <TableSkeleton rows={5} />
       ) : filteredTransactions.length === 0 ? (
         <div className="text-center text-gray-400 py-12">
-          <Clock className="mx-auto mb-4" size={48} />
+          <Clock className="mx-auto mb-4 animate-glass-pulse" size={48} />
           {transactions.length === 0 ? (
             <>
               <h4 className="text-lg font-semibold mb-2 text-gray-300">Транзакций пока нет</h4>
@@ -480,7 +488,7 @@ const TransactionHistory: React.FC = () => {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="btn-secondary mt-4"
+              className="btn-glass-blue mt-4"
             >
               Очистить поиск
             </button>
@@ -493,7 +501,7 @@ const TransactionHistory: React.FC = () => {
           {filteredTransactions.map((tx) => (
             <div 
               key={tx.id}
-              className="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-slate-600 transition-colors"
+              className="flex items-center justify-between p-4 liquid-glass animate-glass-float hover:glass-accent transition-all duration-300"
             >
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -514,14 +522,14 @@ const TransactionHistory: React.FC = () => {
 
               <div className="text-right">
                 <div className="flex items-center space-x-2">
-                  <code className="text-xs bg-slate-700 px-2 py-1 rounded">
+                  <code className="text-xs glass-ultra px-2 py-1 rounded">
                     {formatTxHash(tx.hash)}
                   </code>
                   <a
                     href={`https://testnet.bscscan.com/tx/${tx.hash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300"
+                    className="text-blue-400 hover:text-blue-300 glass-ultra rounded p-1 transition-colors duration-300"
                   >
                     <ExternalLink size={14} />
                   </a>
@@ -541,7 +549,7 @@ const TransactionHistory: React.FC = () => {
               <button
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="btn-secondary"
+                className="btn-glass-morphic animate-glass-pulse"
               >
                 {loadingMore ? (
                   <div className="flex items-center space-x-2">

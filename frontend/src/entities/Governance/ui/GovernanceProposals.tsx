@@ -292,8 +292,8 @@ const GovernanceProposals: React.FC = () => {
 
   if (!account) {
     return (
-      <div className="card text-center text-gray-400">
-        <Vote className="mx-auto mb-4" size={48} />
+      <div className="liquid-glass text-center text-gray-400 animate-glass-float">
+        <Vote className="mx-auto mb-4 animate-glass-pulse" size={48} />
         <h3 className="text-lg font-semibold mb-2 text-slate-100">Управление протоколом</h3>
         <p>Подключите кошелёк для участия в голосованиях</p>
       </div>
@@ -301,24 +301,24 @@ const GovernanceProposals: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-responsive">
       {/* Header with voting power and create button */}
-      <div className="card">
+      <div className="liquid-glass animate-glass-float">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold mb-2 text-slate-100">Управление протоколом</h2>
+            <h2 className="section-title text-2xl font-bold mb-2 text-slate-100">Управление протоколом</h2>
             <p className="text-gray-400">Участвуйте в развитии экосистемы через голосования</p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="text-center">
+            <div className="text-center glass-ultra px-3 py-2 rounded-lg">
               <div className="text-sm text-gray-400">Ваша сила голоса</div>
               <div className="text-xl font-bold text-blue-400">{parseFloat(votingPower).toLocaleString()} VG</div>
             </div>
             
             <button
               onClick={() => setShowCreateProposal(true)}
-              className="btn-primary flex items-center space-x-2"
+              className="btn-glass-morphic flex items-center space-x-2 animate-glass-pulse"
               disabled={parseFloat(votingPower) < 1000} // Minimum threshold
             >
               <Plus size={18} />
@@ -332,40 +332,40 @@ const GovernanceProposals: React.FC = () => {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
             filter === 'all' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              ? 'btn-glass-blue text-white animate-glass-pulse' 
+              : 'glass-ultra text-gray-300 hover:glass-accent'
           }`}
         >
           Все
         </button>
         <button
           onClick={() => setFilter('active')}
-          className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
             filter === 'active' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              ? 'btn-glass-blue text-white animate-glass-pulse' 
+              : 'glass-ultra text-gray-300 hover:glass-accent'
           }`}
         >
           Активные
         </button>
         <button
           onClick={() => setFilter('protocol')}
-          className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
             filter === 'protocol' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              ? 'btn-glass-blue text-white animate-glass-pulse' 
+              : 'glass-ultra text-gray-300 hover:glass-accent'
           }`}
         >
           Протокол
         </button>
         <button
           onClick={() => setFilter('treasury')}
-          className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
             filter === 'treasury' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              ? 'btn-glass-blue text-white animate-glass-pulse' 
+              : 'glass-ultra text-gray-300 hover:glass-accent'
           }`}
         >
           Казна
@@ -374,9 +374,9 @@ const GovernanceProposals: React.FC = () => {
 
       {/* Create Proposal Modal */}
       {showCreateProposal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-6 text-slate-100">Создать предложение</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="liquid-glass max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-glass-float">
+            <h3 className="section-title text-xl font-bold mb-6 text-slate-100">Создать предложение</h3>
             
             <div className="space-y-4">
               <div>
@@ -385,7 +385,7 @@ const GovernanceProposals: React.FC = () => {
                   type="text"
                   value={newProposal.title}
                   onChange={(e) => setNewProposal({...newProposal, title: e.target.value})}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2"
+                  className="input-field w-full"
                   placeholder="Краткое название предложения"
                 />
               </div>
@@ -395,7 +395,7 @@ const GovernanceProposals: React.FC = () => {
                 <select
                   value={newProposal.category}
                   onChange={(e) => setNewProposal({...newProposal, category: e.target.value as Proposal['category']})}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2"
+                  className="input-field w-full"
                 >
                   <option value="protocol">Протокол</option>
                   <option value="treasury">Казна</option>
@@ -409,7 +409,7 @@ const GovernanceProposals: React.FC = () => {
                 <textarea
                   value={newProposal.description}
                   onChange={(e) => setNewProposal({...newProposal, description: e.target.value})}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 h-32"
+                  className="input-field w-full h-32"
                   placeholder="Подробное описание предложения и его обоснование"
                 />
               </div>
@@ -417,13 +417,13 @@ const GovernanceProposals: React.FC = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={handleCreateProposal}
-                  className="btn-primary flex-1"
+                  className="btn-glass-morphic flex-1 animate-glass-pulse"
                 >
                   Создать предложение
                 </button>
                 <button
                   onClick={() => setShowCreateProposal(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-glass-fire flex-1"
                 >
                   Отмена
                 </button>
@@ -437,8 +437,8 @@ const GovernanceProposals: React.FC = () => {
       {loading ? (
         <TableSkeleton rows={3} />
       ) : filteredProposals.length === 0 ? (
-        <div className="card text-center text-gray-400 py-12">
-          <Vote className="mx-auto mb-4" size={48} />
+        <div className="liquid-glass text-center text-gray-400 py-12 animate-glass-float">
+          <Vote className="mx-auto mb-4 animate-glass-pulse" size={48} />
           <h3 className="text-lg font-semibold mb-2 text-slate-100">Предложений не найдено</h3>
           <p>Пока нет активных предложений для голосования</p>
         </div>
@@ -448,17 +448,19 @@ const GovernanceProposals: React.FC = () => {
             const percentages = calculateVotingPercentages(proposal);
             
             return (
-              <div key={proposal.id} className="card">
+              <div key={proposal.id} className="liquid-glass animate-glass-float">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start space-x-3">
-                    {getCategoryIcon(proposal.category)}
+                    <div className="animate-glass-pulse">
+                      {getCategoryIcon(proposal.category)}
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-slate-100">{proposal.title}</h3>
                       <p className="text-gray-400 text-sm">Предложил: {proposal.proposer}</p>
                     </div>
                   </div>
                   
-                  <div className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(proposal.status)}`}>
+                  <div className={`px-3 py-1 rounded-lg text-xs font-semibold border animate-glass-pulse ${getStatusColor(proposal.status)}`}>
                     {getStatusLabel(proposal.status)}
                   </div>
                 </div>
@@ -477,9 +479,9 @@ const GovernanceProposals: React.FC = () => {
                       <span className="text-green-400 text-sm">За ({percentages.for.toFixed(1)}%)</span>
                       <span className="text-sm">{parseFloat(proposal.forVotes).toLocaleString()} VG</span>
                     </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div className="w-full glass-ultra rounded-full h-2">
                       <div 
-                        className="bg-green-500 h-2 rounded-full" 
+                        className="bg-green-500 h-2 rounded-full animate-glass-pulse" 
                         style={{ width: `${percentages.for}%` }}
                       />
                     </div>
@@ -488,9 +490,9 @@ const GovernanceProposals: React.FC = () => {
                       <span className="text-red-400 text-sm">Против ({percentages.against.toFixed(1)}%)</span>
                       <span className="text-sm">{parseFloat(proposal.againstVotes).toLocaleString()} VG</span>
                     </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div className="w-full glass-ultra rounded-full h-2">
                       <div 
-                        className="bg-red-500 h-2 rounded-full" 
+                        className="bg-red-500 h-2 rounded-full animate-glass-pulse" 
                         style={{ width: `${percentages.against}%` }}
                       />
                     </div>
@@ -501,9 +503,9 @@ const GovernanceProposals: React.FC = () => {
                           <span className="text-gray-400 text-sm">Воздержались ({percentages.abstain.toFixed(1)}%)</span>
                           <span className="text-sm">{parseFloat(proposal.abstainVotes).toLocaleString()} VG</span>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div className="w-full glass-ultra rounded-full h-2">
                           <div 
-                            className="bg-gray-500 h-2 rounded-full" 
+                            className="bg-gray-500 h-2 rounded-full animate-glass-pulse" 
                             style={{ width: `${percentages.abstain}%` }}
                           />
                         </div>
@@ -517,21 +519,21 @@ const GovernanceProposals: React.FC = () => {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleVote(proposal.proposalId, 1)}
-                      className="btn-success flex items-center space-x-2"
+                      className="btn-glass-green flex items-center space-x-2 animate-glass-pulse"
                     >
                       <CheckCircle size={16} />
                       <span>За</span>
                     </button>
                     <button
                       onClick={() => handleVote(proposal.proposalId, 0)}
-                      className="btn-danger flex items-center space-x-2"
+                      className="btn-glass-fire flex items-center space-x-2 animate-glass-pulse"
                     >
                       <XCircle size={16} />
                       <span>Против</span>
                     </button>
                     <button
                       onClick={() => handleVote(proposal.proposalId, 2)}
-                      className="btn-secondary flex items-center space-x-2"
+                      className="btn-glass-orange flex items-center space-x-2 animate-glass-pulse"
                     >
                       <Clock size={16} />
                       <span>Воздержаться</span>
@@ -540,7 +542,7 @@ const GovernanceProposals: React.FC = () => {
                 )}
                 
                 {proposal.status === 'active' && parseFloat(votingPower) === 0 && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-sm">
+                  <div className="glass-accent border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-sm animate-glass-pulse">
                     У вас нет VG токенов для голосования. Получите VG через стейкинг LP токенов.
                   </div>
                 )}

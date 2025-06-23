@@ -30,21 +30,21 @@ const TokenStats: React.FC<TokenStatsProps> = ({
     return (
       <div className={className}>
         {showTitle && (
-          <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-            <BarChart3 className="mr-3 text-blue-400" />
+          <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+            <BarChart3 className="mr-3 text-blue-400 animate-glass-pulse" />
             Статистика токенов
           </h2>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-responsive">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="card animate-pulse">
+            <div key={i} className="liquid-glass animate-pulse">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="h-4 bg-gray-600 rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-gray-600 rounded w-12"></div>
+                  <div className="h-4 bg-gray-600 rounded w-20 mb-2 animate-glass-pulse"></div>
+                  <div className="h-8 bg-gray-600 rounded w-12 animate-glass-pulse"></div>
                 </div>
-                <div className="w-8 h-8 bg-gray-600 rounded"></div>
+                <div className="w-8 h-8 bg-gray-600 rounded animate-glass-pulse"></div>
               </div>
             </div>
           ))}
@@ -56,24 +56,24 @@ const TokenStats: React.FC<TokenStatsProps> = ({
   return (
     <div className={className}>
       {showTitle && (
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <BarChart3 className="mr-3 text-blue-400" />
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <BarChart3 className="mr-3 text-blue-400 animate-glass-pulse" />
           Статистика токенов
         </h2>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-responsive">
+        <div className="card-ultra animate-glass-float">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Всего токенов</p>
               <p className="text-2xl font-bold text-slate-100">{totalTokens}</p>
             </div>
-            <Coins className="w-8 h-8 text-blue-400" />
+            <Coins className="w-8 h-8 text-blue-400 animate-glass-pulse" />
           </div>
         </div>
         
-        <div className="card">
+        <div className="card-ultra animate-glass-float">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">С балансом</p>
@@ -81,27 +81,27 @@ const TokenStats: React.FC<TokenStatsProps> = ({
                 {tokensWithBalance.length}
               </p>
             </div>
-            <Activity className="w-8 h-8 text-green-400" />
+            <Activity className="w-8 h-8 text-green-400 animate-glass-pulse" />
           </div>
         </div>
         
-        <div className="card">
+        <div className="card-ultra animate-glass-float">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">USD стоимость</p>
               <p className="text-2xl font-bold text-slate-100">$0.00</p>
             </div>
-            <TrendingUp className="w-8 h-8 text-yellow-400" />
+            <TrendingUp className="w-8 h-8 text-yellow-400 animate-glass-pulse" />
           </div>
         </div>
         
-        <div className="card">
+        <div className="card-ultra animate-glass-float">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Активных разрешений</p>
               <p className="text-2xl font-bold text-slate-100">{totalAllowances}</p>
             </div>
-            <Shield className="w-8 h-8 text-purple-400" />
+            <Shield className="w-8 h-8 text-purple-400 animate-glass-pulse" />
           </div>
         </div>
       </div>

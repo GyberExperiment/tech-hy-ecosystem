@@ -66,35 +66,35 @@ export const ContractStatus: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6 mb-6">
+    <div className="liquid-glass animate-glass-float mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-white">🔍 Contract Status</h3>
+        <h3 className="section-title text-xl font-bold text-white">🔍 Contract Status</h3>
         <button
           onClick={checkContracts}
           disabled={checking}
-          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm transition-all"
+          className="btn-glass-blue disabled:opacity-50 text-white px-4 py-2 text-sm animate-glass-pulse"
         >
           {checking ? 'Checking...' : 'Refresh'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-responsive">
         {contracts.map((contract, index) => (
           <div
             key={index}
-            className={`p-4 rounded-lg border ${
+            className={`p-4 rounded-lg border animate-glass-float ${
               contract.exists
-                ? 'bg-green-900/20 border-green-700'
-                : 'bg-red-900/20 border-red-700'
-            }`}
+                ? 'glass-ultra border-green-500/30 hover:border-green-400/50'
+                : 'glass-accent border-red-500/30 hover:border-red-400/50'
+            } transition-all duration-300`}
           >
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-semibold text-white">{contract.name}</h4>
               <span
-                className={`text-xs px-2 py-1 rounded ${
+                className={`text-xs px-2 py-1 rounded animate-glass-pulse ${
                   contract.exists
-                    ? 'bg-green-600 text-white'
-                    : 'bg-red-600 text-white'
+                    ? 'btn-glass-green text-white'
+                    : 'btn-glass-fire text-white'
                 }`}
               >
                 {contract.exists ? 'OK' : 'ERROR'}
@@ -110,7 +110,7 @@ export const ContractStatus: React.FC = () => {
         ))}
       </div>
 
-      <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
+      <div className="mt-4 p-4 glass-ultra rounded-lg animate-glass-float">
         <h4 className="text-sm font-semibold text-yellow-400 mb-2">
           💡 Troubleshooting Tips:
         </h4>

@@ -344,13 +344,13 @@ const Governance: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
+      <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400 animate-glass-pulse" />
+          <h2 className="hero-title text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('common:messages.connectWallet')}
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="hero-subtitle text-xl text-gray-400 mb-8">
             Подключите кошелек для участия в governance
           </p>
         </div>
@@ -360,13 +360,13 @@ const Governance: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
+      <div className="animate-fade-in px-responsive">
         <div className="text-center py-12">
-          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-3xl font-bold mb-4 text-red-400">
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400 animate-glass-pulse" />
+          <h2 className="hero-title text-3xl font-bold mb-4 text-red-400">
             Неправильная сеть
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="hero-subtitle text-xl text-gray-400 mb-8">
             {t('common:messages.wrongNetwork')}
           </p>
         </div>
@@ -375,30 +375,30 @@ const Governance: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 px-4 md:px-8 lg:px-12">
+    <div className="animate-fade-in space-y-responsive px-responsive">
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         <div className="flex items-center justify-center space-x-3">
-          <Vote className="w-8 h-8 text-purple-400" />
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">
+          <Vote className="w-8 h-8 text-purple-400 animate-glass-pulse" />
+          <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">
             {t('governance:title')}
           </h1>
         </div>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <p className="hero-subtitle text-xl text-gray-300 max-w-2xl mx-auto">
           {t('governance:subtitle')}
         </p>
       </div>
 
       {/* Personal Stats */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Activity className="mr-3 text-purple-400" />
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <Activity className="mr-3 text-purple-400 animate-glass-pulse" />
           Ваша статистика
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid-responsive-1-2-4 gap-6">
           {stats.map((stat, index) => (
-            <div key={index} className="card">
+            <div key={index} className="card-ultra animate-glass-float">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">{stat.title}</p>
@@ -411,7 +411,7 @@ const Governance: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <stat.icon className={`w-8 h-8 ${stat.color} animate-glass-pulse`} />
               </div>
             </div>
           ))}
@@ -420,14 +420,14 @@ const Governance: React.FC = () => {
 
       {/* Protocol Statistics */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <BarChart3 className="mr-3 text-blue-400" />
+        <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
+          <BarChart3 className="mr-3 text-blue-400 animate-glass-pulse" />
           Статистика governance
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid-responsive-1-2-4 gap-6">
           {protocolStats.map((stat, index) => (
-            <div key={index} className="card">
+            <div key={index} className="card-ultra animate-glass-float">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">{stat.title}</p>
@@ -440,7 +440,7 @@ const Governance: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <stat.icon className={`w-8 h-8 ${stat.color} animate-glass-pulse`} />
               </div>
             </div>
           ))}
@@ -452,8 +452,8 @@ const Governance: React.FC = () => {
         {/* Proposals List */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold flex items-center text-slate-100">
-              <FileText className="mr-3 text-blue-400" />
+            <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
+              <FileText className="mr-3 text-blue-400 animate-glass-pulse" />
               Предложения ({filteredProposals.length})
             </h2>
             
@@ -481,9 +481,9 @@ const Governance: React.FC = () => {
             {filteredProposals.map((proposal) => (
               <div 
                 key={proposal.id} 
-                className={`card cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.02] animate-glass-float ${
                   selectedProposal?.id === proposal.id 
-                    ? 'ring-2 ring-purple-500/50 bg-purple-500/10' 
+                    ? 'ring-2 ring-purple-500/50 glass-secondary' 
                     : ''
                 }`}
                 onClick={() => setSelectedProposal(proposal)}
@@ -493,7 +493,7 @@ const Governance: React.FC = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="font-bold text-lg">{proposal.title}</h3>
+                        <h3 className="card-title font-bold text-lg">{proposal.title}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(proposal.status)}`}>
                           {proposal.status}
                         </span>
@@ -501,11 +501,24 @@ const Governance: React.FC = () => {
                           {proposal.category}
                         </span>
                       </div>
-                      <p className="text-gray-400 text-sm line-clamp-2">{proposal.description}</p>
+                      <p className="text-gray-300 text-sm mb-3">{proposal.description}</p>
+                      
+                      {/* Proposer */}
+                      <div className="flex items-center space-x-2 text-xs text-gray-400">
+                        <Users className="w-3 h-3" />
+                        <span>Автор: {proposal.proposer.slice(0, 8)}...{proposal.proposer.slice(-6)}</span>
+                      </div>
                     </div>
-                    <div className="text-right text-sm text-gray-400">
-                      <p>#{proposal.id}</p>
-                    </div>
+                    
+                    <button 
+                      className="glass-ultra hover:glass-accent p-2 rounded-lg transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProposal(selectedProposal?.id === proposal.id ? null : proposal);
+                      }}
+                    >
+                      <Eye className="w-5 h-5 text-gray-400" />
+                    </button>
                   </div>
 
                   {/* Voting Progress */}
@@ -528,7 +541,6 @@ const Governance: React.FC = () => {
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <div className="flex items-center space-x-4">
-                      <span>Proposer: {proposal.proposer ? `${proposal.proposer.slice(0, 6)}...${proposal.proposer.slice(-4)}` : 'Unknown'}</span>
                       <span>Кворум: {formatBalance(proposal.quorum)} VGV</span>
                     </div>
                     <div className="flex items-center space-x-1">

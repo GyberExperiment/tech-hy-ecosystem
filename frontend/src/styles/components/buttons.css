@@ -1,0 +1,339 @@
+/* 🎯 TECH HY PREMIUM BUTTONS SYSTEM 🎯 */
+/* Ultra Modern Glassmorphism Buttons */
+
+/* ===== BASE BUTTON STYLES ===== */
+.btn-base {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-weight: 500;
+  font-size: var(--text-base);
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: var(--glass-transition);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  overflow: hidden;
+  min-height: 44px; /* Touch target */
+}
+
+.btn-base:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===== PRIMARY BUTTON ===== */
+.btn-primary {
+  @apply btn-base;
+  background: linear-gradient(135deg, 
+    rgba(30, 58, 138, 0.9) 0%, 
+    rgba(59, 130, 246, 0.9) 100%);
+  backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+  border: 1px solid var(--glass-techhy-blue-border);
+  box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3),
+              0 4px 16px rgba(30, 58, 138, 0.2),
+              inset 0 1px 0 rgba(59, 130, 246, 0.5);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    transparent 50%);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.05);
+  backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+  box-shadow: 0 12px 40px rgba(30, 58, 138, 0.4),
+              0 6px 20px rgba(30, 58, 138, 0.3);
+}
+
+/* ===== SECONDARY BUTTON ===== */
+.btn-secondary {
+  @apply btn-base;
+  background: var(--glass-neutral);
+  backdrop-filter: blur(var(--glass-blur-radius)) 
+                   brightness(var(--glass-brightness)) 
+                   saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur-radius)) 
+                           brightness(var(--glass-brightness)) 
+                           saturate(var(--glass-saturation));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.05);
+  backdrop-filter: blur(calc(var(--glass-blur-radius) + 4px)) 
+                   brightness(calc(var(--glass-brightness) + 5%)) 
+                   saturate(calc(var(--glass-saturation) + 10%));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur-radius) + 4px)) 
+                           brightness(calc(var(--glass-brightness) + 5%)) 
+                           saturate(calc(var(--glass-saturation) + 10%));
+}
+
+/* ===== DANGER BUTTON ===== */
+.btn-danger {
+  @apply btn-base;
+  background: linear-gradient(135deg, 
+    rgba(239, 68, 68, 0.9) 0%, 
+    rgba(220, 38, 38, 0.9) 100%);
+  backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) brightness(110%) saturate(130%);
+  border: 1px solid var(--glass-techhy-red-border);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3),
+              0 4px 16px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.4),
+              0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* ===== GLASS BUTTON VARIANTS ===== */
+.btn-glass-blue {
+  @apply btn-base;
+  background: var(--glass-techhy-blue);
+  backdrop-filter: blur(25px) saturate(120%);
+  -webkit-backdrop-filter: blur(25px) saturate(120%);
+  border: 0.5px solid var(--glass-techhy-blue-border);
+  box-shadow: 0 8px 32px rgba(30, 58, 138, 0.15),
+              0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-glass-blue:hover {
+  background: rgba(30, 58, 138, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 50px rgba(30, 58, 138, 0.25),
+              0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.btn-glass-purple {
+  @apply btn-base;
+  background: var(--glass-techhy-purple);
+  backdrop-filter: blur(25px) saturate(120%);
+  -webkit-backdrop-filter: blur(25px) saturate(120%);
+  border: 0.5px solid var(--glass-techhy-purple-border);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15),
+              0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-glass-purple:hover {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 50px rgba(139, 92, 246, 0.25),
+              0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.btn-glass-green {
+  @apply btn-base;
+  background: var(--glass-techhy-green);
+  backdrop-filter: blur(25px) saturate(120%);
+  -webkit-backdrop-filter: blur(25px) saturate(120%);
+  border: 0.5px solid var(--glass-techhy-green-border);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15),
+              0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-glass-green:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.5);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 50px rgba(16, 185, 129, 0.25),
+              0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.btn-glass-orange {
+  @apply btn-base;
+  background: var(--glass-techhy-orange);
+  backdrop-filter: blur(25px) saturate(120%);
+  -webkit-backdrop-filter: blur(25px) saturate(120%);
+  border: 0.5px solid var(--glass-techhy-orange-border);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.15),
+              0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-glass-orange:hover {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 50px rgba(245, 158, 11, 0.25),
+              0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.btn-glass-fire {
+  @apply btn-base;
+  background: var(--glass-techhy-red);
+  backdrop-filter: blur(25px) saturate(120%);
+  -webkit-backdrop-filter: blur(25px) saturate(120%);
+  border: 0.5px solid var(--glass-techhy-red-border);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.15),
+              0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-glass-fire:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 50px rgba(239, 68, 68, 0.25),
+              0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+/* ===== MORPHIC BUTTON (HERO BUTTON) ===== */
+.btn-glass-morphic {
+  @apply btn-base;
+  background: linear-gradient(135deg, 
+    rgba(30, 58, 138, 0.2) 0%, 
+    rgba(139, 92, 246, 0.2) 100%);
+  backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) brightness(115%) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg) var(--space-xl);
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.btn-glass-morphic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%);
+  transition: left 0.6s ease;
+}
+
+.btn-glass-morphic:hover::before {
+  left: 100%;
+}
+
+.btn-glass-morphic:hover {
+  transform: translateY(-3px) scale(1.05);
+  backdrop-filter: blur(24px) brightness(125%) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) brightness(125%) saturate(150%);
+  box-shadow: 0 16px 40px rgba(30, 58, 138, 0.4),
+              0 8px 20px rgba(30, 58, 138, 0.3),
+              0 4px 10px rgba(30, 58, 138, 0.2);
+}
+
+/* ===== BUTTON SIZES ===== */
+.btn-sm {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  min-height: 36px;
+}
+
+.btn-lg {
+  padding: var(--space-lg) var(--space-2xl);
+  font-size: var(--text-lg);
+  min-height: 52px;
+}
+
+.btn-xl {
+  padding: var(--space-xl) var(--space-3xl);
+  font-size: var(--text-xl);
+  min-height: 60px;
+}
+
+/* ===== BUTTON STATES ===== */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: btn-spin 1s linear infinite;
+  margin-left: var(--space-sm);
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE BUTTONS ===== */
+@media (max-width: 768px) {
+  .btn-base {
+    min-height: 48px; /* Larger touch target on mobile */
+    padding: var(--space-lg) var(--space-xl);
+  }
+  
+  .btn-sm {
+    min-height: 40px;
+    padding: var(--space-md) var(--space-lg);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  .btn-base,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-glass-morphic {
+    transition: none;
+    animation: none;
+  }
+  
+  .btn-base:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-danger:hover,
+  .btn-glass-morphic:hover {
+    transform: none;
+  }
+}
+
+/* ===== FOCUS STATES ===== */
+.btn-base:focus-visible {
+  outline: 2px solid var(--techhy-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+}
+
+/* ===== TOUCH DEVICE OPTIMIZATIONS ===== */
+@media (hover: none) and (pointer: coarse) {
+  .btn-base:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-danger:hover {
+    transform: none;
+  }
+  
+  .btn-base {
+    padding: var(--space-lg) var(--space-xl);
+    min-height: 48px;
+  }
+} 
