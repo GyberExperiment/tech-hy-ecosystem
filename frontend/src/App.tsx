@@ -27,18 +27,18 @@ function App() {
     <I18nProvider>
       <Web3Provider>
         <Router>
-          <div className="min-h-screen text-white relative overflow-hidden">
-            {/* Dark Background with Gradient Overlay */}
-            <div className="fixed inset-0 bg-slate-900">
-              <div className="gradient-bg absolute inset-0"></div>
+          <div className="min-h-screen text-dark-gray relative overflow-hidden">
+            {/* Clean Light Background */}
+            <div className="fixed inset-0 bg-pure-white">
+              <div className="clean-bg absolute inset-0"></div>
               
-              {/* Ultra Modern Animated Background Elements */}
+              {/* Clean Minimalist Background Elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 animate-glass-float">
-                  <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-glass-pulse"></div>
-                  <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-glass-float"></div>
-                  <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-glass-pulse"></div>
-                  <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-green-500/10 rounded-full blur-3xl animate-glass-float"></div>
+                <div className="absolute inset-0 animate-gentle-float">
+                  <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-accent-blue/8 rounded-full blur-3xl animate-subtle-glow"></div>
+                  <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-accent-purple/5 rounded-full blur-3xl animate-gentle-float"></div>
+                  <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-accent-teal/6 rounded-full blur-3xl animate-subtle-glow"></div>
+                  <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-accent-green/5 rounded-full blur-3xl animate-gentle-float"></div>
                 </div>
               </div>
             </div>
@@ -47,8 +47,8 @@ function App() {
             <div className="relative z-10">
               <Header />
               
-              <main className="flex-1 py-6 md:py-8 lg:py-12 animate-fade-in">
-                <div className="container-mobile">
+              <main className="flex-1 py-6 md:py-8 lg:py-12 animate-clean-fade-in">
+                <div className="clean-container">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/tokens" element={<Tokens />} />

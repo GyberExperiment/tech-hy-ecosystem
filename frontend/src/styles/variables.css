@@ -1,176 +1,207 @@
-/* 🌟 TECH HY ECOSYSTEM REFINED DESIGN SYSTEM 2025 🌟 */
-/* 🎨 Professional Grade Variables & Design Tokens */
+/* 🚀 TECH HY ECOSYSTEM - ULTRA MODERN DESIGN SYSTEM 2025 🚀 */
+/* ⚡ Cutting-Edge, Bold & Sophisticated Design Language ⚡ */
 
 :root {
-  /* ===== TECH HY БРЕНДОВЫЕ ЦВЕТА ===== */
-  --techhy-primary: #1E3A8A;     /* Deep Tech Blue */
-  --techhy-secondary: #3B82F6;   /* Bright Blue */
-  --techhy-accent: #8B5CF6;      /* Purple Accent */
-  --techhy-success: #10B981;     /* Green Success */
-  --techhy-warning: #F59E0B;     /* Amber Warning */
-  --techhy-danger: #EF4444;      /* Red Danger */
-  --techhy-dark: #0F172A;        /* Deep Dark */
-  --techhy-light: #F8FAFC;       /* Light */
+  /* ===== ULTRA MODERN NEOSPACE PALETTE 2025 ===== */
+  --neo-electric-blue: #00D4FF;      /* Electric Cyan - Primary Brand */
+  --neo-plasma-purple: #8B5CF6;      /* Plasma Purple - Secondary */
+  --neo-neon-green: #00FF88;         /* Neon Green - Success */
+  --neo-laser-pink: #FF0080;         /* Laser Pink - Accent */
+  --neo-solar-orange: #FF6B00;       /* Solar Orange - Warning */
+  --neo-crimson-red: #FF1744;        /* Crimson Red - Danger */
+  --neo-pure-white: #FFFFFF;         /* Pure White */
+  --neo-arctic-blue: #F0F9FF;        /* Arctic Blue Light */
   
-  /* ===== REFINED CUBIC-BEZIER ПЕРЕМЕННЫЕ ===== */
-  --ease-out-expo: cubic-bezier(0.23, 1, 0.320, 1);
-  --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.15);
-  --ease-in-out-back: cubic-bezier(0.68, -0.35, 0.265, 1.35);
-  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-in-out-sine: cubic-bezier(0.42, 0, 0.58, 1);
-  --ease-subtle: cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* ===== DARK SPACE FOUNDATION ===== */
+  --space-black: #000000;            /* Pure Black */
+  --space-void: #0A0A0F;             /* Deep Void */
+  --space-dark: #111118;             /* Dark Space */
+  --space-medium: #1A1A24;           /* Medium Space */
+  --space-light: #2A2A35;            /* Light Space */
+  --space-lighter: #3A3A45;          /* Lighter Space */
+  --space-muted: #4A4A55;            /* Muted Space */
+  --space-text: #E1E5E9;             /* Space Text */
+  --space-text-bright: #F8FAFC;      /* Bright Text */
   
-  /* ===== REFINED ДЛИТЕЛЬНОСТЬ АНИМАЦИЙ ===== */
+  /* ===== ULTRA MODERN GRADIENTS ===== */
+  --gradient-cyber: linear-gradient(135deg, var(--neo-electric-blue) 0%, var(--neo-plasma-purple) 100%);
+  --gradient-neon: linear-gradient(135deg, var(--neo-neon-green) 0%, var(--neo-electric-blue) 100%);
+  --gradient-plasma: linear-gradient(135deg, var(--neo-plasma-purple) 0%, var(--neo-laser-pink) 100%);
+  --gradient-solar: linear-gradient(135deg, var(--neo-solar-orange) 0%, var(--neo-crimson-red) 100%);
+  --gradient-space: linear-gradient(135deg, var(--space-void) 0%, var(--space-dark) 50%, var(--space-medium) 100%);
+  --gradient-aurora: linear-gradient(135deg, 
+    var(--neo-electric-blue) 0%, 
+    var(--neo-plasma-purple) 25%, 
+    var(--neo-laser-pink) 50%, 
+    var(--neo-neon-green) 75%, 
+    var(--neo-electric-blue) 100%);
+  --gradient-hologram: linear-gradient(45deg, 
+    rgba(0, 212, 255, 0.1) 0%, 
+    rgba(139, 92, 246, 0.1) 25%, 
+    rgba(255, 0, 128, 0.1) 50%, 
+    rgba(0, 255, 136, 0.1) 75%, 
+    rgba(0, 212, 255, 0.1) 100%);
+  
+  /* ===== NEOMORPHIC GLASS SYSTEM ===== */
+  --glass-blur-sharp: 12px;
+  --glass-blur-medium: 20px;
+  --glass-blur-soft: 32px;
+  --glass-blur-ultra: 48px;
+  --glass-brightness-boost: 130%;
+  --glass-contrast-high: 125%;
+  --glass-saturation-vivid: 140%;
+  
+  /* ===== GLASS OPACITY LEVELS ===== */
+  --glass-opacity-subtle: 0.05;
+  --glass-opacity-light: 0.1;
+  --glass-opacity-medium: 0.15;
+  --glass-opacity-strong: 0.25;
+  --glass-opacity-solid: 0.4;
+  
+  /* ===== MODERN GLASS BACKGROUNDS ===== */
+  --glass-cyber: rgba(0, 212, 255, var(--glass-opacity-light));
+  --glass-plasma: rgba(139, 92, 246, var(--glass-opacity-light));
+  --glass-neon: rgba(0, 255, 136, var(--glass-opacity-light));
+  --glass-laser: rgba(255, 0, 128, var(--glass-opacity-light));
+  --glass-dark: rgba(26, 26, 36, var(--glass-opacity-strong));
+  --glass-neutral: rgba(255, 255, 255, var(--glass-opacity-subtle));
+  
+  /* ===== ULTRA MODERN BORDERS ===== */
+  --border-cyber: rgba(0, 212, 255, 0.4);
+  --border-plasma: rgba(139, 92, 246, 0.4);
+  --border-neon: rgba(0, 255, 136, 0.4);
+  --border-laser: rgba(255, 0, 128, 0.4);
+  --border-space: rgba(255, 255, 255, 0.1);
+  --border-bright: rgba(255, 255, 255, 0.2);
+  
+  /* ===== PROFESSIONAL SHADOW SYSTEM ===== */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-soft: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  --shadow-medium: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --shadow-large: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  --shadow-extra: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+  
+  /* ===== NEON GLOW EFFECTS ===== */
+  --glow-cyber: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3), 0 0 60px rgba(0, 212, 255, 0.1);
+  --glow-plasma: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
+  --glow-neon: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3), 0 0 60px rgba(0, 255, 136, 0.1);
+  --glow-laser: 0 0 20px rgba(255, 0, 128, 0.5), 0 0 40px rgba(255, 0, 128, 0.3), 0 0 60px rgba(255, 0, 128, 0.1);
+  --glow-focus: 0 0 0 3px rgba(0, 212, 255, 0.4);
+  
+  /* ===== PREMIUM SPACING SYSTEM (8pt Base) ===== */
+  --space-px: 1px;
+  --space-0: 0rem;
+  --space-1: 0.25rem;    /* 4px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+  --space-32: 8rem;      /* 128px */
+  --space-40: 10rem;     /* 160px */
+  --space-48: 12rem;     /* 192px */
+  --space-64: 16rem;     /* 256px */
+  
+  /* ===== MODERN BORDER RADIUS ===== */
+  --radius-none: 0;
+  --radius-xs: 0.125rem;    /* 2px */
+  --radius-sm: 0.375rem;    /* 6px */
+  --radius-md: 0.5rem;      /* 8px */
+  --radius-lg: 0.75rem;     /* 12px */
+  --radius-xl: 1rem;        /* 16px */
+  --radius-2xl: 1.5rem;     /* 24px */
+  --radius-3xl: 2rem;       /* 32px */
+  --radius-4xl: 3rem;       /* 48px */
+  --radius-full: 9999px;    /* Full round */
+  
+  /* ===== ULTRA MODERN TYPOGRAPHY ===== */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  /* ===== PROFESSIONAL TEXT SHADOWS ===== */
+  --text-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --text-shadow-medium: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --text-shadow-strong: 0 3px 6px rgba(0, 0, 0, 0.3);
+  --text-shadow-glow: 0 0 10px var(--neo-electric-blue);
+  
+  /* ===== ADVANCED ANIMATION SYSTEM ===== */
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.68, 0, 0.265, 1.55);
+  --ease-swift: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-dramatic: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* ===== MODERN DURATION SYSTEM ===== */
   --duration-instant: 0.1s;
-  --duration-fast: 0.2s;
+  --duration-fast: 0.15s;
   --duration-normal: 0.25s;
   --duration-medium: 0.35s;
   --duration-slow: 0.5s;
-  --duration-slower: 0.7s;
-  --duration-ambient: 8s;   /* Для фоновых анимаций */
-  --duration-floating: 10s; /* Для floating эффектов */
+  --duration-dramatic: 0.8s;
   
-  /* ===== REFINED TECH HY GLASS PROPERTIES ===== */
-  --glass-blur-radius: 16px;
-  --glass-blur-premium: 20px;
-  --glass-blur-subtle: 12px;
-  --glass-brightness: 105%;
-  --glass-saturation: 110%;
-  --glass-contrast: 102%;
-  --glass-opacity: 0.08;
-  --glass-opacity-premium: 0.10;
-  --glass-opacity-subtle: 0.06;
-  --glass-edge-opacity: 0.15;
-  --glass-thickness: 6px;
+  /* ===== PROFESSIONAL TRANSITIONS ===== */
+  --transition-instant: all var(--duration-instant) var(--ease-swift);
+  --transition-fast: all var(--duration-fast) var(--ease-smooth);
+  --transition-normal: all var(--duration-normal) var(--ease-smooth);
+  --transition-medium: all var(--duration-medium) var(--ease-elastic);
+  --transition-bounce: all var(--duration-medium) var(--ease-bounce);
+  --transition-dramatic: all var(--duration-dramatic) var(--ease-dramatic);
   
-  /* ===== REFINED DEPTH & LAYERING ===== */
-  --glass-depth-near: 115%;
-  --glass-depth-far: 105%;
-  --glass-mask-fade: 35%;
+  /* ===== MODERN HOVER EFFECTS ===== */
+  --hover-scale-subtle: 1.02;
+  --hover-scale-medium: 1.05;
+  --hover-scale-dramatic: 1.08;
+  --hover-lift-subtle: -2px;
+  --hover-lift-medium: -4px;
+  --hover-lift-dramatic: -8px;
+  --hover-rotate-subtle: 1deg;
+  --hover-rotate-medium: 2deg;
   
-  /* ===== REFINED TECH HY COLOR THEMES ===== */
-  --glass-techhy-primary: rgba(30, 58, 138, var(--glass-opacity));
-  --glass-techhy-secondary: rgba(59, 130, 246, var(--glass-opacity));
-  --glass-techhy-accent: rgba(139, 92, 246, var(--glass-opacity));
-  --glass-techhy-success: rgba(16, 185, 129, var(--glass-opacity));
-  --glass-neutral: rgba(255, 255, 255, var(--glass-opacity));
-  --glass-dark: rgba(15, 23, 42, var(--glass-opacity));
-  
-  /* ===== REFINED TECH HY PREMIUM BUTTON COLORS ===== */
-  --glass-techhy-blue: rgba(30, 58, 138, 0.15);
-  --glass-techhy-blue-border: rgba(59, 130, 246, 0.25);
-  --glass-techhy-purple: rgba(139, 92, 246, 0.12);
-  --glass-techhy-purple-border: rgba(139, 92, 246, 0.22);
-  --glass-techhy-green: rgba(16, 185, 129, 0.12);
-  --glass-techhy-green-border: rgba(16, 185, 129, 0.22);
-  --glass-techhy-orange: rgba(245, 158, 11, 0.12);
-  --glass-techhy-orange-border: rgba(245, 158, 11, 0.22);
-  --glass-techhy-red: rgba(239, 68, 68, 0.12);
-  --glass-techhy-red-border: rgba(239, 68, 68, 0.22);
-  
-  /* ===== LEGACY COMPATIBILITY ===== */
-  --glass-orange: var(--glass-techhy-orange);
-  --glass-orange-border: var(--glass-techhy-orange-border);
-  --glass-blue: var(--glass-techhy-blue);
-  --glass-blue-border: var(--glass-techhy-blue-border);
-  --glass-fire: var(--glass-techhy-red);
-  --glass-fire-border: var(--glass-techhy-red-border);
-  --glass-green: var(--glass-techhy-green);
-  --glass-green-border: var(--glass-techhy-green-border);
-  
-  /* ===== REFINED TECH HY BORDERS & HIGHLIGHTS ===== */
-  --glass-border: rgba(59, 130, 246, 0.15);
-  --glass-border-dark: rgba(30, 58, 138, 0.1);
-  --glass-highlight: rgba(139, 92, 246, 0.25);
-  --glass-shadow: rgba(15, 23, 42, 0.2);
-  --glass-shadow-soft: rgba(15, 23, 42, 0.1);
-  
-  /* ===== REFINED TECH HY ANIMATION PROPERTIES ===== */
-  --glass-transition: all var(--duration-normal) var(--ease-subtle);
-  --glass-transition-fast: all var(--duration-fast) var(--ease-out-quad);
-  --glass-hover-scale: 1.02;
-  --glass-hover-scale-subtle: 1.01;
-  --glass-hover-blur: 20px;
-  --glass-hover-brightness: 108%;
-  
-  /* ===== REFINED TECH HY GRADIENTS ===== */
-  --techhy-gradient-primary: linear-gradient(135deg, var(--techhy-primary) 0%, var(--techhy-secondary) 50%, var(--techhy-accent) 100%);
-  --techhy-gradient-glass: linear-gradient(135deg, var(--glass-techhy-primary) 0%, var(--glass-techhy-secondary) 50%, var(--glass-techhy-accent) 100%);
-  --techhy-gradient-subtle: linear-gradient(135deg, 
-    rgba(30, 58, 138, 0.05) 0%, 
-    rgba(59, 130, 246, 0.04) 50%, 
-    rgba(139, 92, 246, 0.03) 100%);
-  
-  /* ===== REFINED SPACING SYSTEM ===== */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 2.5rem;
-  --space-3xl: 3rem;
-  --space-4xl: 4rem;
-  
-  /* ===== REFINED BORDER RADIUS SYSTEM ===== */
-  --radius-xs: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
-  
-  /* ===== REFINED SHADOW SYSTEM ===== */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 16px 32px -8px rgba(0, 0, 0, 0.12);
-  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-glass-premium: 0 8px 32px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
-  --shadow-glass-subtle: 0 2px 16px rgba(0, 0, 0, 0.1);
-  
-  /* ===== REFINED TYPOGRAPHY SYSTEM ===== */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
-  
-  /* ===== TEXT SHADOW SYSTEM ===== */
-  --text-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --text-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --text-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --text-shadow-xl: 0 2px 12px rgba(0, 0, 0, 0.5);
+  /* ===== PROFESSIONAL Z-INDEX SCALE ===== */
+  --z-below: -1;
+  --z-base: 0;
+  --z-content: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+  --z-toast: 80;
+  --z-dropdown: 90;
+  --z-maximum: 100;
 }
 
-/* ===== REFINED DARK MODE OVERRIDES ===== */
-.dark {
-  --glass-opacity: 0.06;
-  --glass-opacity-premium: 0.08;
-  --glass-opacity-subtle: 0.04;
-  --glass-brightness: 103%;
-  --glass-saturation: 105%;
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-highlight: rgba(255, 255, 255, 0.2);
-  --glass-shadow: rgba(0, 0, 0, 0.3);
-  --glass-shadow-soft: rgba(0, 0, 0, 0.15);
+/* ===== ULTRA MODERN LIGHT MODE ===== */
+@media (prefers-color-scheme: light) {
+  :root {
+    --primary-bg: var(--space-text-bright);
+    --secondary-bg: var(--neo-arctic-blue);
+    --tertiary-bg: var(--neo-pure-white);
+    --glass-brightness-boost: 110%;
+    --glass-contrast-high: 105%;
+    --glass-saturation-vivid: 120%;
+  }
 }
 
-/* ===== REFINED RESPONSIVE BREAKPOINTS ===== */
-@custom-media --mobile (max-width: 639px);
-@custom-media --tablet (min-width: 640px) and (max-width: 1023px);
-@custom-media --desktop (min-width: 1024px);
-@custom-media --large (min-width: 1280px);
-@custom-media --xl (min-width: 1536px);
+/* ===== ULTRA MODERN DARK MODE ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-bg: var(--space-void);
+    --secondary-bg: var(--space-dark);
+    --tertiary-bg: var(--space-medium);
+    --glass-brightness-boost: 140%;
+    --glass-contrast-high: 130%;
+    --glass-saturation-vivid: 150%;
+  }
+}
 
 /* ===== PERFORMANCE OPTIMIZATIONS ===== */
 @media (prefers-reduced-motion: reduce) {
@@ -180,17 +211,248 @@
     --duration-normal: 0s;
     --duration-medium: 0s;
     --duration-slow: 0s;
-    --duration-slower: 0s;
-    --duration-ambient: 0s;
-    --duration-floating: 0s;
+    --duration-dramatic: 0s;
+    --ease-bounce: ease;
+    --ease-elastic: ease;
+    --ease-dramatic: ease;
   }
 }
 
+/* ===== MOBILE OPTIMIZATIONS ===== */
 @media (max-width: 768px) {
   :root {
-    --glass-blur-radius: 12px;
-    --glass-blur-premium: 16px;
-    --glass-blur-subtle: 8px;
-    --glass-hover-scale: 1.01;
+    --glass-blur-sharp: 8px;
+    --glass-blur-medium: 16px;
+    --glass-blur-soft: 24px;
+    --glass-blur-ultra: 32px;
+    --hover-scale-medium: 1.03;
+    --hover-lift-medium: -2px;
+    --hover-rotate-medium: 1deg;
+  }
+}
+
+/* ===== HIGH DPI OPTIMIZATIONS ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  :root {
+    --glass-blur-sharp: 14px;
+    --glass-blur-medium: 22px;
+    --glass-blur-soft: 36px;
+    --glass-blur-ultra: 52px;
+  }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+  :root {
+    --glass-opacity-light: 0.3;
+    --glass-opacity-medium: 0.4;
+    --glass-opacity-strong: 0.6;
+    --border-cyber: var(--neo-electric-blue);
+    --border-plasma: var(--neo-plasma-purple);
+    --border-neon: var(--neo-neon-green);
+  }
+}
+
+/* ✨ TECH HY ECOSYSTEM - CLEAN GLASSMORPHISM 2025 ✨ */
+/* 🎯 Minimalist, Pure & Sophisticated Design Language 🎯 */
+
+:root {
+  /* ===== CLEAN MINIMALIST PALETTE 2025 ===== */
+  --pure-white: #FFFFFF;              /* Pure White Background */
+  --snow-white: #FAFAFA;              /* Snow White */
+  --pearl-white: #F8F9FA;             /* Pearl White */
+  --soft-gray: #F1F3F4;               /* Soft Gray */
+  --light-gray: #E8EAED;              /* Light Gray */
+  --medium-gray: #DADCE0;             /* Medium Gray */
+  --border-gray: #C4C7C5;             /* Border Gray */
+  --text-gray: #5F6368;               /* Text Gray */
+  --dark-gray: #3C4043;               /* Dark Gray */
+  --charcoal: #202124;                /* Charcoal */
+  
+  /* ===== CLEAN ACCENT COLORS ===== */
+  --accent-blue: #4285F4;             /* Clean Blue */
+  --accent-green: #34A853;            /* Clean Green */
+  --accent-orange: #FF8F00;           /* Clean Orange */
+  --accent-red: #EA4335;              /* Clean Red */
+  --accent-purple: #9C27B0;           /* Clean Purple */
+  --accent-teal: #00BCD4;             /* Clean Teal */
+  
+  /* ===== GLASSMORPHISM FOUNDATION ===== */
+  --glass-white: rgba(255, 255, 255, 0.9);        /* Clean white glass */
+  --glass-light: rgba(255, 255, 255, 0.7);        /* Light glass */
+  --glass-medium: rgba(255, 255, 255, 0.5);       /* Medium glass */
+  --glass-subtle: rgba(255, 255, 255, 0.3);       /* Subtle glass */
+  --glass-frosted: rgba(248, 249, 250, 0.8);      /* Frosted glass */
+  
+  /* ===== NEOMORPHISM COLORS ===== */
+  --neo-light: #FFFFFF;                            /* Light side */
+  --neo-shadow: rgba(163, 177, 198, 0.6);         /* Soft shadow */
+  --neo-highlight: rgba(255, 255, 255, 0.8);      /* Highlight */
+  --neo-surface: #F0F2F5;                         /* Surface color */
+  --neo-pressed: #E4E6EA;                         /* Pressed state */
+  
+  /* ===== MODERN GLASS BLUR SYSTEM ===== */
+  --glass-blur-light: 10px;           /* Light blur */
+  --glass-blur-medium: 20px;          /* Medium blur */
+  --glass-blur-strong: 40px;          /* Strong blur */
+  --glass-blur-ultra: 60px;           /* Ultra blur */
+  --glass-brightness: 110%;           /* Brightness boost */
+  --glass-contrast: 105%;             /* Contrast enhancement */
+  --glass-saturation: 110%;           /* Saturation boost */
+  
+  /* ===== CLEAN GRADIENTS ===== */
+  --gradient-clean: linear-gradient(135deg, var(--pure-white) 0%, var(--pearl-white) 100%);
+  --gradient-glass: linear-gradient(135deg, var(--glass-white) 0%, var(--glass-light) 100%);
+  --gradient-subtle: linear-gradient(135deg, var(--snow-white) 0%, var(--soft-gray) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-teal) 100%);
+  --gradient-surface: linear-gradient(135deg, #F8F9FA 0%, #E8EAED 100%);
+  
+  /* ===== MINIMALIST BORDERS ===== */
+  --border-clean: rgba(218, 220, 224, 0.8);       /* Clean border */
+  --border-subtle: rgba(196, 199, 197, 0.6);      /* Subtle border */
+  --border-accent: rgba(66, 133, 244, 0.3);       /* Accent border */
+  --border-focus: rgba(66, 133, 244, 0.6);        /* Focus border */
+  
+  /* ===== CLEAN SHADOWS ===== */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.14);
+  
+  /* ===== NEOMORPHISM SHADOWS ===== */
+  --neo-shadow-inset: inset 6px 6px 12px var(--neo-shadow), inset -6px -6px 12px var(--neo-highlight);
+  --neo-shadow-raised: 6px 6px 12px var(--neo-shadow), -6px -6px 12px var(--neo-highlight);
+  --neo-shadow-pressed: inset 3px 3px 6px var(--neo-shadow), inset -3px -3px 6px var(--neo-highlight);
+  --neo-shadow-float: 12px 12px 24px var(--neo-shadow), -12px -12px 24px var(--neo-highlight);
+  
+  /* ===== MODERN SPACING (4pt Base) ===== */
+  --space-0: 0rem;
+  --space-1: 0.25rem;      /* 4px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-8: 2rem;         /* 32px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-12: 3rem;        /* 48px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  --space-24: 6rem;        /* 96px */
+  --space-32: 8rem;        /* 128px */
+  
+  /* ===== CLEAN BORDER RADIUS ===== */
+  --radius-sm: 0.375rem;   /* 6px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-3xl: 2rem;      /* 32px */
+  --radius-full: 9999px;   /* Full round */
+  
+  /* ===== CLEAN TYPOGRAPHY ===== */
+  --font-clean: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  /* ===== SMOOTH ANIMATIONS ===== */
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-swift: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-gentle: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* ===== CLEAN DURATIONS ===== */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+  --duration-medium: 0.35s;
+  --duration-slow: 0.5s;
+  
+  /* ===== CLEAN TRANSITIONS ===== */
+  --transition-fast: all var(--duration-fast) var(--ease-swift);
+  --transition-normal: all var(--duration-normal) var(--ease-smooth);
+  --transition-medium: all var(--duration-medium) var(--ease-gentle);
+  --transition-bounce: all var(--duration-medium) var(--ease-bounce);
+  
+  /* ===== SUBTLE HOVER EFFECTS ===== */
+  --hover-scale: 1.02;
+  --hover-lift: -2px;
+  --hover-rotate: 0.5deg;
+  
+  /* ===== Z-INDEX SYSTEM ===== */
+  --z-base: 0;
+  --z-content: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal: 50;
+  --z-tooltip: 70;
+  --z-maximum: 100;
+}
+
+/* ===== LIGHT MODE ENHANCEMENT ===== */
+@media (prefers-color-scheme: light) {
+  :root {
+    --primary-bg: var(--pure-white);
+    --secondary-bg: var(--snow-white);
+    --tertiary-bg: var(--pearl-white);
+    --glass-brightness: 108%;
+    --glass-contrast: 102%;
+    --glass-saturation: 105%;
+  }
+}
+
+/* ===== DARK MODE MINIMAL ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pure-white: #1A1A1A;
+    --snow-white: #242424;
+    --pearl-white: #2A2A2A;
+    --soft-gray: #303030;
+    --light-gray: #3A3A3A;
+    --medium-gray: #444444;
+    --text-gray: #E0E0E0;
+    --dark-gray: #F0F0F0;
+    --charcoal: #FFFFFF;
+    
+    --glass-white: rgba(26, 26, 26, 0.9);
+    --glass-light: rgba(36, 36, 36, 0.8);
+    --glass-medium: rgba(42, 42, 42, 0.7);
+    --neo-surface: #242424;
+    --neo-shadow: rgba(0, 0, 0, 0.3);
+    --neo-highlight: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ===== PERFORMANCE MODE ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0s;
+    --duration-normal: 0s;
+    --duration-medium: 0s;
+    --duration-slow: 0s;
+    --ease-bounce: ease;
+    --ease-gentle: ease;
+  }
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  :root {
+    --glass-blur-light: 8px;
+    --glass-blur-medium: 16px;
+    --glass-blur-strong: 32px;
+    --glass-blur-ultra: 48px;
+    --hover-scale: 1.01;
+    --hover-lift: -1px;
+    --hover-rotate: 0deg;
+  }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+  :root {
+    --glass-white: rgba(255, 255, 255, 1);
+    --glass-light: rgba(248, 249, 250, 1);
+    --border-clean: rgba(0, 0, 0, 0.2);
+    --border-subtle: rgba(0, 0, 0, 0.3);
   }
 } 

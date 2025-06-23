@@ -11,151 +11,193 @@ interface WaveTransitionProps {
 
 export const WaveTransition = ({ 
   className = '', 
-  intensity = 0.15, // Минимальная интенсивность
-  speed = 0.3, // Очень медленно для еле заметности
-  height = 6 // Очень низкие волны
+  intensity = 0.2, // Мягкая интенсивность для минимализма
+  speed = 0.3, // Медленнее для элегантности
+  height = 6 // Умеренная высота
 }: WaveTransitionProps) => {
   
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   
   // Используем useId для стабильных ID между сервером и клиентом
   const uniqueId = useId()
-  const gradientId = `wave-gradient-${uniqueId}`
-  
-  // Защита от некорректных значений
-  const safeHeight = typeof height === 'number' && !isNaN(height) && height > 0 ? height : 6
-  const safeIntensity = typeof intensity === 'number' && !isNaN(intensity) ? Math.max(0, Math.min(1, intensity)) : 0.15
-  const safeSpeed = typeof speed === 'number' && !isNaN(speed) && speed > 0 ? speed : 0.3
+  const gradientId = `clean-wave-gradient-${uniqueId}`
+  const filterId = `clean-wave-filter-${uniqueId}`
   
   useEffect(() => {
-    // Определяем предпочтения пользователя по анимациям
-    const checkReducedMotion = () => {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-      setPrefersReducedMotion(mediaQuery.matches)
-    }
-    
-    checkReducedMotion()
-    
-    // Слушатель для изменения настроек анимации
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const handleChange = () => checkReducedMotion()
-    mediaQuery.addEventListener('change', handleChange)
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange)
-    }
+    setPrefersReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   }, [])
-  
-  // Если анимации отключены, не показываем волны
-  if (prefersReducedMotion) {
-    return null
-  }
-  
-  // Функция для создания безопасных SVG path
-  const createSafePath = (pathTemplate: string): string => {
-    try {
-      return pathTemplate
-        .replace(/NaN/g, '0')
-        .replace(/undefined/g, '0')
-        .replace(/Infinity/g, '0')
-    } catch (error) {
-      console.warn('Error creating SVG path:', error)
-      return `M0,${safeHeight/2} L1200,${safeHeight/2} L1200,${safeHeight} L0,${safeHeight} Z`
+
+  // Clean minimalist colors - мягкие элегантные тона
+  const cleanColors = [
+    '#4285F4', // Clean Blue
+    '#34A853', // Clean Green  
+    '#00BCD4', // Clean Teal
+    '#9C27B0', // Clean Purple
+    '#FF8F00', // Clean Orange
+    '#607D8B', // Clean Blue Gray
+    '#795548', // Clean Brown
+    '#8BC34A'  // Clean Light Green
+  ]
+
+  // Мягкая амплитуда для элегантного эффекта
+  const waveHeight = height * intensity
+  const animationDuration = 25 / speed // Медленные элегантные волны
+
+  // Генерируем мягкие элегантные волны
+  const generateCleanWavePath = (phase: number, amplitude: number) => {
+    const points = []
+    const segments = 6 // Меньше сегментов для простоты
+    
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * 100
+      const y = Math.sin((i / segments) * Math.PI * 2 + phase) * amplitude
+      points.push(`${x},${50 + y}`)
     }
+    
+    return `M0,50 C${points.join(' ')} 100,50 V100 H0 Z`
+  }
+
+  if (prefersReducedMotion) {
+    return (
+      <div 
+        className={`w-full overflow-hidden ${className}`}
+        style={{ height: `${height}px` }}
+      >
+        <div 
+          className="w-full h-full"
+          style={{
+            background: `linear-gradient(90deg, ${cleanColors[0]}20, ${cleanColors[1]}15, ${cleanColors[2]}10)`
+          }}
+        />
+      </div>
+    )
   }
   
   return (
     <div 
-      className={`fixed bottom-0 left-0 w-full pointer-events-none z-10 ${className}`}
-      style={{ 
-        height: `${safeHeight}px`
-      }}
+      className={`relative w-full overflow-hidden ${className}`}
+      style={{ height: `${height}px` }}
     >
+      {/* Clean minimalist background base */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(135deg, 
+            ${cleanColors[0]}12 0%, 
+            ${cleanColors[1]}08 25%, 
+            ${cleanColors[2]}10 50%, 
+            ${cleanColors[3]}06 75%, 
+            ${cleanColors[0]}08 100%)`,
+          opacity: 0.6
+        }}
+      />
+      
+      {/* Мягкие SVG волны */}
       <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 1200 ${safeHeight}`}
+        className="absolute inset-0 w-full h-full"
         preserveAspectRatio="none"
-        className="absolute top-0 left-0"
+        viewBox="0 0 100 100"
+        style={{ opacity: 0.7 }}
       >
         <defs>
-          {/* Subtle градиент интегрированный с дизайн-системой */}
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(30, 58, 138, 0.08)" />
-            <stop offset="50%" stopColor="rgba(59, 130, 246, 0.06)" />
-            <stop offset="100%" stopColor="rgba(139, 92, 246, 0.04)" />
+          {/* Clean gradient definition */}
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={cleanColors[0]} stopOpacity="0.3" />
+            <stop offset="25%" stopColor={cleanColors[1]} stopOpacity="0.2" />
+            <stop offset="50%" stopColor={cleanColors[2]} stopOpacity="0.25" />
+            <stop offset="75%" stopColor={cleanColors[3]} stopOpacity="0.15" />
+            <stop offset="100%" stopColor={cleanColors[0]} stopOpacity="0.2" />
           </linearGradient>
+          
+          {/* Soft blur filter */}
+          <filter id={filterId}>
+            <feGaussianBlur stdDeviation="0.8" result="blur" />
+            <feColorMatrix
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.8 0"
+            />
+          </filter>
         </defs>
         
-        {/* Основная еле заметная волна */}
+        {/* Мягкие анимированные волны */}
+        {[0, 1, 2].map((index) => (
         <motion.path
-          d={createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7} L1200,${safeHeight} L0,${safeHeight} Z`)}
+            key={index}
+            d={generateCleanWavePath(index * Math.PI * 0.6, waveHeight * (1 - index * 0.2))}
           fill={`url(#${gradientId})`}
-          style={{ 
-            opacity: safeIntensity
-          }}
+            filter={`url(#${filterId})`}
           animate={{
             d: [
-              createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.65} Q300,${safeHeight*0.75} 600,${safeHeight*0.65} Q900,${safeHeight*0.55} 1200,${safeHeight*0.65} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.8} Q300,${safeHeight*0.55} 600,${safeHeight*0.8} Q900,${safeHeight*0.9} 1200,${safeHeight*0.8} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7} L1200,${safeHeight} L0,${safeHeight} Z`)
+                generateCleanWavePath(index * Math.PI * 0.6, waveHeight * (1 - index * 0.2)),
+                generateCleanWavePath(index * Math.PI * 0.6 + Math.PI * 2, waveHeight * (1 - index * 0.2)),
+                generateCleanWavePath(index * Math.PI * 0.6 + Math.PI * 4, waveHeight * (1 - index * 0.2)),
             ]
           }}
           transition={{
-            duration: 20 / safeSpeed,
+              duration: animationDuration + index * 3,
             repeat: Infinity,
-            ease: [0.25, 0.8, 0.25, 1] // Очень мягкий easing
-          }}
-        />
-        
-        {/* Вторая еще более тонкая волна */}
-        <motion.path
-          d={createSafePath(`M0,${safeHeight*0.75} Q400,${safeHeight*0.65} 800,${safeHeight*0.75} Q1000,${safeHeight*0.85} 1200,${safeHeight*0.75} L1200,${safeHeight} L0,${safeHeight} Z`)}
-          fill="rgba(255, 255, 255, 0.03)"
+              ease: "linear",
+              delay: index * 0.5
+            }}
           style={{ 
-            opacity: safeIntensity * 0.7
-          }}
-          animate={{
-            d: [
-              createSafePath(`M0,${safeHeight*0.75} Q400,${safeHeight*0.65} 800,${safeHeight*0.75} Q1000,${safeHeight*0.85} 1200,${safeHeight*0.75} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.8} Q400,${safeHeight*0.7} 800,${safeHeight*0.8} Q1000,${safeHeight*0.6} 1200,${safeHeight*0.8} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.7} Q400,${safeHeight*0.8} 800,${safeHeight*0.7} Q1000,${safeHeight*0.9} 1200,${safeHeight*0.7} L1200,${safeHeight} L0,${safeHeight} Z`),
-              createSafePath(`M0,${safeHeight*0.75} Q400,${safeHeight*0.65} 800,${safeHeight*0.75} Q1000,${safeHeight*0.85} 1200,${safeHeight*0.75} L1200,${safeHeight} L0,${safeHeight} Z`)
-            ]
-          }}
-          transition={{
-            duration: 15 / safeSpeed,
-            repeat: Infinity,
-            ease: [0.25, 0.8, 0.25, 1],
-            delay: 5
-          }}
-        />
-        
-        {/* Тонкая контурная линия для подчеркивания */}
-        <motion.path
-          d={createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7}`)}
-          stroke="rgba(59, 130, 246, 0.1)"
-          strokeWidth="1"
-          fill="none"
-          style={{ 
-            opacity: safeIntensity
-          }}
-          animate={{
-            d: [
-              createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7}`),
-              createSafePath(`M0,${safeHeight*0.65} Q300,${safeHeight*0.75} 600,${safeHeight*0.65} Q900,${safeHeight*0.55} 1200,${safeHeight*0.65}`),
-              createSafePath(`M0,${safeHeight*0.8} Q300,${safeHeight*0.55} 600,${safeHeight*0.8} Q900,${safeHeight*0.9} 1200,${safeHeight*0.8}`),
-              createSafePath(`M0,${safeHeight*0.7} Q300,${safeHeight*0.6} 600,${safeHeight*0.7} Q900,${safeHeight*0.8} 1200,${safeHeight*0.7}`)
-            ]
-          }}
-          transition={{
-            duration: 20 / safeSpeed,
-            repeat: Infinity,
-            ease: [0.25, 0.8, 0.25, 1]
-          }}
-        />
+              opacity: 0.6 - index * 0.15, // Мягкая непрозрачность
+              mixBlendMode: 'normal' // Обычное смешивание
+            }}
+          />
+        ))}
       </svg>
+      
+      {/* Soft shimmer overlay */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+          style={{ 
+          background: `linear-gradient(45deg, 
+            transparent 0%, 
+            ${cleanColors[0]}15 20%, 
+            transparent 40%, 
+            ${cleanColors[2]}10 60%, 
+            transparent 80%, 
+            ${cleanColors[1]}08 100%)`,
+          backgroundSize: '300% 300%'
+          }}
+          animate={{
+          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
+          }}
+          transition={{
+          duration: animationDuration * 2,
+            repeat: Infinity,
+          ease: "linear"
+        }}
+      />
+      
+      {/* Clean edge highlights */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(to right, 
+            ${cleanColors[0]}30 0%, 
+            transparent 20%, 
+            transparent 80%, 
+            ${cleanColors[2]}25 100%)`
+        }}
+      />
+      
+      {/* Subtle ambient glow */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse at center, 
+            ${cleanColors[1]}08 0%, 
+            transparent 70%)`
+        }}
+          animate={{
+          opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{
+          duration: animationDuration * 1.5,
+            repeat: Infinity,
+          ease: "easeInOut"
+          }}
+        />
     </div>
   )
 } 
