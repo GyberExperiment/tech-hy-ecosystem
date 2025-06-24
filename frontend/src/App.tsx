@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 
 // Import Providers
-import I18nProvider from './i18n/I18nProvider.tsx';
+import I18nProvider from './i18n/I18nProvider';
 import { Web3Provider } from './shared/lib/Web3Context';
 
 // Import Layout Components
@@ -13,6 +13,7 @@ import Home from './app/Home';
 import Tokens from './app/Tokens';
 import Staking from './app/Staking';
 import Governance from './app/Governance';
+import Dashboard from './app/Dashboard';
 
 // Import Showcase Component
 import { StyleShowcase } from './shared/ui/StyleShowcase';
@@ -58,6 +59,7 @@ function App() {
                     <Route path="/tokens" element={<Tokens />} />
                     <Route path="/staking" element={<Staking />} />
                     <Route path="/governance" element={<Governance />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     
                     {/* Development/Debug Routes */}
                     <Route path="/showcase" element={<StyleShowcase />} />

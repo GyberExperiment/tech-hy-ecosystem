@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: t('navigation.dashboard'), href: '/', icon: BarChart3 },
+    { name: t('navigation.dashboard'), href: '/dashboard', icon: BarChart3 },
     { name: t('navigation.tokens'), href: '/tokens', icon: Coins },
     { name: t('navigation.locking'), href: '/staking', icon: Rocket },
     { name: t('navigation.governance'), href: '/governance', icon: Vote },
