@@ -94,7 +94,7 @@ class RpcService {
    */
   async withFallback<T>(
     operation: (provider: ethers.Provider) => Promise<T>,
-    timeoutMs: number = 10000
+    timeoutMs: number = 5000  // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ: 5 секунд вместо 10
   ): Promise<T> {
     let provider = await this.getProvider();
     
@@ -131,9 +131,18 @@ class RpcService {
     } catch (error) {
       const errorMessage = (error as Error).message;
       
-      // ✅ СПЕЦИАЛЬНАЯ ОБРАБОТКА: При rate limiting переключаемся на read-only
-      if (errorMessage?.includes('429') || errorMessage?.includes('Too Many Requests')) {
-        log.warn('RPC rate limiting detected, switching to read-only mode', {
+      // ✅ БОЛЕЕ АГРЕССИВНАЯ ОБРАБОТКА: Сразу переключаемся на read-only при проблемах
+      const shouldTryReadOnly = 
+        errorMessage?.includes('429') || 
+        errorMessage?.includes('Too Many Requests') ||
+        errorMessage?.includes('timeout') ||
+        errorMessage?.includes('TIMEOUT') ||
+        errorMessage?.includes('ECONNRESET') ||
+        errorMessage?.includes('ENOTFOUND') ||
+        errorMessage?.includes('network error');
+      
+      if (shouldTryReadOnly && this.web3Provider) {
+        log.warn('Network issues detected, trying read-only mode', {
           component: 'RpcService',
           function: 'withFallback',
           error: errorMessage,
@@ -141,9 +150,9 @@ class RpcService {
         });
         
         try {
-          // Принудительно используем read-only провайдер
+          // Принудительно используем read-only провайдер с меньшим таймаутом
           const readOnlyProvider = await this.getProvider(true);
-          const result = await withTimeout(operation(readOnlyProvider), timeoutMs);
+          const result = await withTimeout(operation(readOnlyProvider), timeoutMs / 2);
           
           log.info('RPC Service: Read-only fallback successful', {
             component: 'RpcService',
@@ -153,7 +162,7 @@ class RpcService {
           
           return result;
         } catch (readOnlyError) {
-          log.error('RPC Service: Read-only fallback also failed', {
+          log.debug('RPC Service: Read-only fallback also failed', {
             component: 'RpcService',
             function: 'withFallback',
             error: (readOnlyError as Error).message
@@ -162,15 +171,15 @@ class RpcService {
         }
       }
       
-      log.error('RPC operation failed with primary provider', {
+      log.warn('RPC operation failed with primary provider', {
         component: 'RpcService',
         function: 'withFallback',
         isWeb3Provider: !!this.web3Provider,
         error: errorMessage
-      }, error as Error);
+      });
 
       // If using Web3 provider, don't try fallbacks (user should handle wallet issues)
-      if (this.web3Provider) {
+      if (this.web3Provider && !shouldTryReadOnly) {
         throw error;
       }
 
@@ -182,7 +191,10 @@ class RpcService {
       
       let lastError = error;
       
-      for (let i = 1; i < rpcEndpoints.length; i++) {
+      // ✅ ОГРАНИЧИВАЕМ КОЛИЧЕСТВО ПОПЫТОК: максимум 2 fallback endpoint
+      const maxFallbacks = Math.min(3, rpcEndpoints.length);
+      
+      for (let i = 1; i < maxFallbacks; i++) {
         const rpcUrl = rpcEndpoints[i];
         
         try {
@@ -193,13 +205,15 @@ class RpcService {
             attemptNumber: i + 1
           });
           
-          // Add delay between attempts to avoid rate limiting
+          // ✅ МЕНЬШИЕ ЗАДЕРЖКИ между попытками
           if (i > 1) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * i));
+            await new Promise(resolve => setTimeout(resolve, 500 * i));
           }
           
           const fallbackProvider = this.getFallbackProvider(rpcUrl);
-          const result = await withTimeout(operation(fallbackProvider), timeoutMs);
+          // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ для fallback запросов
+          const fallbackTimeout = timeoutMs * 0.7; 
+          const result = await withTimeout(operation(fallbackProvider), fallbackTimeout);
             
           log.info('RPC Service: Fallback successful', {
               component: 'RpcService',
@@ -214,7 +228,7 @@ class RpcService {
             
             return result;
           } catch (fallbackError) {
-          log.warn('RPC Service: Fallback failed', {
+          log.debug('RPC Service: Fallback failed', {
               component: 'RpcService',
             function: 'withFallback',
             endpoint: rpcUrl,
@@ -224,15 +238,24 @@ class RpcService {
           RpcHealthMonitor.markFailure(rpcUrl);
           lastError = fallbackError;
           
-          // Extra delay after rate limiting errors
+          // ✅ УМЕНЬШЕННАЯ ЗАДЕРЖКА после rate limiting errors
           if ((fallbackError as Error).message?.includes('429') || 
               (fallbackError as Error).message?.includes('Too Many Requests')) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
       }
 
-      throw lastError;
+      // ✅ ФИНАЛЬНАЯ ПРОВЕРКА: Если все упало, возвращаем более информативную ошибку
+      const finalError = new Error(`All RPC endpoints failed. Last error: ${(lastError as Error).message}`);
+      log.warn('RPC Service: All fallbacks exhausted', {
+        component: 'RpcService',
+        function: 'withFallback',
+        finalError: finalError.message,
+        attemptsCount: maxFallbacks
+      });
+
+      throw finalError;
     }
   }
 

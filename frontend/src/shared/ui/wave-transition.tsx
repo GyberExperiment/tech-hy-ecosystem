@@ -43,19 +43,61 @@ export const WaveTransition = ({
   const waveHeight = height * intensity
   const animationDuration = 25 / speed // Медленные элегантные волны
 
-  // Генерируем мягкие элегантные волны
-  const generateCleanWavePath = (phase: number, amplitude: number) => {
-    const points = []
-    const segments = 6 // Меньше сегментов для простоты
+  // Генерируем правильные элегантные волны
+  const generateCleanWavePath = (phase: number, amplitude: number): string => {
+    // Проверяем входные параметры и устанавливаем fallback значения
+    const safePhase = isFinite(phase) ? phase : 0;
+    const safeAmplitude = isFinite(amplitude) ? amplitude : 0;
     
-    for (let i = 0; i <= segments; i++) {
-      const x = (i / segments) * 100
-      const y = Math.sin((i / segments) * Math.PI * 2 + phase) * amplitude
-      points.push(`${x},${50 + y}`)
+    // Если амплитуда слишком мала или параметры некорректны, возвращаем прямую линию
+    if (Math.abs(safeAmplitude) < 0.1) {
+      return 'M0,50 L100,50 V100 H0 Z';
     }
     
-    return `M0,50 C${points.join(' ')} 100,50 V100 H0 Z`
-  }
+    const segments = 8;
+    let path = 'M0,50';
+    
+    // Создаем плавную волну с правильными Bezier кривыми
+    for (let i = 0; i < segments; i++) {
+      const x1 = (i / segments) * 100;
+      const x2 = ((i + 1) / segments) * 100;
+      
+      // Вычисляем Y координаты с дополнительными проверками
+      const y1Raw = 50 + Math.sin((i / segments) * Math.PI * 2 + safePhase) * safeAmplitude;
+      const y2Raw = 50 + Math.sin(((i + 1) / segments) * Math.PI * 2 + safePhase) * safeAmplitude;
+      
+      // Ограничиваем Y координаты разумными пределами
+      const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) ? y1Raw : 50));
+      const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) ? y2Raw : 50));
+      
+      // Контрольные точки для плавности
+      const cx1 = x1 + (x2 - x1) * 0.3;
+      const cy1 = y1;
+      const cx2 = x1 + (x2 - x1) * 0.7;
+      const cy2 = y2;
+      
+      // Дополнительная проверка всех значений перед добавлением в path
+      if (isFinite(cx1) && isFinite(cy1) && isFinite(cx2) && isFinite(cy2) && 
+          isFinite(x2) && isFinite(y2) && 
+          cx1 >= 0 && cx2 >= 0 && x2 >= 0) {
+        // Округляем значения для стабильности
+        const roundedCx1 = Math.round(cx1 * 100) / 100;
+        const roundedCy1 = Math.round(cy1 * 100) / 100;
+        const roundedCx2 = Math.round(cx2 * 100) / 100;
+        const roundedCy2 = Math.round(cy2 * 100) / 100;
+        const roundedX2 = Math.round(x2 * 100) / 100;
+        const roundedY2 = Math.round(y2 * 100) / 100;
+        
+        path += ` C${roundedCx1},${roundedCy1} ${roundedCx2},${roundedCy2} ${roundedX2},${roundedY2}`;
+      } else {
+        // Fallback: добавляем прямую линию если что-то пошло не так
+        path += ` L${x2},50`;
+      }
+    }
+    
+    path += ' V100 H0 Z';
+    return path;
+  };
 
   if (prefersReducedMotion) {
     return (
@@ -119,37 +161,57 @@ export const WaveTransition = ({
         </defs>
         
         {/* Мягкие анимированные волны */}
-        {[0, 1, 2].map((index) => (
-        <motion.path
-            key={index}
-            d={generateCleanWavePath(index * Math.PI * 0.6, waveHeight * (1 - index * 0.2))}
-          fill={`url(#${gradientId})`}
-            filter={`url(#${filterId})`}
-          animate={{
-            d: [
-                generateCleanWavePath(index * Math.PI * 0.6, waveHeight * (1 - index * 0.2)),
-                generateCleanWavePath(index * Math.PI * 0.6 + Math.PI * 2, waveHeight * (1 - index * 0.2)),
-                generateCleanWavePath(index * Math.PI * 0.6 + Math.PI * 4, waveHeight * (1 - index * 0.2)),
-            ]
-          }}
-          transition={{
-              duration: animationDuration + index * 3,
-            repeat: Infinity,
-              ease: "linear",
-              delay: index * 0.5
-            }}
-          style={{ 
-              opacity: 0.6 - index * 0.15, // Мягкая непрозрачность
-              mixBlendMode: 'normal' // Обычное смешивание
-            }}
-          />
-        ))}
+        {[0, 1, 2].map((index) => {
+          const basePhase = index * Math.PI * 0.6;
+          const baseAmplitude = waveHeight * (1 - index * 0.2);
+          
+          // Генерируем пути для анимации с проверкой валидности
+          const pathFrames = [
+            generateCleanWavePath(basePhase, baseAmplitude),
+            generateCleanWavePath(basePhase + Math.PI * 2, baseAmplitude),
+            generateCleanWavePath(basePhase + Math.PI * 4, baseAmplitude),
+          ];
+          
+          // Проверяем что все пути валидны
+          const validPaths = pathFrames.every(path => 
+            path && path.length > 0 && !path.includes('undefined') && !path.includes('NaN')
+          );
+          
+          // Если пути невалидны, используем fallback
+          const safePaths = validPaths ? pathFrames : [
+            'M0,50 L100,50 V100 H0 Z',
+            'M0,50 L100,50 V100 H0 Z',
+            'M0,50 L100,50 V100 H0 Z'
+          ];
+          
+          return (
+            <motion.path
+              key={index}
+              d={safePaths[0]}
+              fill={`url(#${gradientId})`}
+              filter={`url(#${filterId})`}
+              animate={{
+                d: safePaths
+              }}
+              transition={{
+                duration: Math.max(5, animationDuration + index * 3), // Минимальная длительность
+                repeat: Infinity,
+                ease: "linear",
+                delay: index * 0.5
+              }}
+              style={{ 
+                opacity: Math.max(0.1, 0.6 - index * 0.15), // Минимальная непрозрачность
+                mixBlendMode: 'normal'
+              }}
+            />
+          )
+        })}
       </svg>
       
       {/* Soft shimmer overlay */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
-          style={{ 
+        style={{ 
           background: `linear-gradient(45deg, 
             transparent 0%, 
             ${cleanColors[0]}15 20%, 
@@ -158,13 +220,13 @@ export const WaveTransition = ({
             transparent 80%, 
             ${cleanColors[1]}08 100%)`,
           backgroundSize: '300% 300%'
-          }}
-          animate={{
+        }}
+        animate={{
           backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
-          }}
-          transition={{
+        }}
+        transition={{
           duration: animationDuration * 2,
-            repeat: Infinity,
+          repeat: Infinity,
           ease: "linear"
         }}
       />
@@ -189,15 +251,15 @@ export const WaveTransition = ({
             ${cleanColors[1]}08 0%, 
             transparent 70%)`
         }}
-          animate={{
+        animate={{
           opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{
+        }}
+        transition={{
           duration: animationDuration * 1.5,
-            repeat: Infinity,
+          repeat: Infinity,
           ease: "easeInOut"
-          }}
-        />
+        }}
+      />
     </div>
   )
 } 

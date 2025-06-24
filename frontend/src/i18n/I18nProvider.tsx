@@ -20,4 +20,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
       </Suspense>
     </I18nextProvider>
   )
-} 
+}
+
+// Default export для совместимости
+export default I18nProvider 

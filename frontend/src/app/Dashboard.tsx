@@ -1,309 +1,359 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useWeb3 } from '../contexts/Web3Context';
-import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
+import { useAccount, useChainId } from 'wagmi';
+import StakingStats from '../entities/Staking/ui/StakingStats';
 import { 
-  Activity, 
-  Coins, 
-  TrendingUp, 
-  Users, 
-  ExternalLink, 
-  Lock, 
-  AlertTriangle, 
-  CreditCard,
-  Gift,
-  Vote,
-  Rocket
+  Wallet,
+  BarChart3,
+  DollarSign,
+  Coins,
+  ArrowUpRight,
+  AlertTriangle,
+  RefreshCw,
+  Activity,
+  Users,
+  Zap,
+  Lock
 } from 'lucide-react';
-import WalletTroubleshoot from '../components/WalletTroubleshoot';
-import StakingStats from '../components/StakingStats';
-import TransactionHistory from '../components/TransactionHistory';
-import { ContractStatus } from '../components/ContractStatus';
-import TokenStats from '../components/TokenStats';
-import { useTokenData } from '../hooks/useTokenData';
+
+interface AccountStats {
+  vcBalance: string;
+  bnbBalance: string;
+  lpBalance: string;
+  vgBalance: string;
+  totalValue: string;
+  lockedLP: string;
+  pendingRewards: string;
+}
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation(['dashboard', 'common']);
-  const { 
-    account, 
-    isConnected, 
-    isCorrectNetwork
-  } = useWeb3();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const isCorrectNetwork = chainId === 97; // BSC Testnet
 
-  // Use the shared token data hook
-  const { 
-    balances, 
-    tokens,
-    loading: tokenLoading, 
-    refreshing,
-    formatBalance 
-  } = useTokenData();
+  const [accountStats] = useState<AccountStats>({
+    vcBalance: '89.9M',
+    bnbBalance: '0.3859',
+    lpBalance: '159.00',
+    vgBalance: '1.6K',
+    totalValue: '$2,847.32',
+    lockedLP: '159.00',
+    pendingRewards: '0.15'
+  });
 
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Set initial loading to false when token data is loaded
-  useEffect(() => {
-    if (!tokenLoading && (balances.VC !== '0' || balances.VG !== '0' || balances.BNB !== '0')) {
-      setInitialLoading(false);
-    }
-  }, [tokenLoading, balances]);
+  const refreshData = async () => {
+    setRefreshing(true);
+    // Simulate data refresh
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
 
-  const tokenCards = [
-    {
-      symbol: 'VC',
-      name: TOKEN_INFO.VC.name,
-      icon: <CreditCard className="w-6 h-6" />,
-      color: 'from-blue-500 to-cyan-500',
-      balance: balances.VC || '0',
-      address: CONTRACTS.VC_TOKEN,
-    },
-    {
-      symbol: 'VG',
-      name: TOKEN_INFO.VG.name,
-      icon: <Gift className="w-6 h-6" />,
-      color: 'from-yellow-500 to-orange-500',
-      balance: balances.VG || '0',
-      address: CONTRACTS.VG_TOKEN,
-    },
-    {
-      symbol: 'VGV',
-      name: TOKEN_INFO.VG_VOTES.name,
-      icon: <Vote className="w-6 h-6" />,
-      color: 'from-purple-500 to-pink-500',
-      balance: balances.VGVotes || '0',
-      address: CONTRACTS.VG_TOKEN_VOTES,
-    },
-    {
-      symbol: 'LP',
-      name: TOKEN_INFO.LP.name,
-      icon: <Rocket className="w-6 h-6" />,
-      color: 'from-green-500 to-emerald-500',
-      balance: balances.LP || '0',
-      address: CONTRACTS.LP_TOKEN,
-    },
-  ];
-
-  const stats = [
-    {
-      title: t('dashboard:stats.bnbBalance'),
-      value: formatBalance(balances.BNB || '0'),
-      unit: 'tBNB',
-      icon: Activity,
-      color: 'text-blue-400',
-    },
-    {
-      title: t('dashboard:stats.totalTokens'),
-      value: tokenCards.filter(token => parseFloat(token.balance) > 0).length.toString(),
-      unit: t('dashboard:stats.types'),
-      icon: Coins,
-      color: 'text-green-400',
-    },
-    {
-      title: t('dashboard:stats.lpLocking'),
-      value: parseFloat(balances.LP || '0') > 0 ? t('dashboard:stats.active') : t('dashboard:stats.inactive'),
-      unit: '',
-      icon: TrendingUp,
-      color: 'text-purple-400',
-    },
-    {
-      title: t('dashboard:stats.governancePower'),
-      value: formatBalance(balances.VGVotes || '0'),
-      unit: t('dashboard:stats.votes'),
-      icon: Users,
-      color: 'text-yellow-400',
-    },
-  ];
-
+  // Connection status card
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-responsive">
-        <div className="text-center py-8 sm:py-12">
-          <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-responsive-2xl font-semibold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {t('dashboard:welcome')}
-          </h2>
-          <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto">
-            {t('dashboard:subtitle')}
-          </p>
-          <div className="text-responsive-base text-gray-300">
-            {t('common:messages.connectWallet')}
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <motion.div 
+          className="text-center space-y-6 max-w-md mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300">
+            <Wallet className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-4">Кошелек не подключен</h3>
+            <p className="text-slate-400 mb-6">
+              Подключите кошелек для доступа к Dashboard и управлению активами
+            </p>
+            <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105">
+              Подключить кошелек
+            </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-responsive">
-        <div className="text-center py-8 sm:py-12">
-          <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-responsive-2xl font-semibold mb-4 text-red-400">
-            {t('dashboard:errors.wrongNetwork')}
-          </h2>
-          <p className="text-responsive-lg text-gray-400 mb-6 sm:mb-8">
-            {t('common:messages.wrongNetwork')}
-          </p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <motion.div 
+          className="text-center space-y-6 max-w-md mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300">
+            <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-4">Неправильная сеть</h3>
+            <p className="text-slate-400 mb-6">
+              Переключитесь на BSC Testnet для доступа к Dashboard
+            </p>
+            <button className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105">
+              Переключить на BSC Testnet
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-responsive px-responsive">
-      {/* Header */}
-      <div className="text-center space-y-3 sm:space-y-4">
-        <h1 className="text-responsive-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          {t('dashboard:title')}
-        </h1>
-        <p className="text-responsive-lg text-gray-300 max-w-2xl mx-auto">
-          {t('dashboard:subtitle')}
-        </p>
-        {refreshing && (
-          <div className="flex items-center justify-center space-x-2 text-blue-400">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-            <span className="text-responsive-sm">{t('common:labels.refreshing')}</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Header */}
+        <motion.div 
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+              {t('dashboard:title')}
+            </h1>
+            <p className="text-slate-400">
+              {t('dashboard:subtitle')}
+            </p>
           </div>
-        )}
-      </div>
-
-      {/* Contract Status */}
-      <ContractStatus />
-
-      {/* Connection Status & Troubleshooting */}
-      {!isConnected && (
-        <WalletTroubleshoot />
-      )}
-
-      {/* Token Statistics - Reusable Component */}
-      <TokenStats />
-
-      {/* Stats Grid */}
-      <div className="grid-responsive-1-2-4">
-        {stats.map((stat, index) => (
-          <div key={index} className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-responsive-xs text-gray-400">{stat.title}</p>
-                <div className="flex items-baseline space-x-2">
-                  <p className="text-responsive-lg font-semibold text-slate-100">
-                    {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : stat.value}
-                  </p>
-                  {stat.unit && (
-                    <p className="text-responsive-xs text-gray-400">{stat.unit}</p>
-                  )}
-                </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <div className="text-sm text-slate-400">Подключен как</div>
+              <div className="text-white font-mono text-sm">
+                {address?.slice(0, 6)}...{address?.slice(-4)}
               </div>
-              <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`} />
+            </div>
+            
+            <button
+              onClick={refreshData}
+              disabled={refreshing}
+              className="p-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-300 group"
+            >
+              <RefreshCw className={`w-5 h-5 text-slate-400 group-hover:text-white transition-colors duration-300 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Account Overview Cards */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 group-hover:scale-110 transition-transform duration-300">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-green-400" />
+            </div>
+            <div className="space-y-2">
+              <div className="text-2xl font-bold text-white">{accountStats.totalValue}</div>
+              <div className="text-sm text-slate-400">Общая стоимость портфеля</div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Token Balances */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-6 flex items-center text-slate-100">
-          <Coins className="mr-3 text-blue-400" />
-          {t('dashboard:sections.tokenBalances')}
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {tokenCards.map((token) => (
-            <div key={token.symbol} className="card group hover:scale-105 transition-transform duration-200">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center text-xl`}>
-                    {token.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-slate-100">{token.symbol}</h3>
-                    <p className="text-sm text-gray-400">{token.name}</p>
-                  </div>
-                </div>
-                <a
-                  href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ExternalLink className="w-4 h-4 text-gray-400 hover:text-white" />
-                </a>
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-blue-600 group-hover:scale-110 transition-transform duration-300">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">+2.4%</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-2xl font-bold text-white">{accountStats.vcBalance}</div>
+              <div className="text-sm text-slate-400">VC Баланс</div>
+            </div>
+          </div>
+
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 group-hover:scale-110 transition-transform duration-300">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-green-400" />
+            </div>
+            <div className="space-y-2">
+              <div className="text-2xl font-bold text-white">{accountStats.vgBalance}</div>
+              <div className="text-sm text-slate-400">VG Токены</div>
+            </div>
+          </div>
+
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 group-hover:scale-110 transition-transform duration-300">
+                <Lock className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full">Locked</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-2xl font-bold text-white">{accountStats.lockedLP}</div>
+              <div className="text-sm text-slate-400">Заблокированные LP</div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Dashboard Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Ecosystem Statistics */}
+          <motion.div 
+            className="lg:col-span-2"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <StakingStats />
+          </motion.div>
+
+          {/* Account Details Sidebar */}
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            
+            {/* Recent Activity */}
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-6">
+                <Activity className="w-5 h-5 text-blue-400" />
+                <h3 className="text-xl font-bold text-white">Последняя активность</h3>
               </div>
               
-              <div className="text-right">
-                <p className="text-2xl font-semibold text-slate-100">
-                  {initialLoading ? t('common:labels.loading') : refreshing ? t('common:labels.refreshing') : formatBalance(token.balance)}
-                </p>
-                <p className="text-sm text-gray-400">{token.symbol}</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-green-500/20">
+                      <ArrowUpRight className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">LP Locked</div>
+                      <div className="text-xs text-slate-400">2 часа назад</div>
+                    </div>
+                  </div>
+                  <div className="text-green-400 font-bold">+159 LP</div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-purple-500/20">
+                      <Zap className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">VG Received</div>
+                      <div className="text-xs text-slate-400">2 часа назад</div>
+                    </div>
+                  </div>
+                  <div className="text-purple-400 font-bold">+1.6K VG</div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-blue-500/20">
+                      <Coins className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">VC Transfer</div>
+                      <div className="text-xs text-slate-400">1 день назад</div>
+                    </div>
+                  </div>
+                  <div className="text-blue-400 font-bold">+89M VC</div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-6 flex items-center text-slate-100">
-          <Activity className="mr-3 text-green-400" />
-          {t('dashboard:sections.quickActions')}
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Coins className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.manageTokens.title')}</h3>
-            <p className="text-gray-400 mb-4">{t('dashboard:actions.manageTokens.description')}</p>
-            <a href="/tokens" className="btn-primary inline-block">
-              {t('dashboard:actions.manageTokens.button')}
-            </a>
-          </div>
-          
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400" />
-            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.lpLocking.title')}</h3>
-            <p className="text-gray-400 mb-4">{t('dashboard:actions.lpLocking.description')}</p>
-            <a href="/staking" className="btn-primary inline-block">
-              {t('dashboard:actions.lpLocking.button')}
-            </a>
-          </div>
-          
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-semibold mb-2 text-slate-100">{t('dashboard:actions.governance.title')}</h3>
-            <p className="text-gray-400 mb-4">{t('dashboard:actions.governance.description')}</p>
-            <a href="/governance" className="btn-primary inline-block">
-              {t('dashboard:actions.governance.button')}
-            </a>
-          </div>
-        </div>
-      </div>
+            {/* Quick Actions */}
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-6">
+                <Zap className="w-5 h-5 text-orange-400" />
+                <h3 className="text-xl font-bold text-white">Быстрые действия</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <button className="w-full p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-300 group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Lock className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                      <span className="text-white font-medium">Заблокировать LP</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                </button>
 
-      {/* Contract Addresses */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4 text-slate-100">{t('dashboard:sections.contractAddresses')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          {tokenCards.map((token) => (
-            <div key={token.symbol} className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">{token.name}</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+                <button className="w-full p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-xl hover:from-green-500/30 hover:to-blue-500/30 transition-all duration-300 group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Coins className="w-5 h-5 text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                      <span className="text-white font-medium">Управление токенами</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                </button>
+
+                <button className="w-full p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300 group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Users className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+                      <span className="text-white font-medium">DAO Голосование</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
+                  </div>
+                </button>
+              </div>
             </div>
-          ))}
+
+            {/* Portfolio Allocation */}
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-6">
+                <BarChart3 className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-xl font-bold text-white">Распределение портфеля</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-400">VC Токены</span>
+                    <span className="text-white">68.5%</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full" style={{ width: '68.5%' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-400">VG Токены</span>
+                    <span className="text-white">22.3%</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full" style={{ width: '22.3%' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-400">BNB</span>
+                    <span className="text-white">9.2%</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-yellow-500 to-orange-600 h-2 rounded-full" style={{ width: '9.2%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </motion.div>
         </div>
+
       </div>
-
-      {/* Staking Stats */}
-      <StakingStats />
-
-      {/* Transaction History */}
-      <TransactionHistory />
     </div>
   );
 };

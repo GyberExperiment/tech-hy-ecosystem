@@ -535,7 +535,7 @@ const Tokens: React.FC = () => {
               {filteredTokens.map((token) => (
                 <div 
                   key={token.symbol} 
-                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.02] animate-glass-float ${
+                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-glass-float ${
                     selectedToken?.symbol === token.symbol 
                       ? 'ring-2 ring-blue-500/50 glass-accent animate-glass-pulse' 
                       : ''
@@ -865,7 +865,7 @@ const Tokens: React.FC = () => {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-responsive">
-          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
             <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
             <p className="text-gray-400 mb-4">Заблокируйте LP токены и получите VG</p>
@@ -874,7 +874,7 @@ const Tokens: React.FC = () => {
             </a>
           </div>
           
-          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-400 mb-4">Участвуйте в голосовании и управлении</p>
@@ -883,7 +883,7 @@ const Tokens: React.FC = () => {
             </a>
           </div>
           
-          <div className="liquid-glass text-center group hover:scale-105 transition-all duration-300 animate-glass-float">
+          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-glass-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
             <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>

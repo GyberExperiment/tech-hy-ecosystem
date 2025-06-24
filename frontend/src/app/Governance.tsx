@@ -420,7 +420,7 @@ const Governance: React.FC = () => {
             {filteredProposals.map((proposal) => (
               <div 
                 key={proposal.id} 
-                className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.02] animate-glass-float ${
+                className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-glass-float ${
                   selectedProposal?.id === proposal.id 
                     ? 'ring-2 ring-purple-500/50 glass-secondary' 
                     : ''
@@ -610,7 +610,7 @@ const Governance: React.FC = () => {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
+          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
             <Coins className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Получить VG</h3>
             <p className="text-gray-400 mb-4">Заблокируйте LP токены для получения VG</p>
@@ -619,7 +619,7 @@ const Governance: React.FC = () => {
             </a>
           </div>
           
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
+          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
             <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Конвертировать VG</h3>
             <p className="text-gray-400 mb-4">Обменяйте VG на VGVotes для голосования</p>
@@ -628,7 +628,7 @@ const Governance: React.FC = () => {
             </a>
           </div>
           
-          <div className="card text-center group hover:scale-105 transition-transform duration-200">
+          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Аналитика</h3>
             <p className="text-gray-400 mb-4">Просмотрите статистику governance</p>

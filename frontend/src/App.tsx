@@ -1,9 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 
 // Import Providers
-import { I18nProvider } from './i18n/I18nProvider';
+import I18nProvider from './i18n/I18nProvider.tsx';
 import { Web3Provider } from './shared/lib/Web3Context';
 
 // Import Layout Components
@@ -26,7 +25,12 @@ function App() {
   return (
     <I18nProvider>
       <Web3Provider>
-        <Router>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           <div className="min-h-screen text-dark-gray relative overflow-hidden">
             {/* Clean Light Background */}
             <div className="fixed inset-0 bg-pure-white">
