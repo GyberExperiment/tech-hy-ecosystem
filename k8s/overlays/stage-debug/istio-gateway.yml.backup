@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: techhy-ecosystem-stage-debug-gateway
+  namespace: default
+  labels:
+    app: techhy-ecosystem-stage-debug
+    environment: stage-debug
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - stage.techhyecosystem.build.infra.gyber.org
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - stage.techhyecosystem.build.infra.gyber.org
+    tls:
+      mode: SIMPLE
+      credentialName: techhy-stage-istio-tls
