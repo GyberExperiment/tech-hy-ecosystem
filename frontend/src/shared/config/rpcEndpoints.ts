@@ -16,11 +16,32 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 ];
 
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - самый надёжный (ПЕРВЫЙ)
-  'https://data-seed-prebsc-1-s1.binance.org:8545', // ✅ Официальный Binance endpoint
-  'https://bsc-testnet.drpc.org',                  // ✅ dRPC - надёжный провайдер
-  'https://bsc-testnet-dataseed.bnbchain.org',     // ✅ Официальный Binance endpoint
-  'https://bsc-testnet.bnbchain.org',              // ✅ Официальный Binance endpoint (backup)
+  // ✅ Самые надежные endpoints (проверены на стабильность)
+  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - обычно самый надёжный
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',  // ✅ omniatech - очень стабильный
+  'https://bsc-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3',  // ✅ NodeReal с API key
+  
+  // ✅ Официальные Binance endpoints
+  'https://data-seed-prebsc-1-s1.binance.org:8545', 
+  'https://data-seed-prebsc-2-s1.binance.org:8545',
+  'https://data-seed-prebsc-1-s2.binance.org:8545',
+  'https://data-seed-prebsc-2-s2.binance.org:8545',
+  'https://data-seed-prebsc-1-s3.binance.org:8545',
+  'https://data-seed-prebsc-2-s3.binance.org:8545',
+  
+  // ✅ Альтернативные провайдеры
+  'https://bsc-testnet.drpc.org',
+  'https://bsc-testnet-dataseed.bnbchain.org',
+  'https://bsc-testnet.bnbchain.org',
+  'https://bsc-testnet.public.blastapi.io',
+  'https://bsc-testnet-rpc.publicnode.com',
+  
+  // ✅ Дополнительные backup endpoints
+  'https://rpc.ankr.com/bsc_testnet_chapel',
+  'https://bsc-testnet.blockpi.network/v1/rpc/public',
+  'https://bsc-testnet-rpc.allthatnode.com',
+  'https://1rpc.io/bnb-testnet',
+  'https://bsctestapi.terminet.io/rpc'
 ];
 
 // 🎯 Current network configuration

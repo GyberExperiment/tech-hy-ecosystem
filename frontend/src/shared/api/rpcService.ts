@@ -94,7 +94,7 @@ class RpcService {
    */
   async withFallback<T>(
     operation: (provider: ethers.Provider) => Promise<T>,
-    timeoutMs: number = 5000  // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ: 5 секунд вместо 10
+    timeoutMs: number = 3500  // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ: 3.5 секунд для быстрого переключения
   ): Promise<T> {
     let provider = await this.getProvider();
     

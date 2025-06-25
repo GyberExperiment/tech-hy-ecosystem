@@ -41,14 +41,6 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       const ratio = parseFloat(poolInfo.bnbReserve) / parseFloat(poolInfo.vcReserve);
       const calculatedBnb = (vcValue * ratio).toFixed(6);
       
-      if (process.env.NODE_ENV === 'development') {
-        log.debug('Auto-calculated BNB amount from VC', {
-          component: 'EarnVGWidget',
-          vcAmount,
-          bnbAmount: calculatedBnb,
-          ratio: ratio.toFixed(8)
-        });
-      }
       return calculatedBnb;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -60,14 +52,28 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
       return '';
     }
-  }, [vcAmount, poolInfo]);
+  }, [vcAmount, poolInfo?.bnbReserve, poolInfo?.vcReserve]);
 
-  // Auto-update BNB amount when VC changes
+  // Auto-update BNB amount when VC changes - с debounce для уменьшения частоты логов
   useEffect(() => {
     if (calculatedBnbAmount && calculatedBnbAmount !== bnbAmount) {
-      setBnbAmount(calculatedBnbAmount);
+      // ✅ Добавляем небольшую задержку для уменьшения частоты обновлений
+      const timeoutId = setTimeout(() => {
+        setBnbAmount(calculatedBnbAmount);
+        if (process.env.NODE_ENV === 'development') {
+          log.debug('Auto-calculated BNB amount from VC', {
+            component: 'EarnVGWidget',
+            vcAmount,
+            bnbAmount: calculatedBnbAmount,
+            ratio: poolInfo?.bnbReserve && poolInfo?.vcReserve ? 
+              (parseFloat(poolInfo.bnbReserve) / parseFloat(poolInfo.vcReserve)).toFixed(8) : 'N/A'
+          });
+        }
+      }, 100); // ✅ 100ms debounce
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [calculatedBnbAmount, bnbAmount]);
+  }, [calculatedBnbAmount, bnbAmount, vcAmount, poolInfo?.bnbReserve, poolInfo?.vcReserve]); // ✅ Оптимизированные dependencies
 
   // Auto-check allowance when wallet connects
   /* useEffect(() => {
@@ -1055,10 +1061,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       <div className="widget-header-ultra">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg glass-primary animate-glass-pulse">
-            <Zap className="h-6 w-6 text-blue-400" />
+            <Zap className="h-6 w-6 text-yellow-400" />
           </div>
           <div>
-            <h3 className="hero-title text-responsive-lg font-semibold text-white">⚡ Получить VG токены</h3>
+            <h3 className="hero-title text-responsive-lg font-semibold text-white">Получить VG токены</h3>
             <p className="hero-subtitle text-gray-300 text-responsive-sm">
               {mode === 'create' 
                 ? 'Создайте LP позицию и получите VG (10:1)'

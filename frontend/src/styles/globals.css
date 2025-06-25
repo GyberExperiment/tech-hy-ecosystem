@@ -116,8 +116,8 @@ a:active, button:active, [role="button"]:active {
   border-radius: clamp(16px, 2vw, 20px);
   
   /* Premium glassmorphism effect for dark theme */
-  backdrop-filter: blur(20px) saturate(1.8) brightness(1.15);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8) brightness(1.15);
+  backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.12) 0%,
     rgba(255, 255, 255, 0.06) 50%,
@@ -131,15 +131,15 @@ a:active, button:active, [role="button"]:active {
     0 1px 0 rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   cursor: pointer;
 }
 
 .liquid-glass:hover,
 .card-ultra:hover {
   /* Enhanced on hover for dark theme */
-  backdrop-filter: blur(24px) saturate(2.0) brightness(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(2.0) brightness(1.2);
+  backdrop-filter: blur(28px) saturate(2.0) brightness(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(2.0) brightness(1.2);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.18) 0%,
     rgba(255, 255, 255, 0.10) 50%,
@@ -148,11 +148,12 @@ a:active, button:active, [role="button"]:active {
   border-color: rgba(255, 255, 255, 0.25);
   
   box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 16px 64px rgba(0, 0, 0, 0.4),
     0 1px 0 rgba(255, 255, 255, 0.2) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 32px rgba(59, 130, 246, 0.1);
   
-  transform: translateY(-1px) scale(1.005);
+  transform: translateY(-2px) scale(1.01);
 }
 
 .liquid-glass:active,
@@ -303,4 +304,220 @@ section, article, .fade-in {
     background: rgba(15, 23, 42, 0.95) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
+}
+
+/* ===== BREATHING ANIMATIONS ===== */
+@keyframes breathing-slow {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1) translateY(0);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+}
+
+@keyframes section-breathing-subtle {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+  }
+  33% { 
+    transform: translateY(-1px) scale(1.002);
+  }
+  66% { 
+    transform: translateY(0.5px) scale(0.999);
+  }
+}
+
+@keyframes breathing-orb-1 {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  25% { 
+    transform: translate(10px, -15px) scale(1.1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translate(-5px, 10px) scale(0.95);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: translate(15px, 5px) scale(1.05);
+    opacity: 0.7;
+  }
+}
+
+@keyframes breathing-orb-2 {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  30% { 
+    transform: translate(-12px, 8px) scale(0.9);
+    opacity: 0.8;
+  }
+  60% { 
+    transform: translate(8px, -20px) scale(1.15);
+    opacity: 0.6;
+  }
+  90% { 
+    transform: translate(-5px, 12px) scale(0.95);
+    opacity: 0.7;
+  }
+}
+
+@keyframes breathing-orb-3 {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.7;
+  }
+  40% { 
+    transform: translate(18px, -10px) scale(1.08) rotate(180deg);
+    opacity: 0.9;
+  }
+  80% { 
+    transform: translate(-8px, 15px) scale(0.92) rotate(360deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes breathing-orb-4 {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  20% { 
+    transform: translate(-10px, 12px) scale(1.12);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translate(14px, -8px) scale(0.88);
+    opacity: 0.9;
+  }
+  80% { 
+    transform: translate(5px, 18px) scale(1.06);
+    opacity: 0.4;
+  }
+}
+
+@keyframes card-breathing {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    transform: translateY(-1px) scale(1.005);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes glass-breathing {
+  0%, 100% { 
+    backdrop-filter: blur(20px) saturate(1.8) brightness(1.15);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  50% { 
+    backdrop-filter: blur(24px) saturate(2.0) brightness(1.2);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ===== BREATHING ANIMATION CLASSES ===== */
+.animate-breathing-slow {
+  animation: breathing-slow 8s ease-in-out infinite;
+}
+
+.animate-section-breathing-subtle {
+  animation: section-breathing-subtle 12s ease-in-out infinite;
+}
+
+.animate-breathing-orb-1 {
+  animation: breathing-orb-1 15s ease-in-out infinite;
+}
+
+.animate-breathing-orb-2 {
+  animation: breathing-orb-2 18s ease-in-out infinite 2s;
+}
+
+.animate-breathing-orb-3 {
+  animation: breathing-orb-3 22s ease-in-out infinite 5s;
+}
+
+.animate-breathing-orb-4 {
+  animation: breathing-orb-4 16s ease-in-out infinite 3s;
+}
+
+.animate-card-breathing {
+  animation: card-breathing 10s ease-in-out infinite;
+}
+
+.animate-glass-breathing {
+  animation: glass-breathing 14s ease-in-out infinite;
+}
+
+/* ===== ENHANCED GLASSMORPHISM CLASSES ===== */
+.glass-enhanced-breathing {
+  @apply glass-enhanced animate-glass-breathing;
+  backdrop-filter: blur(20px) saturate(1.6) brightness(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(1.1);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.08) 100%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.glass-enhanced-breathing:hover {
+  backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) brightness(1.15);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.12) 100%);
+  
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 0 24px rgba(59, 130, 246, 0.08);
+  
+  transform: translateY(-1px) scale(1.005);
+}
+
+.glass-card-breathing {
+  @apply glass-card-hover animate-card-breathing;
+  backdrop-filter: blur(16px) saturate(1.4) brightness(1.05);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4) brightness(1.05);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.06) 100%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+}
+
+.glass-card-breathing:hover {
+  backdrop-filter: blur(20px) saturate(1.6) brightness(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(1.1);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.09) 100%);
+  
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 20px rgba(59, 130, 246, 0.06);
+  
+  transform: translateY(-1px) scale(1.003);
 } 
