@@ -204,9 +204,9 @@ jobs:
           
           # Wait for pods to be ready
           echo "⏳ Waiting for deployment rollout..."
-          if ! kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s; then
+          if ! kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s; then
             echo "💥 Deployment rollout failed! Initiating rollback..."
-            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
+            kubectl rollout undo deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
             exit 1
           fi
           
@@ -219,16 +219,16 @@ jobs:
             echo "💥 Health check validation FAILED! Initiating automatic rollback..."
             
             # Get current deployment revision
-            current_revision=$(kubectl rollout history deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --revision=0 | tail -n1 | awk '{print $1}')
+            current_revision=$(kubectl rollout history deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --revision=0 | tail -n1 | awk '{print $1}')
             echo "📊 Current revision: $current_revision"
             
             # Rollback to previous version
             echo "🔙 Rolling back to previous working version..."
-            kubectl rollout undo deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
+            kubectl rollout undo deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
             
             # Wait for rollback to complete
             echo "⏳ Waiting for rollback to complete..."
-            kubectl rollout status deployment/techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s
+            kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s
             
             # Verify rollback health
             echo "🔍 Verifying rollback health..."
