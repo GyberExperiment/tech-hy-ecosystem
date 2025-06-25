@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
   Shield, 
@@ -42,25 +43,27 @@ import {
 } from 'lucide-react';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3
+        staggerChildren: 0.1,
+        delayChildren: 0.2
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 40 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: "easeOut"
       }
     }
@@ -367,6 +370,47 @@ const Home: React.FC = () => {
     }
   ];
 
+  // Event handlers
+  const handleJoinEcosystem = () => {
+    navigate('/dashboard');
+  };
+
+  const handleReadWhitepaper = () => {
+    window.open('https://techhy.me/whitepaper.pdf', '_blank');
+  };
+
+  const handleGetStarted = (service: string) => {
+    // В зависимости от сервиса перенаправляем на разные страницы
+    switch(service) {
+      case 'kyc':
+        window.open('https://app.techhy.me/kyc', '_blank');
+        break;
+      case 'scoring':
+        window.open('https://app.techhy.me/scoring', '_blank');
+        break;
+      case 'network':
+        navigate('/dashboard');
+        break;
+      case 'marketplace':
+        window.open('https://services.techhy.me', '_blank');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  };
+
+  const handleReadMore = (newsId: string) => {
+    window.open(`https://blog.techhy.me/post/${newsId}`, '_blank');
+  };
+
+  const handleStartJourney = () => {
+    navigate('/tokens');
+  };
+
+  const handleScheduleCall = () => {
+    window.open('https://calendly.com/techhy/consultation', '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden">
       {/* Hero Section */}
@@ -407,6 +451,7 @@ const Home: React.FC = () => {
                 className="glass-btn-primary group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleJoinEcosystem}
               >
                 <Rocket className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 Join the Ecosystem
@@ -417,6 +462,7 @@ const Home: React.FC = () => {
                 className="glass-btn-ghost group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleReadWhitepaper}
               >
                 <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 Read Whitepaper
@@ -703,6 +749,7 @@ const Home: React.FC = () => {
                   className="glass-btn-ghost w-full group"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
                 >
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -901,6 +948,7 @@ const Home: React.FC = () => {
                       className="glass-btn-ghost !px-4 !py-2 !min-h-auto text-sm group"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      onClick={() => handleReadMore(news.title.toLowerCase().replace(/\s+/g, '-'))}
                     >
                       Read More
                       <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
@@ -1070,7 +1118,14 @@ const Home: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-white font-semibold">Business Inquiries</p>
-                      <p className="text-gray-300">i@techhy.me</p>
+                      <motion.a 
+                        href="mailto:i@techhy.me"
+                        className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        i@techhy.me
+                      </motion.a>
                     </div>
                   </div>
                   
@@ -1213,7 +1268,7 @@ const Home: React.FC = () => {
                             )}
                           </div>
                           <p className="text-gray-300 leading-relaxed">
-                            {achievement.replace(/^[✅🔄🎯🚀]\s*/, '')}
+                            {achievement.replace(/^[✅🔄🎯🚀]\s*/u, '')}
                           </p>
                         </motion.div>
                       ))}
@@ -1330,6 +1385,7 @@ const Home: React.FC = () => {
                   className="glass-btn-primary text-lg px-8 py-4"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleStartJourney}
                 >
                   <Rocket className="w-6 h-6" />
                   Start Your Journey
@@ -1339,6 +1395,7 @@ const Home: React.FC = () => {
                   className="glass-btn-ghost text-lg px-8 py-4"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleScheduleCall}
                 >
                   <MessageSquare className="w-6 h-6" />
                   Schedule a Call
@@ -1371,7 +1428,14 @@ const Home: React.FC = () => {
             <div className="glass-ultra p-8">
               <Globe className="w-12 h-12 text-green-400 mx-auto mb-6" />
               <h3 className="text-xl font-bold text-white mb-4">Contact</h3>
-              <p className="text-gray-300 mb-2">i@techhy.me</p>
+              <motion.a 
+                href="mailto:i@techhy.me"
+                className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer mb-2 block"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                i@techhy.me
+              </motion.a>
               <p className="text-gray-400 text-sm">Business Inquiries</p>
               <p className="text-gray-400 text-sm">Investor Relations</p>
             </div>
