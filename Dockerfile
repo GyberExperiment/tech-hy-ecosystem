@@ -8,7 +8,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install system dependencies
-RUN apk add --no-cache git
+RUN apk add --no-cache git python3 make g++ && ln -sf python3 /usr/bin/python
 
 # Copy package files
 COPY frontend/package*.json ./
