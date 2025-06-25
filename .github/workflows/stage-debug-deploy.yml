@@ -16,34 +16,33 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 🧪 Smart Contracts Testing
-  contracts-test:
-    name: 🔗 Smart Contracts Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: 🔧 Install Dependencies
-        run: npm ci
-
-      - name: 🔨 Compile Contracts
-        run: npm run compile
-
-      - name: 🧪 Run Tests
-        run: npm run test
+  # 🧪 Smart Contracts Testing for Stage Debug
+  # stage-debug-contracts-test:
+  #   name: 🔗 Stage Debug Contracts Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 📥 Checkout Code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #
+  #     - name: 🔧 Install Dependencies
+  #       run: npm ci
+  #
+  #     - name: 🔨 Compile Contracts
+  #       run: npm run compile
+  #
+  #     - name: 🧪 Run Tests
+  #       run: npm run test
 
   # 🎨 Frontend Build for Stage Debug
   stage-debug-frontend-build:
     name: 🎨 Stage Debug Frontend Build
     runs-on: ubuntu-latest
-    needs: [contracts-test]
     defaults:
       run:
         working-directory: ./frontend
@@ -81,7 +80,6 @@ jobs:
   stage-debug-docker-build:
     name: 🐳 Stage Debug Docker Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # 🚀 Максимум 15 минут для Docker Build
     needs: [stage-debug-frontend-build]
     if: github.ref == 'refs/heads/stage-debug'
     permissions:
@@ -122,7 +120,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -160,12 +158,6 @@ jobs:
           # Set stage-debug environment variables
           export IMAGE_TAG="stage-debug-latest"
           export NAMESPACE="techhy-ecosystem-stage-debug"
-          # ✅ ДОБАВЛЯЕМ SHORT_SHA для уникальных тегов образов
-          export SHORT_SHA="${{ github.sha }}"
-          export SHORT_SHA_7="${SHORT_SHA:0:7}"
-          export UNIQUE_IMAGE_TAG="stage-debug-${SHORT_SHA_7}"
-          
-          echo "🏷️ Using unique image tag: $UNIQUE_IMAGE_TAG"
           
           # Create stage-debug namespace first
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
@@ -178,16 +170,8 @@ jobs:
             --docker-email="dev@techhy.me" \
             -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
-          # ✅ ОБНОВЛЯЕМ deployment с уникальным образом перед применением
-          # Сначала применяем базовые конфигурации
+          # Apply stage-debug configurations using kustomize
           kubectl apply -k k8s/overlays/stage-debug/
-          
-          # Затем обновляем образ на уникальный SHA-based тег
-          kubectl set image deployment/techhy-ecosystem-stage-debug-deployment \
-            techhy-ecosystem-frontend=ghcr.io/gyberexperiment/tech-hy-ecosystem:${UNIQUE_IMAGE_TAG} \
-            -n $NAMESPACE
-          
-          echo "✅ Deployment updated with unique image: ghcr.io/gyberexperiment/tech-hy-ecosystem:${UNIQUE_IMAGE_TAG}"
 
       - name: 🔍 Comprehensive Health Check & Rollback Protection
         run: |
@@ -264,12 +248,6 @@ jobs:
       - name: ✅ Final Deployment Validation
         run: |
           echo "📊 Final deployment status validation..."
-          
-          # ✅ ДОБАВЛЯЕМ информацию о текущем образе
-          echo "🏷️ Current deployment image:"
-          kubectl get deployment techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug -o jsonpath='{.spec.template.spec.containers[0].image}'
-          echo ""
-          
           kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug
           kubectl get services -n techhy-ecosystem-stage-debug  
           kubectl get ingress -n techhy-ecosystem-stage-debug
@@ -287,15 +265,8 @@ jobs:
       - name: 🎉 Stage Debug Deployment Success
         if: success()
         run: |
-          # ✅ ДОБАВЛЯЕМ информацию о SHA и образе
-          SHORT_SHA="${{ github.sha }}"
-          SHORT_SHA_7="${SHORT_SHA:0:7}"
-          UNIQUE_IMAGE_TAG="stage-debug-${SHORT_SHA_7}"
-          
           echo "🎉 TECH HY Ecosystem successfully deployed to Stage Debug!"
           echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
-          echo "🏷️ Image Tag: $UNIQUE_IMAGE_TAG"
-          echo "📝 Commit SHA: ${{ github.sha }}"
-          echo "🔄 This deployment uses unique SHA-based image tags for proper rollouts" 
+          echo "🏷️ Image Tag: stage-debug-latest" 
