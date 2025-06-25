@@ -10,8 +10,18 @@ spec:
   hosts:
   - stage.techhyecosystem.build.infra.gyber.org
   gateways:
-  - default/stage-debug-techhy-ecosystem-stage-debug-gateway
+  - default/techhy-ecosystem-stage-debug-gateway
   http:
+  # 1. ACME Challenge - направляем в istio-system
+  - match:
+    - uri:
+        prefix: /.well-known/acme-challenge/
+    route:
+    - destination:
+        host: cm-acme-http-solver.istio-system.svc.cluster.local
+        port:
+          number: 8089
+  # 2. Все остальные запросы - направляем на приложение
   - match:
     - uri:
         prefix: /
