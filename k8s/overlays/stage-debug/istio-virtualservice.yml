@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: techhy-ecosystem-stage-debug-vs
+  namespace: techhy-ecosystem-stage-debug
+  labels:
+    app: techhy-ecosystem-stage-debug
+    environment: stage-debug
+spec:
+  hosts:
+  - stage.techhyecosystem.build.infra.gyber.org
+  gateways:
+  - default/stage-debug-techhy-ecosystem-stage-debug-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: stage-debug-techhy-ecosystem-stage-debug-service.techhy-ecosystem-stage-debug.svc.cluster.local
+        port:
+          number: 80

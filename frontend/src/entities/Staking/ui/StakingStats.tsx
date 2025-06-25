@@ -52,7 +52,7 @@ const StakingStats: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
   const fetchInProgressRef = useRef(false);
-  
+
   // Cleanup
   useEffect(() => {
     isMountedRef.current = true;
@@ -77,7 +77,7 @@ const StakingStats: React.FC = () => {
       });
       return;
     }
-
+    
     // Проверка кэша - загружаем не чаще чем раз в 120 секунд
     const now = Date.now();
     if (!isRefresh && now - lastFetchTime < 120000) {
@@ -227,16 +227,16 @@ const StakingStats: React.FC = () => {
       
       // Устанавливаем данные по умолчанию при ошибке только если нет данных
       if (isMountedRef.current && !poolData) {
-        setPoolData({
-          totalLockedLP: '0',
-          totalVGIssued: '0',
-          totalVGDeposited: '0',
-          availableVG: '0',
-          userVCBalance: '0',
-          userBNBBalance: '0',
-          lpToVgRatio: '10',
-          lpDivisor: '1000000',
-        });
+      setPoolData({
+        totalLockedLP: '0',
+        totalVGIssued: '0',
+        totalVGDeposited: '0',
+        availableVG: '0',
+        userVCBalance: '0',
+        userBNBBalance: '0',
+        lpToVgRatio: '10',
+        lpDivisor: '1000000',
+      });
       }
     } finally {
       if (isMountedRef.current) {

@@ -57,8 +57,8 @@ const LanguageSwitcher: React.FC = () => {
         aria-haspopup="true"
       >
         <span className="text-current">
-          {SUPPORTED_LANGUAGES[currentLanguage]}
-        </span>
+            {SUPPORTED_LANGUAGES[currentLanguage]}
+          </span>
         <ChevronDown 
           className={`w-3.5 h-3.5 text-current transition-transform duration-300 ${
             isOpen ? 'rotate-180' : ''
@@ -78,13 +78,13 @@ const LanguageSwitcher: React.FC = () => {
             animate-in fade-in-0 zoom-in-95 duration-200
           ">
             <div className="py-2">
-              {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => {
-                const isSelected = currentLanguage === code;
-                
-                return (
-                  <button
-                    key={code}
-                    onClick={() => handleLanguageChange(code as SupportedLanguage)}
+            {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => {
+              const isSelected = currentLanguage === code;
+              
+              return (
+                <button
+                  key={code}
+                  onClick={() => handleLanguageChange(code as SupportedLanguage)}
                     className={`
                       group relative overflow-hidden
                       w-full flex items-center justify-between
@@ -101,14 +101,14 @@ const LanguageSwitcher: React.FC = () => {
                         `
                       }
                     `}
-                    role="menuitem"
-                  >
+                  role="menuitem"
+                >
                     <span className={`relative z-10 ${isSelected ? 'drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]' : ''}`}>
                       {name}
                     </span>
-                    {isSelected && (
+                  {isSelected && (
                       <Check className="w-4 h-4 relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
-                    )}
+                  )}
                     
                     {/* Неоморфный внутренний свет для неактивных */}
                     {!isSelected && (
@@ -121,16 +121,16 @@ const LanguageSwitcher: React.FC = () => {
                         ? 'from-transparent via-white/[0.25] to-transparent' 
                         : 'from-transparent via-white/[0.2] to-transparent'
                     } translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-out`} />
-                  </button>
-                );
-              })}
-            </div>
-            
+                </button>
+              );
+            })}
+          </div>
+          
             {/* ✨ Premium Language Info */}
             <div className="border-t border-white/[0.2] px-4 py-2 bg-gradient-to-r from-white/[0.1] to-white/[0.05]">
               <p className="text-xs text-slate-600 font-medium">
-                Language / Язык
-              </p>
+              Language / Язык
+            </p>
             </div>
           </div>
         </div>

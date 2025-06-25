@@ -1,2 +1,3 @@
 resources:
-  - istio-certificate.yml 
+  - istio-certificate.yml
+  - techhy-stage-certificate.yml
