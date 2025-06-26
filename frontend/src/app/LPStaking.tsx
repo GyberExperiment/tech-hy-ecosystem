@@ -14,7 +14,6 @@ import {
   Gift, 
   Vote, 
   Lock,
-  AlertTriangle,
   Activity,
   TrendingUp,
   Users,
@@ -25,10 +24,7 @@ import {
   RefreshCw,
   Zap,
   Target,
-  DollarSign,
   Loader2,
-  CheckCircle,
-  XCircle,
   Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -75,9 +71,7 @@ const LPLocking: React.FC = () => {
   const { 
     account, 
     isConnected, 
-    isCorrectNetwork, 
-    provider,
-    signer
+    isCorrectNetwork
   } = useWeb3();
 
   const [balances, setBalances] = useState<UserBalances>({
@@ -217,12 +211,12 @@ const LPLocking: React.FC = () => {
           
           const balance = await rpcService.withFallback(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
-            return await contract.balanceOf(account);
+            return await (contract as any).balanceOf(account);
           });
 
           const decimals = await rpcService.withFallback(async (rpcProvider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, rpcProvider);
-            return await contract.decimals();
+            return await (contract as any).decimals();
           });
 
           const formattedBalance = ethers.formatUnits(balance, decimals);
@@ -297,8 +291,8 @@ const LPLocking: React.FC = () => {
         const lpLockerContract = new ethers.Contract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI, rpcProvider);
         
         const [poolInfo, totalUsers] = await Promise.all([
-          lpLockerContract.getPoolInfo(),
-          lpLockerContract.totalUsers().catch(() => 0n) // Fallback if function doesn't exist
+          (lpLockerContract as any).getPoolInfo(),
+          (lpLockerContract as any).totalUsers().catch(() => 0n) // Fallback if function doesn't exist
         ]);
         
         // Используем статические значения конфигурации вместо дублированного config() вызова
@@ -329,19 +323,19 @@ const LPLocking: React.FC = () => {
           
           const [vgEvents, lpEvents] = await Promise.all([
             lpLockerContract.queryFilter(
-              lpLockerContract.filters.VGTokensEarned(),
+              lpLockerContract.filters.VGTokensEarned?.() || 'VGTokensEarned',
               fromBlock
             ).catch(() => []),
             lpLockerContract.queryFilter(
-              lpLockerContract.filters.LPTokensLocked(),
+              lpLockerContract.filters.LPTokensLocked?.() || 'LPTokensLocked',
               fromBlock
             ).catch(() => [])
           ]);
           
           const users = new Set<string>();
           
-          [...vgEvents, ...lpEvents].forEach(event => {
-        if (event.args?.user) {
+          [...vgEvents, ...lpEvents].forEach((event: any) => {
+            if (event.args?.user) {
               users.add(event.args.user.toLowerCase());
             }
           });

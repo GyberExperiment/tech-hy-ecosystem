@@ -1057,15 +1057,15 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={cn("liquid-glass animate-glass-float", className)}>
+    <div className={cn("backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300", className)}>
       <div className="widget-header-ultra">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg glass-primary animate-glass-pulse">
-            <Zap className="h-6 w-6 text-yellow-400" />
+          <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 group-hover:scale-110 transition-transform duration-300">
+            <Zap className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="hero-title text-responsive-lg font-semibold text-white">Получить VG токены</h3>
-            <p className="hero-subtitle text-gray-300 text-responsive-sm">
+            <h3 className="text-xl font-bold text-white mb-2">Получить VG токены</h3>
+            <p className="text-slate-400 text-sm">
               {mode === 'create' 
                 ? 'Создайте LP позицию и получите VG (10:1)'
                 : 'Заблокируйте LP токены и получите VG (10:1)'
@@ -1078,22 +1078,22 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={refreshAllData}
             disabled={poolLoading}
-            className="touch-target p-2 glass-ultra hover:glass-accent text-blue-400 hover:text-blue-300 transition-all duration-300 rounded-xl"
+            className="p-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-300 group"
           >
-            <RefreshCw className={cn("h-5 w-5", poolLoading && "animate-spin")} />
+            <RefreshCw className={cn("h-5 w-5 text-slate-400 group-hover:text-white transition-colors duration-300", poolLoading && "animate-spin")} />
           </button>
         </div>
       </div>
 
       {/* Mode Switcher */}
-      <div className="flex rounded-xl glass-ultra p-1 border-glass mb-4 sm:mb-6 animate-glass-float">
+      <div className="flex rounded-xl bg-white/5 border border-white/10 p-1 mb-6">
         <button
           onClick={() => setMode('create')}
           className={cn(
-            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-300 touch-target',
+            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300',
             mode === 'create'
-              ? 'btn-glass-morphic text-white shadow-glass animate-glass-pulse'
-              : 'text-gray-300 hover:text-white glass-subtle hover:glass-accent'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
           )}
         >
           Create LP
@@ -1101,10 +1101,10 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         <button
           onClick={() => setMode('lock')}
           className={cn(
-            'flex-1 px-3 py-3 text-responsive-sm font-medium rounded-lg transition-all duration-300 touch-target',
+            'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300',
             mode === 'lock'
-              ? 'btn-glass-morphic text-white shadow-glass animate-glass-pulse'
-              : 'text-gray-300 hover:text-white glass-subtle hover:glass-accent'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
           )}
         >
           Lock LP Tokens
@@ -1112,24 +1112,24 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       </div>
 
       {/* Balances */}
-      <div className="grid-responsive-1-2 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {mode === 'create' ? (
           <>
-            <div className="text-center liquid-glass p-3 sm:p-4 animate-glass-float">
-              <div className="text-responsive-xs text-gray-400 mb-1">VC Balance</div>
-              <div className="text-responsive-lg font-semibold text-blue-400">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all duration-300">
+              <div className="text-sm text-slate-400 mb-2">VC Balance</div>
+              <div className="text-xl font-bold text-blue-400">
                 {balancesLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                  <div className="animate-pulse bg-slate-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
                   formatBalance(balances.VC || '0')
                 )}
               </div>
             </div>
-            <div className="text-center liquid-glass p-3 sm:p-4 animate-glass-float">
-              <div className="text-responsive-xs text-gray-400 mb-1">BNB Balance</div>
-              <div className="text-responsive-lg font-semibold text-amber-400">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all duration-300">
+              <div className="text-sm text-slate-400 mb-2">BNB Balance</div>
+              <div className="text-xl font-bold text-yellow-400">
                 {balancesLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                  <div className="animate-pulse bg-slate-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
                   formatBalance(balances.BNB || '0')
                 )}
@@ -1138,21 +1138,21 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </>
         ) : (
           <>
-            <div className="text-center liquid-glass p-3 sm:p-4 animate-glass-float">
-              <div className="text-responsive-xs text-gray-400 mb-1">LP Balance</div>
-              <div className="text-responsive-lg font-semibold text-purple-400">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all duration-300">
+              <div className="text-sm text-slate-400 mb-2">LP Balance</div>
+              <div className="text-xl font-bold text-purple-400">
                 {balancesLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                  <div className="animate-pulse bg-slate-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
                   formatBalance(balances.LP || '0')
                 )}
               </div>
             </div>
-            <div className="text-center liquid-glass p-3 sm:p-4 animate-glass-float">
-              <div className="text-responsive-xs text-gray-400 mb-1">VG Balance</div>
-              <div className="text-responsive-lg font-semibold text-green-400">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:bg-white/10 transition-all duration-300">
+              <div className="text-sm text-slate-400 mb-2">VG Balance</div>
+              <div className="text-xl font-bold text-green-400">
                 {balancesLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-6 w-16 rounded mx-auto"></div>
+                  <div className="animate-pulse bg-slate-600 h-6 w-16 rounded mx-auto"></div>
                 ) : (
                   formatBalance(balances.VG || '0')
                 )}
@@ -1164,46 +1164,46 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* Pool Information */}
       {mode === 'create' && (
-        <div className="glass-primary p-3 sm:p-4 rounded-xl mb-4 sm:mb-6 animate-glass-float">
-          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between mb-3">
-            <span className="text-responsive-sm font-medium text-white flex items-center gap-2">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 mb-6 hover:bg-white/10 transition-all duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white flex items-center gap-2">
               <Info className="w-4 h-4 text-blue-400" />
               Pool Information
             </span>
             {!poolInfo.isLoaded && (
-              <div className="flex items-center gap-1 text-xs text-amber-400">
+              <div className="flex items-center gap-1 text-xs text-yellow-400">
                 <AlertCircle className="w-3 h-3" />
                 Fallback
               </div>
             )}
           </div>
-          <div className="grid-responsive-1-2 text-responsive-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-              <div className="text-gray-400 mb-1">VC Reserve</div>
+              <div className="text-slate-400 mb-1">VC Reserve</div>
               <div className="font-medium text-white">
                 {poolLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-4 w-16 rounded"></div>
+                  <div className="animate-pulse bg-slate-600 h-4 w-16 rounded"></div>
                 ) : (
                   formatBalance(poolInfo.vcReserve)
                 )}
               </div>
             </div>
             <div>
-              <div className="text-gray-400 mb-1">BNB Reserve</div>
+              <div className="text-slate-400 mb-1">BNB Reserve</div>
               <div className="font-medium text-white">
                 {poolLoading ? (
-                  <div className="animate-pulse bg-gray-600 h-4 w-16 rounded"></div>
+                  <div className="animate-pulse bg-slate-600 h-4 w-16 rounded"></div>
                 ) : (
                   formatBalance(poolInfo.bnbReserve)
                 )}
               </div>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-glass">
-            <div className="text-xs text-gray-400">Current Price</div>
-            <div className="text-responsive-sm font-medium text-green-400">
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <div className="text-xs text-slate-400">Current Price</div>
+            <div className="text-sm font-medium text-green-400">
               {poolLoading ? (
-                <div className="animate-pulse bg-gray-600 h-4 w-24 rounded"></div>
+                <div className="animate-pulse bg-slate-600 h-4 w-24 rounded"></div>
               ) : (
                 `1 VC = ${poolInfo.price} BNB`
               )}
@@ -1213,11 +1213,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       )}
 
       {/* Input Fields */}
-      <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+      <div className="space-y-4 mb-6">
         {mode === 'create' ? (
           <>
             <div>
-              <label className="block text-responsive-sm font-medium text-white mb-2">VC Amount</label>
+              <label className="block text-sm font-medium text-white mb-2">VC Amount</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                   <Coins className="h-4 w-4 text-blue-400" />
@@ -1228,16 +1228,16 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={vcAmount}
                   onChange={(e) => setVcAmount(e.target.value)}
                   disabled={loading}
-                  className="input-field w-full pl-10 pr-4 touch-manipulation"
+                  className="w-full pl-10 pr-4 py-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-responsive-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
+              <label className="block text-sm font-medium text-white mb-2">BNB Amount (Auto-calculated)</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                  <Coins className="h-4 w-4 text-amber-400" />
+                  <Coins className="h-4 w-4 text-yellow-400" />
                 </div>
                 <input
                   type="number"
@@ -1245,14 +1245,14 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                   value={bnbAmount}
                   onChange={(e) => setBnbAmount(e.target.value)}
                   disabled={loading}
-                  className="input-field w-full pl-10 pr-4 touch-manipulation"
+                  className="w-full pl-10 pr-4 py-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300"
                 />
               </div>
             </div>
           </>
         ) : (
           <div>
-            <label className="block text-responsive-sm font-medium text-white mb-2">LP Token Amount</label>
+            <label className="block text-sm font-medium text-white mb-2">LP Token Amount</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <Coins className="h-4 w-4 text-purple-400" />
@@ -1263,7 +1263,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 value={lpAmount}
                 onChange={(e) => setLpAmount(e.target.value)}
                 disabled={loading}
-                className="input-field w-full pl-10 pr-4 touch-manipulation"
+                className="w-full pl-10 pr-4 py-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
               />
             </div>
           </div>
@@ -1272,13 +1272,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
       {/* VG Reward Preview */}
       {((mode === 'create' && vcAmount && bnbAmount) || (mode === 'lock' && lpAmount)) && (
-        <div className="glass-secondary rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 animate-glass-pulse">
-          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between">
-            <span className="text-responsive-sm text-white flex items-center gap-2">
+        <div className="backdrop-blur-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-green-400" />
               Expected VG Reward:
             </span>
-            <span className="text-responsive-lg font-semibold text-green-400">
+            <span className="text-lg font-bold text-green-400">
               {calculateVGReward()} VG
             </span>
           </div>
@@ -1291,7 +1291,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           <button
             onClick={checkCurrentAllowance}
             disabled={checkingAllowance}
-            className="touch-target w-full h-10 sm:h-12 text-responsive-sm font-medium rounded-lg transition-all duration-300 glass-ultra hover:glass-accent text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
+            className="w-full py-3 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {checkingAllowance ? (
               <>
@@ -1316,10 +1316,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           (mode === 'create' && (!vcAmount || !bnbAmount)) ||
           (mode === 'lock' && !lpAmount)
         }
-        className={cn(
-          "touch-target w-full h-11 sm:h-12 md:h-14 text-responsive-base font-semibold rounded-lg transition-all duration-300 shadow-glass disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation",
-          "btn-glass-morphic animate-glass-pulse"
-        )}
+        className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 group"
       >
         {loading ? (
           <>
@@ -1328,16 +1325,16 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           </>
         ) : (
           <>
-            <Zap className="h-5 w-5" />
+            <Zap className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
             {mode === 'create' ? 'Create LP + Earn VG' : 'Lock LP + Earn VG'}
           </>
         )}
       </button>
 
       {/* Information */}
-      <div className="mt-4 sm:mt-6 space-y-2 glass-ultra rounded-lg p-3 sm:p-4 border-glass animate-glass-float">
-        <div className="font-medium text-white mb-3 text-responsive-sm">Important Information:</div>
-        <div className="text-responsive-xs text-gray-300 space-y-1">
+      <div className="mt-6 space-y-2 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
+        <div className="font-medium text-white mb-3 text-sm">Important Information:</div>
+        <div className="text-xs text-slate-300 space-y-1">
           <div>• LP токены блокируются навсегда (permanent lock)</div>
           <div>• Получаете 10 VG за каждый 1 LP токен (мгновенно)</div>
           <div>• VG токены можно использовать для governance</div>
