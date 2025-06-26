@@ -455,38 +455,38 @@ const Home: React.FC = () => {
       <div className="relative z-10">
       {/* Hero Section */}
         <motion.section 
-          className="relative pt-24 pb-16 px-6 animate-section-breathing-subtle"
+          className="relative pt-32 pb-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
+            <motion.div variants={itemVariants} className="text-center mb-20">
           <motion.div
-                className="inline-flex items-center gap-2 glass-badge-primary mb-8"
+                className="inline-flex items-center gap-3 glass-badge-primary mb-10"
                 whileHover={{ scale: 1.05 }}
               >
-                <SafeIcon IconComponent={Shield} className="w-4 h-4" />
+                <SafeIcon IconComponent={Shield} className="w-5 h-5" />
                 <span>Transforming Venture Industry Security</span>
               </motion.div>
               
-              <h1 className="text-6xl md:text-8xl font-black mb-8 bg-gradient-to-r from-white via-blue-200 to-cyan-400 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-6xl md:text-8xl font-black mb-10 bg-gradient-to-r from-white via-blue-200 to-cyan-400 bg-clip-text text-transparent leading-tight">
                 TECH HY
             </h1>
               
-              <h2 className="text-2xl md:text-4xl font-bold mb-8 text-gray-300 max-w-4xl mx-auto leading-relaxed">
+              <h2 className="text-2xl md:text-4xl font-bold mb-10 text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 Fighting fraud. Protecting investors.<br />
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   Building the future of venture capital.
                 </span>
               </h2>
               
-              <p className="text-xl text-gray-400 max-w-4xl mx-auto mb-12 leading-relaxed">
+              <p className="text-xl text-gray-400 max-w-4xl mx-auto mb-16 leading-relaxed">
                 The first crypto venture platform combining free KYC, AI-powered scoring, and community-driven due diligence 
                 to create a safer, more transparent investment ecosystem.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <div className="flex flex-col sm:flex-row gap-8 justify-center">
               <motion.button
                   className="glass-btn-primary group"
                 whileHover={{ scale: 1.05 }}
@@ -515,60 +515,60 @@ const Home: React.FC = () => {
 
         {/* Problems We Solve */}
         <motion.section 
-          className="py-20 px-6 animate-section-breathing-subtle"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-accent mb-6">
-                <SafeIcon IconComponent={AlertTriangle} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
+                <SafeIcon IconComponent={AlertTriangle} className="w-5 h-5" />
                 <span>Critical Industry Problems</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">The Venture Crisis We're Solving</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">The Venture Crisis We're Solving</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
                 The venture industry loses billions to fraud annually. We're building the infrastructure to change that.
               </p>
             </motion.div>
             
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-10">
               {problemsWeeSolve.map((item, index) => (
               <motion.div
                   key={index}
                   variants={itemVariants}
-                  className="glass-enhanced-breathing group relative overflow-hidden"
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 200}ms` }}
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-red-500/10 to-transparent rounded-bl-full" />
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl flex items-center justify-center">
-                      <SafeIcon IconComponent={TrendingDown} className="w-8 h-8 text-red-400" />
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-18 h-18 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl flex items-center justify-center">
+                      <SafeIcon IconComponent={TrendingDown} className="w-10 h-10 text-red-400" />
                 </div>
                     <div>
-                      <h3 className="text-lg font-bold text-red-400 mb-1">PROBLEM</h3>
+                      <h3 className="text-lg font-bold text-red-400 mb-2">PROBLEM</h3>
                       <p className="text-white font-semibold">{item.problem}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={item.icon} className="w-8 h-8 text-green-400" />
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-18 h-18 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={item.icon} className="w-10 h-10 text-green-400" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-green-400 mb-1">OUR SOLUTION</h3>
+                      <h3 className="text-lg font-bold text-green-400 mb-2">OUR SOLUTION</h3>
                       <p className="text-white font-semibold">{item.solution}</p>
                     </div>
                   </div>
                   
-                  <p className="text-gray-300 mb-6 leading-relaxed">{item.description}</p>
+                  <p className="text-gray-300 mb-8 leading-relaxed text-lg">{item.description}</p>
                   
-                  <div className="glass-ultra p-4 rounded-lg">
+                  <div className="glass-ultra p-6 rounded-xl">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400 text-sm">Expected Impact:</span>
-                      <span className="text-blue-400 font-bold">{item.impact}</span>
+                      <span className="text-blue-400 font-bold text-lg">{item.impact}</span>
                     </div>
                   </div>
               </motion.div>
@@ -579,40 +579,40 @@ const Home: React.FC = () => {
 
         {/* Core Metrics */}
         <motion.section 
-          className="py-20 px-6 animate-section-breathing-subtle"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-success mb-6">
-                <SafeIcon IconComponent={BarChart3} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-success mb-8">
+                <SafeIcon IconComponent={BarChart3} className="w-5 h-5" />
                 <span>Proven Track Record</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-4">Real Results, Real Impact</h2>
+              <h2 className="text-5xl font-bold text-white mb-6">Real Results, Real Impact</h2>
               <p className="text-xl text-gray-300">Metrics that matter from our operating business</p>
             </motion.div>
             
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-4 gap-10">
               {coreMetrics.map((metric, index) => (
                 <motion.div
                   key={index}
                   variants={itemVariants}
-                  className="glass-card-breathing text-center group relative overflow-hidden"
+                  className="glass-card-breathing text-center group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 group-hover:from-blue-500/10 group-hover:to-purple-500/10 transition-all" />
                   
                   <div className="relative z-10">
-                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={metric.icon} className="w-10 h-10 text-blue-400" />
+                    <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={metric.icon} className="w-12 h-12 text-blue-400" />
               </div>
-                    <div className="text-5xl font-black text-white mb-3 group-hover:text-blue-200 transition-colors">
+                    <div className="text-5xl font-black text-white mb-4 group-hover:text-blue-200 transition-colors">
                       {metric.metric}
               </div>
-                    <div className="text-gray-300 font-medium">{metric.description}</div>
+                    <div className="text-gray-300 font-medium text-lg">{metric.description}</div>
             </div>
                 </motion.div>
               ))}
@@ -622,34 +622,34 @@ const Home: React.FC = () => {
 
         {/* TECH HY Ecosystem */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
           <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-primary mb-6">
-                <SafeIcon IconComponent={Network} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                <SafeIcon IconComponent={Network} className="w-5 h-5" />
                 <span>Integrated Ecosystem</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">The TECH HY Ecosystem</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">The TECH HY Ecosystem</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
                 Four interconnected platforms working together to revolutionize venture capital
               </p>
             </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-10">
               {techHyEcosystem.map((component, index) => (
               <motion.div
                 key={index}
                   variants={itemVariants}
-                  className="glass-enhanced group relative"
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-4 right-4">
-                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  <div className="absolute top-6 right-6">
+                    <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
                       component.status === 'Live' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
                       component.status === 'Launching' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
                       'bg-orange-500/20 text-orange-300 border border-orange-500/30'
@@ -658,25 +658,25 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={component.icon} className="w-8 h-8 text-blue-400" />
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={component.icon} className="w-10 h-10 text-blue-400" />
                     </div>
                     <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
                       {component.component}
                     </h3>
                   </div>
                   
-                  <p className="text-gray-300 mb-8 text-lg leading-relaxed">{component.description}</p>
+                  <p className="text-gray-300 mb-10 text-lg leading-relaxed">{component.description}</p>
                   
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-4">
                     {component.features.map((feature, featureIndex) => (
                       <motion.div 
                         key={featureIndex} 
-                        className="flex items-center gap-3 p-3 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                         whileHover={{ x: 5 }}
                       >
-                        <SafeIcon IconComponent={CheckCircle} className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{feature}</span>
               </motion.div>
             ))}
@@ -689,67 +689,67 @@ const Home: React.FC = () => {
 
         {/* Detailed Services Section */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-primary mb-6">
-                <SafeIcon IconComponent={Settings} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                <SafeIcon IconComponent={Settings} className="w-5 h-5" />
                 <span>Professional Services</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">Comprehensive Startup Services</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">Comprehensive Startup Services</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
                 From free KYC verification to AI-powered scoring, we provide everything startups need to succeed
               </p>
             </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-10">
               {detailedServices.map((service, index) => (
               <motion.div
                 key={index}
                   variants={itemVariants}
-                  className="glass-enhanced group relative overflow-hidden"
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  <div className="absolute top-6 right-6 flex gap-3">
+                    <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
                       service.status === 'Live' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
                       service.status === 'Beta' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
                       'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                     }`}>
                       {service.status}
                   </div>
-                    <div className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    <div className="px-4 py-2 rounded-full text-sm font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                       {service.clients} clients
                   </div>
                 </div>
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={service.icon} className="w-8 h-8 text-blue-400" />
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={service.icon} className="w-10 h-10 text-blue-400" />
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
                         {service.title}
                       </h3>
-                      <div className="text-2xl font-bold text-green-400 mt-1">{service.price}</div>
+                      <div className="text-2xl font-bold text-green-400 mt-2">{service.price}</div>
                     </div>
                   </div>
                   
-                  <p className="text-gray-300 mb-8 text-lg leading-relaxed">{service.description}</p>
+                  <p className="text-gray-300 mb-10 text-lg leading-relaxed">{service.description}</p>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-8">
+                  <div className="grid grid-cols-2 gap-4 mb-10">
                     {service.features.map((feature, featureIndex) => (
                       <motion.div 
                         key={featureIndex} 
-                        className="flex items-center gap-3 p-3 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                         whileHover={{ x: 5 }}
                       >
-                        <SafeIcon IconComponent={CheckCircle} className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{feature}</span>
                       </motion.div>
                   ))}
@@ -762,7 +762,7 @@ const Home: React.FC = () => {
                     onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
                   >
                     <span>Get Started</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
               </motion.div>
             ))}
@@ -772,102 +772,102 @@ const Home: React.FC = () => {
 
         {/* Dual Tokenomics Section */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-accent mb-6">
-                <SafeIcon IconComponent={Coins} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
+                <SafeIcon IconComponent={Coins} className="w-5 h-5" />
                 <span>Dual Token Economy</span>
               </div>
-              <h2 className="text-5xl font-bold mb-6 text-white">Two Tokens, Unlimited Potential</h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
+              <h2 className="text-5xl font-bold mb-8 text-white">Two Tokens, Unlimited Potential</h2>
+              <p className="text-xl text-gray-300 mb-10 max-w-4xl mx-auto leading-relaxed">
                 Our innovative dual-token system maximizes utility while creating sustainable value for all stakeholders.
               </p>
             </motion.div>
 
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div className="grid lg:grid-cols-2 gap-16">
               {/* $VC Token */}
-              <motion.div variants={itemVariants} className="glass-enhanced group relative overflow-hidden">
+              <motion.div variants={itemVariants} className="glass-enhanced-breathing group relative overflow-hidden p-10">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-bl-full" />
                 
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <SafeIcon IconComponent={Bitcoin} className="w-10 h-10 text-blue-400" />
+                <div className="flex items-center gap-6 mb-10">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <SafeIcon IconComponent={Bitcoin} className="w-12 h-12 text-blue-400" />
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vcToken.name}</h3>
-                    <p className="text-blue-400 font-medium">{dualTokenomics.vcToken.purpose}</p>
+                    <p className="text-blue-400 font-medium text-lg">{dualTokenomics.vcToken.purpose}</p>
                   </div>
                 </div>
 
-                <div className="glass-ultra p-6 rounded-xl mb-8">
-                  <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="glass-ultra p-8 rounded-xl mb-10">
+                  <div className="grid grid-cols-2 gap-6 text-center">
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">Total Supply</p>
+                      <p className="text-gray-400 text-sm mb-3">Total Supply</p>
                       <p className="text-white font-bold text-xl">{dualTokenomics.vcToken.supply}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">Network</p>
+                      <p className="text-gray-400 text-sm mb-3">Network</p>
                       <p className="text-white font-bold text-xl">BSC</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {dualTokenomics.vcToken.utilities.map((utility, index) => (
               <motion.div
                 key={index}
-                      className="flex items-center gap-3 p-4 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-4 p-5 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                       whileHover={{ x: 5 }}
                     >
-                      <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                      <span className="text-gray-300">{utility}</span>
+                      <SafeIcon IconComponent={CheckCircle} className="w-6 h-6 text-blue-400 flex-shrink-0" />
+                      <span className="text-gray-300 text-lg">{utility}</span>
               </motion.div>
             ))}
           </div>
               </motion.div>
 
               {/* $VG Token */}
-              <motion.div variants={itemVariants} className="glass-enhanced group relative overflow-hidden">
+              <motion.div variants={itemVariants} className="glass-enhanced-breathing group relative overflow-hidden p-10">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-500/10 to-transparent rounded-bl-full" />
                 
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <SafeIcon IconComponent={TrendingUp} className="w-10 h-10 text-green-400" />
+                <div className="flex items-center gap-6 mb-10">
+                  <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <SafeIcon IconComponent={TrendingUp} className="w-12 h-12 text-green-400" />
         </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vgToken.name}</h3>
-                    <p className="text-green-400 font-medium">{dualTokenomics.vgToken.purpose}</p>
+                    <p className="text-green-400 font-medium text-lg">{dualTokenomics.vgToken.purpose}</p>
                   </div>
                 </div>
 
-                <div className="glass-ultra p-6 rounded-xl mb-8">
-                  <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="glass-ultra p-8 rounded-xl mb-10">
+                  <div className="grid grid-cols-2 gap-6 text-center">
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">Total Supply</p>
+                      <p className="text-gray-400 text-sm mb-3">Total Supply</p>
                       <p className="text-white font-bold text-xl">{dualTokenomics.vgToken.supply}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">Network</p>
+                      <p className="text-gray-400 text-sm mb-3">Network</p>
                       <p className="text-white font-bold text-xl">BSC</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {dualTokenomics.vgToken.utilities.map((utility, index) => (
                     <motion.div 
                       key={index} 
-                      className="flex items-center gap-3 p-4 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-4 p-5 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                       whileHover={{ x: 5 }}
                     >
-                      <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
-                      <span className="text-gray-300">{utility}</span>
+                      <SafeIcon IconComponent={CheckCircle} className="w-6 h-6 text-green-400 flex-shrink-0" />
+                      <span className="text-gray-300 text-lg">{utility}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -878,226 +878,166 @@ const Home: React.FC = () => {
 
         {/* Latest News & Updates */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-primary mb-6">
-                <SafeIcon IconComponent={Newspaper} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                <SafeIcon IconComponent={Newspaper} className="w-5 h-5" />
                 <span>Latest Updates</span>
           </div>
-              <h2 className="text-5xl font-bold text-white mb-6">What's Happening at TECH HY</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">What's Happening at TECH HY</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-                Stay updated with our latest developments, partnerships, and milestones
+                Stay updated with our latest developments, partnerships, and community milestones
               </p>
             </motion.div>
-          
-            <div className="grid lg:grid-cols-3 gap-8">
+            
+            <div className="grid md:grid-cols-3 gap-10">
               {latestNews.map((news, index) => (
               <motion.div
                 key={index}
                   variants={itemVariants}
-                  className="glass-enhanced-breathing group relative overflow-hidden"
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-4 right-4">
-                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      news.category === 'Funding' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                      news.category === 'Partnerships' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                      'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                    }`}>
-                      {news.category}
-                </div>
-                    </div>
-                  
-                  <div className="mb-6">
-                    <div className="w-full h-48 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all">
-                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
-                        news.category === 'Funding' ? 'bg-green-500/20' :
-                        news.category === 'Partnerships' ? 'bg-blue-500/20' :
-                        'bg-purple-500/20'
-                      }`}>
-                        <SafeIcon IconComponent={news.icon} className={`w-10 h-10 ${
-                          news.category === 'Funding' ? 'text-green-400' :
-                          news.category === 'Partnerships' ? 'text-blue-400' :
-                          'text-purple-400'
-                        }`} />
-                      </div>
-                    </div>
+                  <div className="absolute top-6 right-6">
+                    <div className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                      {news.date}
                   </div>
-                  
-                  <div className="flex items-center gap-3 mb-4">
-                    <SafeIcon IconComponent={Calendar} className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-400 text-sm">
-                      {new Date(news.date).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                    <span className="text-gray-500">•</span>
-                    <SafeIcon IconComponent={Clock} className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-400 text-sm">{news.readTime}</span>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-200 transition-colors">
-                    {news.title}
-                  </h3>
-                  
-                  <p className="text-gray-300 mb-6 leading-relaxed">
-                    {news.excerpt}
-                  </p>
-                  
-                  <div className="border-t border-gray-700 pt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {news.author.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <span className="text-gray-300 text-sm">{news.author}</span>
-                      </div>
-                      
-                      <motion.button
-                        className="glass-btn-ghost !px-4 !py-2 !min-h-auto text-sm group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleReadMore(news.title.toLowerCase().replace(/\s+/g, '-'))}
-                      >
-                        Read More
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-                  ))}
-                </div>
           </div>
+          
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={news.icon} className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-blue-400 text-sm font-semibold">{news.category}</span>
+                      <h3 className="text-xl font-bold text-white mt-2 group-hover:text-blue-200 transition-colors">
+                        {news.title}
+                      </h3>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 mb-8 leading-relaxed text-lg">{news.excerpt}</p>
+                  
+                  <motion.button
+                    className="glass-btn-ghost group w-full"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                onClick={() => handleReadMore(news.title.toLowerCase().replace(/\s+/g, '-'))}
+                  >
+                    Read More
+                    <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
         </motion.section>
 
         {/* Team & About Us */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
           <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-accent mb-6">
-                <SafeIcon IconComponent={User} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
+                <SafeIcon IconComponent={User} className="w-5 h-5" />
                 <span>Meet the Team</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">Leaders Behind the Vision</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">Leaders Behind the Vision</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-                Experienced professionals from leading tech companies and financial institutions
+                Experienced professionals from leading tech companies and successful startup exits
               </p>
-              </motion.div>
+            </motion.div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-3 gap-10">
               {teamMembers.map((member, index) => (
-                <motion.div
-                  key={index}
+              <motion.div
+                key={index}
                   variants={itemVariants}
-                  className="glass-enhanced group text-center relative overflow-hidden"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="glass-enhanced-breathing group text-center p-8"
+                  style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-bl-full" />
-                  
-                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform">
-                    {member.image}
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">
+                  <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <SafeIcon IconComponent={User} className="w-16 h-16 text-blue-400" />
+                </div>
+                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-200 transition-colors">
                     {member.name}
-                  </h3>
-                  <p className="text-blue-400 font-semibold mb-4">{member.position}</p>
+          </h3>
+                  <p className="text-blue-400 font-medium mb-4 text-lg">{member.position}</p>
+                  <p className="text-gray-300 mb-8 leading-relaxed">{member.bio}</p>
                   
-                  <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-                    {member.bio}
-                  </p>
-                  
-                  <div className="mb-6">
-                    <h4 className="text-gray-400 text-xs font-semibold mb-3 uppercase tracking-wider">Expertise</h4>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {member.expertise.map((skill, skillIndex) => (
-                        <span 
-                          key={skillIndex}
-                          className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs border border-blue-500/30"
-                        >
-                          {skill}
-                        </span>
-            ))}
-          </div>
-        </div>
-                  
-                  <motion.a
-                    href={member.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 glass-btn-ghost !px-4 !py-2 !min-h-auto text-sm group"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <SafeIcon IconComponent={Linkedin} className="w-4 h-4" />
-                    Connect
-                  </motion.a>
-                </motion.div>
-              ))}
-            </div>
+                  <div className="flex justify-center gap-4">
+                    <motion.a
+                      href={`https://linkedin.com/in/${member.linkedin}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <SafeIcon IconComponent={Linkedin} className="w-6 h-6 text-blue-400" />
+                </motion.a>
+                    <motion.a
+                      href={`mailto:${member.linkedin}@techhy.me`}
+                      className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <SafeIcon IconComponent={Mail} className="w-6 h-6 text-blue-400" />
+              </motion.a>
+                    </div>
+              </motion.div>
+                  ))}
+                </div>
           </div>
         </motion.section>
 
         {/* Trusted Partners */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-success mb-6">
-                <SafeIcon IconComponent={Handshake} className="w-4 h-4" />
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                <SafeIcon IconComponent={Handshake} className="w-5 h-5" />
                 <span>Strategic Partners</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">Trusted by Industry Leaders</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">Trusted by Industry Leaders</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-                Collaborating with top-tier partners to deliver exceptional results and innovation
+                Strategic partnerships that enhance our ecosystem and provide value to our community
               </p>
             </motion.div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <div className="grid md:grid-cols-4 gap-8">
               {trustedPartners.map((partner, index) => (
               <motion.div
                 key={index}
                   variants={itemVariants}
-                  className="glass-enhanced group text-center relative overflow-hidden"
+                  className="glass-card-breathing group text-center p-8"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="absolute top-4 right-4">
-                    <div className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-300 border border-green-500/30">
-                      {partner.partnership}
-                    </div>
-                  </div>
-                  
                   <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform border border-gray-600">
                     {partner.logo}
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-200 transition-colors">
+                  <h3 className="text-lg font-bold text-white mb-3 group-hover:text-blue-200 transition-colors">
                     {partner.name}
-                  </h3>
-                  <p className="text-green-400 font-semibold mb-4 text-sm">{partner.category}</p>
-                  
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {partner.description}
-                  </p>
+          </h3>
+                  <p className="text-gray-400 text-sm mb-6">{partner.category}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{partner.description}</p>
               </motion.div>
             ))}
           </div>
@@ -1106,31 +1046,31 @@ const Home: React.FC = () => {
 
         {/* Contact & Social */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
           <div className="max-w-5xl mx-auto">
-            <motion.div variants={itemVariants} className="glass-enhanced">
+            <motion.div variants={itemVariants} className="glass-enhanced-breathing">
               <div className="grid lg:grid-cols-2 gap-12 p-12">
                 <div>
-                  <div className="inline-flex items-center gap-2 glass-badge-primary mb-8">
-                    <SafeIcon IconComponent={Send} className="w-4 h-4" />
+                  <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                    <SafeIcon IconComponent={Send} className="w-5 h-5" />
                     <span>Get in Touch</span>
                   </div>
                   
                   <h2 className="text-4xl font-bold text-white mb-6">
                     Ready to Build the Future Together?
                   </h2>
-                  <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+                  <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto">
                     Join our ecosystem, explore partnership opportunities, or get personalized support for your venture journey.
                   </p>
                   
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center">
                         <SafeIcon IconComponent={Mail} className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
@@ -1147,7 +1087,7 @@ const Home: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
                         <SafeIcon IconComponent={Building2} className="w-6 h-6 text-green-400" />
                       </div>
                       <div>
@@ -1204,184 +1144,144 @@ const Home: React.FC = () => {
 
         {/* Development Roadmap */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
         <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-primary mb-6">
-                <SafeIcon IconComponent={TargetIcon} className="w-4 h-4" />
-                <span>Execution Roadmap</span>
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
+                <SafeIcon IconComponent={Calendar} className="w-5 h-5" />
+                <span>Development Progress</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-4">Proven Execution Track Record</h2>
-              <p className="text-xl text-gray-300">Transparent milestones with real progress updates</p>
+              <h2 className="text-5xl font-bold text-white mb-8">Roadmap & Milestones</h2>
+              <p className="text-xl text-gray-300 max-w-4xl mx-auto">
+                Transparent development progress with real completion percentages
+              </p>
             </motion.div>
             
-            <div className="space-y-8">
-              {roadmapMilestones.map((milestone, index) => (
-                <motion.div
-                  key={index}
+            <div className="grid md:grid-cols-2 gap-10">
+              {roadmapMilestones.map((quarter, index) => (
+              <motion.div
+                key={index}
                   variants={itemVariants}
-                  className="glass-enhanced-breathing group relative overflow-hidden"
-                  style={{ animationDelay: `${index * 200}ms` }}
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
+                  style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="p-8">
-                    <div className="flex flex-col lg:flex-row gap-8">
-                      <div className="lg:w-1/3">
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-white font-black text-lg ${
-                            milestone.status === 'In Progress' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                            milestone.status === 'Planned' ? 'bg-gradient-to-br from-orange-500 to-orange-600' :
-                            'bg-gradient-to-br from-gray-500 to-gray-600'
-                          }`}>
-                            <div className="text-center">
-                              <div className="text-sm font-bold">{milestone.quarter.split(' ')[0]}</div>
-                              <div className="text-xs">{milestone.quarter.split(' ')[1]}</div>
-                            </div>
-                          </div>
-                          <div>
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${
-                              milestone.status === 'In Progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                              milestone.status === 'Planned' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' :
-                              'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                            }`}>
-                              <SafeIcon IconComponent={Activity} className="w-4 h-4" />
-                              <span>{milestone.status}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <h3 className="text-3xl font-bold text-white mb-4">{milestone.title}</h3>
-                        
-                        {milestone.completion > 0 && (
-                          <div className="mb-6">
-                            <div className="flex justify-between text-sm mb-3">
-                              <span className="text-gray-400">Completion Progress</span>
-                              <span className="text-white font-bold">{milestone.completion}%</span>
-                            </div>
-                            <div className="w-full bg-gray-700/50 rounded-full h-4 overflow-hidden">
-                              <div 
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-1000 relative"
-                                style={{ width: `${milestone.completion}%` }}
-                              >
-                                <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="lg:w-2/3">
-                        <div className="space-y-4">
-                          {milestone.achievements.map((achievement, achievementIndex) => (
-                            <motion.div 
-                              key={achievementIndex} 
-                              className="flex items-start gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
-                              whileHover={{ x: 5 }}
-                            >
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                achievement.status === 'completed' ? 'bg-green-500/20' :
-                                achievement.status === 'progress' ? 'bg-blue-500/20' :
-                                achievement.status === 'planned' ? 'bg-orange-500/20' :
-                                'bg-purple-500/20'
-                              }`}>
-                                <SafeIcon IconComponent={achievement.icon} className={`w-5 h-5 ${
-                                  achievement.status === 'completed' ? 'text-green-400' :
-                                  achievement.status === 'progress' ? 'text-blue-400' :
-                                  achievement.status === 'planned' ? 'text-orange-400' :
-                                  'text-purple-400'
-                                } ${achievement.status === 'progress' ? 'animate-spin' : ''}`} />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-gray-300 leading-relaxed font-medium">
-                                  {achievement.text}
-                                </p>
-                                <div className={`inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-lg text-xs font-semibold ${
-                                  achievement.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                  achievement.status === 'progress' ? 'bg-blue-500/10 text-blue-400' :
-                                  achievement.status === 'planned' ? 'bg-orange-500/10 text-orange-400' :
-                                  'bg-purple-500/10 text-purple-400'
-                                }`}>
-                                  <span className="capitalize">{achievement.status}</span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
+                  <div className="absolute top-6 right-6">
+                    <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                      quarter.status === 'Completed' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                      quarter.status === 'In Progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                      'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                    }`}>
+                      {quarter.status}
                     </div>
                   </div>
+                  
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <SafeIcon IconComponent={Calendar} className="w-10 h-10 text-purple-400" />
+                    </div>
+                    <div>
+              <h3 className="text-2xl font-bold text-white">{quarter.title}</h3>
+                      <p className="text-gray-300 text-lg">{quarter.quarter}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-gray-400 text-sm">Completion Progress</span>
+                      <span className="text-white font-bold text-lg">{quarter.completion}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-3">
+                      <motion.div 
+                        className="h-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${quarter.completion}%` }}
+                        transition={{ duration: 1.5, delay: index * 0.2 }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {quarter.achievements.map((achievement, achievementIndex) => (
+                      <motion.div 
+                        key={achievementIndex} 
+                        className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
+                        whileHover={{ x: 5 }}
+                      >
+                      <SafeIcon IconComponent={achievement.icon} className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-gray-300 text-sm">{achievement.text}</span>
+              </motion.div>
+            ))}
+          </div>
                 </motion.div>
               ))}
-            </div>
-          </div>
+        </div>
+        </div>
         </motion.section>
 
         {/* Client Success Stories */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
-          <div className="max-w-7xl mx-auto">
-            <motion.div variants={itemVariants} className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 glass-badge-success mb-6">
-                <SafeIcon IconComponent={MessageSquare} className="w-4 h-4" />
+        <div className="max-w-7xl mx-auto">
+            <motion.div variants={itemVariants} className="text-center mb-20">
+              <div className="inline-flex items-center gap-3 glass-badge-success mb-8">
+                <SafeIcon IconComponent={MessageSquare} className="w-5 h-5" />
                 <span>Client Success Stories</span>
               </div>
-              <h2 className="text-5xl font-bold text-white mb-6">Real Results from Real Clients</h2>
+              <h2 className="text-5xl font-bold text-white mb-8">What Our Clients Say</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-                Verified testimonials from founders who achieved extraordinary results with TECH HY
+                Real results from real founders who've grown with TECH HY
               </p>
             </motion.div>
             
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 gap-10">
               {realTestimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
                   variants={itemVariants}
-                  className="glass-enhanced group relative overflow-hidden"
+                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-500/10 to-transparent rounded-bl-full" />
-                  
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                    <SafeIcon IconComponent={Star} key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  <div className="absolute top-6 right-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                        <SafeIcon key={i} IconComponent={Star} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
-                    <div className="glass-badge-success !px-3 !py-1 text-xs">
-                      Verified
+                      <span className="text-yellow-400 font-bold text-lg">5.0</span>
+                  </div>
+                </div>
+                  
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl flex items-center justify-center">
+                      <SafeIcon IconComponent={User} className="w-10 h-10 text-yellow-400" />
+              </div>
+                <div>
+                      <div className="text-xl font-bold text-white">{testimonial.author}</div>
+                      <div className="text-gray-400">{testimonial.position}</div>
+                      <div className="text-green-400 font-semibold text-lg">{testimonial.result}</div>
                     </div>
                   </div>
                   
-                  <blockquote className="text-gray-300 mb-8 italic text-lg leading-relaxed">
+                  <blockquote className="text-gray-300 text-lg leading-relaxed italic mb-8">
                     "{testimonial.quote}"
                   </blockquote>
                   
-                  <div className="border-t border-gray-700 pt-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                        {testimonial.avatar}
-                      </div>
-                <div>
-                        <p className="font-bold text-white text-lg">{testimonial.author}</p>
-                        <p className="text-blue-400">{testimonial.position}</p>
-                        <p className="text-gray-400 text-sm">{testimonial.company}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="glass-ultra p-3 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <SafeIcon IconComponent={TrendingUp} className="w-4 h-4 text-green-400" />
-                        <span className="text-green-400 font-semibold text-sm">{testimonial.result}</span>
-                      </div>
+                  <div className="glass-ultra p-6 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Verified Result:</span>
+                      <span className="text-green-400 font-bold text-lg">{testimonial.result}</span>
                     </div>
                 </div>
               </motion.div>
@@ -1392,55 +1292,44 @@ const Home: React.FC = () => {
 
         {/* Call to Action */}
         <motion.section 
-          className="py-20 px-6"
+          className="py-32 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
-          <div className="max-w-5xl mx-auto text-center">
-          <motion.div
-              variants={itemVariants}
-              className="glass-enhanced group relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5" />
+        <div className="max-w-5xl mx-auto text-center">
+            <motion.div variants={itemVariants} className="glass-enhanced-breathing p-16">
+              <div className="w-32 h-32 mx-auto mb-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
+                <SafeIcon IconComponent={Rocket} className="w-16 h-16 text-blue-400" />
+          </div>
               
-              <div className="relative z-10 p-12">
-                <div className="inline-flex items-center gap-2 glass-badge-accent mb-8">
-                  <SafeIcon IconComponent={Sparkles} className="w-4 h-4" />
-                  <span>Join the Revolution</span>
-                </div>
-                
-                <h2 className="text-5xl font-bold text-white mb-6">
-                  Ready to Transform Venture Capital?
-                </h2>
-                <p className="text-xl text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto">
-                  Join TECH HY and be part of the movement that's making venture capital safer, 
-                  more transparent, and more accessible for everyone.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <h2 className="text-5xl font-bold text-white mb-8">Ready to Transform Your Venture?</h2>
+              <p className="text-2xl text-gray-300 mb-16 leading-relaxed">
+                Join thousands of founders who trust TECH HY for secure, transparent, and successful fundraising.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-8 justify-center">
               <motion.button
-                    className="glass-btn-primary text-lg px-8 py-4"
+                className="glass-btn-primary group text-xl px-12 py-6"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                    onClick={handleStartJourney}
+                  onClick={handleStartJourney}
               >
-                    <SafeIcon IconComponent={Rocket} className="w-6 h-6" />
-                    Start Your Journey
-                    <ArrowRight className="w-6 h-6" />
+                  <SafeIcon IconComponent={Play} className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Start Your Journey
+                  <SafeIcon IconComponent={ArrowRight} className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </motion.button>
               <motion.button
-                    className="glass-btn-ghost text-lg px-8 py-4"
+                className="glass-btn-ghost group text-xl px-12 py-6"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                    onClick={handleScheduleCall}
+                  onClick={handleScheduleCall}
               >
-                    <SafeIcon IconComponent={MessageSquare} className="w-6 h-6" />
-                    Schedule a Call
-                    <SafeIcon IconComponent={ChevronRight} className="w-6 h-6" />
+                  <SafeIcon IconComponent={Calendar} className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Schedule a Call
+                  <SafeIcon IconComponent={ExternalLink} className="w-6 h-6 group-hover:rotate-12 transition-transform" />
               </motion.button>
-                </div>
             </div>
           </motion.div>
         </div>
@@ -1448,7 +1337,7 @@ const Home: React.FC = () => {
 
         {/* Company Info Footer */}
         <motion.section 
-          className="py-16 px-6 border-t border-gray-700"
+          className="py-16 px-6 border-t border-gray-700 animate-section-breathing-subtle"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"

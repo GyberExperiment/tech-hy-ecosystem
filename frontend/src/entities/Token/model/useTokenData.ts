@@ -77,11 +77,12 @@ export const useTokenData = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialFetchRef = useRef(true);
+  const isFirstFetch = useRef(true);
 
   // Cleanup
   useEffect(() => {
@@ -97,53 +98,40 @@ export const useTokenData = () => {
     };
   }, []);
 
-  // Helper functions
-  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) => 
-        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-      )
-    ]);
-  };
-
-  // ✅ ИСПРАВЛЕНИЕ: Убираем lastFetchTime из зависимостей чтобы избежать цикла
+  // ✅ СТАБИЛЬНАЯ ФУНКЦИЯ загрузки без циклических dependencies
   const fetchTokenData = useCallback(async (showRefreshToast: boolean = false, force: boolean = false) => {
-    // Prevent multiple simultaneous requests
-    if (abortControllerRef.current) {
+    // Блокируем множественные одновременные запросы
+    if (abortControllerRef.current && !force) {
+      log.debug('useTokenData: Aborting previous fetch', {
+        component: 'useTokenData'
+      });
       abortControllerRef.current.abort();
     }
     
-    // ✅ ИСПРАВЛЕНИЕ: Более строгая проверка кеша для предотвращения спама запросов
+    // ✅ Строгий кеш для предотвращения спама
     const now = Date.now();
     const timeSinceLastFetch = now - lastFetchTime;
     
-    // Не делаем запросы чаще чем раз в 10 секунд, кроме принудительных обновлений
-    if (!force && !showRefreshToast && timeSinceLastFetch < 10000) {
-      log.debug('useTokenData: Skipping fetch - cached data is fresh', {
+    if (!force && !showRefreshToast && timeSinceLastFetch < 15000) {
+      log.debug('useTokenData: Skipping fetch - using cached data', {
         component: 'useTokenData',
-        function: 'fetchTokenData',
         timeSinceLastFetch,
-        force,
-        showRefreshToast
+        cacheValidFor: 15000
       });
       return;
     }
     
-    if (!account || !isConnected || !isCorrectNetwork) {
-      log.debug('useTokenData: Skipping fetch - not ready', {
+    if (!account || !isConnected) {
+      log.debug('useTokenData: Skipping fetch - wallet not ready', {
         component: 'useTokenData',
-        function: 'fetchTokenData',
         account: !!account,
-        isConnected,
-        isCorrectNetwork
+        isConnected
       });
       return;
     }
     
     log.info('useTokenData: Starting token data fetch', {
       component: 'useTokenData',
-      function: 'fetchTokenData', 
       address: account,
       force,
       showRefreshToast,
@@ -152,12 +140,11 @@ export const useTokenData = () => {
     
     if (showRefreshToast) {
       setRefreshing(true);
-      toast.loading('Обновление данных токенов...', { id: 'refresh-tokens' });
+      toast.loading('Обновление балансов...', { id: 'refresh-tokens' });
     } else {
       setLoading(true);
     }
     
-    // Create new AbortController
     abortControllerRef.current = new AbortController();
 
     try {
@@ -171,33 +158,49 @@ export const useTokenData = () => {
       
       const tokenData: TokenData[] = [];
 
-      // BNB balance
+      // ✅ BNB balance с улучшенным error handling
       try {
         log.debug('useTokenData: Fetching BNB balance', {
           component: 'useTokenData',
-          function: 'fetchTokenData',
           address: account
         });
+        
         const balance = await rpcService.withFallback(async (provider) => {
           return await provider.getBalance(account);
-        });
+        }, 8000); // 8 секунд timeout
+        
         newBalances.BNB = ethers.formatEther(balance);
-        log.info('useTokenData: BNB balance fetched', {
+        
+        log.info('useTokenData: BNB balance fetched successfully', {
           component: 'useTokenData',
-          function: 'fetchTokenData',
           address: account,
           balance: newBalances.BNB
         });
       } catch (error: any) {
-        log.error('useTokenData: Error fetching BNB balance', {
+        log.error('useTokenData: Failed to fetch BNB balance, using fallback', {
           component: 'useTokenData',
-          function: 'fetchTokenData',
-          address: account
-        }, error);
+          address: account,
+          error: error.message
+        });
+        // ✅ Fallback: если есть provider, пробуем напрямую
+        try {
+          if (provider) {
+            const balance = await provider.getBalance(account);
+            newBalances.BNB = ethers.formatEther(balance);
+            log.info('useTokenData: BNB balance fetched via direct provider', {
+              component: 'useTokenData',
+              balance: newBalances.BNB
+            });
+          }
+        } catch (fallbackError) {
+          log.error('useTokenData: All BNB balance methods failed', {
+            component: 'useTokenData'
+          });
         newBalances.BNB = '0';
+        }
       }
 
-      // Token contracts info
+      // ✅ Token contracts с улучшенной обработкой ошибок
       const tokenContracts = [
         { 
           symbol: 'VC', 
@@ -225,63 +228,69 @@ export const useTokenData = () => {
         }
       ];
 
-      // Fetch all token data
+      // ✅ Последовательная загрузка токенов с индивидуальным error handling
       for (const tokenInfo of tokenContracts) {
         try {
           log.debug('useTokenData: Fetching token data', {
             component: 'useTokenData',
-            function: 'fetchTokenData',
-            address: account,
             tokenSymbol: tokenInfo.symbol,
             tokenAddress: tokenInfo.address
           });
           
+          // ✅ Увеличенный timeout и улучшенная обработка
           const [balance, decimals, totalSupply] = await rpcService.withFallback(async (provider) => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
-            return await Promise.all([
-              contract.balanceOf(account),
-              contract.decimals(),
-              contract.totalSupply()
-            ]);
-          });
+            
+            // Параллельные запросы с индивидуальными fallback
+            const balancePromise = contract.balanceOf(account).catch(() => BigInt(0));
+            const decimalsPromise = contract.decimals().catch(() => BigInt(18));
+            const totalSupplyPromise = contract.totalSupply().catch(() => BigInt(0));
+            
+            return await Promise.all([balancePromise, decimalsPromise, totalSupplyPromise]);
+          }, 10000); // 10 секунд timeout для токенов
 
-          const formattedBalance = ethers.formatUnits(balance, decimals);
-          const formattedTotalSupply = ethers.formatUnits(totalSupply, decimals);
+          const formattedBalance = ethers.formatUnits(balance || BigInt(0), decimals || 18);
+          const formattedTotalSupply = ethers.formatUnits(totalSupply || BigInt(0), decimals || 18);
           
-          // Update balances object
           newBalances[tokenInfo.symbol as keyof TokenBalances] = formattedBalance;
           
-          // ✅ Используем getReadOnlyContract() для избежания MetaMask RPC rate limiting
-          const contract = await rpcService.getReadOnlyContract(tokenInfo.address, ERC20_ABI);
+          // ✅ Создаем read-only контракт
+          let contract = null;
+          try {
+            contract = await rpcService.getReadOnlyContract(tokenInfo.address, ERC20_ABI);
+          } catch (contractError) {
+            log.warn('useTokenData: Failed to create read-only contract', {
+              component: 'useTokenData',
+              tokenSymbol: tokenInfo.symbol
+            });
+          }
           
           tokenData.push({
             symbol: tokenInfo.symbol,
             name: tokenInfo.name,
             address: tokenInfo.address,
             balance: formattedBalance,
-            decimals: Number(decimals),
+            decimals: Number(decimals || 18),
             totalSupply: formattedTotalSupply,
             contract: contract,
             color: tokenInfo.color
           });
           
-          log.info('useTokenData: Token balance fetched', {
+          log.info('useTokenData: Token balance fetched successfully', {
             component: 'useTokenData',
-            function: 'fetchTokenData',
-            address: account,
             tokenSymbol: tokenInfo.symbol,
             balance: formattedBalance
           });
-        } catch (error) {
-          log.error('useTokenData: Error fetching token data', {
-            component: 'useTokenData',
-            function: 'fetchTokenData',
-            address: account,
-            tokenSymbol: tokenInfo.symbol,
-            tokenAddress: tokenInfo.address
-          }, error);
           
-          // Add token with zero values as fallback
+        } catch (error: any) {
+          log.error('useTokenData: Failed to fetch token data, using fallback', {
+            component: 'useTokenData',
+            tokenSymbol: tokenInfo.symbol,
+            tokenAddress: tokenInfo.address,
+            error: error.message
+          });
+          
+          // ✅ Fallback: добавляем токен с нулевыми значениями
           newBalances[tokenInfo.symbol as keyof TokenBalances] = '0';
           tokenData.push({
             symbol: tokenInfo.symbol,
@@ -296,47 +305,47 @@ export const useTokenData = () => {
         }
       }
 
-      // Update state only if component is still mounted
+      // ✅ Обновляем состояние только если компонент mounted
       if (isMountedRef.current) {
         setBalances(newBalances);
         setTokens(tokenData);
         setLastFetchTime(now);
+        setIsInitialized(true);
         
-        log.info('useTokenData: Successfully updated token data', {
+        log.info('useTokenData: Successfully updated all token data', {
           component: 'useTokenData',
-          function: 'fetchTokenData',
           address: account,
-          tokenCount: tokenData.length
+          balances: {
+            BNB: newBalances.BNB,
+            VC: newBalances.VC,
+            VG: newBalances.VG,
+            LP: newBalances.LP
+          }
         });
         
         if (showRefreshToast) {
-          toast.success('Данные токенов обновлены!', { id: 'refresh-tokens' });
+          toast.success('Балансы обновлены!', { id: 'refresh-tokens' });
         }
 
-        // ✅ ИСПРАВЛЕНИЕ: Уведомляем другие компоненты только при первом успешном обновлении
-        // чтобы избежать циклических обновлений
-        if (isInitialFetchRef.current || showRefreshToast) {
-          isInitialFetchRef.current = false;
-          // Задержка чтобы избежать немедленных циклических обновлений
+        // ✅ Уведомляем другие компоненты только при значимых изменениях
+        if (isFirstFetch.current || showRefreshToast) {
+          isFirstFetch.current = false;
           setTimeout(() => {
             if (isMountedRef.current) {
         globalBalanceEmitter.emit();
             }
-          }, 500);
+          }, 1000);
         }
       }
-    } catch (error) {
-      log.error('useTokenData: Error fetching token data', {
+    } catch (error: any) {
+      log.error('useTokenData: Critical error during token data fetch', {
         component: 'useTokenData',
-        function: 'fetchTokenData',
-        address: account
-      }, error as Error);
+        address: account,
+        error: error.message
+      });
       
-      const errorMessage = 'Ошибка загрузки данных токенов';
       if (showRefreshToast) {
-        toast.error(errorMessage, { id: 'refresh-tokens' });
-      } else {
-        toast.error(errorMessage);
+        toast.error('Ошибка обновления балансов', { id: 'refresh-tokens' });
       }
     } finally {
       if (isMountedRef.current) {
@@ -344,50 +353,68 @@ export const useTokenData = () => {
         setRefreshing(false);
       }
     }
-  }, [account, isConnected, isCorrectNetwork]); // ✅ Убираем lastFetchTime из зависимостей
+  }, [account, isConnected]); // ✅ Минимальные dependencies
 
-  // ✅ ИСПРАВЛЕНИЕ: Подписываемся на глобальные обновления балансов с дебаунсом
+  // ✅ Инициализация только при смене account/connection
+  useEffect(() => {
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    if (isConnected && account) {
+      // Задержка для предотвращения множественных запросов при быстрых переключениях
+      fetchTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          log.info('useTokenData: Initializing token data fetch', {
+            component: 'useTokenData',
+            account
+          });
+          fetchTokenData(false, true);
+        }
+      }, 1000);
+    } else {
+      // Сбрасываем состояние при отключении
+      setBalances({
+        VC: '0',
+        VG: '0',
+        VGVotes: '0',
+        LP: '0',
+        BNB: '0'
+      });
+      setTokens([]);
+      setIsInitialized(false);
+    }
+  }, [account, isConnected]); // ✅ Убираем fetchTokenData из dependencies
+
+  // ✅ Подписка на глобальные обновления с дебаунсом
   useEffect(() => {
     let debounceTimeout: NodeJS.Timeout;
     
     const unsubscribe = globalBalanceEmitter.subscribe(() => {
-      // Дебаунс для предотвращения слишком частых обновлений
       clearTimeout(debounceTimeout);
       debounceTimeout = setTimeout(() => {
-        if (account && isConnected && isCorrectNetwork && isMountedRef.current) {
-          log.info('useTokenData: Received global balance update event (debounced)', {
+        if (account && isConnected && isMountedRef.current && isInitialized) {
+          log.debug('useTokenData: Global balance update triggered', {
             component: 'useTokenData',
             account
           });
-          fetchTokenData(false, false); // Фоновое обновление без принуждения
+          fetchTokenData(false, false);
         }
-      }, 2000); // 2 секунды дебаунс
+      }, 3000); // 3 секунды дебаунс
     });
 
     return () => {
       unsubscribe();
       clearTimeout(debounceTimeout);
     };
-  }, [account, isConnected, isCorrectNetwork, fetchTokenData]);
-
-  // ✅ ИСПРАВЛЕНИЕ: Убираем fetchTokenData из зависимостей useEffect для предотвращения цикла
-  useEffect(() => {
-    // Дебаунс для предотвращения слишком частых инициализаций
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current);
-    }
-    
-    if (isConnected && isCorrectNetwork && account) {
-      fetchTimeoutRef.current = setTimeout(() => {
-        if (isMountedRef.current) {
-          fetchTokenData(false, true); // Первоначальная загрузка с force=true
-        }
-      }, 500); // 500ms задержка для предотвращения спама
-    }
-  }, [account, isConnected, isCorrectNetwork]); // ✅ Убираем fetchTokenData из зависимостей
+  }, [account, isConnected, isInitialized]); // ✅ Добавляем isInitialized
 
   const refreshData = useCallback(() => {
-    fetchTokenData(true, true); // Принудительное обновление с toast
+    log.info('useTokenData: Manual refresh requested', {
+      component: 'useTokenData',
+      account
+    });
+    fetchTokenData(true, true);
   }, [fetchTokenData]);
 
   const formatBalance = useCallback((balance: string): string => {
@@ -400,13 +427,11 @@ export const useTokenData = () => {
     return `${(num / 1000000).toFixed(1)}M`;
   }, []);
 
-  // ✅ Функция для принудительного глобального обновления всех компонентов
   const triggerGlobalRefresh = useCallback(() => {
-    log.info('useTokenData: Triggering global balance refresh for all components', {
+    log.info('useTokenData: Triggering global refresh', {
       component: 'useTokenData',
       account
     });
-    // Немедленное обновление с задержкой для распространения
     setTimeout(() => {
     globalBalanceEmitter.emit();
     }, 100);
@@ -417,6 +442,7 @@ export const useTokenData = () => {
     tokens,
     loading,
     refreshing,
+    isInitialized,
     fetchTokenData,
     refreshData,
     formatBalance,
