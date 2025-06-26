@@ -1,47 +1,27 @@
 /**
  * 🌐 Centralized RPC Endpoints Configuration
  * 
- * TECH HY Ecosystem - Centralized management of all RPC endpoints
- * Priority: publicnode.com (most reliable) > fallback providers
+ * TECH HY Ecosystem - Browser-compatible RPC endpoints only
+ * Priority: MetaMask provider > CORS-enabled public RPC endpoints
  */
 
-// 🏆 Primary RPC endpoints (most reliable)
+// 🏆 Browser-compatible BSC Mainnet RPC endpoints (CORS enabled)
 export const BSC_MAINNET_RPC_ENDPOINTS = [
-  'https://bsc-rpc.publicnode.com',           // ✅ publicnode.com - most reliable
   'https://bsc-dataseed.bnbchain.org',
   'https://bsc-dataseed1-defi.binance.org',
   'https://bsc-dataseed2-defi.binance.org',
-  'https://bsc-rpc.publicnode.com',
-  'https://endpoints.omniatech.io/v1/bsc/mainnet/public'
+  'https://bsc.drpc.org',
+  'https://rpc.ankr.com/bsc'
 ];
 
+// 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ Самые надежные endpoints (проверены на стабильность)
-  'https://bsc-testnet-rpc.publicnode.com',        // ✅ publicnode.com - обычно самый надёжный
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public',  // ✅ omniatech - очень стабильный
-  'https://bsc-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3',  // ✅ NodeReal с API key
-  
-  // ✅ Официальные Binance endpoints
+  // ✅ Проверенные CORS-совместимые endpoints
   'https://data-seed-prebsc-1-s1.binance.org:8545', 
   'https://data-seed-prebsc-2-s1.binance.org:8545',
-  'https://data-seed-prebsc-1-s2.binance.org:8545',
-  'https://data-seed-prebsc-2-s2.binance.org:8545',
-  'https://data-seed-prebsc-1-s3.binance.org:8545',
-  'https://data-seed-prebsc-2-s3.binance.org:8545',
-  
-  // ✅ Альтернативные провайдеры
-  'https://bsc-testnet.drpc.org',
   'https://bsc-testnet-dataseed.bnbchain.org',
   'https://bsc-testnet.bnbchain.org',
-  'https://bsc-testnet.public.blastapi.io',
-  'https://bsc-testnet-rpc.publicnode.com',
-  
-  // ✅ Дополнительные backup endpoints
-  'https://rpc.ankr.com/bsc_testnet_chapel',
-  'https://bsc-testnet.blockpi.network/v1/rpc/public',
-  'https://bsc-testnet-rpc.allthatnode.com',
-  'https://1rpc.io/bnb-testnet',
-  'https://bsctestapi.terminet.io/rpc'
+  'https://rpc.ankr.com/bsc_testnet_chapel'
 ];
 
 // 🎯 Current network configuration
@@ -101,7 +81,7 @@ export const getCurrentNetworkConfig = () => {
   return NETWORK_CONFIG[CURRENT_NETWORK];
 };
 
-// 📊 RPC endpoint health monitoring
+// 📊 RPC endpoint health monitoring (for browser environments)
 export class RpcHealthMonitor {
   private static failureCount = new Map<string, number>();
   private static lastSuccess = new Map<string, number>();
@@ -135,6 +115,18 @@ export class RpcHealthMonitor {
     return healthyEndpoints[0]!; // Non-null assertion since we checked length above
   }
 }
+
+// ✅ Browser environment check
+export const isBrowserEnvironment = (): boolean => {
+  return typeof window !== 'undefined';
+};
+
+// ✅ MetaMask availability check
+export const hasMetaMask = (): boolean => {
+  return isBrowserEnvironment() && 
+         typeof window.ethereum !== 'undefined' && 
+         window.ethereum.isMetaMask === true;
+};
 
 // Explicit functions for each network
 export const getTestnetRpcEndpoints = (): string[] => BSC_TESTNET_RPC_ENDPOINTS;

@@ -4,6 +4,7 @@ import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../shared/config/contracts';
 import { getAllRpcEndpoints } from '../shared/config/rpcEndpoints';
+import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import { 
   Send, 
   CheckCircle, 
@@ -414,33 +415,29 @@ const Tokens: React.FC = () => {
 
   if (!address) {
     return (
-      <div className="animate-fade-in px-responsive">
-        <div className="text-center py-12">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400 animate-glass-pulse" />
-          <h2 className="hero-title text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {t('common:messages.connectWallet')}
-          </h2>
-          <p className="hero-subtitle text-xl text-gray-400 mb-8">
-            Подключите кошелек для управления токенами
-          </p>
-        </div>
-      </div>
+      <PageConnectionPrompt
+        title={t('tokens:title')}
+        subtitle="Подключите кошелек для управления токенами"
+        icon={Coins}
+        iconColor="text-blue-400"
+        titleGradient="from-blue-400 to-purple-500"
+        isConnected={!!address}
+        isCorrectNetwork={chainId === BSC_TESTNET.chainId}
+      />
     );
   }
 
   if (chainId !== BSC_TESTNET.chainId) {
     return (
-      <div className="animate-fade-in px-responsive">
-        <div className="text-center py-12">
-          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400 animate-glass-pulse" />
-          <h2 className="hero-title text-3xl font-bold mb-4 text-red-400">
-            Неправильная сеть
-          </h2>
-          <p className="hero-subtitle text-xl text-gray-400 mb-8">
-            {t('common:messages.wrongNetwork')}
-          </p>
-        </div>
-      </div>
+      <PageConnectionPrompt
+        title={t('tokens:title')}
+        subtitle="Подключите кошелек для управления токенами"
+        icon={Coins}
+        iconColor="text-blue-400"
+        titleGradient="from-blue-400 to-purple-500"
+        isConnected={!!address}
+        isCorrectNetwork={chainId === BSC_TESTNET.chainId}
+      />
     );
   }
 

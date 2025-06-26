@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
@@ -6,8 +6,10 @@ import { useAccount, useSwitchChain } from 'wagmi';
 import { ethers } from 'ethers';
 import { config, customTheme } from '../../config/rainbowkit';
 import { CONTRACTS } from '../config/contracts';
+import { rpcService } from '../api/rpcService';
 import { bscTestnet, bsc } from 'wagmi/chains';
 import { useEthersProvider, useEthersSigner } from './ethers';
+import { log } from './logger';
 
 // ABIs
 const ERC20_ABI = [
@@ -83,6 +85,7 @@ interface Web3ContextType {
   isConnected: boolean;
   isCorrectNetwork: boolean;
   chainId: number | undefined;
+  metaMaskAvailable: boolean;
   
   // Contracts (memoized)
   vcContract: ethers.Contract | null;
@@ -109,6 +112,21 @@ export const useWeb3 = () => {
   return context;
 };
 
+// ✅ Utility function to check MetaMask availability
+const checkMetaMaskAvailability = (): boolean => {
+  try {
+    return typeof window !== 'undefined' && 
+           typeof window.ethereum !== 'undefined' && 
+           window.ethereum.isMetaMask === true;
+  } catch (error) {
+    log.debug('MetaMask check failed', {
+      component: 'Web3Context',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    return false;
+  }
+};
+
 // Внутренний компонент для работы с Wagmi хуками
 const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address, isConnected, chainId } = useAccount();
@@ -118,8 +136,79 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const provider = useEthersProvider(chainId ? { chainId } : {});
   const signer = useEthersSigner(chainId ? { chainId } : {});
 
-  // Проверяем правильность сети (BSC testnet или mainnet)
-  const isCorrectNetwork = chainId === bscTestnet.id || chainId === bsc.id;
+  // ✅ Check MetaMask availability
+  const metaMaskAvailable = checkMetaMaskAvailability();
+
+  // ✅ Enhanced network detection with logging
+  const isCorrectNetwork = React.useMemo(() => {
+    const validChains = [bscTestnet.id, bsc.id]; // 97, 56
+    const result = chainId ? validChains.includes(chainId) : false;
+    
+    log.info('Network detection', {
+      component: 'Web3Context',
+      currentChainId: chainId,
+      validChains,
+      isCorrect: result,
+      isConnected,
+      hasProvider: !!provider
+    });
+    
+    return result;
+  }, [chainId, isConnected, provider]);
+
+  // ✅ Integration with rpcService
+  useEffect(() => {
+    if (provider && provider instanceof ethers.BrowserProvider) {
+      rpcService.setWeb3Provider(provider);
+      log.info('Web3Context: Provider set in rpcService', {
+        component: 'Web3Context',
+        hasProvider: true,
+        chainId,
+        isConnected,
+        isCorrectNetwork
+      });
+    } else {
+      rpcService.setWeb3Provider(null);
+      log.info('Web3Context: Provider cleared in rpcService', {
+        component: 'Web3Context',
+        hasProvider: false,
+        chainId,
+        isConnected,
+        reason: !provider ? 'no provider' : 'not BrowserProvider'
+      });
+    }
+  }, [provider, chainId, isConnected, isCorrectNetwork]);
+
+  // ✅ Enhanced MetaMask logging
+  useEffect(() => {
+    if (!metaMaskAvailable) {
+      log.warn('MetaMask not detected', {
+        component: 'Web3Context',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+        hasEthereum: typeof window !== 'undefined' && typeof window.ethereum !== 'undefined',
+        isMetaMask: typeof window !== 'undefined' && window.ethereum?.isMetaMask,
+        ethereumProviders: typeof window !== 'undefined' && window.ethereum ? Object.keys(window.ethereum) : []
+      });
+    } else {
+      log.info('MetaMask detected successfully', {
+        component: 'Web3Context',
+        version: window.ethereum?.version || 'unknown',
+        chainId: chainId || 'not connected'
+      });
+    }
+  }, [metaMaskAvailable, chainId]);
+
+  // ✅ Log connection state changes
+  useEffect(() => {
+    log.info('Connection state changed', {
+      component: 'Web3Context',
+      isConnected,
+      address: address || 'none',
+      chainId: chainId || 'none',
+      isCorrectNetwork,
+      metaMaskAvailable
+    });
+  }, [isConnected, address, chainId, isCorrectNetwork, metaMaskAvailable]);
 
   // Helper function to create contract instances
   const getContract = (address: string, abi: any[]): ethers.Contract | null => {
@@ -127,7 +216,11 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       return new ethers.Contract(address, abi, signer);
     } catch (error) {
-      console.error('Failed to create contract:', error);
+      log.error('Failed to create contract', {
+        component: 'Web3Context',
+        address,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       return null;
     }
   };
@@ -145,22 +238,41 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchToTestnet = async () => {
     try {
       await switchChain({ chainId: bscTestnet.id });
+      log.info('Switched to BSC Testnet', {
+        component: 'Web3Context',
+        chainId: bscTestnet.id
+      });
     } catch (error) {
-      console.error('Failed to switch to testnet:', error);
+      log.error('Failed to switch to testnet', {
+        component: 'Web3Context',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
   };
 
   const switchToMainnet = async () => {
     try {
       await switchChain({ chainId: bsc.id });
+      log.info('Switched to BSC Mainnet', {
+        component: 'Web3Context',
+        chainId: bsc.id
+      });
     } catch (error) {
-      console.error('Failed to switch to mainnet:', error);
+      log.error('Failed to switch to mainnet', {
+        component: 'Web3Context',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
   };
 
   // Compatibility function
   const updateBSCTestnetRPC = async (): Promise<boolean> => {
     // RainbowKit handles RPC automatically
+    log.debug('updateBSCTestnetRPC called (compatibility mode)', {
+      component: 'Web3Context'
+    });
     return true;
   };
 
@@ -171,6 +283,7 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isConnected,
     isCorrectNetwork,
     chainId,
+    metaMaskAvailable,
     vcContract,
     vgContract,
     vgVotesContract,

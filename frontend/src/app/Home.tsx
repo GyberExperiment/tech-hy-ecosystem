@@ -9,13 +9,11 @@ import {
   Award,
   CheckCircle,
   Star,
-  ChevronRight,
   Bitcoin,
   Download,
   ExternalLink,
   Building2,
   DollarSign,
-  Sparkles,
   Globe,
   Rocket,
   BarChart3,
@@ -39,12 +37,8 @@ import {
   Settings,
   BadgeCheck,
   Newspaper,
-  Clock,
   RefreshCw,
-  Zap,
   Play,
-  Activity,
-  Layers,
   Box
 } from 'lucide-react';
 

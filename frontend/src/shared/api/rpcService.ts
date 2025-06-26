@@ -1,39 +1,322 @@
 /**
  * 🌐 Centralized RPC Service
  * 
- * TECH HY Ecosystem - Proper DApp Architecture
- * Uses only MetaMask provider, no direct HTTP RPC calls
+ * TECH HY Ecosystem - Browser-optimized DApp Architecture
+ * Priority: MetaMask provider > CORS-enabled RPC endpoints
  */
 
 import { ethers } from 'ethers';
-import { getAllRpcEndpoints, RpcHealthMonitor } from '../config/rpcEndpoints';
+import { getAllRpcEndpoints, hasMetaMask, isBrowserEnvironment } from '../config/rpcEndpoints';
 import { log } from '../lib/logger';
 
-// ✅ ДОБАВЛЯЕМ Network import для staticNetwork конфигурации
+// ✅ Optimized timeouts for browser environment
+const RPC_TIMEOUT = 5000; // 5 seconds for browser requests
+const MAX_RETRIES = 2; // Reduced retries for faster UX
+const REQUEST_DEBOUNCE_TIME = 100; // 100ms between requests
+const MAX_CONCURRENT_REQUESTS = 3; // Maximum 3 concurrent requests
+
+// ✅ BSC Testnet Network Configuration
 const BSC_TESTNET_NETWORK = ethers.Network.from({
   chainId: 97,
   name: 'bsc-testnet'
 });
 
-// Singleton pattern for RPC service
-class RpcService {
-  private static instance: RpcService;
+interface ProviderInfo {
+  url: string;
+  provider: ethers.JsonRpcProvider;
+  isHealthy: boolean;
+  consecutiveErrors: number;
+  lastErrorTime: number;
+  requestCount: number;
+  lastRequestTime: number;
+}
+
+class OptimizedRpcService {
+  private providers: ProviderInfo[] = [];
+  private currentProviderIndex = 0;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
+  private activeRequests = 0;
+  private requestQueue: Array<() => void> = [];
   private web3Provider: ethers.BrowserProvider | null = null;
-  private fallbackProviders: Map<string, ethers.JsonRpcProvider> = new Map();
-  private primaryFallbackProvider: ethers.JsonRpcProvider | null = null;
 
-  private constructor() {}
-
-  static getInstance(): RpcService {
-    if (!RpcService.instance) {
-      RpcService.instance = new RpcService();
+  constructor() {
+    this.initializeProviders();
+    // ✅ Start health checking only after initialization completes
+    if (isBrowserEnvironment()) {
+      // Defer health checking to avoid startup spam
+      setTimeout(() => this.startHealthChecking(), 5000);
     }
-    return RpcService.instance;
   }
 
-  /**
-   * Set Web3 provider from Web3Context (MetaMask)
-   */
+  private initializeProviders() {
+    const endpoints = getAllRpcEndpoints();
+    
+    log.info('RpcService: Initializing fallback providers', {
+      component: 'RpcService',
+      hasMetaMask: hasMetaMask(),
+      endpointCount: endpoints.length
+    });
+    
+    this.providers = endpoints.map(url => ({
+      url,
+      provider: new ethers.JsonRpcProvider(url, BSC_TESTNET_NETWORK, {
+        staticNetwork: BSC_TESTNET_NETWORK,
+        batchMaxCount: 1,
+        batchMaxSize: 1024,
+        batchStallTime: 10,
+        polling: false, // ✅ Disable polling for browser
+        pollingInterval: 30000, // Longer interval for browser
+      }),
+      isHealthy: true,
+      consecutiveErrors: 0,
+      lastErrorTime: 0,
+      requestCount: 0,
+      lastRequestTime: 0
+    }));
+
+    // ✅ Set timeouts on providers
+    this.providers.forEach(providerInfo => {
+      const provider = providerInfo.provider;
+      
+      // Custom timeout handling for browser
+      const originalSend = provider.send.bind(provider);
+      provider.send = async (method: string, params: any[]): Promise<any> => {
+        return Promise.race([
+          originalSend(method, params),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('RPC timeout')), RPC_TIMEOUT)
+          )
+        ]);
+      };
+    });
+
+    log.info('RpcService: Initialized browser-compatible providers', {
+      component: 'RpcService',
+      providerCount: this.providers.length,
+      endpoints: endpoints
+    });
+  }
+
+  private startHealthChecking() {
+    // ✅ Start health checking for fallback providers
+    this.healthCheckInterval = setInterval(() => {
+      this.checkProvidersHealth();
+    }, 60000); // Check every minute for browser
+  }
+
+  private async checkProvidersHealth() {
+    if (this.providers.length === 0) return;
+
+    log.debug('RpcService: Starting health check for providers', {
+      component: 'RpcService',
+      providerCount: this.providers.length
+    });
+
+    const healthPromises = this.providers.map(async (providerInfo, index) => {
+      try {
+        const start = Date.now();
+        await providerInfo.provider.getBlockNumber();
+        const responseTime = Date.now() - start;
+        
+        if (responseTime < 3000) { // 3 second threshold for browser
+          providerInfo.isHealthy = true;
+          providerInfo.consecutiveErrors = 0;
+        }
+        
+        log.debug('Provider health check passed', {
+          component: 'RpcService',
+          providerIndex: index,
+          url: providerInfo.url,
+          responseTime
+        });
+      } catch (error) {
+        providerInfo.consecutiveErrors++;
+        providerInfo.lastErrorTime = Date.now();
+        
+        if (providerInfo.consecutiveErrors >= 2) {
+          providerInfo.isHealthy = false;
+        }
+        
+        log.warn('Provider health check failed', {
+          component: 'RpcService',
+          providerIndex: index,
+          url: providerInfo.url,
+          consecutiveErrors: providerInfo.consecutiveErrors,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
+    await Promise.allSettled(healthPromises);
+  }
+
+  private getNextHealthyProvider(): ProviderInfo | null {
+    if (this.providers.length === 0) return null;
+
+    const healthyProviders = this.providers.filter(p => p.isHealthy);
+    
+    if (healthyProviders.length === 0) {
+      // ✅ Reset all to healthy if none available
+      log.warn('No healthy providers available, resetting all', {
+        component: 'RpcService'
+      });
+      this.providers.forEach(p => {
+        p.isHealthy = true;
+        p.consecutiveErrors = 0;
+      });
+      return this.providers[0] || null;
+    }
+
+    // ✅ Round-robin among healthy providers
+    const providerInfo = healthyProviders[this.currentProviderIndex % healthyProviders.length];
+    this.currentProviderIndex++;
+    
+    return providerInfo;
+  }
+
+  private async rateLimitRequest(): Promise<void> {
+    return new Promise(resolve => {
+      if (this.activeRequests >= MAX_CONCURRENT_REQUESTS) {
+        this.requestQueue.push(resolve);
+      } else {
+        this.activeRequests++;
+        resolve();
+      }
+    });
+  }
+
+  private releaseRequest(): void {
+    this.activeRequests--;
+    if (this.requestQueue.length > 0) {
+      const nextRequest = this.requestQueue.shift();
+      if (nextRequest) {
+        this.activeRequests++;
+        nextRequest();
+      }
+    }
+  }
+
+  async withFallback<T>(
+    operation: (provider: ethers.JsonRpcProvider) => Promise<T>,
+    maxRetries: number = MAX_RETRIES
+  ): Promise<T> {
+    // ✅ Rate limiting protection
+    await this.rateLimitRequest();
+    
+    let lastError: Error | null = null;
+    let attemptsCount = 0;
+
+    try {
+      // ✅ Check if we have any providers initialized
+      if (this.providers.length === 0) {
+        throw new Error('No RPC providers configured for fallback operations');
+      }
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const providerInfo = this.getNextHealthyProvider();
+        
+        if (!providerInfo) {
+          throw new Error('No healthy RPC providers available');
+        }
+
+        attemptsCount++;
+        const startTime = Date.now();
+
+        try {
+          // ✅ Request debouncing
+          const timeSinceLastRequest = Date.now() - providerInfo.lastRequestTime;
+          if (timeSinceLastRequest < REQUEST_DEBOUNCE_TIME) {
+            await new Promise(resolve => 
+              setTimeout(resolve, REQUEST_DEBOUNCE_TIME - timeSinceLastRequest)
+            );
+          }
+
+          providerInfo.lastRequestTime = Date.now();
+          providerInfo.requestCount++;
+
+          log.debug('Executing RPC operation', {
+            component: 'RpcService',
+            attempt: attempt + 1,
+            maxRetries,
+            providerUrl: providerInfo.url,
+            requestCount: providerInfo.requestCount
+          });
+
+          const result = await operation(providerInfo.provider);
+          const responseTime = Date.now() - startTime;
+
+          log.debug('RPC operation successful', {
+            component: 'RpcService',
+            attempt: attempt + 1,
+            providerUrl: providerInfo.url,
+            responseTime,
+            totalAttempts: attemptsCount
+          });
+
+          // ✅ Reset error count on success
+          providerInfo.consecutiveErrors = 0;
+          
+          return result;
+
+        } catch (error: any) {
+          const responseTime = Date.now() - startTime;
+          lastError = error instanceof Error ? error : new Error(String(error));
+          
+          // ✅ Mark provider as problematic
+          providerInfo.consecutiveErrors++;
+          providerInfo.lastErrorTime = Date.now();
+          
+          // ✅ Immediate health status update for critical errors
+          if (error.message.includes('429') || 
+              error.message.includes('rate limit') ||
+              error.message.includes('timeout') ||
+              error.message.includes('CORS') ||
+              responseTime >= RPC_TIMEOUT) {
+            providerInfo.isHealthy = false;
+          }
+
+          log.warn('RPC operation failed', {
+            component: 'RpcService',
+            attempt: attempt + 1,
+            maxRetries,
+            providerUrl: providerInfo.url,
+            responseTime,
+            error: lastError.message,
+            consecutiveErrors: providerInfo.consecutiveErrors
+          });
+
+          // ✅ Quick retry for rate limiting (with delay)
+          if (error.message.includes('429') && attempt < maxRetries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 3000); // Max 3s for browser
+            log.info('Rate limited, waiting before retry', {
+              component: 'RpcService',
+              delay,
+              providerUrl: providerInfo.url
+            });
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+
+      // ✅ All attempts failed
+      const errorMessage = lastError ? lastError.message : 'All RPC providers failed';
+      
+      log.error('All RPC fallback attempts failed', {
+        component: 'RpcService',
+        totalAttempts: attemptsCount,
+        maxRetries,
+        lastError: errorMessage,
+        healthyProviders: this.providers.filter(p => p.isHealthy).length
+      });
+
+      throw new Error(`RPC operation failed after ${attemptsCount} attempts: ${errorMessage}`);
+      
+    } finally {
+      this.releaseRequest();
+    }
+  }
+
+  // ✅ Web3 provider management
   setWeb3Provider(provider: ethers.BrowserProvider | null) {
     this.web3Provider = provider;
     log.info('RPC Service: Web3 provider updated', {
@@ -42,244 +325,53 @@ class RpcService {
     });
   }
 
-  /**
-   * Get or create fallback provider for specific endpoint
-   * ✅ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Добавлен staticNetwork параметр
-   */
-  private getFallbackProvider(rpcUrl: string): ethers.JsonRpcProvider {
-    if (!this.fallbackProviders.has(rpcUrl)) {
-      // ✅ РЕШЕНИЕ: staticNetwork предотвращает автоматические eth_chainId запросы!
-      const provider = new ethers.JsonRpcProvider(rpcUrl, BSC_TESTNET_NETWORK, {
-        staticNetwork: BSC_TESTNET_NETWORK
-      });
-      this.fallbackProviders.set(rpcUrl, provider);
-      log.debug('RPC Service: Created new fallback provider with staticNetwork', {
-        component: 'RpcService',
-        endpoint: rpcUrl,
-        network: 'BSC Testnet (97)'
-      });
-    }
-    return this.fallbackProviders.get(rpcUrl)!;
-  }
-
-  /**
-   * Get provider - prefer Web3 (MetaMask), fallback to read-only
-   * ✅ ДОБАВЛЯЕМ опцию принудительного использования fallback для избежания rate limiting
-   */
   async getProvider(forceReadOnly: boolean = false): Promise<ethers.Provider> {
-    // ✅ НОВАЯ ЛОГИКА: Если forceReadOnly или MetaMask RPC проблематичен, используем fallback
-    if (forceReadOnly || !this.web3Provider) {
-    // 2. Fallback to read-only provider for disconnected state
-      if (!this.primaryFallbackProvider) {
-      const rpcEndpoints = getAllRpcEndpoints();
-        this.primaryFallbackProvider = this.getFallbackProvider(rpcEndpoints[0]);
-        log.info('RPC Service: Set primary fallback provider', {
-        component: 'RpcService',
-          endpoint: rpcEndpoints[0],
-          reason: forceReadOnly ? 'forceReadOnly' : 'no_web3_provider'
-      });
-    }
-
-      return this.primaryFallbackProvider;
-    }
-
-    // 1. Prefer MetaMask provider (proper DApp architecture)
-    return this.web3Provider;
-  }
-
-  /**
-   * Try multiple RPC endpoints with fallback and health monitoring
-   * ✅ УЛУЧШЕННАЯ ЛОГИКА: При rate limiting переключаемся на read-only режим
-   * ✅ БЛОКИРОВКА ПРОБЛЕМНЫХ ENDPOINTS
-   */
-  async withFallback<T>(
-    operation: (provider: ethers.Provider) => Promise<T>,
-    timeoutMs: number = 3500  // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ: 3.5 секунд для быстрого переключения
-  ): Promise<T> {
-    let provider = await this.getProvider();
-    
-    // ✅ ПРИНУДИТЕЛЬНАЯ БЛОКИРОВКА blastapi.io
-    if (this.isProblematicEndpoint(provider)) {
-      log.warn('Detected problematic RPC endpoint, forcing read-only mode', {
-        component: 'RpcService',
-        function: 'withFallback',
-        reason: 'blastapi_blocked'
-      });
-      provider = await this.getProvider(true); // Принудительно read-only
-    }
-    
-    // Helper function for timeout
-    const withTimeout = <T>(promise: Promise<T>, timeout: number): Promise<T> => {
-      return Promise.race([
-        promise,
-        new Promise<T>((_, reject) => 
-          setTimeout(() => reject(new Error(`Operation timeout after ${timeout}ms`)), timeout)
-        )
-      ]);
-    };
-    
-    try {
-      const result = await withTimeout(operation(provider), timeoutMs);
-      
-      // Mark success if using fallback provider
-      if (!this.web3Provider && this.primaryFallbackProvider) {
-        const rpcEndpoints = getAllRpcEndpoints();
-        RpcHealthMonitor.markSuccess(rpcEndpoints[0]);
-      }
-      
-      return result;
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      
-      // ✅ БОЛЕЕ АГРЕССИВНАЯ ОБРАБОТКА: Сразу переключаемся на read-only при проблемах
-      const shouldTryReadOnly = 
-        errorMessage?.includes('429') || 
-        errorMessage?.includes('Too Many Requests') ||
-        errorMessage?.includes('timeout') ||
-        errorMessage?.includes('TIMEOUT') ||
-        errorMessage?.includes('ECONNRESET') ||
-        errorMessage?.includes('ENOTFOUND') ||
-        errorMessage?.includes('network error');
-      
-      if (shouldTryReadOnly && this.web3Provider) {
-        log.warn('Network issues detected, trying read-only mode', {
+    // ✅ For write operations, prioritize MetaMask if connected and on correct network
+    if (!forceReadOnly && this.web3Provider && isBrowserEnvironment()) {
+      try {
+        // Test if the provider is actually working
+        await this.web3Provider.getNetwork();
+        return this.web3Provider;
+      } catch (error) {
+        log.warn('MetaMask provider not working, falling back to RPC', {
           component: 'RpcService',
-          function: 'withFallback',
-          error: errorMessage,
-          switchingToReadOnly: true
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
-        
-        try {
-          // Принудительно используем read-only провайдер с меньшим таймаутом
-          const readOnlyProvider = await this.getProvider(true);
-          const result = await withTimeout(operation(readOnlyProvider), timeoutMs / 2);
-          
-          log.info('RPC Service: Read-only fallback successful', {
-            component: 'RpcService',
-            function: 'withFallback',
-            mode: 'read-only'
-          });
-          
-          return result;
-        } catch (readOnlyError) {
-          log.debug('RPC Service: Read-only fallback also failed', {
-            component: 'RpcService',
-            function: 'withFallback',
-            error: (readOnlyError as Error).message
-          });
-          // Продолжаем с обычной fallback логикой
-        }
       }
-      
-      log.warn('RPC operation failed with primary provider', {
-        component: 'RpcService',
-        function: 'withFallback',
-        isWeb3Provider: !!this.web3Provider,
-        error: errorMessage
-      });
-
-      // If using Web3 provider, don't try fallbacks (user should handle wallet issues)
-      if (this.web3Provider && !shouldTryReadOnly) {
-        throw error;
-      }
-
-      // Try other endpoints only if using fallback providers
-        const rpcEndpoints = getAllRpcEndpoints();
-        
-      // Mark primary endpoint failure
-      RpcHealthMonitor.markFailure(rpcEndpoints[0]);
-      
-      let lastError = error;
-      
-      // ✅ ОГРАНИЧИВАЕМ КОЛИЧЕСТВО ПОПЫТОК: максимум 2 fallback endpoint
-      const maxFallbacks = Math.min(3, rpcEndpoints.length);
-      
-      for (let i = 1; i < maxFallbacks; i++) {
-        const rpcUrl = rpcEndpoints[i];
-        
-        try {
-          log.debug('RPC Service: Trying fallback endpoint', {
-            component: 'RpcService',
-            function: 'withFallback',
-            endpoint: rpcUrl,
-            attemptNumber: i + 1
-          });
-          
-          // ✅ МЕНЬШИЕ ЗАДЕРЖКИ между попытками
-          if (i > 1) {
-            await new Promise(resolve => setTimeout(resolve, 500 * i));
-          }
-          
-          const fallbackProvider = this.getFallbackProvider(rpcUrl);
-          // ✅ УМЕНЬШЕННЫЙ ТАЙМАУТ для fallback запросов
-          const fallbackTimeout = timeoutMs * 0.7; 
-          const result = await withTimeout(operation(fallbackProvider), fallbackTimeout);
-            
-          log.info('RPC Service: Fallback successful', {
-              component: 'RpcService',
-            function: 'withFallback',
-            endpoint: rpcUrl,
-              attemptNumber: i + 1
-            });
-          
-          // Mark success and update primary provider
-          RpcHealthMonitor.markSuccess(rpcUrl);
-          this.primaryFallbackProvider = fallbackProvider;
-            
-            return result;
-          } catch (fallbackError) {
-          log.debug('RPC Service: Fallback failed', {
-              component: 'RpcService',
-            function: 'withFallback',
-            endpoint: rpcUrl,
-              error: (fallbackError as Error).message
-            });
-          
-          RpcHealthMonitor.markFailure(rpcUrl);
-          lastError = fallbackError;
-          
-          // ✅ УМЕНЬШЕННАЯ ЗАДЕРЖКА после rate limiting errors
-          if ((fallbackError as Error).message?.includes('429') || 
-              (fallbackError as Error).message?.includes('Too Many Requests')) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-      }
-
-      // ✅ ФИНАЛЬНАЯ ПРОВЕРКА: Если все упало, возвращаем более информативную ошибку
-      const finalError = new Error(`All RPC endpoints failed. Last error: ${(lastError as Error).message}`);
-      log.warn('RPC Service: All fallbacks exhausted', {
-        component: 'RpcService',
-        function: 'withFallback',
-        finalError: finalError.message,
-        attemptsCount: maxFallbacks
-      });
-
-      throw finalError;
     }
+
+    // ✅ Fallback to RPC providers for read operations
+    const healthyProvider = this.getNextHealthyProvider();
+    if (healthyProvider) {
+      return healthyProvider.provider;
+    }
+    
+    // ✅ Last resort: return first provider if available
+    if (this.providers.length > 0) {
+      return this.providers[0].provider;
+    }
+    
+    throw new Error('No providers available for read operations');
   }
 
-  /**
-   * Get contract instance with proper provider
-   */
   async getContract(
     address: string, 
     abi: any[], 
     needsSigner: boolean = false
   ): Promise<ethers.Contract> {
-    const provider = await this.getProvider();
-
     if (needsSigner && this.web3Provider) {
-      const signer = await this.web3Provider.getSigner();
-      return new ethers.Contract(address, abi, signer);
+      try {
+        const signer = await this.web3Provider.getSigner();
+        return new ethers.Contract(address, abi, signer);
+      } catch (error) {
+        throw new Error(`Failed to get signer: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
 
+    const provider = await this.getProvider(true); // Force read-only for contract calls
     return new ethers.Contract(address, abi, provider);
   }
 
-  /**
-   * ✅ НОВЫЙ МЕТОД: Get contract instance with read-only provider (избегает MetaMask RPC)
-   */
   async getReadOnlyContract(
     address: string, 
     abi: any[]
@@ -288,65 +380,58 @@ class RpcService {
     return new ethers.Contract(address, abi, readOnlyProvider);
   }
 
-  /**
-   * Check if Web3 provider is available
-   */
   hasWeb3Provider(): boolean {
     return !!this.web3Provider;
   }
 
-  /**
-   * Clean up providers (useful for testing/reset)
-   */
-  cleanup(): void {
-    this.fallbackProviders.clear();
-    this.primaryFallbackProvider = null;
-    log.info('RPC Service: Cleaned up fallback providers', {
-      component: 'RpcService',
-      function: 'cleanup'
-    });
+  // ✅ Utility methods
+  getProviderStats() {
+    return {
+      hasMetaMask: hasMetaMask(),
+      hasWeb3Provider: this.hasWeb3Provider(),
+      fallbackProviders: this.providers.map(p => ({
+        url: p.url,
+        isHealthy: p.isHealthy,
+        consecutiveErrors: p.consecutiveErrors,
+        requestCount: p.requestCount,
+        lastErrorTime: p.lastErrorTime
+      })),
+      activeRequests: this.activeRequests,
+      queuedRequests: this.requestQueue.length
+    };
   }
 
-  /**
-   * ✅ ПРОВЕРКА ПРОБЛЕМНЫХ RPC ENDPOINTS
-   * Блокирует известные проблемные endpoints типа blastapi.io
-   */
-  private isProblematicEndpoint(provider: ethers.Provider): boolean {
-    try {
-      // Проверяем JsonRpcProvider
-      if (provider instanceof ethers.JsonRpcProvider) {
-        const url = (provider as any)._getConnection?.()?.url || '';
-        
-        // ✅ БЛОКИРУЕМ ИЗВЕСТНЫЕ ПРОБЛЕМНЫЕ ENDPOINTS
-        const problematicDomains = [
-          'blastapi.io',
-          'blast-api.io', 
-          'blast.api.io'
-        ];
-        
-        const isProblematic = problematicDomains.some(domain => url.includes(domain));
-        
-        if (isProblematic) {
-          log.warn('Blocked problematic RPC endpoint', {
-            component: 'RpcService',
-            function: 'isProblematicEndpoint',
-            url: url,
-            reason: 'rate_limiting_issues'
-          });
-          return true;
-        }
+  resetProviderHealth(providerUrl?: string) {
+    if (providerUrl) {
+      const provider = this.providers.find(p => p.url === providerUrl);
+      if (provider) {
+        provider.isHealthy = true;
+        provider.consecutiveErrors = 0;
+        provider.lastErrorTime = 0;
       }
-      
-      return false;
-    } catch (error) {
-      log.debug('Error checking problematic endpoint', {
-        component: 'RpcService',
-        function: 'isProblematicEndpoint',
-        error: (error as Error).message
+    } else {
+      this.providers.forEach(p => {
+        p.isHealthy = true;
+        p.consecutiveErrors = 0;
+        p.lastErrorTime = 0;
       });
-      return false;
     }
+  }
+
+  destroy() {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+    
+    this.providers.forEach(p => {
+      p.provider.destroy();
+    });
   }
 }
 
-export const rpcService = RpcService.getInstance(); 
+// ✅ Export singleton instance
+export const rpcService = new OptimizedRpcService();
+
+// ✅ Export for testing/debugging
+export { OptimizedRpcService }; 

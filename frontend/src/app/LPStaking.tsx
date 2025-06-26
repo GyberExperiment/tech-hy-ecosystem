@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWeb3 } from '../contexts/Web3Context';
+import { useWeb3 } from '../shared/lib/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../constants/contracts';
-import EarnVGWidget from '../components/EarnVGWidget';
-import VGConverter from '../components/VGConverter';
-import LPPoolManager from '../components/LPPoolManager';
-import TransactionHistory from '../components/TransactionHistory';
-import { ContractStatus } from '../components/ContractStatus';
+import { CONTRACTS, BSC_TESTNET } from '../shared/config/contracts';
+import EarnVGWidget from '../widgets/StakingDashboard/ui/EarnVGWidget';
+import VGConverter from '../entities/Token/ui/VGConverter';
+import LPPoolManager from '../widgets/StakingDashboard/ui/LPPoolManager';
+import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
+import { ContractStatus } from '../shared/lib/ContractStatus';
+import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import { 
   Rocket, 
   Gift, 
@@ -31,8 +32,8 @@ import {
   Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { log } from '../utils/logger';
-import { rpcService } from '../services/rpcService';
+import { log } from '../shared/lib/logger';
+import { rpcService } from '../shared/api/rpcService';
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -481,36 +482,29 @@ const LPLocking: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
-        <div className="text-center py-12">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {t('locking:title')}
-          </h2>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            {t('locking:subtitle')}
-          </p>
-          <div className="text-lg text-gray-300">
-            {t('common:messages.connectWallet')}
-          </div>
-        </div>
-      </div>
+      <PageConnectionPrompt
+        title={t('locking:title')}
+        subtitle={t('locking:subtitle')}
+        icon={Rocket}
+        iconColor="text-green-400"
+        titleGradient="from-green-400 to-blue-500"
+        isConnected={isConnected}
+        isCorrectNetwork={isCorrectNetwork}
+      />
     );
   }
 
   if (!isCorrectNetwork) {
     return (
-      <div className="animate-fade-in px-4 md:px-8 lg:px-12">
-        <div className="text-center py-12">
-          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-          <h2 className="text-3xl font-bold mb-4 text-red-400">
-            Неправильная сеть
-          </h2>
-          <p className="text-xl text-gray-400 mb-8">
-            {t('common:messages.wrongNetwork')}
-          </p>
-        </div>
-      </div>
+      <PageConnectionPrompt
+        title={t('locking:title')}
+        subtitle={t('locking:subtitle')}
+        icon={Rocket}
+        iconColor="text-green-400"
+        titleGradient="from-green-400 to-blue-500"
+        isConnected={isConnected}
+        isCorrectNetwork={isCorrectNetwork}
+      />
     );
   }
 

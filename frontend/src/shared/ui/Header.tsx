@@ -3,8 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Globe } from 'lucide-react';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Globe, Settings, Shield } from 'lucide-react';
 import LanguageSwitcher from '../lib/LanguageSwitcher';
+import NetworkStatus from './NetworkStatus';
+import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
 
@@ -14,6 +17,8 @@ const Header: React.FC = () => {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const { isAdmin } = useAdminAccess();
 
   const navigation = [
     { name: t('navigation.dashboard'), href: '/dashboard', icon: BarChart3 },
@@ -28,6 +33,10 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const toggleAdminPanel = () => {
+    setIsAdminPanelOpen(!isAdminPanelOpen);
+  };
+
   const isTestnet = chainId === bscTestnet.id;
   const isMainnet = chainId === bsc.id;
 
@@ -37,6 +46,42 @@ const Header: React.FC = () => {
     } else {
       switchChain({ chainId: bscTestnet.id });
     }
+  };
+
+  // ✨ Admin Button Component
+  const AdminButton = () => {
+    if (!isAdmin) return null;
+
+    return (
+      <button
+        onClick={toggleAdminPanel}
+        className="
+          group relative overflow-hidden
+          h-[44px] w-[44px] p-2
+          bg-gradient-to-br from-red-500/20 via-orange-500/20 to-yellow-500/20
+          border border-red-500/30 hover:border-red-400/50
+          text-red-400 hover:text-red-300
+          rounded-[14px]
+          shadow-[0_4px_16px_rgba(239,68,68,0.2),0_1px_0_rgba(255,255,255,0.1)_inset]
+          hover:shadow-[0_8px_32px_rgba(239,68,68,0.3),0_1px_0_rgba(255,255,255,0.15)_inset]
+          hover:scale-[1.02] hover:-translate-y-[1px]
+          active:scale-[0.98] active:translate-y-[0px]
+          transition-all duration-300 ease-out
+          animate-pulse
+        "
+        title="Admin Panel (Authorized Access)"
+      >
+        <div className="relative w-5 h-5 mx-auto">
+          <Shield className="w-5 h-5 transition-all duration-300 group-hover:scale-110" />
+        </div>
+        
+        {/* Неоморфный внутренний свет */}
+        <div className="absolute inset-[1px] rounded-[13px] bg-gradient-to-br from-red-500/[0.1] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Shimmer эффект */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/[0.2] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-out" />
+      </button>
+    );
   };
 
   // ✨ Premium Network Switcher с качественным glassmorphism
@@ -205,6 +250,14 @@ const Header: React.FC = () => {
 
               {/* ✨ Premium Right Section */}
               <div className="flex items-center space-x-3 ml-auto">
+                
+                {/* Admin Button - Only visible to admin */}
+                <AdminButton />
+                
+                {/* Network Status - Desktop Only */}
+                <div className="hidden lg:block">
+                  <NetworkStatus compact />
+                </div>
                 
                 {/* Network Switcher - Desktop */}
                 <div className="hidden md:block">
@@ -423,6 +476,18 @@ const Header: React.FC = () => {
                 
                 {/* Mobile Controls */}
                 <div className="pt-4 space-y-3 border-t border-white/[0.15]">
+                  {isAdmin && (
+                    <button
+                      onClick={toggleAdminPanel}
+                      className="w-full flex items-center space-x-3 px-4 py-3 bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 text-red-400 rounded-lg font-medium"
+                    >
+                      <Shield className="w-5 h-5" />
+                      <span>Admin Panel</span>
+                    </button>
+                  )}
+                  <div className="w-full">
+                    <NetworkStatus compact className="mb-3" />
+                  </div>
                   <NetworkSwitcher isMobile />
                   <LanguageContainer isMobile />
                 </div>
@@ -439,6 +504,12 @@ const Header: React.FC = () => {
           height={6}
         />
       </header>
+
+      {/* ✅ ADMIN PANEL MODAL */}
+      <AdminPanel 
+        isOpen={isAdminPanelOpen} 
+        onClose={() => setIsAdminPanelOpen(false)} 
+      />
     </>
   );
 };

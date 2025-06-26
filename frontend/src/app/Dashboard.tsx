@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAccount, useChainId } from 'wagmi';
+import { useWeb3 } from '../shared/lib/Web3Context';
+import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import StakingStats from '../entities/Staking/ui/StakingStats';
 import { 
   Wallet,
@@ -30,8 +32,8 @@ interface AccountStats {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const { address, isConnected } = useAccount();
+  const { metaMaskAvailable, isCorrectNetwork } = useWeb3();
   const chainId = useChainId();
-  const isCorrectNetwork = chainId === 97; // BSC Testnet
 
   const [accountStats] = useState<AccountStats>({
     vcBalance: '89.9M',
@@ -53,50 +55,25 @@ const Dashboard: React.FC = () => {
     }, 2000);
   };
 
-  // Connection status card
-  if (!isConnected) {
+  // ✅ Show connection status if there are issues
+  if (!metaMaskAvailable || !isConnected || !isCorrectNetwork) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <motion.div 
-          className="text-center space-y-6 max-w-md mx-auto"
+          className="max-w-md mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300">
-            <Wallet className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-4">Кошелек не подключен</h3>
-            <p className="text-slate-400 mb-6">
-              Подключите кошелек для доступа к Dashboard и управлению активами
-            </p>
-            <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105">
-              Подключить кошелек
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!isCorrectNetwork) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-        <motion.div 
-          className="text-center space-y-6 max-w-md mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300">
-            <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-4">Неправильная сеть</h3>
-            <p className="text-slate-400 mb-6">
-              Переключитесь на BSC Testnet для доступа к Dashboard
-            </p>
-            <button className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105">
-              Переключить на BSC Testnet
-            </button>
-        </div>
+          <PageConnectionPrompt
+            title={t('dashboard:title')}
+            subtitle={t('dashboard:subtitle')}
+            icon={BarChart3}
+            iconColor="text-blue-400"
+            titleGradient="from-blue-400 to-purple-500"
+            isConnected={isConnected && metaMaskAvailable}
+            isCorrectNetwork={isCorrectNetwork}
+          />
         </motion.div>
       </div>
     );

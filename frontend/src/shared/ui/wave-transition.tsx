@@ -45,58 +45,85 @@ export const WaveTransition = ({
 
   // Генерируем правильные элегантные волны
   const generateCleanWavePath = (phase: number, amplitude: number): string => {
-    // Проверяем входные параметры и устанавливаем fallback значения
-    const safePhase = isFinite(phase) ? phase : 0;
-    const safeAmplitude = isFinite(amplitude) ? amplitude : 0;
-    
-    // Если амплитуда слишком мала или параметры некорректны, возвращаем прямую линию
-    if (Math.abs(safeAmplitude) < 0.1) {
+    try {
+      // Строгие проверки входных параметров
+      const safePhase = isFinite(phase) && !isNaN(phase) ? phase : 0;
+      const safeAmplitude = isFinite(amplitude) && !isNaN(amplitude) && amplitude > 0 ? amplitude : 0;
+      
+      // Если амплитуда слишком мала или параметры некорректны, возвращаем прямую линию
+      if (safeAmplitude < 0.1) {
+        return 'M0,50 L100,50 V100 H0 Z';
+      }
+      
+      const segments = 8;
+      let path = 'M0,50';
+      
+      // Создаем плавную волну с правильными Bezier кривыми
+      for (let i = 0; i < segments; i++) {
+        const x1 = (i / segments) * 100;
+        const x2 = ((i + 1) / segments) * 100;
+        
+        // Безопасные вычисления Y координат
+        const sinValue1 = Math.sin((i / segments) * Math.PI * 2 + safePhase);
+        const sinValue2 = Math.sin(((i + 1) / segments) * Math.PI * 2 + safePhase);
+        
+        // Дополнительные проверки на валидность sin значений
+        const safeSin1 = isFinite(sinValue1) && !isNaN(sinValue1) ? sinValue1 : 0;
+        const safeSin2 = isFinite(sinValue2) && !isNaN(sinValue2) ? sinValue2 : 0;
+        
+        const y1Raw = 50 + safeSin1 * safeAmplitude;
+        const y2Raw = 50 + safeSin2 * safeAmplitude;
+        
+        // Ограничиваем Y координаты разумными пределами
+        const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) && !isNaN(y1Raw) ? y1Raw : 50));
+        const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) && !isNaN(y2Raw) ? y2Raw : 50));
+        
+        // Контрольные точки для плавности
+        const cx1 = x1 + (x2 - x1) * 0.3;
+        const cy1 = y1;
+        const cx2 = x1 + (x2 - x1) * 0.7;
+        const cy2 = y2;
+        
+        // Строгая проверка всех значений перед добавлением в path
+        const values = [cx1, cy1, cx2, cy2, x2, y2];
+        const allValuesValid = values.every(val => 
+          isFinite(val) && 
+          !isNaN(val) && 
+          val >= 0 && 
+          val <= 100
+        );
+        
+        if (allValuesValid) {
+          // Округляем значения для стабильности
+          const roundedCx1 = Math.round(cx1 * 100) / 100;
+          const roundedCy1 = Math.round(cy1 * 100) / 100;
+          const roundedCx2 = Math.round(cx2 * 100) / 100;
+          const roundedCy2 = Math.round(cy2 * 100) / 100;
+          const roundedX2 = Math.round(x2 * 100) / 100;
+          const roundedY2 = Math.round(y2 * 100) / 100;
+          
+          path += ` C${roundedCx1},${roundedCy1} ${roundedCx2},${roundedCy2} ${roundedX2},${roundedY2}`;
+        } else {
+          // Fallback: добавляем прямую линию если что-то пошло не так
+          const safeX2 = Math.round(x2 * 100) / 100;
+          path += ` L${safeX2},50`;
+        }
+      }
+      
+      path += ' V100 H0 Z';
+      
+      // Финальная проверка валидности path
+      if (path.includes('undefined') || path.includes('NaN') || path.includes('Infinity')) {
+        console.warn('Invalid path generated, using fallback');
+        return 'M0,50 L100,50 V100 H0 Z';
+      }
+      
+      return path;
+      
+    } catch (error) {
+      console.warn('Error generating wave path:', error);
       return 'M0,50 L100,50 V100 H0 Z';
     }
-    
-    const segments = 8;
-    let path = 'M0,50';
-    
-    // Создаем плавную волну с правильными Bezier кривыми
-    for (let i = 0; i < segments; i++) {
-      const x1 = (i / segments) * 100;
-      const x2 = ((i + 1) / segments) * 100;
-      
-      // Вычисляем Y координаты с дополнительными проверками
-      const y1Raw = 50 + Math.sin((i / segments) * Math.PI * 2 + safePhase) * safeAmplitude;
-      const y2Raw = 50 + Math.sin(((i + 1) / segments) * Math.PI * 2 + safePhase) * safeAmplitude;
-      
-      // Ограничиваем Y координаты разумными пределами
-      const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) ? y1Raw : 50));
-      const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) ? y2Raw : 50));
-      
-      // Контрольные точки для плавности
-      const cx1 = x1 + (x2 - x1) * 0.3;
-      const cy1 = y1;
-      const cx2 = x1 + (x2 - x1) * 0.7;
-      const cy2 = y2;
-      
-      // Дополнительная проверка всех значений перед добавлением в path
-      if (isFinite(cx1) && isFinite(cy1) && isFinite(cx2) && isFinite(cy2) && 
-          isFinite(x2) && isFinite(y2) && 
-          cx1 >= 0 && cx2 >= 0 && x2 >= 0) {
-        // Округляем значения для стабильности
-        const roundedCx1 = Math.round(cx1 * 100) / 100;
-        const roundedCy1 = Math.round(cy1 * 100) / 100;
-        const roundedCx2 = Math.round(cx2 * 100) / 100;
-        const roundedCy2 = Math.round(cy2 * 100) / 100;
-        const roundedX2 = Math.round(x2 * 100) / 100;
-        const roundedY2 = Math.round(y2 * 100) / 100;
-        
-        path += ` C${roundedCx1},${roundedCy1} ${roundedCx2},${roundedCy2} ${roundedX2},${roundedY2}`;
-      } else {
-        // Fallback: добавляем прямую линию если что-то пошло не так
-        path += ` L${x2},50`;
-      }
-    }
-    
-    path += ' V100 H0 Z';
-    return path;
   };
 
   if (prefersReducedMotion) {

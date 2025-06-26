@@ -167,7 +167,7 @@ export const useTokenData = () => {
         
         const balance = await rpcService.withFallback(async (provider) => {
           return await provider.getBalance(account);
-        }, 8000); // 8 секунд timeout
+        });
         
         newBalances.BNB = ethers.formatEther(balance);
         
@@ -196,7 +196,7 @@ export const useTokenData = () => {
           log.error('useTokenData: All BNB balance methods failed', {
             component: 'useTokenData'
           });
-        newBalances.BNB = '0';
+          newBalances.BNB = '0';
         }
       }
 
@@ -247,7 +247,7 @@ export const useTokenData = () => {
             const totalSupplyPromise = contract.totalSupply().catch(() => BigInt(0));
             
             return await Promise.all([balancePromise, decimalsPromise, totalSupplyPromise]);
-          }, 10000); // 10 секунд timeout для токенов
+          });
 
           const formattedBalance = ethers.formatUnits(balance || BigInt(0), decimals || 18);
           const formattedTotalSupply = ethers.formatUnits(totalSupply || BigInt(0), decimals || 18);
