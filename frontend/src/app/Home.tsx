@@ -292,36 +292,116 @@ const Home: React.FC = () => {
 
   const teamMembers = [
     {
-      name: 'Michael Chen',
-      position: 'CEO & Founder',
-      bio: 'Serial entrepreneur with 15+ years in venture capital. Previously VP at Binance Labs, led $500M+ in investments.',
-      image: 'MC',
-      linkedin: 'https://linkedin.com/in/michaelchen-techhy',
-      expertise: ['Venture Capital', 'Strategic Partnerships', 'Business Development']
+      name: 'Michael Hypov',
+      position: 'Founder',
+      bio: 'Visionary entrepreneur driving innovation in venture capital and blockchain technology',
+      image: 'MH',
+      linkedin: 'michael-hypov',
+      expertise: ['Venture Capital', 'Blockchain Strategy', 'Business Vision']
     },
     {
-      name: 'Sarah Kim',
-      position: 'COO & Co-Founder',
-      bio: 'Operations expert from McKinsey & Company. Scaled 3 startups from seed to Series B. Harvard MBA.',
-      image: 'SK',
-      linkedin: 'https://linkedin.com/in/sarahkim-techhy',
-      expertise: ['Operations', 'Strategy', 'Team Building']
+      name: 'Kingsley',
+      position: 'CPO',
+      bio: 'Product strategy expert focused on user experience and ecosystem development',
+      image: 'KI',
+      linkedin: 'kingsley-techhy',
+      expertise: ['Product Strategy', 'UX Design', 'Market Research']
     },
     {
-      name: 'Alex Rodriguez',
-      position: 'CTO & Co-Founder',
-      bio: 'Former senior engineer at Google and Coinbase. Leading blockchain and AI development initiatives.',
-      image: 'AR',
-      linkedin: 'https://linkedin.com/in/alexrodriguez-techhy',
-      expertise: ['Blockchain', 'AI/ML', 'Full-Stack Development']
+      name: 'Hanna',
+      position: 'CBDO',
+      bio: 'Business development leader expanding strategic partnerships and market reach',
+      image: 'HA',
+      linkedin: 'hanna-techhy',
+      expertise: ['Business Development', 'Strategic Partnerships', 'Market Expansion']
     },
     {
-      name: 'Dr. Elena Vasquez',
-      position: 'Chief Risk Officer',
-      bio: 'Risk management specialist with 20+ years at Goldman Sachs. PhD in Financial Engineering from Stanford.',
-      image: 'EV',
-      linkedin: 'https://linkedin.com/in/elenavasquez-techhy',
-      expertise: ['Risk Management', 'Compliance', 'Financial Engineering']
+      name: 'Nik',
+      position: 'CTO',
+      bio: 'Technology architect building scalable blockchain infrastructure and smart contracts',
+      image: 'NI',
+      linkedin: 'nik-techhy',
+      expertise: ['Blockchain Development', 'Smart Contracts', 'System Architecture']
+    },
+    {
+      name: 'Marina',
+      position: 'CMO',
+      bio: 'Marketing strategist driving brand awareness and community growth',
+      image: 'MA',
+      linkedin: 'marina-techhy',
+      expertise: ['Digital Marketing', 'Brand Strategy', 'Community Building']
+    },
+    {
+      name: 'Petro',
+      position: 'CCO',
+      bio: 'Community operations expert fostering engagement and user adoption',
+      image: 'PE',
+      linkedin: 'petro-techhy',
+      expertise: ['Community Management', 'User Engagement', 'Growth Operations']
+    },
+    {
+      name: 'Gyber',
+      position: 'Blockchain & AI Technology Expert',
+      bio: 'Advanced technology specialist in blockchain and AI integration',
+      image: 'GY',
+      linkedin: 'gyber-techhy',
+      expertise: ['Blockchain Technology', 'AI/ML', 'Technical Innovation']
+    },
+    {
+      name: 'Dasha',
+      position: 'CHRO',
+      bio: 'Human resources leader building exceptional teams and company culture',
+      image: 'DA',
+      linkedin: 'dasha-techhy',
+      expertise: ['Human Resources', 'Team Development', 'Company Culture']
+    },
+    {
+      name: 'Thomas',
+      position: 'Head of Graphic Design',
+      bio: 'Creative design expert crafting visual identity and user interfaces',
+      image: 'TH',
+      linkedin: 'thomas-techhy',
+      expertise: ['Graphic Design', 'UI/UX', 'Brand Identity']
+    },
+    {
+      name: 'Dima',
+      position: 'Head of AI Solutions & Automatization',
+      bio: 'AI specialist developing intelligent automation systems and solutions',
+      image: 'DI',
+      linkedin: 'dima-techhy',
+      expertise: ['AI Solutions', 'Automation', 'Machine Learning']
+    },
+    {
+      name: 'Ifeanyi',
+      position: 'Business Assistant',
+      bio: 'Operations support specialist ensuring smooth business processes',
+      image: 'IF',
+      linkedin: 'ifeanyi-techhy',
+      expertise: ['Operations Support', 'Process Optimization', 'Administrative Excellence']
+    },
+    {
+      name: 'Timchang',
+      position: 'SMM Manager',
+      bio: 'Social media expert building online presence and engagement',
+      image: 'TC',
+      linkedin: 'timchang-techhy',
+      expertise: ['Social Media Marketing', 'Content Strategy', 'Digital Engagement']
+    },
+    {
+      name: 'Waseem',
+      position: 'BD Manager',
+      bio: 'Business development specialist fostering strategic partnerships',
+      image: 'WA',
+      linkedin: 'waseem-techhy',
+      expertise: ['Business Development', 'Partnership Management', 'Deal Negotiation']
+    },
+    {
+      name: 'Faheem',
+      position: 'BD Manager',
+      bio: 'Business development expert expanding market opportunities and relationships',
+      image: 'FA',
+      linkedin: 'faheem-techhy',
+      expertise: ['Business Development', 'Market Expansion', 'Client Relations']
     }
   ];
 

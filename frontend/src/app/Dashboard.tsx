@@ -5,6 +5,7 @@ import { useAccount, useChainId } from 'wagmi';
 import { useWeb3 } from '../shared/lib/Web3Context';
 import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import StakingStats from '../entities/Staking/ui/StakingStats';
+import { BuyVCWidget } from '../entities/Token';
 import { 
   Wallet,
   BarChart3,
@@ -302,10 +303,10 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full" style={{ width: '68.5%' }}></div>
-        </div>
-      </div>
+                  </div>
+                </div>
 
-      <div>
+                <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-400">VG Токены</span>
                     <span className="text-white">22.3%</span>
@@ -313,19 +314,22 @@ const Dashboard: React.FC = () => {
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full" style={{ width: '22.3%' }}></div>
                   </div>
-          </div>
-          
+                </div>
+                
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-400">BNB</span>
                     <span className="text-white">9.2%</span>
-          </div>
+                  </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div className="bg-gradient-to-r from-yellow-500 to-orange-600 h-2 rounded-full" style={{ width: '9.2%' }}></div>
-          </div>
-        </div>
-      </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Buy VC Widget */}
+            <BuyVCWidget />
 
           </motion.div>
         </div>
