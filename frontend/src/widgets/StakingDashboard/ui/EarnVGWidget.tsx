@@ -1076,13 +1076,13 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             </p>
           </div>
         </div>
-        <button
-          onClick={refreshAllData}
-          disabled={poolLoading}
+          <button
+            onClick={refreshAllData}
+            disabled={poolLoading}
           className="p-3 backdrop-blur-xl bg-white/8 border border-orange-400/25 rounded-xl hover:bg-orange-500/15 transition-all duration-300 group"
-        >
+          >
           <RefreshCw className={cn("h-5 w-5 text-orange-300/80 group-hover:text-white transition-colors duration-300", poolLoading && "animate-spin")} />
-        </button>
+          </button>
       </div>
 
       {/* Mode Switcher */}
@@ -1092,8 +1092,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           className={cn(
             'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300',
             mode === 'create'
-              ? 'bg-gradient-to-r from-yellow-500/80 to-orange-600/80 text-white shadow-lg shadow-yellow-500/25'
-              : 'text-slate-200 hover:text-white hover:bg-yellow-500/8'
+              ? 'bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white shadow-lg shadow-orange-500/25'
+              : 'text-slate-200 hover:text-white hover:bg-orange-500/8'
           )}
         >
           Burn LP
@@ -1103,8 +1103,8 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
           className={cn(
             'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300',
             mode === 'lock'
-              ? 'bg-gradient-to-r from-yellow-500/80 to-orange-600/80 text-white shadow-lg shadow-yellow-500/25'
-              : 'text-slate-200 hover:text-white hover:bg-yellow-500/8'
+              ? 'bg-gradient-to-r from-purple-500/80 to-blue-600/80 text-white shadow-lg shadow-purple-500/25'
+              : 'text-slate-200 hover:text-white hover:bg-purple-500/8'
           )}
         >
           Lock LP
