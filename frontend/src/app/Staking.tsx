@@ -16,11 +16,11 @@ const Staking: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="liquid-glass text-center py-12 animate-glass-float">
           <Zap className="mx-auto mb-4 text-yellow-400 animate-glass-pulse" size={64} />
-          <h1 className="text-3xl font-bold mb-4 text-slate-100">Стейкинг и LP Locking</h1>
+          <h1 className="text-3xl font-bold mb-4 text-slate-100">Burn LP and Earn VG</h1>
           <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-            Заблокируйте LP токены навсегда и получайте VG награды. Участвуйте в управлении протоколом через DAO голосования.
+            Создавайте и сжигайте LP позиции или блокируйте готовые LP токены для получения VG наград. Участвуйте в управлении протоколом через DAO голосования.
           </p>
-          <p className="text-gray-400">Подключите кошелёк для доступа к стейкингу</p>
+          <p className="text-gray-400">Подключите кошелёк для доступа к функциям</p>
         </div>
       </div>
     )
@@ -33,9 +33,9 @@ const Staking: React.FC = () => {
           <AlertTriangle className="mx-auto mb-4 text-red-400 animate-glass-pulse" size={64} />
           <h1 className="text-3xl font-bold mb-4 text-slate-100">Неправильная сеть</h1>
           <p className="text-gray-400 mb-6">
-            Переключитесь на BSC Testnet для использования стейкинга
+            Переключитесь на BSC Testnet для сжигания LP и получения VG токенов
           </p>
-          <Button variant="orange" className="animate-glass-pulse">
+          <Button variant="orange" className="animate-glass-glow">
             Переключить сеть
           </Button>
         </div>
@@ -48,46 +48,48 @@ const Staking: React.FC = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-slate-100 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-          Стейкинг и LP Locking
+          Burn LP and Earn VG
         </h1>
         <p className="text-gray-400 max-w-3xl mx-auto">
-          Постоянная блокировка LP токенов с мгновенными VG наградами. Получайте 10 VG за каждый заблокированный LP токен.
+          Создавайте и сжигайте LP позиции или блокируйте готовые LP токены для получения VG наград. Получайте 10 VG за каждый сожженный LP токен.
         </p>
       </div>
 
       {/* Stats Overview */}
-      <StakingStats />
+      <div className="mb-8">
+        <StakingStats />
+      </div>
 
-      {/* Main Staking Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Burn & Earn Widget */}
+      {/* Main Staking Section - ВЕРТИКАЛЬНЫЕ ВИДЖЕТЫ */}
+      <div className="space-y-8 mb-8">
+        {/* Burn LP and Earn VG Widget */}
         <div className="liquid-glass animate-glass-float">
           <div className="flex items-center mb-6">
             <Zap className="mr-3 text-yellow-400 animate-glass-pulse" size={24} />
-            <h2 className="text-2xl font-bold text-slate-100">Burn & Earn VG</h2>
+            <h2 className="text-2xl font-bold text-slate-100">Burn LP and Earn VG</h2>
           </div>
           <EarnVGWidget />
         </div>
 
-        {/* LP Pool Manager */}
+        {/* LP Manager */}
         <div className="liquid-glass animate-glass-float">
           <div className="flex items-center mb-6">
             <TrendingUp className="mr-3 text-blue-400 animate-glass-pulse" size={24} />
-            <h2 className="text-2xl font-bold text-slate-100">LP Pool Manager</h2>
+            <h2 className="text-2xl font-bold text-slate-100">LP Manager</h2>
           </div>
           <LPPoolManager />
         </div>
       </div>
 
       {/* How It Works */}
-      <div className="liquid-glass animate-glass-float">
+      <div className="liquid-glass animate-glass-float mb-8">
         <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
-          <BarChart3 className="mr-3 text-green-400" size={24} />
-          Как это работает
+          <BarChart3 className="mr-3 text-green-400 animate-glass-pulse" size={24} />
+          Как сжечь LP и получить VG
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-glow">
             <div className="text-3xl mb-4">1️⃣</div>
             <h3 className="text-lg font-semibold mb-2 text-slate-100">Создайте LP токены</h3>
             <p className="text-gray-400 text-sm">
@@ -95,33 +97,33 @@ const Staking: React.FC = () => {
             </p>
           </div>
 
-          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-glow">
             <div className="text-3xl mb-4">2️⃣</div>
-            <h3 className="text-lg font-semibold mb-2 text-slate-100">Заблокируйте навсегда</h3>
+            <h3 className="text-lg font-semibold mb-2 text-slate-100">Сожгите навсегда</h3>
             <p className="text-gray-400 text-sm">
-              Заблокируйте LP токены в смарт-контракте без возможности вывода
+              Сожгите LP токены в смарт-контракте без возможности восстановления
             </p>
           </div>
 
-          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-pulse">
+          <div className="glass-ultra p-6 rounded-lg text-center animate-glass-glow">
             <div className="text-3xl mb-4">3️⃣</div>
             <h3 className="text-lg font-semibold mb-2 text-slate-100">Получите VG награды</h3>
             <p className="text-gray-400 text-sm">
-              Мгновенно получите 10 VG токенов за каждый заблокированный LP
+              Мгновенно получите 10 VG токенов за каждый сожженный LP
             </p>
           </div>
         </div>
       </div>
 
       {/* Risk Warning */}
-      <div className="glass-ultra border border-yellow-500/20 bg-yellow-500/5 p-6 rounded-lg animate-glass-pulse">
+      <div className="glass-ultra border border-yellow-500/20 bg-yellow-500/5 p-6 rounded-lg animate-glass-glow">
         <div className="flex items-start space-x-3">
-          <AlertTriangle className="text-yellow-400 mt-1 flex-shrink-0" size={20} />
+          <AlertTriangle className="text-yellow-400 mt-1 flex-shrink-0 animate-glass-pulse" size={20} />
           <div>
             <h3 className="font-semibold text-yellow-400 mb-2">Важное предупреждение</h3>
             <p className="text-gray-300 text-sm">
-              LP токены блокируются <strong>навсегда</strong> без возможности вывода. Это необратимая операция. 
-              Убедитесь, что понимаете риски перед использованием функции Burn & Earn.
+              LP токены сжигаются <strong>навсегда</strong> без возможности восстановления. Это необратимая операция. 
+              Убедитесь, что понимаете риски перед использованием функции сжигания LP.
             </p>
           </div>
         </div>

@@ -442,14 +442,16 @@ const Tokens: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-responsive px-responsive">
+    <div className="animate-fade-in space-y-8 px-responsive">
       {/* Contract Status */}
-      <ContractStatus />
+      <div className="mb-8">
+        <ContractStatus />
+      </div>
 
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-4 mb-8">
         <div className="flex items-center justify-center space-x-3">
-          <Coins className="w-8 h-8 text-blue-400 animate-glass-pulse" />
+          <Coins className="w-8 h-8 text-blue-400 animate-pulse" />
           <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('tokens:title')}
           </h1>
@@ -460,10 +462,12 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Token Statistics - Reusable Component */}
-      <TokenStats />
+      <div className="mb-8">
+        <TokenStats />
+      </div>
 
       {/* Search and Filter */}
-      <div className="liquid-glass animate-glass-float">
+      <div className="liquid-glass animate-gentle-float mb-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -495,7 +499,7 @@ const Tokens: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={loading || refreshing}
-              className="btn-glass-blue p-2 animate-glass-pulse"
+              className="btn-glass-blue p-2 animate-pulse"
             >
               <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
             </button>
@@ -508,7 +512,7 @@ const Tokens: React.FC = () => {
         {/* Token List */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
-            <Coins className="mr-3 text-blue-400 animate-glass-pulse" />
+            <Coins className="mr-3 text-blue-400 animate-pulse" />
             Ваши токены ({filteredTokens.length})
           </h2>
 
@@ -517,7 +521,7 @@ const Tokens: React.FC = () => {
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="liquid-glass animate-pulse">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-600 rounded-full animate-glass-pulse"></div>
+                    <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
                     <div className="flex-1">
                       <div className="h-4 bg-gray-600 rounded w-1/4 mb-2"></div>
                       <div className="h-3 bg-gray-600 rounded w-1/2"></div>
@@ -532,16 +536,16 @@ const Tokens: React.FC = () => {
               {filteredTokens.map((token) => (
                 <div 
                   key={token.symbol} 
-                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-glass-float ${
+                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-gentle-float ${
                     selectedToken?.symbol === token.symbol 
-                      ? 'ring-2 ring-blue-500/50 glass-accent animate-glass-pulse' 
+                      ? 'ring-2 ring-blue-500/50 glass-accent animate-pulse' 
                       : ''
                   }`}
                   onClick={() => setSelectedToken(token)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center animate-glass-pulse`}>
+                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center animate-pulse`}>
                         {token.icon}
                       </div>
                       <div>
@@ -601,7 +605,7 @@ const Tokens: React.FC = () => {
         {/* Action Panel */}
         <div className="space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
-            <Settings className="mr-3 text-purple-400 animate-glass-pulse" />
+            <Settings className="mr-3 text-purple-400 animate-pulse" />
             Действия с токенами
           </h2>
 
@@ -609,7 +613,7 @@ const Tokens: React.FC = () => {
             <div className="liquid-glass animate-glass-float">
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3 animate-glass-pulse`}>
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3 animate-pulse`}>
                     {selectedToken.icon}
                   </div>
                   <h3 className="font-bold text-slate-100 text-lg">{selectedToken.name}</h3>
@@ -630,7 +634,7 @@ const Tokens: React.FC = () => {
                     onClick={() => setActiveTab('transfer')}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'transfer'
-                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        ? 'btn-glass-blue text-white animate-pulse'
                         : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
@@ -640,7 +644,7 @@ const Tokens: React.FC = () => {
                     onClick={() => setActiveTab('approve')}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'approve'
-                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        ? 'btn-glass-blue text-white animate-pulse'
                         : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
@@ -650,7 +654,7 @@ const Tokens: React.FC = () => {
                     onClick={() => setActiveTab('allowances')}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                       activeTab === 'allowances'
-                        ? 'btn-glass-blue text-white animate-glass-pulse'
+                        ? 'btn-glass-blue text-white animate-pulse'
                         : 'text-gray-400 hover:text-white glass-subtle'
                     }`}
                   >
@@ -718,7 +722,7 @@ const Tokens: React.FC = () => {
                     <button
                       onClick={handleTransfer}
                       disabled={!transferTo || !transferAmount || !selectedToken.contract || transactionLoading}
-                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
+                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-pulse"
                     >
                       {transactionLoading ? (
                         <>
@@ -791,7 +795,7 @@ const Tokens: React.FC = () => {
                     <button
                       onClick={handleApprove}
                       disabled={!approveTo || !approveAmount || !selectedToken.contract || transactionLoading}
-                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-glass-pulse"
+                      className="btn-glass-morphic w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 animate-pulse"
                     >
                       {transactionLoading ? (
                         <>
@@ -834,7 +838,7 @@ const Tokens: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center py-6 text-gray-400">
-                        <Shield className="w-12 h-12 mx-auto mb-2 opacity-50 animate-glass-pulse" />
+                        <Shield className="w-12 h-12 mx-auto mb-2 opacity-50 animate-pulse" />
                         <p>Нет активных allowances</p>
                       </div>
                     )}
@@ -844,7 +848,7 @@ const Tokens: React.FC = () => {
             </div>
           ) : (
             <div className="liquid-glass text-center py-12 animate-glass-float">
-              <div className="text-4xl mb-4 animate-glass-pulse">🪙</div>
+              <div className="text-4xl mb-4 animate-pulse">🪙</div>
               <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите токен</h3>
               <p className="text-gray-400">
                 Выберите токен из списка для выполнения операций
@@ -857,13 +861,13 @@ const Tokens: React.FC = () => {
       {/* Quick Actions */}
       <div>
         <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Zap className="mr-3 text-yellow-400 animate-glass-pulse" />
+          <Zap className="mr-3 text-yellow-400 animate-pulse" />
           Быстрые действия
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-responsive">
           <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400 animate-glass-pulse" />
+            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400 animate-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
             <p className="text-gray-400 mb-4">Заблокируйте LP токены и получите VG</p>
             <a href="/staking" className="btn-glass-green inline-block">
@@ -872,7 +876,7 @@ const Tokens: React.FC = () => {
           </div>
           
           <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-glass-pulse" />
+            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
             <p className="text-gray-400 mb-4">Участвуйте в голосовании и управлении</p>
             <a href="/governance" className="btn-glass-purple inline-block">
@@ -881,7 +885,7 @@ const Tokens: React.FC = () => {
           </div>
           
           <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-glass-pulse" />
+            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-pulse" />
             <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
             <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
             <a href="/" className="btn-glass-blue inline-block">
@@ -894,7 +898,7 @@ const Tokens: React.FC = () => {
       {/* Contract Information */}
       <div>
         <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-blue-400 animate-glass-pulse" />
+          <Shield className="mr-3 text-blue-400 animate-pulse" />
           Информация о контрактах
         </h2>
         

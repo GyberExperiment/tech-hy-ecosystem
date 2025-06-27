@@ -3,13 +3,10 @@ import { motion } from 'framer-motion';
 import { 
   ArrowUpDown, 
   Settings, 
-  Zap, 
+  TrendingUp, 
+  Zap,
   RefreshCw,
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Shield,
-  Coins
+  Shield
 } from 'lucide-react';
 
 interface Token {
@@ -37,43 +34,15 @@ const TokenSwapper: React.FC = () => {
     deadline: 20
   });
 
-  const tokens: Token[] = [
-    {
-      symbol: 'VC',
-      name: 'Venture Capital Token',
-      balance: '15,000.00',
-      price: 1.90,
-      icon: 'VC'
-    },
-    {
-      symbol: 'VG',
-      name: 'Venture Growth Token',
-      balance: '1,247.89',
-      price: 7.00,
-      icon: 'VG'
-    },
-    {
-      symbol: 'BNB',
-      name: 'Binance Coin',
-      balance: '12.50',
-      price: 448.76,
-      icon: 'BNB'
-    },
-    {
-      symbol: 'USDT',
-      name: 'Tether USD',
-      balance: '2,500.00',
-      price: 1.00,
-      icon: 'USDT'
-    }
-  ];
+  // TODO: Подключить реальные токены из контрактной системы
+  // const tokens: Token[] = [...]; // Будет использоваться для token selector
 
   // Simulate price calculation
   useEffect(() => {
     if (fromToken && toToken && fromAmount) {
       const timeout = setTimeout(() => {
-        const fromValue = parseFloat(fromAmount) * fromToken.price;
-        const calculatedAmount = fromValue / toToken.price;
+        // Вычисляем конвертацию без сохранения промежуточного fromValue
+        const calculatedAmount = (parseFloat(fromAmount) * fromToken.price) / toToken.price;
         setToAmount(calculatedAmount.toFixed(6));
       }, 500);
 
@@ -104,7 +73,12 @@ const TokenSwapper: React.FC = () => {
     setToAmount('');
   };
 
-  const calculateSwapDetails = () => {
+  const calculateSwapDetails = (): {
+    rate: number;
+    minimumReceived: number;
+    priceImpact: number;
+    networkFee: number;
+  } | null => {
     if (!fromToken || !toToken || !fromAmount) return null;
 
     const fromValue = parseFloat(fromAmount) * fromToken.price;

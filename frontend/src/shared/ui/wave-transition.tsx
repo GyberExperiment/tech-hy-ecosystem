@@ -20,8 +20,10 @@ export const WaveTransition = ({
   
   // Используем useId для стабильных ID между сервером и клиентом
   const uniqueId = useId()
-  const gradientId = `clean-wave-gradient-${uniqueId}`
-  const filterId = `clean-wave-filter-${uniqueId}`
+  // Очищаем ID от потенциально проблемных символов для SVG  
+  const cleanId = uniqueId.replace(/[^a-zA-Z0-9]/g, '') || Date.now().toString()
+  const gradientId = `wave-gradient-${cleanId}`
+  const filterId = `wave-filter-${cleanId}`
   
   useEffect(() => {
     setPrefersReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -43,14 +45,19 @@ export const WaveTransition = ({
   const waveHeight = height * intensity
   const animationDuration = 25 / speed // Медленные элегантные волны
 
-  // Генерируем правильные элегантные волны
+  // УЛУЧШЕННАЯ функция генерации правильных элегантных волн с надежными fallback
   const generateCleanWavePath = (phase: number, amplitude: number): string => {
     try {
-      // Строгие проверки входных параметров
-      const safePhase = isFinite(phase) && !isNaN(phase) ? phase : 0;
-      const safeAmplitude = isFinite(amplitude) && !isNaN(amplitude) && amplitude > 0 ? amplitude : 0;
+      // Строгие проверки входных параметров с дополнительной валидацией
+      if (!isFinite(phase) || isNaN(phase) || !isFinite(amplitude) || isNaN(amplitude)) {
+        console.warn('Invalid parameters for wave generation, using fallback');
+        return 'M0,50 L100,50 V100 H0 Z';
+      }
       
-      // Если амплитуда слишком мала или параметры некорректны, возвращаем прямую линию
+      const safePhase = Number(phase) || 0;
+      const safeAmplitude = Math.max(0, Number(amplitude) || 0);
+      
+      // Если амплитуда слишком мала, возвращаем прямую линию
       if (safeAmplitude < 0.1) {
         return 'M0,50 L100,50 V100 H0 Z';
       }
@@ -63,20 +70,25 @@ export const WaveTransition = ({
         const x1 = (i / segments) * 100;
         const x2 = ((i + 1) / segments) * 100;
         
-        // Безопасные вычисления Y координат
-        const sinValue1 = Math.sin((i / segments) * Math.PI * 2 + safePhase);
-        const sinValue2 = Math.sin(((i + 1) / segments) * Math.PI * 2 + safePhase);
+        // Безопасные вычисления Y координат с дополнительными проверками
+        const angle1 = (i / segments) * Math.PI * 2 + safePhase;
+        const angle2 = ((i + 1) / segments) * Math.PI * 2 + safePhase;
         
-        // Дополнительные проверки на валидность sin значений
-        const safeSin1 = isFinite(sinValue1) && !isNaN(sinValue1) ? sinValue1 : 0;
-        const safeSin2 = isFinite(sinValue2) && !isNaN(sinValue2) ? sinValue2 : 0;
+        const sinValue1 = Math.sin(angle1);
+        const sinValue2 = Math.sin(angle2);
         
-        const y1Raw = 50 + safeSin1 * safeAmplitude;
-        const y2Raw = 50 + safeSin2 * safeAmplitude;
+        // Тройная проверка на валидность sin значений
+        if (!isFinite(sinValue1) || isNaN(sinValue1) || !isFinite(sinValue2) || isNaN(sinValue2)) {
+          console.warn('Invalid sin values, using fallback segment');
+          continue;
+        }
         
-        // Ограничиваем Y координаты разумными пределами
-        const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) && !isNaN(y1Raw) ? y1Raw : 50));
-        const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) && !isNaN(y2Raw) ? y2Raw : 50));
+        const y1Raw = 50 + sinValue1 * safeAmplitude;
+        const y2Raw = 50 + sinValue2 * safeAmplitude;
+        
+        // Ограничиваем Y координаты разумными пределами с дополнительной проверкой
+        const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) ? y1Raw : 50));
+        const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) ? y2Raw : 50));
         
         // Контрольные точки для плавности
         const cx1 = x1 + (x2 - x1) * 0.3;
@@ -94,18 +106,16 @@ export const WaveTransition = ({
         );
         
         if (allValuesValid) {
-          // Округляем значения для стабильности
-          const roundedCx1 = Math.round(cx1 * 100) / 100;
-          const roundedCy1 = Math.round(cy1 * 100) / 100;
-          const roundedCx2 = Math.round(cx2 * 100) / 100;
-          const roundedCy2 = Math.round(cy2 * 100) / 100;
-          const roundedX2 = Math.round(x2 * 100) / 100;
-          const roundedY2 = Math.round(y2 * 100) / 100;
+          // Округляем значения для стабильности с проверкой
+          const roundedValues = values.map(val => {
+            const rounded = Math.round(val * 100) / 100;
+            return isFinite(rounded) ? rounded : 50;
+          });
           
-          path += ` C${roundedCx1},${roundedCy1} ${roundedCx2},${roundedCy2} ${roundedX2},${roundedY2}`;
+          path += ` C${roundedValues[0]},${roundedValues[1]} ${roundedValues[2]},${roundedValues[3]} ${roundedValues[4]},${roundedValues[5]}`;
         } else {
           // Fallback: добавляем прямую линию если что-то пошло не так
-          const safeX2 = Math.round(x2 * 100) / 100;
+          const safeX2 = Math.max(0, Math.min(100, x2));
           path += ` L${safeX2},50`;
         }
       }
@@ -113,7 +123,7 @@ export const WaveTransition = ({
       path += ' V100 H0 Z';
       
       // Финальная проверка валидности path
-      if (path.includes('undefined') || path.includes('NaN') || path.includes('Infinity')) {
+      if (path.includes('undefined') || path.includes('NaN') || path.includes('Infinity') || path.length < 20) {
         console.warn('Invalid path generated, using fallback');
         return 'M0,50 L100,50 V100 H0 Z';
       }
@@ -124,6 +134,38 @@ export const WaveTransition = ({
       console.warn('Error generating wave path:', error);
       return 'M0,50 L100,50 V100 H0 Z';
     }
+  };
+
+  // НОВАЯ функция для безопасной генерации анимационных кадров
+  const generateSafeAnimationFrames = (index: number) => {
+    const basePhase = index * Math.PI * 0.6;
+    const baseAmplitude = Math.max(0.1, waveHeight * (1 - index * 0.2));
+    
+    const frames = [];
+    for (let i = 0; i < 3; i++) {
+      const phase = basePhase + i * Math.PI * 2;
+      const path = generateCleanWavePath(phase, baseAmplitude);
+      frames.push(path);
+    }
+    
+    // Проверяем что все пути валидны
+    const validFrames = frames.every(path => 
+      path && 
+      typeof path === 'string' && 
+      path.length > 10 && 
+      !path.includes('undefined') && 
+      !path.includes('NaN') && 
+      !path.includes('Infinity')
+    );
+    
+    // Если есть проблемы, возвращаем безопасные fallback
+    if (!validFrames) {
+      console.warn('Generated invalid animation frames, using fallback');
+      const fallback = 'M0,50 L100,50 V100 H0 Z';
+      return [fallback, fallback, fallback];
+    }
+    
+    return frames;
   };
 
   if (prefersReducedMotion) {
@@ -187,48 +229,37 @@ export const WaveTransition = ({
           </filter>
         </defs>
         
-        {/* Мягкие анимированные волны */}
+        {/* УЛУЧШЕННЫЕ мягкие анимированные волны */}
         {[0, 1, 2].map((index) => {
-          const basePhase = index * Math.PI * 0.6;
-          const baseAmplitude = waveHeight * (1 - index * 0.2);
-          
-          // Генерируем пути для анимации с проверкой валидности
-          const pathFrames = [
-            generateCleanWavePath(basePhase, baseAmplitude),
-            generateCleanWavePath(basePhase + Math.PI * 2, baseAmplitude),
-            generateCleanWavePath(basePhase + Math.PI * 4, baseAmplitude),
-          ];
-          
-          // Проверяем что все пути валидны
-          const validPaths = pathFrames.every(path => 
-            path && path.length > 0 && !path.includes('undefined') && !path.includes('NaN')
-          );
-          
-          // Если пути невалидны, используем fallback
-          const safePaths = validPaths ? pathFrames : [
-            'M0,50 L100,50 V100 H0 Z',
-            'M0,50 L100,50 V100 H0 Z',
-            'M0,50 L100,50 V100 H0 Z'
-          ];
+          const animationFrames = generateSafeAnimationFrames(index);
+          const initialPath = animationFrames[0] || 'M0,50 L100,50 V100 H0 Z';
           
           return (
             <motion.path
-              key={index}
-              d={safePaths[0]}
+              key={`wave-${index}-${cleanId}`}
+              d={initialPath}
               fill={`url(#${gradientId})`}
               filter={`url(#${filterId})`}
               animate={{
-                d: safePaths
+                d: animationFrames
               }}
               transition={{
-                duration: Math.max(5, animationDuration + index * 3), // Минимальная длительность
+                duration: Math.max(8, animationDuration + index * 3), // Увеличили минимальную длительность
                 repeat: Infinity,
                 ease: "linear",
-                delay: index * 0.5
+                delay: index * 0.8,
+                // Добавляем более мягкие переходы
+                type: "tween"
               }}
               style={{ 
-                opacity: Math.max(0.1, 0.6 - index * 0.15), // Минимальная непрозрачность
+                opacity: Math.max(0.15, 0.6 - index * 0.12), // Увеличили минимальную непрозрачность
                 mixBlendMode: 'normal'
+              }}
+              // Добавляем проверку на валидность перед анимацией
+              onAnimationStart={() => {
+                if (animationFrames.some(frame => !frame || frame.includes('undefined'))) {
+                  console.warn('Invalid animation frame detected, stopping animation');
+                }
               }}
             />
           )

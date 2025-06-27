@@ -8,7 +8,12 @@ import {
   TrendingUp,
   Users,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  X,
+  ThumbsUp,
+  ThumbsDown,
+  Minus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
@@ -42,6 +47,7 @@ const GovernanceProposals: React.FC = () => {
   const [votingPower, setVotingPower] = useState('0');
   const [showCreateProposal, setShowCreateProposal] = useState(false);
   const [filter, setFilter] = useState<string>('all');
+  const [error, setError] = useState<string | null>(null);
 
   // New proposal form
   const [newProposal, setNewProposal] = useState({
@@ -296,6 +302,23 @@ const GovernanceProposals: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="liquid-glass text-center text-gray-400 animate-glass-float">
+        <Vote className="mx-auto mb-4 animate-glass-pulse" size={48} />
+        <h3 className="text-xl font-bold mb-2 text-slate-100">Ошибка загрузки</h3>
+        <p className="mb-4">{error}</p>
+        <button 
+          onClick={fetchProposals}
+          className="btn-glass-morphic flex items-center space-x-2 animate-glass-glow"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Попробовать снова</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-responsive">
       {/* Header with voting power and create button */}
@@ -328,43 +351,43 @@ const GovernanceProposals: React.FC = () => {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
-            filter === 'all' 
-              ? 'btn-glass-blue text-white animate-glass-pulse' 
-              : 'glass-ultra text-gray-300 hover:glass-accent'
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+            filter === 'all'
+              ? 'btn-glass-blue text-white animate-glass-glow'
+              : 'glass-card hover:glass-accent'
           }`}
         >
           Все
         </button>
         <button
           onClick={() => setFilter('active')}
-          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
-            filter === 'active' 
-              ? 'btn-glass-blue text-white animate-glass-pulse' 
-              : 'glass-ultra text-gray-300 hover:glass-accent'
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+            filter === 'active'
+              ? 'btn-glass-blue text-white animate-glass-glow'
+              : 'glass-card hover:glass-accent'
           }`}
         >
           Активные
         </button>
         <button
-          onClick={() => setFilter('protocol')}
-          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
-            filter === 'protocol' 
-              ? 'btn-glass-blue text-white animate-glass-pulse' 
-              : 'glass-ultra text-gray-300 hover:glass-accent'
+          onClick={() => setFilter('closed')}
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+            filter === 'closed'
+              ? 'btn-glass-blue text-white animate-glass-glow'
+              : 'glass-card hover:glass-accent'
           }`}
         >
-          Протокол
+          Закрытые
         </button>
         <button
-          onClick={() => setFilter('treasury')}
-          className={`px-4 py-2 rounded-lg text-sm transition-all duration-300 ${
-            filter === 'treasury' 
-              ? 'btn-glass-blue text-white animate-glass-pulse' 
-              : 'glass-ultra text-gray-300 hover:glass-accent'
+          onClick={() => setFilter('executed')}
+          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+            filter === 'executed'
+              ? 'btn-glass-blue text-white animate-glass-glow'
+              : 'glass-card hover:glass-accent'
           }`}
         >
-          Казна
+          Исполненные
         </button>
       </div>
 
@@ -372,7 +395,17 @@ const GovernanceProposals: React.FC = () => {
       {showCreateProposal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="liquid-glass max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-glass-float">
-            <h3 className="section-title text-xl font-bold mb-6 text-slate-100">Создать предложение</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Создать предложение</h3>
+              <button
+                onClick={() => setShowCreateProposal(false)}
+                className={`p-2 rounded-lg transition-all duration-300 ${
+                  'glass-card hover:glass-accent'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             
             <div className="space-y-4">
               <div>
@@ -417,12 +450,6 @@ const GovernanceProposals: React.FC = () => {
                 >
                   Создать предложение
                 </button>
-                <button
-                  onClick={() => setShowCreateProposal(false)}
-                  className="btn-glass-fire flex-1"
-                >
-                  Отмена
-                </button>
               </div>
             </div>
           </div>
@@ -435,113 +462,102 @@ const GovernanceProposals: React.FC = () => {
       ) : filteredProposals.length === 0 ? (
         <div className="liquid-glass text-center text-gray-400 py-12 animate-glass-float">
           <Vote className="mx-auto mb-4 animate-glass-pulse" size={48} />
-          <h3 className="text-lg font-semibold mb-2 text-slate-100">Предложений не найдено</h3>
-          <p>Пока нет активных предложений для голосования</p>
+          <h3 className="text-xl font-bold mb-2 text-slate-100">Нет предложений</h3>
+          <p>Пока нет предложений в этой категории</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredProposals.map((proposal) => {
             const percentages = calculateVotingPercentages(proposal);
             
             return (
               <div key={proposal.id} className="liquid-glass animate-glass-float">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="animate-glass-pulse">
-                      {getCategoryIcon(proposal.category)}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-100">{proposal.title}</h3>
-                      <p className="text-gray-400 text-sm">Предложил: {proposal.proposer}</p>
-                    </div>
-                  </div>
-                  
-                  <div className={`px-3 py-1 rounded-lg text-xs font-semibold border animate-glass-pulse ${getStatusColor(proposal.status)}`}>
-                    {getStatusLabel(proposal.status)}
-                  </div>
-                </div>
-                
-                <p className="text-gray-300 mb-6">{proposal.description}</p>
-                
-                {/* Voting Results */}
-                <div className="mb-6">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Результаты голосования</span>
-                    <span>{(parseFloat(proposal.forVotes) + parseFloat(proposal.againstVotes) + parseFloat(proposal.abstainVotes)).toLocaleString()} голосов</span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-400 text-sm">За ({percentages.for.toFixed(1)}%)</span>
-                      <span className="text-sm">{parseFloat(proposal.forVotes).toLocaleString()} VG</span>
-                    </div>
-                    <div className="w-full glass-ultra rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full animate-glass-pulse" 
-                        style={{ width: `${percentages.for}%` }}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-red-400 text-sm">Против ({percentages.against.toFixed(1)}%)</span>
-                      <span className="text-sm">{parseFloat(proposal.againstVotes).toLocaleString()} VG</span>
-                    </div>
-                    <div className="w-full glass-ultra rounded-full h-2">
-                      <div 
-                        className="bg-red-500 h-2 rounded-full animate-glass-pulse" 
-                        style={{ width: `${percentages.against}%` }}
-                      />
-                    </div>
-                    
-                    {parseFloat(proposal.abstainVotes) > 0 && (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-400 text-sm">Воздержались ({percentages.abstain.toFixed(1)}%)</span>
-                          <span className="text-sm">{parseFloat(proposal.abstainVotes).toLocaleString()} VG</span>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="animate-glass-glow">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        #{proposal.id} {proposal.title}
+                      </h3>
+                      
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className={`px-3 py-1 rounded-lg text-xs font-semibold border animate-glass-glow ${getStatusColor(proposal.status)}`}>
+                          {getStatusLabel(proposal.status)}
                         </div>
-                        <div className="w-full glass-ultra rounded-full h-2">
+                        <span className="text-sm text-gray-400">
+                          {/* Add date formatting logic here */}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-300 mb-4 line-clamp-2">
+                      {proposal.description}
+                    </p>
+                    
+                    {/* Voting Progress */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-400">За: {proposal.forVotes} голосов</span>
+                        <span className="text-red-400">Против: {proposal.againstVotes} голосов</span>
+                      </div>
+                      
+                      <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-green-500 animate-glass-glow"
+                          style={{ width: `${percentages.for}%` }}
+                        />
+                        <div 
+                          className="absolute top-0 right-0 h-full bg-red-500 animate-glass-glow"
+                          style={{ width: `${percentages.against}%` }}
+                        />
+                        {parseFloat(proposal.abstainVotes) > 0 && (
                           <div 
-                            className="bg-gray-500 h-2 rounded-full animate-glass-pulse" 
-                            style={{ width: `${percentages.abstain}%` }}
+                            className="absolute top-0 h-full bg-gray-500 animate-glass-glow"
+                            style={{ 
+                              left: `${percentages.for}%`,
+                              width: `${percentages.abstain}%` 
+                            }}
                           />
-                        </div>
-                      </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    {proposal.status === 'active' && parseFloat(votingPower) > 0 && (
+                      <div className="flex space-x-2 mt-4">
+                        <button
+                          onClick={() => handleVote(proposal.proposalId, 1)}
+                          disabled={parseFloat(votingPower) === 0}
+                          className="btn-glass-green flex items-center space-x-2 animate-glass-glow"
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                          <span>За</span>
+                        </button>
+                        <button
+                          onClick={() => handleVote(proposal.proposalId, 0)}
+                          disabled={parseFloat(votingPower) === 0}
+                          className="btn-glass-fire flex items-center space-x-2 animate-glass-glow"
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          <span>Против</span>
+                        </button>
+                        <button
+                          onClick={() => handleVote(proposal.proposalId, 2)}
+                          disabled={parseFloat(votingPower) === 0}
+                          className="btn-glass-orange flex items-center space-x-2 animate-glass-glow"
+                        >
+                          <Minus className="w-4 h-4" />
+                          <span>Воздержаться</span>
+                        </button>
+                      </div>
+                    )}
+                    
+                    {proposal.status === 'executed' && (
+                      <div className="glass-accent border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-sm animate-glass-glow">
+                        ✅ Предложение исполнено {/* Add date formatting logic here */}
+                      </div>
                     )}
                   </div>
                 </div>
-                
-                {/* Voting Buttons */}
-                {proposal.status === 'active' && parseFloat(votingPower) > 0 && (
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => handleVote(proposal.proposalId, 1)}
-                      className="btn-glass-green flex items-center space-x-2 animate-glass-pulse"
-                    >
-                      <CheckCircle size={16} />
-                      <span>За</span>
-                    </button>
-                    <button
-                      onClick={() => handleVote(proposal.proposalId, 0)}
-                      className="btn-glass-fire flex items-center space-x-2 animate-glass-pulse"
-                    >
-                      <XCircle size={16} />
-                      <span>Против</span>
-                    </button>
-                    <button
-                      onClick={() => handleVote(proposal.proposalId, 2)}
-                      className="btn-glass-orange flex items-center space-x-2 animate-glass-pulse"
-                    >
-                      <Clock size={16} />
-                      <span>Воздержаться</span>
-                    </button>
-                  </div>
-                )}
-                
-                {proposal.status === 'active' && parseFloat(votingPower) === 0 && (
-                  <div className="glass-accent border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-sm animate-glass-pulse">
-                    У вас нет VG токенов для голосования. Получите VG через стейкинг LP токенов.
-                  </div>
-                )}
               </div>
             );
           })}

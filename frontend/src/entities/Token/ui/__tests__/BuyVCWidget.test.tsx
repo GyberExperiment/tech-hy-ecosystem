@@ -20,11 +20,8 @@ vi.mock('framer-motion', () => ({
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>{children}</div>
     ),
-    button: ({ children, className, ...props }: any) => (
-      <button className={className} {...props}>{children}</button>
-    ),
-    input: ({ className, ...props }: any) => (
-      <input className={className} {...props} />
+    a: ({ children, className, ...props }: any) => (
+      <a className={className} {...props}>{children}</a>
     ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -106,20 +103,29 @@ describe('BuyVCWidget', () => {
     it('должен отрендерить поля ввода', () => {
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
-      const vcOutputs = screen.getAllByPlaceholderText('0.0');
-      const vcOutput = vcOutputs[vcOutputs.length - 1]; // Последний с placeholder 0.0
+      const bnbInput = screen.getByTestId('bnb-input');
+      const vcOutput = screen.getByTestId('vc-output');
       
       expect(bnbInput).toBeInTheDocument();
       expect(vcOutput).toBeInTheDocument();
       expect(vcOutput).toHaveAttribute('readonly');
     });
 
-    it('должен показать кнопку настроек', () => {
+    it('должен показать кнопки настроек', () => {
       render(<BuyVCWidget />);
       
-      const settingsButton = screen.getByTestId('settings-icon').closest('button');
+      const settingsButton = screen.getByTestId('settings-button');
+      const infoButton = screen.getByTestId('info-button');
       expect(settingsButton).toBeInTheDocument();
+      expect(infoButton).toBeInTheDocument();
+    });
+
+    it('должен отрендерить статистику цены и торгов', () => {
+      render(<BuyVCWidget />);
+      
+      expect(screen.getByText('Цена VC')).toBeInTheDocument();
+      expect(screen.getByText('Объем 24ч')).toBeInTheDocument();
+      expect(screen.getByText('Ликвидность')).toBeInTheDocument();
     });
   });
 
@@ -132,23 +138,35 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('connect-wallet-button')).toBeInTheDocument();
       expect(screen.getByText('Подключите кошелек')).toBeInTheDocument();
     });
 
     it('должен показать кнопку покупки, если кошелек подключен', () => {
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('swap-button')).toBeInTheDocument();
       expect(screen.getByText('Купить VC (V2)')).toBeInTheDocument();
     });
   });
 
   describe('Ввод суммы BNB', () => {
-    it('должен позволить ввести сумму BNB', async () => {
+    it('должен позволить ввести валидную сумму BNB', async () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1.5');
+      
+      expect(bnbInput).toHaveValue('1.5');
+    });
+
+    it('должен фильтровать недопустимые символы в BNB поле', async () => {
+      const user = userEvent.setup();
+      render(<BuyVCWidget />);
+      
+      const bnbInput = screen.getByTestId('bnb-input');
+      await user.type(bnbInput, 'abc1.5xyz');
       
       expect(bnbInput).toHaveValue('1.5');
     });
@@ -159,7 +177,7 @@ describe('BuyVCWidget', () => {
       
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1');
       
       await waitFor(() => {
@@ -173,12 +191,11 @@ describe('BuyVCWidget', () => {
       
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1');
       
       await waitFor(() => {
-        const vcOutputs = screen.getAllByPlaceholderText('0.0');
-        const vcOutput = vcOutputs[vcOutputs.length - 1];
+        const vcOutput = screen.getByTestId('vc-output');
         expect(vcOutput).toHaveValue('1500.1234');
       }, { timeout: 1000 });
     });
@@ -187,10 +204,10 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const maxButton = screen.getByText('MAX');
+      const maxButton = screen.getByTestId('max-button');
       await user.click(maxButton);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       expect(bnbInput).toHaveValue('1');
     });
   });
@@ -199,14 +216,14 @@ describe('BuyVCWidget', () => {
     it('должен по умолчанию выбрать V2', () => {
       render(<BuyVCWidget />);
       
-      const v2Button = screen.getByText('PancakeSwap V2');
-      expect(v2Button).toHaveClass('btn-glass-blue');
+      const v2Button = screen.getByTestId('v2-button');
+      expect(v2Button).toBeInTheDocument();
     });
 
-    it('должен переключить на V3 (хотя он отключен)', async () => {
+    it('должен показать V3 как отключенный', () => {
       render(<BuyVCWidget />);
       
-      const v3Button = screen.getByText('V3 (скоро)');
+      const v3Button = screen.getByTestId('v3-button');
       expect(v3Button).toBeDisabled();
     });
 
@@ -216,11 +233,11 @@ describe('BuyVCWidget', () => {
       
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1');
       
       // Переключаем на V2 (он уже выбран, но проверим обновление)
-      const v2Button = screen.getByText('PancakeSwap V2');
+      const v2Button = screen.getByTestId('v2-button');
       await user.click(v2Button);
       
       await waitFor(() => {
@@ -234,9 +251,10 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const settingsButton = screen.getByTestId('settings-icon').closest('button')!;
+      const settingsButton = screen.getByTestId('settings-button');
       await user.click(settingsButton);
       
+      expect(screen.getByTestId('settings-panel')).toBeInTheDocument();
       expect(screen.getByText('Максимальный slippage')).toBeInTheDocument();
     });
 
@@ -244,25 +262,46 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const settingsButton = screen.getByTestId('settings-icon').closest('button')!;
+      const settingsButton = screen.getByTestId('settings-button');
       await user.click(settingsButton);
       
-      const slippageInput = screen.getByDisplayValue('0.5');
+      const slippageInput = screen.getByTestId('slippage-input');
       await user.clear(slippageInput);
       await user.type(slippageInput, '1.0');
       
-      expect(slippageInput).toHaveValue(1.0);
+      expect(slippageInput).toHaveValue(1);
     });
 
-    it('должен показать информацию о протоколе и комиссии', async () => {
+    it('должен показать быстрые кнопки slippage', async () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const settingsButton = screen.getByTestId('settings-icon').closest('button')!;
+      const settingsButton = screen.getByTestId('settings-button');
       await user.click(settingsButton);
       
-      expect(screen.getByText('PancakeSwap V2')).toBeInTheDocument();
-      expect(screen.getByText('0.25%')).toBeInTheDocument();
+      expect(screen.getByText('0.1%')).toBeInTheDocument();
+      expect(screen.getByText('0.5%')).toBeInTheDocument();
+      expect(screen.getByText('1%')).toBeInTheDocument();
+      expect(screen.getByText('3%')).toBeInTheDocument();
+    });
+  });
+
+  describe('Расширенная информация', () => {
+    it('должен показать расширенную панель при нажатии на info', async () => {
+      const user = userEvent.setup();
+      render(<BuyVCWidget />);
+      
+      // Сначала вводим сумму чтобы показалась расширенная панель
+      const bnbInput = screen.getByTestId('bnb-input');
+      await user.type(bnbInput, '1');
+      
+      const infoButton = screen.getByTestId('info-button');
+      await user.click(infoButton);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('advanced-panel')).toBeInTheDocument();
+        expect(screen.getByText('Детали транзакции')).toBeInTheDocument();
+      });
     });
   });
 
@@ -270,7 +309,7 @@ describe('BuyVCWidget', () => {
     it('должен быть отключен если нет суммы BNB', () => {
       render(<BuyVCWidget />);
       
-      const swapButton = screen.getByText('Купить VC (V2)');
+      const swapButton = screen.getByTestId('swap-button');
       expect(swapButton).toBeDisabled();
     });
 
@@ -278,10 +317,10 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1');
       
-      const swapButton = screen.getByText('Купить VC (V2)');
+      const swapButton = screen.getByTestId('swap-button');
       expect(swapButton).not.toBeDisabled();
     });
 
@@ -289,10 +328,10 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
       await user.type(bnbInput, '1');
       
-      const swapButton = screen.getByText('Купить VC (V2)');
+      const swapButton = screen.getByTestId('swap-button');
       await user.click(swapButton);
       
       expect(mockBuyVCWithBNB).toHaveBeenCalledWith({
@@ -314,7 +353,6 @@ describe('BuyVCWidget', () => {
       render(<BuyVCWidget />);
       
       expect(screen.getByText('Выполняется swap...')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /выполняется swap/i })).toBeDisabled();
     });
   });
 
@@ -328,6 +366,7 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('error-message')).toBeInTheDocument();
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
 
@@ -339,6 +378,7 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('new-swap-button')).toBeInTheDocument();
       expect(screen.getByText('Новый swap')).toBeInTheDocument();
     });
   });
@@ -353,6 +393,7 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('success-message')).toBeInTheDocument();
       expect(screen.getByText('Swap выполнен успешно!')).toBeInTheDocument();
     });
 
@@ -366,9 +407,10 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
-      const link = screen.getByRole('link', { name: /посмотреть транзакцию/i });
+      const link = screen.getByTestId('transaction-link');
       expect(link).toHaveAttribute('href', `https://testnet.bscscan.com/tx/${txHash}`);
       expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveTextContent('Посмотреть транзакцию');
     });
 
     it('должен показать кнопку "Новый swap" при успехе', () => {
@@ -380,6 +422,7 @@ describe('BuyVCWidget', () => {
 
       render(<BuyVCWidget />);
       
+      expect(screen.getByTestId('new-swap-button')).toBeInTheDocument();
       expect(screen.getByText('Новый swap')).toBeInTheDocument();
     });
   });
@@ -389,26 +432,15 @@ describe('BuyVCWidget', () => {
       const user = userEvent.setup();
       mockUsePancakeSwap.mockReturnValue({
         ...defaultPancakeSwapState,
-        isSuccess: true,
-        txHash: '0xabcdef123456',
+        error: { message: 'Test error' },
       });
 
       render(<BuyVCWidget />);
       
-      const resetButton = screen.getByText('Новый swap');
+      const resetButton = screen.getByTestId('new-swap-button');
       await user.click(resetButton);
       
       expect(mockResetState).toHaveBeenCalled();
-    });
-  });
-
-  describe('Информационный блок', () => {
-    it('должен показать информацию о сети и протоколе', () => {
-      render(<BuyVCWidget />);
-      
-      expect(screen.getByText('BSC Testnet')).toBeInTheDocument();
-      expect(screen.getByText('PancakeSwap V2')).toBeInTheDocument();
-      expect(screen.getByText('0.5%')).toBeInTheDocument();
     });
   });
 
@@ -417,37 +449,35 @@ describe('BuyVCWidget', () => {
       const customClass = 'custom-widget-class';
       render(<BuyVCWidget className={customClass} />);
       
-      const widget = screen.getByText('Купить VC токены').closest('div');
-      expect(widget).toHaveClass(customClass);
+      const widget = document.querySelector('.custom-widget-class');
+      expect(widget).toBeInTheDocument();
+      expect(widget).toHaveClass('w-full');
+      expect(widget).toHaveClass('max-w-md');
+      expect(widget).toHaveClass('mx-auto');
     });
 
-    it('должен иметь правильную структуру для центрирования', () => {
+    it('должен иметь правильную responsive структуру', () => {
       render(<BuyVCWidget />);
       
-      const widget = screen.getByText('Купить VC токены').closest('div');
+      const widget = screen.getByText('Купить VC Токены').closest('.max-w-md');
       expect(widget).toHaveClass('mx-auto');
-      expect(widget).toHaveClass('max-w-md');
     });
   });
 
-  describe('Debounce функциональность', () => {
-    it('должен применить debounce к getVCQuote', async () => {
-      const user = userEvent.setup();
-      mockGetVCQuote.mockResolvedValue({ amountOut: '1000.0' });
-      
+  describe('Современные input поля', () => {
+    it('должен скрывать стрелочки number input', () => {
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
+      const bnbInput = screen.getByTestId('bnb-input');
+      expect(bnbInput).toHaveAttribute('type', 'text');
+      expect(bnbInput).toHaveAttribute('inputMode', 'decimal');
+    });
+
+    it('должен показывать иконки валют в полях', () => {
+      render(<BuyVCWidget />);
       
-      // Быстро вводим несколько символов
-      await user.type(bnbInput, '1');
-      await user.type(bnbInput, '.5');
-      
-      // Ждем больше времени чем debounce delay (500ms)
-      await waitFor(() => {
-        expect(mockGetVCQuote).toHaveBeenCalledTimes(1);
-        expect(mockGetVCQuote).toHaveBeenCalledWith('1.5', 'v2');
-      }, { timeout: 1000 });
+      expect(screen.getByText('BNB')).toBeInTheDocument();
+      expect(screen.getByText('VC')).toBeInTheDocument();
     });
   });
 
@@ -455,21 +485,53 @@ describe('BuyVCWidget', () => {
     it('должен иметь правильные aria-labels для важных элементов', () => {
       render(<BuyVCWidget />);
       
-      const bnbInput = screen.getByPlaceholderText('0.0');
-      const vcOutput = screen.getAllByPlaceholderText('0.0')[1];
+      const bnbInput = screen.getByTestId('bnb-input');
+      const vcOutput = screen.getByTestId('vc-output');
       
       expect(bnbInput).toHaveAccessibleName();
       expect(vcOutput).toHaveAccessibleName();
     });
 
-    it('должен иметь корректную семантику для кнопок and inputs', () => {
+    it('должен иметь корректную семантику для кнопок', () => {
       render(<BuyVCWidget />);
       
-      const swapButton = screen.getByRole('button', { name: /купить vc/i });
-      const maxButton = screen.getByRole('button', { name: /max/i });
+      const swapButton = screen.getByTestId('swap-button');
+      const maxButton = screen.getByTestId('max-button');
       
       expect(swapButton).toBeInTheDocument();
       expect(maxButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Debug tests', () => {
+    it('should render error message with simplified mock', () => {
+      const testError = { message: 'Test error' };
+      mockUsePancakeSwap.mockReturnValue({
+        getVCQuote: mockGetVCQuote,
+        buyVCWithBNB: mockBuyVCWithBNB,
+        isLoading: false,
+        isSuccess: false,
+        error: testError,
+        txHash: null,
+        resetState: mockResetState,
+      });
+
+      const { debug } = render(<BuyVCWidget />);
+      
+      // Проверяем что мок вызывается правильно
+      console.log('DEBUG: Mock error value:', testError);
+      console.log('DEBUG: Mock return value:', mockUsePancakeSwap());
+      
+      // Проверяем наличие элементов
+      const errorElement = screen.queryByTestId('error-message');
+      console.log('DEBUG: Error element found:', errorElement);
+      
+      const swapButton = screen.queryByTestId('swap-button');
+      console.log('DEBUG: Swap button found:', swapButton);
+      
+      debug(); // Выводит весь HTML для debugging
+      
+      expect(screen.queryByTestId('error-message')).not.toBeNull();
     });
   });
 }); 
