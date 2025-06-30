@@ -1,211 +1,302 @@
-import React from 'react';
-import { AlertCircle, CheckCircle, ExternalLink, Info, Network, Zap } from 'lucide-react';
-import { getNetworkInfo, NETWORK_STATUS, getContractUrl, CONTRACTS } from '../config/contracts';
-import { cn } from '../lib/cn';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Wifi, 
+  WifiOff, 
+  AlertTriangle, 
+  CheckCircle, 
+  RefreshCw, 
+  ExternalLink,
+  X,
+  Info
+} from 'lucide-react';
+import { networkDiagnostics, type NetworkDiagnostics } from '../lib/networkDiagnostics';
+import { rpcService } from '../api/rpcService';
 
 interface NetworkStatusProps {
   className?: string;
-  compact?: boolean;
+  showDetails?: boolean;
+  autoHide?: boolean;
 }
 
-const NetworkStatus: React.FC<NetworkStatusProps> = ({ className, compact = false }) => {
-  const networkInfo = getNetworkInfo();
-  const networkStatus = NETWORK_STATUS[networkInfo.currentNetwork];
+export const NetworkStatus: React.FC<NetworkStatusProps> = ({ 
+  className = '', 
+  showDetails = false,
+  autoHide = true 
+}) => {
+  const [diagnostics, setDiagnostics] = useState<NetworkDiagnostics | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
 
-  if (compact) {
-    return (
-      <div className={cn("flex items-center space-x-2 text-sm", className)}>
-        <div className={cn(
-          "flex items-center space-x-1 px-2 py-1 rounded-full",
-          networkInfo.isMainnet 
-            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-            : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-        )}>
-          <Network size={12} />
-          <span className="font-medium">{networkInfo.networkName}</span>
-        </div>
-        
-        {networkStatus.isReady ? (
-          <CheckCircle className="text-green-400" size={16} />
-        ) : (
-          <AlertCircle className="text-amber-400" size={16} />
-        )}
-      </div>
-    );
+  const runDiagnostics = async () => {
+    setIsRefreshing(true);
+    try {
+      const results = await networkDiagnostics.runDiagnostics();
+      setDiagnostics(results);
+      
+      // Show component if there are issues or if showDetails is true
+      if (!autoHide || showDetails || results.rpcStatus !== 'good') {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    } catch (error) {
+      console.error('Failed to run network diagnostics:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const resetRpcProviders = () => {
+    try {
+      rpcService.resetProviderHealth();
+      console.log('RPC providers reset successfully');
+      // Перезапускаем диагностику
+      setTimeout(runDiagnostics, 500);
+    } catch (error) {
+      console.error('Failed to reset RPC providers:', error);
+    }
+  };
+
+  useEffect(() => {
+    runDiagnostics();
+    
+    // Run diagnostics periodically
+    const interval = setInterval(runDiagnostics, 60000); // Every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'good': return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case 'degraded': return <Wifi className="w-5 h-5 text-yellow-400" />;
+      case 'poor': return <AlertTriangle className="w-5 h-5 text-orange-400" />;
+      case 'offline': return <WifiOff className="w-5 h-5 text-red-400" />;
+      default: return <Info className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'good': return 'border-green-400/30 bg-green-500/10';
+      case 'degraded': return 'border-yellow-400/30 bg-yellow-500/10';
+      case 'poor': return 'border-orange-400/30 bg-orange-500/10';
+      case 'offline': return 'border-red-400/30 bg-red-500/10';
+      default: return 'border-gray-400/30 bg-gray-500/10';
+    }
+  };
+
+  if (!diagnostics || (!isVisible && !showDetails)) {
+    return null;
   }
 
   return (
-    <div className={cn("card", className)}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <Network className="mr-2 text-blue-400" size={20} />
-          Network Status
-        </h3>
-        <div className={cn(
-          "px-3 py-1 rounded-full text-sm font-medium",
-          networkInfo.isMainnet 
-            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-            : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-        )}>
-          {networkInfo.networkName}
-        </div>
-      </div>
-
-      {/* Network Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-slate-800/50 rounded-lg p-3">
-          <div className="text-gray-400 text-sm mb-1">Chain ID</div>
-          <div className="font-semibold">{networkInfo.chainId}</div>
-        </div>
-        <div className="bg-slate-800/50 rounded-lg p-3">
-          <div className="text-gray-400 text-sm mb-1">Explorer</div>
-          <a 
-            href={networkInfo.blockExplorer}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-          >
-            View <ExternalLink size={12} className="ml-1" />
-          </a>
-        </div>
-      </div>
-
-      {/* Status */}
-      <div className={cn(
-        "flex items-start space-x-3 p-4 rounded-lg",
-        networkStatus.isReady 
-          ? "bg-green-500/10 border border-green-500/20"
-          : "bg-amber-500/10 border border-amber-500/20"
-      )}>
-        {networkStatus.isReady ? (
-          <CheckCircle className="text-green-400 mt-0.5" size={20} />
-        ) : (
-          <AlertCircle className="text-amber-400 mt-0.5" size={20} />
-        )}
-        <div>
-          <div className={cn(
-            "font-medium mb-1",
-            networkStatus.isReady ? "text-green-400" : "text-amber-400"
-          )}>
-            {networkStatus.isReady ? "Ready" : "Pending Deployment"}
-          </div>
-          <div className="text-gray-300 text-sm">
-            {networkStatus.description}
-          </div>
-        </div>
-      </div>
-
-      {/* Features */}
-      <div className="mt-6">
-        <h4 className="text-md font-medium mb-3 flex items-center">
-          <Zap className="mr-2 text-yellow-400" size={16} />
-          Features Status
-        </h4>
-        <div className="grid grid-cols-2 gap-2">
-          {networkStatus.features.map((feature, index) => {
-            const isReady = feature.includes('✅');
-            const isPending = feature.includes('⚠️');
-            
-            return (
-              <div 
-                key={index}
-                className={cn(
-                  "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm",
-                  isReady 
-                    ? "bg-green-500/10 text-green-400"
-                    : isPending 
-                      ? "bg-amber-500/10 text-amber-400"
-                      : "bg-blue-500/10 text-blue-400"
-                )}
-              >
-                <span>{feature}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Next Steps (только для mainnet если не готов) */}
-      {!networkStatus.isReady && 'nextSteps' in networkStatus && (
-        <div className="mt-6">
-          <h4 className="text-md font-medium mb-3 flex items-center">
-            <Info className="mr-2 text-blue-400" size={16} />
-            Next Steps
-          </h4>
-          <div className="space-y-2">
-            {networkStatus.nextSteps.map((step, index) => (
-              <div key={index} className="flex items-start space-x-2 text-sm text-gray-300">
-                <div className="text-blue-400 font-mono text-xs mt-1">{index + 1}.</div>
-                <span>{step}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Token Contracts */}
-      <div className="mt-6">
-        <h4 className="text-md font-medium mb-3">Token Contracts</h4>
-        <div className="space-y-2">
-          <ContractLink 
-            name="VC Token" 
-            address={CONTRACTS.VC_TOKEN}
-            isDeployed={CONTRACTS.VC_TOKEN !== "0x0000000000000000000000000000000000000000"}
-          />
-          <ContractLink 
-            name="VG Token" 
-            address={CONTRACTS.VG_TOKEN}
-            isDeployed={CONTRACTS.VG_TOKEN !== "0x0000000000000000000000000000000000000000"}
-          />
-          {networkInfo.isTestnet && (
-            <>
-              <ContractLink 
-                name="LP Token" 
-                address={CONTRACTS.LP_TOKEN}
-                isDeployed={CONTRACTS.LP_TOKEN !== "0x0000000000000000000000000000000000000000"}
-              />
-              <ContractLink 
-                name="LP Locker" 
-                address={CONTRACTS.LP_LOCKER}
-                isDeployed={CONTRACTS.LP_LOCKER !== "0x0000000000000000000000000000000000000000"}
-              />
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-interface ContractLinkProps {
-  name: string;
-  address: string;
-  isDeployed: boolean;
-}
-
-const ContractLink: React.FC<ContractLinkProps> = ({ name, address, isDeployed }) => {
-  if (!isDeployed) {
-    return (
-      <div className="flex items-center justify-between py-2 px-3 bg-slate-800/30 rounded-lg">
-        <span className="text-sm text-gray-400">{name}</span>
-        <span className="text-xs text-amber-400">TBD</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-between py-2 px-3 bg-slate-800/50 rounded-lg">
-      <span className="text-sm text-gray-300">{name}</span>
-      <a
-        href={getContractUrl(address)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-400 hover:text-blue-300 text-xs flex items-center"
+    <AnimatePresence>
+      <motion.div
+        className={`fixed top-4 right-4 z-50 max-w-md ${className}`}
+        initial={{ opacity: 0, x: 100, scale: 0.8 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        exit={{ opacity: 0, x: 100, scale: 0.8 }}
+        transition={{ type: "spring", duration: 0.5 }}
       >
-        {address.slice(0, 6)}...{address.slice(-4)}
-        <ExternalLink size={10} className="ml-1" />
-      </a>
-    </div>
+        <div className={`
+          backdrop-blur-xl rounded-xl border p-4 shadow-2xl
+          ${getStatusColor(diagnostics.rpcStatus)}
+        `}>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {getStatusIcon(diagnostics.rpcStatus)}
+              <span className="font-semibold text-slate-100">
+                Статус сети
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={runDiagnostics}
+                disabled={isRefreshing}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors duration-200"
+              >
+                <RefreshCw 
+                  className={`w-4 h-4 text-gray-300 ${isRefreshing ? 'animate-spin' : ''}`} 
+                />
+              </button>
+              
+              {autoHide && (
+                <button
+                  onClick={() => setIsVisible(false)}
+                  className="p-1 rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4 text-gray-300" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Status Message */}
+          <div className="mb-3">
+            <p className="text-slate-200 font-medium">
+              {networkDiagnostics.getStatusMessage(diagnostics.rpcStatus)}
+            </p>
+            
+            {diagnostics.workingEndpoints.length > 0 && (
+              <p className="text-sm text-gray-400 mt-1">
+                Работает {diagnostics.workingEndpoints.length} из{' '}
+                {diagnostics.workingEndpoints.length + diagnostics.failingEndpoints.length} RPC
+              </p>
+            )}
+          </div>
+
+          {/* RPC Provider Stats */}
+          {diagnostics.rpcStats && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-slate-200 mb-2">RPC Провайдеры</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {diagnostics.rpcStats.fallbackProviders?.map((provider: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between text-xs bg-white/5 rounded-lg p-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        provider.isHealthy ? 'bg-green-400' : 'bg-red-400'
+                      }`} />
+                      <span className="text-gray-300 truncate max-w-40">
+                        {provider.url.replace('https://', '').split('/')[0]}
+                      </span>
+                    </div>
+                    <div className="text-gray-400">
+                      {provider.consecutiveErrors > 0 && (
+                        <span className="text-red-400">E:{provider.consecutiveErrors}</span>
+                      )}
+                      {provider.requestCount > 0 && (
+                        <span className="ml-1">R:{provider.requestCount}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Active Requests Info */}
+              {diagnostics.rpcStats.activeRequests > 0 && (
+                <div className="mt-2 text-xs text-gray-400">
+                  Активных запросов: {diagnostics.rpcStats.activeRequests}
+                  {diagnostics.rpcStats.queuedRequests > 0 && (
+                    <span className="ml-2">В очереди: {diagnostics.rpcStats.queuedRequests}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-gray-400">Кошелек</div>
+              <div className="text-slate-200 font-medium">
+                {diagnostics.hasMetaMask ? (
+                  diagnostics.isConnected ? '🟢 Подключен' : '🟡 Не подключен'
+                ) : '🔴 Не установлен'}
+              </div>
+            </div>
+            
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-gray-400">Сеть</div>
+              <div className="text-slate-200 font-medium">
+                {diagnostics.chainId === 97 ? '🟢 BSC Testnet' : 
+                 diagnostics.chainId ? `🔴 Chain ${diagnostics.chainId}` : '🔴 Не подключена'}
+              </div>
+            </div>
+          </div>
+
+          {/* Recommendations Toggle */}
+          {diagnostics.recommendations.length > 0 && (
+            <button
+              onClick={() => setShowRecommendations(!showRecommendations)}
+              className="w-full text-left p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200 mb-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-200">
+                  Рекомендации ({diagnostics.recommendations.length})
+                </span>
+                <motion.div
+                  animate={{ rotate: showRecommendations ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </motion.div>
+              </div>
+            </button>
+          )}
+
+          {/* Recommendations */}
+          <AnimatePresence>
+            {showRecommendations && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white/5 rounded-lg p-3 max-h-60 overflow-y-auto">
+                  <div className="space-y-2 text-sm">
+                    {diagnostics.recommendations.map((rec, index) => (
+                      <div key={index} className="text-gray-300">
+                        {rec.includes('•') ? (
+                          <div className="ml-4 text-gray-400">{rec}</div>
+                        ) : rec.trim() ? (
+                          <div>{rec}</div>
+                        ) : (
+                          <div className="h-2" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                    
+                    {/* RPC Reset Button */}
+                    {diagnostics.rpcStatus !== 'good' && (
+                      <button
+                        onClick={resetRpcProviders}
+                        className="flex items-center gap-2 w-full p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 transition-colors duration-200 text-blue-400 hover:text-blue-300"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span className="text-sm">Сбросить RPC провайдеры</span>
+                      </button>
+                    )}
+                    
+                    <a
+                      href="https://metamask.io/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="text-sm">Скачать MetaMask</span>
+                    </a>
+                    
+                    <a
+                      href="https://academy.binance.com/en/articles/how-to-add-bsc-to-metamask"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="text-sm">Добавить BSC в MetaMask</span>
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

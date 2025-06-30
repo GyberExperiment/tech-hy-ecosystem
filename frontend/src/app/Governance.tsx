@@ -1,166 +1,53 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAccount, useChainId } from 'wagmi';
-import { useWeb3 } from '../shared/lib/Web3Context';
-import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../shared/config/contracts';
-import GovernanceProposals from '../entities/Governance/ui/GovernanceProposals';
-import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
-import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import { 
   Vote, 
+  Activity, 
+  BarChart3, 
   Users, 
-  Clock, 
+  TrendingUp, 
   CheckCircle, 
-  XCircle, 
-  AlertTriangle,
-  Lock,
-  Activity,
-  TrendingUp,
-  Shield,
-  BarChart3,
-  Coins,
-  ExternalLink,
-  RefreshCw,
-  Zap,
-  Target,
+  Target, 
+  Coins, 
+  FileText, 
   Plus,
   Eye,
-  ThumbsUp,
-  ThumbsDown,
   Calendar,
-  FileText,
-  Settings
+  Settings,
+  RefreshCw
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import { BSC_TESTNET } from '../shared/config/contracts';
+import { PageConnectionPrompt } from '../shared/ui/PageConnectionPrompt';
 import { log } from '../shared/lib/logger';
-
-interface ProposalData {
-  id: number;
-  title: string;
-  description: string;
-  proposer: string;
-  status: 'Active' | 'Succeeded' | 'Defeated' | 'Pending' | 'Executed';
-  votesFor: string;
-  votesAgainst: string;
-  startTime: number;
-  endTime: number;
-  quorum: string;
-  category: 'Protocol' | 'Treasury' | 'Parameter' | 'Emergency';
-}
+import { cn } from '../shared/lib/cn';
+import { useGovernanceData, type GovernanceProposal } from '../entities/Governance/api/useGovernanceData';
 
 const Governance: React.FC = () => {
   const { t } = useTranslation(['governance', 'common']);
   const { address } = useAccount();
   const chainId = useChainId();
   
-  // TODO: Интегрировать контракты через wagmi
+  // ✅ Используем реальные данные governance
+  const {
+    proposals,
+    stats,
+    userData,
+    loading,
+    refreshing,
+    error,
+    refreshData,
+    isSystemReady
+  } = useGovernanceData();
+  
   const isConnected = !!address;
   const isCorrectNetwork = chainId === BSC_TESTNET.chainId;
-  
-  // Временные заглушки для контрактов (TODO: заменить на wagmi)
-  const vgContract = null;
-  const vgVotesContract = null;
-  const governorContract = null;
 
-  const [balances, setBalances] = useState<Record<string, string>>({});
-  const [proposals, setProposals] = useState<ProposalData[]>([]);
-  const [governanceStats, setGovernanceStats] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-  const [selectedProposal, setSelectedProposal] = useState<ProposalData | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<GovernanceProposal | null>(null);
   const [voteAmount, setVoteAmount] = useState('');
   const [voteSupport, setVoteSupport] = useState<boolean | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-
-  // Mock proposals data - в продакшене получать из контракта
-  const mockProposals: ProposalData[] = [
-    {
-      id: 1,
-      title: 'Увеличение LP-to-VG коэффициента',
-      description: 'Предложение увеличить коэффициент обмена LP токенов на VG с 15:1 до 20:1 для стимулирования большего участия в LP locking.',
-      proposer: '0x742d35Cc6634C0532925a3b8D4C9db9612345678',
-      status: 'Active',
-      votesFor: '125000',
-      votesAgainst: '45000',
-      startTime: Date.now() - 86400000, // 1 день назад
-      endTime: Date.now() + 518400000, // 6 дней вперед
-      quorum: '100000',
-      category: 'Parameter'
-    },
-    {
-      id: 2,
-      title: 'Добавление нового токена в экосистему',
-      description: 'Предложение добавить поддержку USDT в качестве альтернативы BNB для создания LP позиций.',
-      proposer: '0x8ba1f109551bD432803012645Hac136c87654321',
-      status: 'Pending',
-      votesFor: '0',
-      votesAgainst: '0',
-      startTime: Date.now() + 86400000, // завтра
-      endTime: Date.now() + 691200000, // 8 дней вперед
-      quorum: '150000',
-      category: 'Protocol'
-    },
-    {
-      id: 3,
-      title: 'Обновление timelock задержки',
-      description: 'Предложение изменить задержку timelock с 2 дней на 3 дня для повышения безопасности критических изменений.',
-      proposer: '0x1234567890abcdef1234567890abcdef12345678',
-      status: 'Succeeded',
-      votesFor: '200000',
-      votesAgainst: '50000',
-      startTime: Date.now() - 604800000, // неделю назад
-      endTime: Date.now() - 86400000, // день назад
-      quorum: '100000',
-      category: 'Protocol'
-    }
-  ];
-
-  const fetchBalances = async () => {
-    if (!address) return;
-
-    try {
-      setLoading(true);
-      
-      // TODO: Реализовать когда контракты будут интегрированы
-      // Временно устанавливаем заглушки
-      setBalances({
-        VG: '0',
-        VGV: '0'
-      });
-    } catch (error) {
-      log.error('Failed to fetch governance balances', {
-        component: 'Governance',
-        function: 'fetchBalances',
-        address: address
-      }, error as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGovernanceStats = async () => {
-    // Заглушка - в продакшене получать из governance контракта
-    setGovernanceStats({
-      totalProposals: proposals.length,
-      activeProposals: proposals.filter(p => p.status === 'Active').length,
-      totalVotingPower: '500000',
-      participationRate: '68.5',
-    });
-  };
-
-  const fetchProposals = async () => {
-    // Заглушка - в продакшене получать из Governor контракта
-    // Пока используем пустой массив
-    setProposals([]);
-  };
-
-  useEffect(() => {
-    if (isConnected && isCorrectNetwork) {
-      fetchBalances();
-      fetchGovernanceStats();
-      fetchProposals();
-    }
-  }, [address, isConnected, isCorrectNetwork]);
 
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
@@ -200,8 +87,17 @@ const Governance: React.FC = () => {
     }
 
     try {
-      // TODO: Реализовать голосование когда контракты будут интегрированы
-      toast.error('Голосование временно недоступно - контракты не интегрированы');
+      // TODO: Реализовать голосование через rpcService и Governor контракт
+      toast.error('Голосование будет реализовано в следующем обновлении');
+      
+      log.info('Vote attempted', {
+        component: 'Governance',
+        function: 'handleVote',
+        proposalId,
+        support,
+        voteAmount,
+        address
+      });
     } catch (error: any) {
       log.error('Governance vote failed', {
         component: 'Governance',
@@ -221,48 +117,50 @@ const Governance: React.FC = () => {
     return proposal.status.toLowerCase() === filterStatus.toLowerCase();
   });
 
-  const stats = [
+  // ✅ Реальная статистика пользователя
+  const userStats = [
     {
       title: 'Ваши VG токены',
-      value: formatBalance(balances.VG || '0'),
+      value: formatBalance(userData.votingPower || '0'),
       unit: 'VG',
       icon: Coins,
       color: 'text-yellow-400',
     },
     {
       title: 'Voting Power',
-      value: formatBalance(balances.VGV || '0'),
+      value: formatBalance(userData.votingPower || '0'),
       unit: 'VGV',
       icon: Vote,
       color: 'text-purple-400',
     },
     {
       title: 'Всего предложений',
-      value: governanceStats.totalProposals?.toString() || '0',
+      value: stats.totalProposals.toString(),
       unit: 'proposals',
       icon: FileText,
       color: 'text-blue-400',
     },
     {
       title: 'Активных',
-      value: governanceStats.activeProposals?.toString() || '0',
+      value: stats.activeProposals.toString(),
       unit: 'активных',
       icon: Activity,
       color: 'text-green-400',
     },
   ];
 
+  // ✅ Реальная статистика протокола
   const protocolStats = [
     {
       title: 'Общая voting power',
-      value: formatBalance(governanceStats.totalVotingPower || '0'),
-      unit: 'VGV',
+      value: formatBalance(stats.totalVotingPower || '0'),
+      unit: 'VG',
       icon: Users,
       color: 'text-purple-400',
     },
     {
       title: 'Участие в голосовании',
-      value: governanceStats.participationRate || '0',
+      value: stats.participationRate || '0',
       unit: '%',
       icon: TrendingUp,
       color: 'text-green-400',
@@ -275,9 +173,9 @@ const Governance: React.FC = () => {
       color: 'text-blue-400',
     },
     {
-      title: 'Средний кворум',
-      value: '125',
-      unit: 'K VGV',
+      title: 'Требуемый кворум',
+      value: formatBalance(stats.quorumRequired || '0'),
+      unit: 'VG',
       icon: Target,
       color: 'text-yellow-400',
     },
@@ -320,10 +218,23 @@ const Governance: React.FC = () => {
           <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">
             {t('governance:title')}
           </h1>
+          <button
+            onClick={refreshData}
+            disabled={refreshing}
+            className="p-2 backdrop-blur-xl bg-white/8 border border-purple-400/25 rounded-xl hover:bg-purple-500/15 transition-all duration-300 group"
+          >
+            <RefreshCw className={cn("h-5 w-5 text-purple-300/80 group-hover:text-white transition-colors duration-300", refreshing && "animate-spin")} />
+          </button>
         </div>
         <p className="hero-subtitle text-xl text-gray-300 max-w-2xl mx-auto">
           {t('governance:subtitle')}
         </p>
+        
+        {error && (
+          <div className="backdrop-blur-xl bg-red-500/10 border border-red-400/25 rounded-xl p-4 text-red-300 text-sm max-w-md mx-auto">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Personal Stats */}
@@ -334,7 +245,7 @@ const Governance: React.FC = () => {
         </h2>
         
         <div className="grid-responsive-1-2-4 gap-6">
-          {stats.map((stat, index) => (
+          {userStats.map((stat, index) => (
             <div key={index} className="card-ultra animate-glass-float">
               <div className="flex items-center justify-between">
                 <div>
@@ -415,7 +326,44 @@ const Governance: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {filteredProposals.map((proposal) => (
+            {loading && (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="liquid-glass animate-pulse">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-600 rounded w-full mb-3"></div>
+                          <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && filteredProposals.length === 0 && (
+              <div className="liquid-glass text-center py-12">
+                <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4 animate-glass-pulse" />
+                <h3 className="text-xl font-bold text-slate-200 mb-2">
+                  Предложений пока нет
+                </h3>
+                <p className="text-gray-400 mb-6">
+                  {stats.totalProposals === 0 
+                    ? 'Governance контракт не содержит предложений'
+                    : 'Предложения с выбранным статусом не найдены'
+                  }
+                </p>
+                <button className="btn-primary flex items-center space-x-2 mx-auto">
+                  <Plus className="w-4 h-4" />
+                  <span>Создать первое предложение</span>
+                </button>
+              </div>
+            )}
+
+            {!loading && filteredProposals.map((proposal) => (
               <div 
                 key={proposal.id} 
                 className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-glass-float ${
@@ -461,8 +409,8 @@ const Governance: React.FC = () => {
                   {/* Voting Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-green-400">ЗА: {formatBalance(proposal.votesFor)} VGV</span>
-                      <span className="text-red-400">ПРОТИВ: {formatBalance(proposal.votesAgainst)} VGV</span>
+                      <span className="text-green-400">ЗА: {formatBalance(proposal.votesFor)} VG</span>
+                      <span className="text-red-400">ПРОТИВ: {formatBalance(proposal.votesAgainst)} VG</span>
                     </div>
                     
                     <div className="w-full bg-gray-700 rounded-full h-2">
@@ -478,15 +426,15 @@ const Governance: React.FC = () => {
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <div className="flex items-center space-x-4">
-                      <span>Кворум: {formatBalance(proposal.quorum)} VGV</span>
+                      <span>Кворум: {formatBalance(proposal.quorum)} VG</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-3 h-3" />
                       <span>
                         {proposal.status === 'Active' 
-                          ? `Осталось ${Math.ceil((proposal.endTime - Date.now()) / 86400000)} дней`
+                          ? `Блок окончания: ${proposal.endBlock}`
                           : proposal.status === 'Pending'
-                          ? `Начнется через ${Math.ceil((proposal.startTime - Date.now()) / 86400000)} дней`
+                          ? `Блок начала: ${proposal.startBlock}`
                           : 'Завершено'
                         }
                       </span>
@@ -528,9 +476,9 @@ const Governance: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-200">
-                        Количество VGV для голосования
+                        Количество VG для голосования
                         <span className="text-xs text-gray-400 ml-2">
-                          (Доступно: {formatBalance(balances.VGV || '0')} VGV)
+                          (Доступно: {formatBalance(userData.votingPower || '0')} VG)
                         </span>
                       </label>
                       <input
@@ -539,176 +487,57 @@ const Governance: React.FC = () => {
                         onChange={(e) => setVoteAmount(e.target.value)}
                         placeholder="0.0"
                         className="input-field w-full"
-                        step="any"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setVoteSupport(true)}
-                        className={`py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                          voteSupport === true
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : 'bg-white/5 text-gray-400 hover:bg-green-500/10 hover:text-green-400'
-                        }`}
+                        onClick={() => {
+                          setVoteSupport(true);
+                          handleVote(selectedProposal.id, true);
+                        }}
+                        className="btn-success w-full"
+                        disabled={!voteAmount || parseFloat(voteAmount) <= 0}
                       >
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>ЗА</span>
+                        Голосовать ЗА
                       </button>
-                      
                       <button
-                        onClick={() => setVoteSupport(false)}
-                        className={`py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                          voteSupport === false
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-white/5 text-gray-400 hover:bg-red-500/10 hover:text-red-400'
-                        }`}
+                        onClick={() => {
+                          setVoteSupport(false);
+                          handleVote(selectedProposal.id, false);
+                        }}
+                        className="btn-danger w-full"
+                        disabled={!voteAmount || parseFloat(voteAmount) <= 0}
                       >
-                        <ThumbsDown className="w-4 h-4" />
-                        <span>ПРОТИВ</span>
+                        Голосовать ПРОТИВ
                       </button>
                     </div>
-
-                    <button
-                      onClick={() => handleVote(selectedProposal.id, voteSupport!)}
-                      disabled={!voteAmount || voteSupport === null}
-                      className="btn-primary w-full flex items-center justify-center space-x-2"
-                    >
-                      <Vote className="w-4 h-4" />
-                      <span>Проголосовать</span>
-                    </button>
                   </div>
                 )}
 
                 {selectedProposal.status !== 'Active' && (
-                  <div className="text-center py-6 text-gray-400">
-                    <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Голосование {selectedProposal.status === 'Pending' ? 'еще не началось' : 'завершено'}</p>
+                  <div className="text-center py-6">
+                    <p className="text-gray-400 mb-2">Голосование недоступно</p>
+                    <p className="text-xs text-gray-500">
+                      Статус предложения: {selectedProposal.status}
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
             <div className="card text-center py-12">
-              <div className="text-4xl mb-4">🗳️</div>
-              <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите предложение</h3>
+              <Vote className="w-16 h-16 text-gray-500 mx-auto mb-4 animate-glass-pulse" />
+              <h3 className="text-lg font-bold text-slate-200 mb-2">
+                Выберите предложение
+              </h3>
               <p className="text-gray-400">
-                Выберите предложение из списка для голосования
+                Выберите предложение слева для участия в голосовании
               </p>
             </div>
           )}
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Zap className="mr-3 text-yellow-400" />
-          Быстрые действия
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
-            <Coins className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Получить VG</h3>
-            <p className="text-gray-400 mb-4">Заблокируйте LP токены для получения VG</p>
-            <a href="/staking" className="btn-primary inline-block">
-              Перейти к LP Locking
-            </a>
-          </div>
-          
-          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Конвертировать VG</h3>
-            <p className="text-gray-400 mb-4">Обменяйте VG на VGVotes для голосования</p>
-            <a href="/staking" className="btn-primary inline-block">
-              Конвертировать
-            </a>
-          </div>
-          
-          <div className="card text-center group hover:scale-[1.017] transition-transform duration-200">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Аналитика</h3>
-            <p className="text-gray-400 mb-4">Просмотрите статистику governance</p>
-            <a href="/" className="btn-primary inline-block">
-              Перейти к Dashboard
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Contract Information */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-blue-400" />
-          Информация о контрактах
-        </h2>
-        
-        <div className="card">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">VG Token</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN.slice(0, 6)}...${CONTRACTS.VG_TOKEN.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">VG Votes</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/token/${CONTRACTS.VG_TOKEN_VOTES}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.VG_TOKEN_VOTES.slice(0, 6)}...${CONTRACTS.VG_TOKEN_VOTES.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">Timelock</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.TIMELOCK}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.TIMELOCK.slice(0, 6)}...${CONTRACTS.TIMELOCK.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded bg-white/5">
-              <span className="font-medium text-slate-200">Governor</span>
-              <a
-                href={`${BSC_TESTNET.blockExplorer}/address/${CONTRACTS.GOVERNOR}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-mono text-xs flex items-center space-x-1"
-              >
-                <span>{`${CONTRACTS.GOVERNOR.slice(0, 6)}...${CONTRACTS.GOVERNOR.slice(-4)}`}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Legacy Governance Component */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <FileText className="mr-3 text-green-400" />
-          Дополнительные предложения
-        </h2>
-      <GovernanceProposals />
-      </div>
-
-      {/* Transaction History */}
-      <TransactionHistory />
     </div>
   );
 };

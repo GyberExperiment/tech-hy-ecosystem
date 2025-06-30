@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
-import { usePancakeSwap } from '../api/usePancakeSwap';
+import { usePancakeSwap, type SwapVersion } from '../api/usePancakeSwap';
 import { LP_POOL_CONFIG } from '../../../shared/config/contracts';
 import { Input } from '../../../shared/ui/Input';
 import { Button } from '../../../shared/ui/Button';
@@ -19,20 +19,13 @@ import {
   Wallet,
   RefreshCw,
   CheckCircle,
-  AlertCircle,
+  AlertTriangle,
   Activity
 } from 'lucide-react';
-import type { SwapVersion } from '../model/types';
+import { usePoolInfo } from '../../Staking/model/usePoolInfo';
 
 interface BuyVCWidgetProps {
   className?: string;
-}
-
-interface PriceData {
-  price: number;
-  change24h: number;
-  volume24h: number;
-  lastUpdated: number;
 }
 
 interface TransactionStats {
@@ -45,6 +38,8 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
   const { address, isConnected } = useAccount();
   const { getVCQuote, buyVCWithBNB, isLoading, isSuccess, error, txHash, resetState } = usePancakeSwap();
   
+  const { poolInfo, loading: poolLoading } = usePoolInfo();
+  
   const [bnbAmount, setBnbAmount] = useState('');
   const [vcAmount, setVcAmount] = useState('');
   const [slippage, setSlippage] = useState(LP_POOL_CONFIG.DEFAULT_SLIPPAGE);
@@ -53,35 +48,12 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   
-  // Новые состояния для расширенной функциональности
-  const [priceData, setPriceData] = useState<PriceData>({
-    price: 0.0015,
-    change24h: 2.4,
-    volume24h: 127500,
-    lastUpdated: Date.now()
-  });
-  
   const [transactionStats, setTransactionStats] = useState<TransactionStats>({
     estimatedGas: '0.003',
     priceImpact: 0.1,
     minimumReceived: '0'
   });
 
-  // Автоматическое обновление цены
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPriceData(prev => ({
-        ...prev,
-        price: prev.price * (1 + (Math.random() - 0.5) * 0.02),
-        change24h: prev.change24h + (Math.random() - 0.5) * 0.5,
-        lastUpdated: Date.now()
-      }));
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Автоматический расчет цены при изменении BNB или версии
   useEffect(() => {
     const updateQuote = async () => {
       if (bnbAmount && parseFloat(bnbAmount) > 0) {
@@ -143,6 +115,11 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
   const isValidAmount = bnbAmount && parseFloat(bnbAmount) > 0;
   const canSwap = isConnected && isValidAmount && !isLoading && !isCalculating;
 
+  const realPrice = poolInfo.isLoaded ? parseFloat(poolInfo.price) : 0;
+  const vcReserve = poolInfo.isLoaded ? parseFloat(poolInfo.vcReserve) : 0;
+  const bnbReserve = poolInfo.isLoaded ? parseFloat(poolInfo.bnbReserve) : 0;
+  const totalLiquidity = vcReserve + bnbReserve;
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { 
@@ -164,7 +141,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
       initial="hidden"
       animate="visible"
     >
-      {/* Заголовок с живой статистикой */}
       <motion.div 
         className="text-center mb-8"
         initial={{ opacity: 0, y: -30 }}
@@ -184,7 +160,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </h1>
         </div>
         
-        {/* Живая статистика цены */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <motion.div 
             className="glass-ultra p-4 rounded-xl"
@@ -196,10 +171,10 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
               <span className="text-sm text-gray-300">Цена VC</span>
             </div>
             <div className="text-xl font-bold text-white mb-1">
-              ${priceData.price.toFixed(6)}
+              {poolLoading ? '...' : `${realPrice.toFixed(6)} BNB`}
             </div>
-            <div className={`text-sm ${priceData.change24h > 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {priceData.change24h > 0 ? '+' : ''}{priceData.change24h.toFixed(2)}%
+            <div className="text-sm text-gray-400">
+              {poolInfo.isLoaded ? 'Реальная цена' : 'Загрузка...'}
             </div>
           </motion.div>
           
@@ -210,14 +185,13 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           >
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-gray-300">Объем 24ч</span>
+              <span className="text-sm text-gray-300">VC Reserve</span>
             </div>
             <div className="text-xl font-bold text-white mb-1">
-              ${(priceData.volume24h / 1000).toFixed(1)}K
+              {poolLoading ? '...' : `${vcReserve.toFixed(1)}`}
             </div>
             <div className="text-sm text-gray-400">
-              <Clock className="w-3 h-3 inline mr-1" />
-              {Math.floor((Date.now() - priceData.lastUpdated) / 1000)}s
+              VC токенов
             </div>
           </motion.div>
           
@@ -231,22 +205,20 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
               <span className="text-sm text-gray-300">Ликвидность</span>
             </div>
             <div className="text-xl font-bold text-white mb-1">
-              $89.2K
+              {poolLoading ? '...' : `${(totalLiquidity * realPrice).toFixed(1)}K`}
             </div>
             <div className="text-sm text-green-400">
-              Высокая
+              {totalLiquidity > 0 ? 'Доступна' : 'Низкая'}
             </div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Основная карточка swap */}
       <motion.div 
         className="liquid-glass rounded-2xl p-8 backdrop-blur-xl bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-slate-700/50 shadow-2xl"
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Header с настройками */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <motion.div 
@@ -280,7 +252,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </div>
         </div>
 
-        {/* Версия протокола */}
         <motion.div 
           className="flex items-center justify-center gap-3 p-4 rounded-xl glass-ultra mb-6"
           initial={{ opacity: 0, y: 10 }}
@@ -308,7 +279,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </Button>
         </motion.div>
 
-        {/* Настройки slippage */}
         <AnimatePresence>
           {showSettings && (
             <motion.div 
@@ -356,7 +326,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           )}
         </AnimatePresence>
 
-        {/* BNB Input */}
         <motion.div 
           className="space-y-4 mb-6"
           initial={{ opacity: 0, x: -20 }}
@@ -387,7 +356,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
               value={bnbAmount}
               onChange={(e) => {
                 const value = e.target.value;
-                // Разрешаем только числа и точку
                 if (/^\d*\.?\d*$/.test(value)) {
                   setBnbAmount(value);
                 }
@@ -404,7 +372,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </div>
         </motion.div>
 
-        {/* Swap Arrow */}
         <motion.div 
           className="flex justify-center mb-6"
           whileHover={{ scale: 1.2, rotate: 180 }}
@@ -415,7 +382,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </div>
         </motion.div>
 
-        {/* VC Output */}
         <motion.div 
           className="space-y-4 mb-6"
           initial={{ opacity: 0, x: 20 }}
@@ -462,7 +428,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </div>
         </motion.div>
 
-        {/* Расширенная статистика */}
         <AnimatePresence>
           {showAdvanced && isValidAmount && (
             <motion.div 
@@ -513,7 +478,6 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           )}
         </AnimatePresence>
 
-        {/* Success/Error Messages */}
         {isSuccess && txHash && (
           <div 
             className="p-4 rounded-xl bg-green-500/20 border border-green-400/30 mb-6"
@@ -547,51 +511,53 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
             data-testid="error-message"
           >
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400" />
+              <AlertTriangle className="w-5 h-5 text-red-400" />
               <div>
-                <p className="text-red-300 font-medium">Ошибка транзакции</p>
-                <p className="text-red-400/80 text-sm mt-1">{error.message || error}</p>
+                <p className="text-red-300 font-medium">Ошибка выполнения swap</p>
+                <p className="text-red-400/80 text-sm mt-1">{error}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Swap Button */}
-        {!isConnected ? (
-          <Button
-            variant="orange"
-            size="mobile"
-            leftIcon={<Wallet className="w-5 h-5" />}
-            data-testid="connect-wallet-button"
-          >
-            Подключите кошелек
-          </Button>
-        ) : (
-          <div className="space-y-4">
-            <Button
-              variant={canSwap ? 'green' : 'glass'}
-              size="mobile"
-              onClick={handleSwap}
-              disabled={!canSwap}
-              loading={isLoading}
-              leftIcon={!isLoading ? <Zap className="w-5 h-5" /> : undefined}
-              data-testid="swap-button"
+        <div className="space-y-3">
+          {!isConnected ? (
+            <Button 
+              variant="primary" 
+              size="lg" 
+              className="w-full"
+              data-testid="connect-button"
             >
-              {isLoading ? 'Выполняется swap...' : `Купить VC (${swapVersion.toUpperCase()})`}
+              Подключить кошелек
             </Button>
-            
-            {(isSuccess || error) && (
+          ) : (
+            <>
               <Button
-                variant="blue"
-                size="mobile"
-                onClick={handleReset}
-                data-testid="new-swap-button"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                disabled={!canSwap}
+                isLoading={isLoading}
+                onClick={handleSwap}
+                data-testid="swap-button"
               >
-                Новый swap
+                {isLoading ? 'Выполняется...' : 'Купить VC токены'}
               </Button>
-            )}
-          </div>
-        )}
+              
+              {(isSuccess || error) && (
+                <Button
+                  variant="glass"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleReset}
+                  data-testid="reset-button"
+                >
+                  Сделать еще один swap
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </motion.div>
     </motion.div>
   );

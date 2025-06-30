@@ -229,19 +229,60 @@ export const WaveTransition = ({
           </filter>
         </defs>
         
-        {/* УЛУЧШЕННЫЕ мягкие анимированные волны */}
+        {/* УЛУЧШЕННЫЕ мягкие анимированные волны с дополнительной защитой */}
         {[0, 1, 2].map((index) => {
           const animationFrames = generateSafeAnimationFrames(index);
           const initialPath = animationFrames[0] || 'M0,50 L100,50 V100 H0 Z';
           
+          // ✅ Дополнительная проверка всех кадров анимации перед рендером
+          const validatedFrames = animationFrames.map(frame => {
+            if (!frame || 
+                typeof frame !== 'string' || 
+                frame.includes('undefined') || 
+                frame.includes('NaN') || 
+                frame.includes('Infinity') ||
+                frame.length < 10) {
+              console.warn(`Invalid animation frame for wave ${index}, using fallback`);
+              return 'M0,50 L100,50 V100 H0 Z';
+            }
+            return frame;
+          });
+
+          // ✅ Финальная проверка что у нас есть хотя бы базовый path
+          const safeInitialPath = validatedFrames[0] && typeof validatedFrames[0] === 'string' && validatedFrames[0].length > 10 
+            ? validatedFrames[0] 
+            : 'M0,50 L100,50 V100 H0 Z';
+          
+          // ✅ МАКСИМАЛЬНО СТРОГАЯ защита от undefined в animate объекте
+          const safeAnimateFrames = (() => {
+            // Тройная проверка каждого кадра анимации
+            const checkedFrames = validatedFrames.map(frame => {
+              const safeFrame = frame && typeof frame === 'string' && 
+                                frame.length > 10 && 
+                                !frame.includes('undefined') && 
+                                !frame.includes('NaN') && 
+                                !frame.includes('Infinity') && 
+                                frame.startsWith('M') ? frame : 'M0,50 L100,50 V100 H0 Z';
+              return safeFrame;
+            });
+            
+            // Убеждаемся что у нас ровно 3 валидных кадра
+            if (checkedFrames.length !== 3 || checkedFrames.some(frame => frame === 'M0,50 L100,50 V100 H0 Z')) {
+              console.warn('Using fallback animation frames due to validation failure');
+              return [safeInitialPath, safeInitialPath, safeInitialPath];
+            }
+            
+            return checkedFrames;
+          })();
+          
           return (
             <motion.path
               key={`wave-${index}-${cleanId}`}
-              d={initialPath}
+              d={safeInitialPath}
               fill={`url(#${gradientId})`}
               filter={`url(#${filterId})`}
               animate={{
-                d: animationFrames
+                d: safeAnimateFrames
               }}
               transition={{
                 duration: Math.max(8, animationDuration + index * 3), // Увеличили минимальную длительность
@@ -255,10 +296,15 @@ export const WaveTransition = ({
                 opacity: Math.max(0.15, 0.6 - index * 0.12), // Увеличили минимальную непрозрачность
                 mixBlendMode: 'normal'
               }}
-              // Добавляем проверку на валидность перед анимацией
+              // ✅ Добавляем защиту от ошибок рендера
+              onError={(error) => {
+                console.warn('SVG path render error:', error);
+              }}
+              // ✅ Усиленная проверка на валидность перед анимацией
               onAnimationStart={() => {
-                if (animationFrames.some(frame => !frame || frame.includes('undefined'))) {
-                  console.warn('Invalid animation frame detected, stopping animation');
+                const currentD = safeInitialPath;
+                if (!currentD || currentD.includes('undefined')) {
+                  console.error('Critical: undefined detected in SVG path during animation start');
                 }
               }}
             />

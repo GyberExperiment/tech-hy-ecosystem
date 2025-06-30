@@ -7,21 +7,39 @@
 
 // 🏆 Browser-compatible BSC Mainnet RPC endpoints (CORS enabled)
 export const BSC_MAINNET_RPC_ENDPOINTS = [
+  // ✅ Официальные BSC Mainnet эндпоинты (из docs.bnbchain.org)
   'https://bsc-dataseed.bnbchain.org',
-  'https://bsc-dataseed1-defi.binance.org',
-  'https://bsc-dataseed2-defi.binance.org',
+  'https://bsc-dataseed-public.bnbchain.org',
+  'https://bsc-dataseed.nariox.org',
+  'https://bsc-dataseed.defibit.io',
+  'https://bsc-dataseed.ninicoin.io',
+  
+  // ✅ Проверенные сторонние провайдеры (бесплатные, без API ключей)
+  'https://bsc.publicnode.com',
+  'https://bsc-rpc.publicnode.com',
   'https://bsc.drpc.org',
-  'https://rpc.ankr.com/bsc'
+  'https://bnb.rpc.subquery.network/public',
+  
+  // ✅ Дополнительные надежные провайдеры
+  'https://bsc.nodereal.io'
 ];
 
 // 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ Проверенные CORS-совместимые endpoints
-  'https://data-seed-prebsc-1-s1.binance.org:8545', 
-  'https://data-seed-prebsc-2-s1.binance.org:8545',
+  // ✅ Официальные BSC Testnet эндпоинты (из docs.bnbchain.org)
   'https://bsc-testnet-dataseed.bnbchain.org',
   'https://bsc-testnet.bnbchain.org',
-  'https://rpc.ankr.com/bsc_testnet_chapel'
+  'https://bsc-prebsc-dataseed.bnbchain.org',
+  
+  // ✅ Проверенные сторонние провайдеры (бесплатные, без API ключей)
+  'https://bsc-testnet-rpc.publicnode.com',
+  'https://bsc-testnet.publicnode.com',
+  'https://bsc-testnet.drpc.org',
+  
+  // ✅ Дополнительные надежные провайдеры
+  'https://bsc-testnet.4everland.org/v1/97/public',
+  'https://bsc-testnet-dataseed1.defibit.io',
+  'https://bsc-testnet-dataseed1.ninicoin.io'
 ];
 
 // 🎯 Current network configuration

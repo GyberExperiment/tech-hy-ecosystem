@@ -8,6 +8,8 @@ import { TableSkeleton as PoolInfoSkeleton } from '../../../shared/ui/LoadingSke
 import { log } from '../../../shared/lib/logger';
 import { cn } from '../../../shared/lib/cn';
 import { rpcService } from '../../../shared/api/rpcService';
+import { useTokenData } from '../../../entities/Token/model/useTokenData';
+import { usePoolInfo } from '../../../entities/Staking/model/usePoolInfo';
 
 // ERC20 ABI - базовые функции для токенов
 const ERC20_ABI = [
@@ -46,19 +48,6 @@ const PANCAKE_FACTORY_ABI = [
   "function getPair(address tokenA, address tokenB) external view returns (address pair)"
 ];
 
-interface PoolInfo {
-  reserve0: string;
-  reserve1: string;
-  token0: string;
-  token1: string;
-  totalSupply: string;
-  userLPBalance: string;
-  userVCBalance: string;
-  userBNBBalance: string;
-  vcPrice: string;
-  bnbPrice: string;
-}
-
 interface LiquidityCalculation {
   vcAmount: string;
   bnbAmount: string;
@@ -78,7 +67,10 @@ const LPPoolManager: React.FC = () => {
     switchNetwork
   } = useWeb3();
 
-  const [poolInfo, setPoolInfo] = useState<PoolInfo | null>(null);
+  // ✅ Используем централизованные хуки для данных
+  const { balances, loading: balancesLoading, refreshData: refreshTokens } = useTokenData();
+  const { poolInfo, loading: poolLoading, refreshPoolInfo, error: poolError } = usePoolInfo();
+
   const [pairAddress, setPairAddress] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'add' | 'remove'>('add');
@@ -97,193 +89,111 @@ const LPPoolManager: React.FC = () => {
   const [vcApproved, setVcApproved] = useState(false);
   const [lpApproved, setLpApproved] = useState(false);
 
-  // Auto-fetch pool info when wallet connects
+  // ✅ Получаем адрес пула при подключении кошелька
   useEffect(() => {
     if (isConnected && isCorrectNetwork && account) {
-      fetchPoolInfo();
+      fetchPairAddress();
     }
   }, [isConnected, isCorrectNetwork, account]);
 
-  // Auto-calculate liquidity when inputs change
+  // ✅ Автоматический расчет BNB при изменении VC (используем poolInfo из usePoolInfo)
+  const calculatedBnbAmount = useMemo(() => {
+    if (!vcInput || !poolInfo.isLoaded || parseFloat(vcInput) <= 0) return '';
+    
+    try {
+      const vcValue = parseFloat(vcInput);
+      if (isNaN(vcValue) || vcValue <= 0) return '';
+      
+      const vcReserve = parseFloat(poolInfo.vcReserve);
+      const bnbReserve = parseFloat(poolInfo.bnbReserve);
+      
+      if (vcReserve <= 0 || bnbReserve <= 0) return '';
+      
+      const ratio = bnbReserve / vcReserve; // BNB per VC
+      const calculatedBnb = (vcValue * ratio).toFixed(6);
+      
+      log.debug('Auto-calculated BNB amount from VC', {
+            component: 'LPPoolManager',
+        vcAmount: vcInput,
+        bnbAmount: calculatedBnb,
+        ratio: ratio.toFixed(8),
+        vcReserve: poolInfo.vcReserve,
+        bnbReserve: poolInfo.bnbReserve
+      });
+      
+      return calculatedBnb;
+    } catch (error) {
+      log.error('Failed to calculate BNB amount', {
+        component: 'LPPoolManager',
+        function: 'calculatedBnbAmount',
+        vcAmount: vcInput
+      }, error as Error);
+      return '';
+    }
+  }, [vcInput, poolInfo.vcReserve, poolInfo.bnbReserve, poolInfo.isLoaded]);
+
+  // ✅ Автоматическое обновление BNB поля при изменении расчета
   useEffect(() => {
-    if (vcInput && bnbInput && poolInfo) {
+    if (calculatedBnbAmount && calculatedBnbAmount !== bnbInput) {
+      const timeoutId = setTimeout(() => {
+        setBnbInput(calculatedBnbAmount);
+      }, 100); // 100ms debounce
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [calculatedBnbAmount, bnbInput]);
+
+  // ✅ Автоматический расчет ликвидности когда изменяются входные данные
+  useEffect(() => {
+    if (vcInput && bnbInput && poolInfo.isLoaded) {
       calculateLiquidity();
     }
   }, [vcInput, bnbInput, poolInfo]);
 
-  // Auto-calculate BNB amount when VC changes
-  useEffect(() => {
-    if (vcInput && poolInfo && parseFloat(poolInfo.reserve0) > 0 && parseFloat(poolInfo.reserve1) > 0) {
-      const vcAmount = parseFloat(vcInput);
-      if (vcAmount > 0) {
-        const ratio = parseFloat(poolInfo.reserve1) / parseFloat(poolInfo.reserve0); // BNB per VC
-        const calculatedBnb = (vcAmount * ratio).toFixed(6);
-        if (bnbInput !== calculatedBnb) {
-          setBnbInput(calculatedBnb);
-        }
-      }
-    }
-  }, [vcInput, poolInfo]);
-
-  // Auto-check approvals when inputs change
+  // ✅ Автоматическая проверка approve при изменении входных данных
   useEffect(() => {
     checkApprovals();
   }, [vcInput, lpTokensInput, account]);
 
-  const fetchPoolInfo = async () => {
+  const fetchPairAddress = async () => {
     if (!account) return;
 
-    setLoading(true);
     try {
-      log.info('Starting pool info fetch with rpcService', {
-        component: 'LPPoolManager',
-        function: 'fetchPoolInfo',
-        account,
+      log.info('Fetching pair address from factory', {
+          component: 'LPPoolManager',
+        function: 'fetchPairAddress',
         vcToken: CONTRACTS.VC_TOKEN,
-        wbnb: CONTRACTS.WBNB,
-        factory: CONTRACTS.PANCAKE_FACTORY
+        wbnb: CONTRACTS.WBNB
       });
 
-      // ✅ Используем rpcService для получения адреса пула
       const pairAddress = await rpcService.withFallback(async (provider) => {
         const pancakeFactoryContract = new ethers.Contract(CONTRACTS.PANCAKE_FACTORY, PANCAKE_FACTORY_ABI, provider);
         return await pancakeFactoryContract.getPair(CONTRACTS.VC_TOKEN, CONTRACTS.WBNB);
       });
 
-      log.info('Factory getPair result', {
-        component: 'LPPoolManager',
-        function: 'fetchPoolInfo',
-        pairAddress,
-        staticLpToken: CONTRACTS.LP_TOKEN,
-        addressesMatch: pairAddress.toLowerCase() === CONTRACTS.LP_TOKEN.toLowerCase()
-      });
-      
-      if (!pairAddress || pairAddress === ethers.ZeroAddress) {
-        log.warn('LP pool not found', {
+      if (pairAddress && pairAddress !== ethers.ZeroAddress) {
+        setPairAddress(pairAddress);
+        log.info('Pair address found', {
           component: 'LPPoolManager',
-          function: 'fetchPoolInfo',
+          function: 'fetchPairAddress',
           pairAddress
         });
-        toast.error('LP пул не найден. Возможно, ликвидность ещё не добавлена.');
-        
-        setPoolInfo({
-          reserve0: '0',
-          reserve1: '0',
-          token0: CONTRACTS.VC_TOKEN,
-          token1: CONTRACTS.WBNB,
-          totalSupply: '0',
-          userLPBalance: '0',
-          userVCBalance: '0',
-          userBNBBalance: '0',
-          vcPrice: '0',
-          bnbPrice: '0',
-        });
-        return;
-      }
-      
-      // ✅ Сохраняем адрес пула
-      setPairAddress(pairAddress);
-      
-      // ✅ Получаем данные пула через rpcService
-      const [reserves, token0, token1, totalSupply, userLPBalance, userVCBalance, userBNBBalance] = await rpcService.withFallback(async (provider) => {
-        const lpPairContract = new ethers.Contract(pairAddress, PANCAKE_PAIR_ABI, provider);
-        const vcContract = new ethers.Contract(CONTRACTS.VC_TOKEN, ERC20_ABI, provider);
-        
-        return await Promise.all([
-          lpPairContract.getReserves(),
-          lpPairContract.token0(),
-          lpPairContract.token1(),
-          lpPairContract.totalSupply(),
-          lpPairContract.balanceOf(account),
-          vcContract.balanceOf(account),
-          provider.getBalance(account)
-        ]);
-      });
-      
-      log.info('Pool data fetched successfully', {
-        component: 'LPPoolManager',
-        function: 'fetchPoolInfo',
-        token0,
-        token1,
-        reserves: reserves.toString(),
-        totalSupply: totalSupply.toString()
-      });
-
-      // ✅ Правильная обработка резервов и токенов
-      const reserve0Formatted = ethers.formatEther(reserves[0]);
-      const reserve1Formatted = ethers.formatEther(reserves[1]);
-      
-      let vcPrice = '0';
-      let bnbPrice = '0';
-      let vcReserve = '0';
-      let bnbReserve = '0';
-      
-      if (parseFloat(reserve0Formatted) > 0 && parseFloat(reserve1Formatted) > 0) {
-        const isToken0VC = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
-        const isToken1WBNB = token1.toLowerCase() === CONTRACTS.WBNB.toLowerCase();
-        
-        if (isToken0VC && isToken1WBNB) {
-          // token0 = VC, token1 = WBNB
-          vcReserve = reserve0Formatted;
-          bnbReserve = reserve1Formatted;
-          vcPrice = (parseFloat(reserve1Formatted) / parseFloat(reserve0Formatted)).toFixed(8);
-          bnbPrice = (parseFloat(reserve0Formatted) / parseFloat(reserve1Formatted)).toFixed(2);
-        } else if (token1.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase() && token0.toLowerCase() === CONTRACTS.WBNB.toLowerCase()) {
-          // token0 = WBNB, token1 = VC
-          vcReserve = reserve1Formatted;
-          bnbReserve = reserve0Formatted;
-          vcPrice = (parseFloat(reserve0Formatted) / parseFloat(reserve1Formatted)).toFixed(8);
-          bnbPrice = (parseFloat(reserve1Formatted) / parseFloat(reserve0Formatted)).toFixed(2);
         } else {
-          log.warn('Unexpected pool composition', {
-            component: 'LPPoolManager',
-            function: 'fetchPoolInfo',
-            token0,
-            token1,
-            expectedVC: CONTRACTS.VC_TOKEN,
-            expectedWBNB: CONTRACTS.WBNB
-          });
-          toast.error('Найден неправильный LP пул. Ожидается VC/BNB пул.');
-          vcReserve = reserve0Formatted;
-          bnbReserve = reserve1Formatted;
-          vcPrice = parseFloat(reserve0Formatted) > 0 ? (parseFloat(reserve1Formatted) / parseFloat(reserve0Formatted)).toFixed(8) : '0';
-        }
+        log.warn('LP pool not found', {
+          component: 'LPPoolManager',
+          function: 'fetchPairAddress'
+        });
       }
-
-      const finalPoolInfo = {
-        reserve0: vcReserve,
-        reserve1: bnbReserve,
-        token0,
-        token1,
-        totalSupply: ethers.formatEther(totalSupply),
-        userLPBalance: ethers.formatEther(userLPBalance),
-        userVCBalance: ethers.formatEther(userVCBalance),
-        userBNBBalance: ethers.formatEther(userBNBBalance),
-        vcPrice,
-        bnbPrice,
-      };
-      
-      log.info('Final pool info', {
-        component: 'LPPoolManager',
-        function: 'fetchPoolInfo',
-        finalPoolInfo
-      });
-
-      setPoolInfo(finalPoolInfo);
-
     } catch (error: any) {
-      log.error('Failed to fetch pool info', {
+      log.error('Failed to fetch pair address', {
         component: 'LPPoolManager',
-        function: 'fetchPoolInfo'
+        function: 'fetchPairAddress'
       }, error);
-      toast.error('Ошибка загрузки информации о пуле');
-    } finally {
-      setLoading(false);
     }
   };
 
   const calculateLiquidity = async () => {
-    if (!poolInfo || !vcInput || !bnbInput) return;
+    if (!poolInfo.isLoaded || !vcInput || !bnbInput) return;
 
     try {
       const vcAmount = parseFloat(vcInput);
@@ -291,11 +201,10 @@ const LPPoolManager: React.FC = () => {
       
       if (vcAmount <= 0 || bnbAmount <= 0) return;
 
-      const reserve0 = parseFloat(poolInfo.reserve0);  // VC Reserve
-      const reserve1 = parseFloat(poolInfo.reserve1);  // BNB Reserve
-      const totalSupply = parseFloat(poolInfo.totalSupply);
+      const vcReserve = parseFloat(poolInfo.vcReserve);
+      const bnbReserve = parseFloat(poolInfo.bnbReserve);
       
-      if (reserve0 === 0 || reserve1 === 0) {
+      if (vcReserve === 0 || bnbReserve === 0) {
         // First liquidity provision - используем формулу sqrt(x * y)
         const lpTokens = Math.sqrt(vcAmount * bnbAmount);
         setCalculation({
@@ -309,7 +218,7 @@ const LPPoolManager: React.FC = () => {
       }
 
       // Рассчитываем оптимальные суммы на основе текущего соотношения в пуле
-      const currentRatio = reserve1 / reserve0; // BNB per VC
+      const currentRatio = bnbReserve / vcReserve; // BNB per VC
       let finalVcAmount = vcAmount;
       let finalBnbAmount = bnbAmount;
       
@@ -327,17 +236,26 @@ const LPPoolManager: React.FC = () => {
         finalBnbAmount = requiredBnbForVc;
       }
 
+      // Получаем общее количество LP токенов из пула
+      const totalSupply = await rpcService.withFallback(async (provider) => {
+        if (!pairAddress) return 0n;
+        const lpPairContract = new ethers.Contract(pairAddress, PANCAKE_PAIR_ABI, provider);
+        return await lpPairContract.totalSupply();
+      });
+
+      const totalSupplyFormatted = parseFloat(ethers.formatEther(totalSupply));
+
       // Рассчитываем LP токены исходя из доли в пуле
       const lpTokens = Math.min(
-        (finalVcAmount / reserve0) * totalSupply,
-        (finalBnbAmount / reserve1) * totalSupply
+        (finalVcAmount / vcReserve) * totalSupplyFormatted,
+        (finalBnbAmount / bnbReserve) * totalSupplyFormatted
       );
 
       // Рассчитываем влияние на цену
-      const priceImpact = Math.abs((finalVcAmount / reserve0) * 100);
+      const priceImpact = Math.abs((finalVcAmount / vcReserve) * 100);
       
       // Рассчитываем долю в пуле
-      const shareOfPool = (lpTokens / (totalSupply + lpTokens)) * 100;
+      const shareOfPool = (lpTokens / (totalSupplyFormatted + lpTokens)) * 100;
 
       setCalculation({
         vcAmount: finalVcAmount.toFixed(6),
@@ -382,14 +300,6 @@ const LPPoolManager: React.FC = () => {
       
       const requiredAmount = vcInput ? ethers.parseEther(vcInput) : 0n;
       setVcApproved(allowance >= requiredAmount && requiredAmount > 0n);
-      
-      log.info('VC approval checked', {
-        component: 'LPPoolManager',
-        function: 'checkVCApproval',
-        allowance: allowance.toString(),
-        requiredAmount: requiredAmount.toString(),
-        approved: allowance >= requiredAmount && requiredAmount > 0n
-      });
     } catch (error: any) {
       log.error('Failed to check VC approval', {
         component: 'LPPoolManager',
@@ -410,15 +320,6 @@ const LPPoolManager: React.FC = () => {
       
       const requiredAmount = lpTokensInput ? ethers.parseEther(lpTokensInput) : 0n;
       setLpApproved(allowance >= requiredAmount && requiredAmount > 0n);
-      
-      log.info('LP approval checked', {
-        component: 'LPPoolManager',
-        function: 'checkLPApproval',
-        pairAddress,
-        allowance: allowance.toString(),
-        requiredAmount: requiredAmount.toString(),
-        approved: allowance >= requiredAmount && requiredAmount > 0n
-      });
     } catch (error: any) {
       log.error('Failed to check LP approval', {
         component: 'LPPoolManager',
@@ -442,12 +343,6 @@ const LPPoolManager: React.FC = () => {
       
       setVcApproved(true);
       toast.success('VC tokens approved!', { id: 'approve-vc' });
-      
-      log.info('VC tokens approved', {
-        component: 'LPPoolManager',
-        function: 'approveVC',
-        amount: amount.toString()
-      });
     } catch (error: any) {
       log.error('Failed to approve VC', {
         component: 'LPPoolManager',
@@ -470,13 +365,6 @@ const LPPoolManager: React.FC = () => {
       
       setLpApproved(true);
       toast.success('LP tokens approved!', { id: 'approve-lp' });
-      
-      log.info('LP tokens approved', {
-        component: 'LPPoolManager',
-        function: 'approveLP',
-        pairAddress,
-        amount: amount.toString()
-      });
     } catch (error: any) {
       log.error('Failed to approve LP', {
         component: 'LPPoolManager',
@@ -522,7 +410,10 @@ const LPPoolManager: React.FC = () => {
       setBnbInput('');
       setCalculation(null);
       setVcApproved(false);
-      await fetchPoolInfo();
+      
+      // ✅ Обновляем данные через централизованные хуки
+      refreshTokens();
+      refreshPoolInfo();
       
     } catch (error: any) {
       log.error('Failed to add liquidity', {
@@ -564,7 +455,10 @@ const LPPoolManager: React.FC = () => {
       // Reset inputs and refresh data
       setLpTokensInput('');
       setLpApproved(false);
-      await fetchPoolInfo();
+      
+      // ✅ Обновляем данные через централизованные хуки
+      refreshTokens();
+      refreshPoolInfo();
       
     } catch (error: any) {
       log.error('Failed to remove liquidity', {
@@ -576,32 +470,39 @@ const LPPoolManager: React.FC = () => {
   };
 
   const setMaxVC = () => {
-    if (poolInfo) {
-      setVcInput(poolInfo.userVCBalance);
+    if (balances.VC) {
+      setVcInput(balances.VC);
     }
   };
 
   const setMaxBNB = () => {
-    if (poolInfo) {
+    if (balances.BNB) {
       // Leave some BNB for gas
-      const maxBnb = Math.max(0, parseFloat(poolInfo.userBNBBalance) - 0.01);
+      const maxBnb = Math.max(0, parseFloat(balances.BNB) - 0.01);
       setBnbInput(maxBnb.toString());
     }
   };
 
   const setRemovePercentageAmount = (percentage: number) => {
     setRemovePercentage(percentage);
-    if (poolInfo) {
-      const amount = (parseFloat(poolInfo.userLPBalance) * percentage) / 100;
+    if (balances.LP) {
+      const amount = (parseFloat(balances.LP) * percentage) / 100;
       setLpTokensInput(amount.toString());
     }
+  };
+
+  // ✅ Unified refresh function
+  const refreshAllData = () => {
+    refreshTokens();
+    refreshPoolInfo();
+    fetchPairAddress();
   };
 
   // Connection check
   if (!isConnected) {
     return (
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-glass-pulse" />
+          <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-glass-pulse" />
         <h3 className="text-xl font-bold mb-4 text-white">Подключите кошелёк</h3>
         <p className="text-slate-400 mb-6">Для управления LP пулом необходимо подключить MetaMask</p>
         <button 
@@ -609,7 +510,7 @@ const LPPoolManager: React.FC = () => {
           className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300"
         >
           Подключить кошелёк
-        </button>
+          </button>
       </div>
     );
   }
@@ -617,7 +518,7 @@ const LPPoolManager: React.FC = () => {
   if (!isCorrectNetwork) {
     return (
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4 animate-glass-pulse" />
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4 animate-glass-pulse" />
         <h3 className="text-xl font-bold mb-4 text-white">Неправильная сеть</h3>
         <p className="text-slate-400 mb-6">Переключитесь на BSC Testnet</p>
         <button 
@@ -625,7 +526,7 @@ const LPPoolManager: React.FC = () => {
           className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-300"
         >
           Переключить сеть
-        </button>
+          </button>
       </div>
     );
   }
@@ -638,75 +539,79 @@ const LPPoolManager: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/80 to-cyan-600/80 shadow-lg shadow-blue-500/20">
               <BarChart3 className="h-6 w-6 text-white" />
-            </div>
-            <div>
+          </div>
+                <div>
               <h3 className="text-xl font-bold text-white">VC/BNB Pool Information</h3>
               <p className="text-blue-200/80 text-sm">Current liquidity pool stats</p>
-            </div>
-          </div>
+                </div>
+                </div>
           <button
-            onClick={fetchPoolInfo}
-            disabled={loading}
+            onClick={refreshAllData}
+            disabled={poolLoading || balancesLoading}
             className="p-3 backdrop-blur-xl bg-white/8 border border-blue-400/25 rounded-xl hover:bg-blue-500/15 transition-all duration-300 group"
           >
-            <RefreshCw className={cn("h-5 w-5 text-blue-300/80 group-hover:text-white transition-colors duration-300", loading && "animate-spin")} />
+            <RefreshCw className={cn("h-5 w-5 text-blue-300/80 group-hover:text-white transition-colors duration-300", (poolLoading || balancesLoading) && "animate-spin")} />
           </button>
-        </div>
+                </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-blue-400/8 to-cyan-400/5 border border-blue-400/25 rounded-xl p-4 hover:from-blue-500/15 hover:via-blue-400/12 hover:to-cyan-400/8 transition-all duration-300 shadow-lg shadow-blue-500/8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/30 border border-blue-400/40 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-blue-200/90" />
+        {poolLoading && <PoolInfoSkeleton />}
+        
+        {!poolLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-blue-400/8 to-cyan-400/5 border border-blue-400/25 rounded-xl p-4 hover:from-blue-500/15 hover:via-blue-400/12 hover:to-cyan-400/8 transition-all duration-300 shadow-lg shadow-blue-500/8">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/30 border border-blue-400/40 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-blue-200/90" />
+                </div>
+                <div className="text-sm text-blue-200/80">VC Reserve</div>
+                </div>
+              <div className="text-2xl font-bold text-blue-200/90">
+                {parseFloat(poolInfo.vcReserve).toFixed(2)}
+                </div>
+              <div className="text-xs text-blue-300/80 mt-1">VC Tokens</div>
               </div>
-              <div className="text-sm text-blue-200/80">VC Reserve</div>
-            </div>
-            <div className="text-2xl font-bold text-blue-200/90">
-              {poolInfo ? `${parseFloat(poolInfo.reserve0).toFixed(2)}` : '0.00'}
-            </div>
-            <div className="text-xs text-blue-300/80 mt-1">VC Tokens</div>
-          </div>
-          
-          <div className="backdrop-blur-xl bg-gradient-to-br from-yellow-500/10 via-yellow-400/8 to-orange-400/5 border border-yellow-400/25 rounded-xl p-4 hover:from-yellow-500/15 hover:via-yellow-400/12 hover:to-orange-400/8 transition-all duration-300 shadow-lg shadow-yellow-500/8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-yellow-500/30 border border-yellow-400/40 flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-yellow-200/90" />
+            
+            <div className="backdrop-blur-xl bg-gradient-to-br from-yellow-500/10 via-yellow-400/8 to-orange-400/5 border border-yellow-400/25 rounded-xl p-4 hover:from-yellow-500/15 hover:via-yellow-400/12 hover:to-orange-400/8 transition-all duration-300 shadow-lg shadow-yellow-500/8">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-yellow-500/30 border border-yellow-400/40 flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-yellow-200/90" />
+                  </div>
+                <div className="text-sm text-yellow-200/80">BNB Reserve</div>
+                  </div>
+              <div className="text-2xl font-bold text-yellow-200/90">
+                {parseFloat(poolInfo.bnbReserve).toFixed(4)}
+                </div>
+              <div className="text-xs text-yellow-300/80 mt-1">BNB Tokens</div>
               </div>
-              <div className="text-sm text-yellow-200/80">BNB Reserve</div>
+            
+            <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 via-purple-400/8 to-pink-400/5 border border-purple-400/25 rounded-xl p-4 hover:from-purple-500/15 hover:via-purple-400/12 hover:to-pink-400/8 transition-all duration-300 shadow-lg shadow-purple-500/8">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/30 border border-purple-400/40 flex items-center justify-center">
+                  <Calculator className="w-4 h-4 text-purple-200/90" />
             </div>
-            <div className="text-2xl font-bold text-yellow-200/90">
-              {poolInfo ? `${parseFloat(poolInfo.reserve1).toFixed(4)}` : '0.0000'}
-            </div>
-            <div className="text-xs text-yellow-300/80 mt-1">BNB Tokens</div>
-          </div>
-          
-          <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 via-purple-400/8 to-pink-400/5 border border-purple-400/25 rounded-xl p-4 hover:from-purple-500/15 hover:via-purple-400/12 hover:to-pink-400/8 transition-all duration-300 shadow-lg shadow-purple-500/8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-500/30 border border-purple-400/40 flex items-center justify-center">
-                <Calculator className="w-4 h-4 text-purple-200/90" />
+                <div className="text-sm text-purple-200/80">Total LP Supply</div>
               </div>
-              <div className="text-sm text-purple-200/80">Total LP Supply</div>
-            </div>
-            <div className="text-2xl font-bold text-purple-200/90">
-              {poolInfo ? `${parseFloat(poolInfo.totalSupply).toFixed(2)}` : '0.00'}
-            </div>
-            <div className="text-xs text-purple-300/80 mt-1">LP Tokens</div>
-          </div>
-          
-          <div className="backdrop-blur-xl bg-gradient-to-br from-green-500/10 via-green-400/8 to-emerald-400/5 border border-green-400/25 rounded-xl p-4 hover:from-green-500/15 hover:via-green-400/12 hover:to-emerald-400/8 transition-all duration-300 shadow-lg shadow-green-500/8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-green-500/30 border border-green-400/40 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-200/90" />
+              <div className="text-2xl font-bold text-purple-200/90">
+                {balances.LP ? parseFloat(balances.LP).toFixed(2) : '0.00'}
               </div>
-              <div className="text-sm text-green-200/80">Current Price</div>
+              <div className="text-xs text-purple-300/80 mt-1">LP Tokens</div>
             </div>
-            <div className="text-lg font-bold text-green-200/90">
-              {poolInfo ? `${parseFloat(poolInfo.vcPrice).toFixed(6)}` : '0.000000'}
+            
+            <div className="backdrop-blur-xl bg-gradient-to-br from-green-500/10 via-green-400/8 to-emerald-400/5 border border-green-400/25 rounded-xl p-4 hover:from-green-500/15 hover:via-green-400/12 hover:to-emerald-400/8 transition-all duration-300 shadow-lg shadow-green-500/8">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-green-500/30 border border-green-400/40 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-green-200/90" />
+                </div>
+                <div className="text-sm text-green-200/80">Current Price</div>
+              </div>
+              <div className="text-lg font-bold text-green-200/90">
+                {parseFloat(poolInfo.price).toFixed(6)}
+              </div>
+              <div className="text-xs text-green-300/80 mt-1">1 VC = {poolInfo.price} BNB</div>
             </div>
-            <div className="text-xs text-green-300/80 mt-1">1 VC = {poolInfo?.vcPrice || '0'} BNB</div>
           </div>
+          )}
         </div>
-      </div>
 
       {/* LP Calculation Card */}
       <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/5 via-pink-500/3 to-rose-500/2 border border-purple-400/15 rounded-2xl p-6 hover:from-purple-500/8 hover:via-pink-500/5 hover:to-rose-500/3 transition-all duration-300 shadow-xl shadow-purple-500/4">
@@ -718,188 +623,188 @@ const LPPoolManager: React.FC = () => {
             <h3 className="text-xl font-bold text-white">Add Liquidity</h3>
             <p className="text-purple-200/80 text-sm">Manage your liquidity positions</p>
           </div>
-        </div>
-        
+          </div>
+
         {/* Action Tabs */}
         <div className="flex rounded-xl bg-white/5 border border-purple-400/15 p-1 mb-6">
-          <button
-            onClick={() => setActiveTab('add')}
+            <button
+              onClick={() => setActiveTab('add')}
             className={cn(
               'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2',
-              activeTab === 'add'
+                activeTab === 'add'
                 ? 'bg-gradient-to-r from-green-500/80 to-emerald-600/80 text-white shadow-lg shadow-green-500/25'
                 : 'text-purple-200/80 hover:text-white hover:bg-purple-500/8'
             )}
           >
             <Plus className="w-4 h-4" />
             Add liquidity
-          </button>
-          <button
-            onClick={() => setActiveTab('remove')}
+            </button>
+            <button
+              onClick={() => setActiveTab('remove')}
             className={cn(
               'flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2',
-              activeTab === 'remove'
+                activeTab === 'remove'
                 ? 'bg-gradient-to-r from-red-500/80 to-pink-600/80 text-white shadow-lg shadow-red-500/25'
                 : 'text-purple-200/80 hover:text-white hover:bg-purple-500/8'
             )}
           >
             <Minus className="w-4 h-4" />
             Remove liquidity
-          </button>
-        </div>
+            </button>
+          </div>
 
         {/* Tab Content */}
-        {activeTab === 'add' && (
+          {activeTab === 'add' && (
           <div className="space-y-6">
             {/* Input Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                 <label className="block text-sm font-medium text-white mb-2">VC Amount</label>
-                <div className="relative">
-                  <input
-                    type="number"
+                  <div className="relative">
+                    <input
+                      type="number"
                     placeholder="0.0"
-                    value={vcInput}
-                    onChange={(e) => setVcInput(e.target.value)}
+                      value={vcInput}
+                      onChange={(e) => setVcInput(e.target.value)}
                     className="w-full pl-4 pr-16 py-3 backdrop-blur-xl bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-400/40 rounded-xl text-white placeholder-slate-300 focus:border-blue-400/80 focus:ring-2 focus:ring-blue-400/30 focus:bg-gradient-to-r focus:from-blue-500/30 focus:to-cyan-500/30 transition-all duration-300 shadow-lg shadow-blue-500/20 font-medium"
-                  />
-                  <button
-                    onClick={setMaxVC}
+                    />
+                    <button
+                      onClick={setMaxVC}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-blue-500/40 text-blue-200 rounded-lg hover:bg-blue-500/60 hover:text-white transition-all duration-300 font-semibold border border-blue-400/30"
-                  >
-                    MAX
-                  </button>
-                </div>
+                    >
+                      MAX
+                    </button>
+                  </div>
                 <div className="text-xs text-blue-300/80 mt-1 font-medium">
-                  Balance: {poolInfo?.userVCBalance ? parseFloat(poolInfo.userVCBalance).toFixed(4) : '0.0000'} VC
+                  Balance: {balances.VC ? parseFloat(balances.VC).toFixed(4) : '0.0000'} VC
+                    </div>
                 </div>
-              </div>
-
-              <div>
+                
+                <div>
                 <label className="block text-sm font-medium text-white mb-2">BNB Amount</label>
-                <div className="relative">
-                  <input
-                    type="number"
+                  <div className="relative">
+                    <input
+                      type="number"
                     placeholder="0.0"
-                    value={bnbInput}
-                    onChange={(e) => setBnbInput(e.target.value)}
+                      value={bnbInput}
+                      onChange={(e) => setBnbInput(e.target.value)}
                     className="w-full pl-4 pr-16 py-3 backdrop-blur-xl bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/40 rounded-xl text-white placeholder-slate-300 focus:border-yellow-400/80 focus:ring-2 focus:ring-yellow-400/30 focus:bg-gradient-to-r focus:from-yellow-500/30 focus:to-orange-500/30 transition-all duration-300 shadow-lg shadow-yellow-500/20 font-medium"
-                  />
-                  <button
-                    onClick={setMaxBNB}
+                    />
+                    <button
+                      onClick={setMaxBNB}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-yellow-500/40 text-yellow-200 rounded-lg hover:bg-yellow-500/60 hover:text-white transition-all duration-300 font-semibold border border-yellow-400/30"
-                  >
-                    MAX
-                  </button>
-                </div>
+                    >
+                      MAX
+                    </button>
+                  </div>
                 <div className="text-xs text-yellow-300/80 mt-1 font-medium">
-                  Balance: {poolInfo?.userBNBBalance ? parseFloat(poolInfo.userBNBBalance).toFixed(4) : '0.0000'} BNB
+                  Balance: {balances.BNB ? parseFloat(balances.BNB).toFixed(4) : '0.0000'} BNB
+                    </div>
                 </div>
               </div>
-            </div>
 
-            {/* Calculation Preview */}
-            {calculation && (
+              {/* Calculation Preview */}
+              {calculation && (
               <div className="backdrop-blur-xl bg-gradient-to-r from-green-500/6 to-blue-500/6 border border-green-500/15 rounded-xl p-4">
                 <h4 className="text-sm font-medium text-white mb-3">Expected Results:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-slate-400/80">LP Tokens</div>
                     <div className="text-lg font-bold text-green-400/90">{calculation.lpTokensToReceive}</div>
-                  </div>
+                    </div>
                   <div>
                     <div className="text-slate-400/80">Price Impact</div>
                     <div className="text-lg font-bold text-yellow-400/90">{calculation.priceImpact.toFixed(2)}%</div>
-                  </div>
+                    </div>
                   <div>
                     <div className="text-slate-400/80">Pool Share</div>
                     <div className="text-lg font-bold text-purple-400/90">{calculation.shareOfPool.toFixed(2)}%</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Approve & Add Buttons */}
-            <div className="space-y-3">
-              {!vcApproved && vcInput && parseFloat(vcInput) > 0 && (
+              <div className="space-y-3">
+                {!vcApproved && vcInput && parseFloat(vcInput) > 0 && (
                 <button
                   onClick={approveVC}
                   className="w-full py-3 bg-gradient-to-r from-orange-500/90 to-yellow-600/90 hover:from-orange-600/90 hover:to-yellow-700/90 text-white font-semibold rounded-xl transition-all duration-300"
                 >
-                  Approve VC Tokens
-                </button>
-              )}
-              
-              <button
-                onClick={addLiquidity}
+                    Approve VC Tokens
+                  </button>
+                )}
+                
+                <button
+                  onClick={addLiquidity}
                 disabled={!vcApproved || !calculation || loading}
                 className="w-full py-3 bg-gradient-to-r from-green-500/90 to-emerald-600/90 hover:from-green-600/90 hover:to-emerald-700/90 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
+                >
                 Add Liquidity
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'remove' && (
+          {activeTab === 'remove' && (
           <div className="space-y-6">
             {/* Remove Percentage Buttons */}
-            <div>
+              <div>
               <label className="block text-sm font-medium text-white mb-3">Remove Percentage</label>
               <div className="grid grid-cols-4 gap-2 mb-4">
-                {[25, 50, 75, 100].map((percentage) => (
-                  <button
-                    key={percentage}
-                    onClick={() => setRemovePercentageAmount(percentage)}
+                  {[25, 50, 75, 100].map((percentage) => (
+                    <button
+                      key={percentage}
+                      onClick={() => setRemovePercentageAmount(percentage)}
                     className={cn(
                       'py-2 px-3 text-sm font-medium rounded-lg transition-all duration-300',
-                      removePercentage === percentage
+                        removePercentage === percentage
                         ? 'bg-gradient-to-r from-red-500/80 to-pink-600/80 text-white'
                         : 'bg-white/3 text-slate-300/80 hover:text-white hover:bg-white/6'
                     )}
-                  >
-                    {percentage}%
-                  </button>
-                ))}
+                    >
+                      {percentage}%
+                    </button>
+                  ))}
               </div>
-            </div>
-
+                </div>
+                
             {/* LP Amount Input */}
             <div>
               <label className="block text-sm font-medium text-white mb-2">LP Token Amount</label>
-              <input
-                type="number"
+                <input
+                  type="number"
                 placeholder="0.0"
-                value={lpTokensInput}
-                onChange={(e) => setLpTokensInput(e.target.value)}
+                  value={lpTokensInput}
+                  onChange={(e) => setLpTokensInput(e.target.value)}
                 className="w-full pl-4 pr-4 py-3 backdrop-blur-xl bg-gradient-to-r from-red-500/20 to-pink-500/20 border-2 border-red-400/40 rounded-xl text-white placeholder-slate-300 focus:border-red-400/80 focus:ring-2 focus:ring-red-400/30 focus:bg-gradient-to-r focus:from-red-500/30 focus:to-pink-500/30 transition-all duration-300 shadow-lg shadow-red-500/20 font-medium"
-              />
+                />
               <div className="text-xs text-red-300/80 mt-1 font-medium">
-                Balance: {poolInfo?.userLPBalance ? parseFloat(poolInfo.userLPBalance).toFixed(4) : '0.0000'} LP
+                Balance: {balances.LP ? parseFloat(balances.LP).toFixed(4) : '0.0000'} LP
+                  </div>
               </div>
-            </div>
 
             {/* Remove Buttons */}
-            <div className="space-y-3">
-              {!lpApproved && lpTokensInput && parseFloat(lpTokensInput) > 0 && (
+              <div className="space-y-3">
+                {!lpApproved && lpTokensInput && parseFloat(lpTokensInput) > 0 && (
                 <button
                   onClick={approveLP}
                   className="w-full py-3 bg-gradient-to-r from-orange-500/90 to-yellow-600/90 hover:from-orange-600/90 hover:to-yellow-700/90 text-white font-semibold rounded-xl transition-all duration-300"
                 >
-                  Approve LP Tokens
-                </button>
-              )}
-              
-              <button
-                onClick={removeLiquidity}
+                    Approve LP Tokens
+                  </button>
+                )}
+                
+                <button
+                  onClick={removeLiquidity}
                 disabled={!lpApproved || !lpTokensInput || loading}
                 className="w-full py-3 bg-gradient-to-r from-red-500/90 to-pink-600/90 hover:from-red-600/90 hover:to-pink-700/90 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
+                >
                 Remove Liquidity
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Slippage Settings */}
         <div className="mt-6 pt-6 border-t border-white/8">

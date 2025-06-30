@@ -7,6 +7,7 @@ import { Web3Provider } from './shared/lib/Web3Context';
 
 // Import Layout Components
 import Header from './shared/ui/Header';
+import { NetworkStatus } from './shared/ui/NetworkStatus';
 
 // Import Pages
 import Home from './app/Home';
@@ -51,6 +52,9 @@ function App() {
             {/* Main Application Content */}
             <div className="relative z-10">
               <Header />
+              
+              {/* ✅ Network Status Monitor - автоматически показывается при проблемах */}
+              <NetworkStatus />
               
               <main className="flex-1 py-6 md:py-8 lg:py-12 animate-clean-fade-in">
                 <div className="clean-container">

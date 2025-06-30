@@ -423,44 +423,6 @@ const TransactionHistory: React.FC = () => {
                 <li>4. Создайте новый API ключ (бесплатно)</li>
                 <li>5. Добавьте ключ в файл <code className="glass-ultra px-1 rounded">frontend/src/utils/bscscanApi.ts</code></li>
               </ol>
-              <button
-                onClick={() => {
-                  // Add mock data for demonstration
-                  const mockTransactions = [
-                    {
-                      id: 'mock-1',
-                      hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-                      type: 'transfer' as const,
-                      status: 'confirmed' as const,
-                      timestamp: Date.now() - 3600000,
-                      amount: '100',
-                      token: 'VG',
-                      value: '100.0000 VG',
-                      gasUsed: '21000',
-                      from: account,
-                      to: '0x742d35Cc6634C0532925a3b8D369D7763F4b2d66'
-                    },
-                    {
-                      id: 'mock-2',
-                      hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-                      type: 'lock_lp' as const,
-                      status: 'confirmed' as const,
-                      timestamp: Date.now() - 7200000,
-                      amount: '50',
-                      token: 'LP',
-                      value: '50.0000 LP',
-                      gasUsed: '45000',
-                      from: account,
-                      to: CONTRACTS.LP_LOCKER
-                    }
-                  ];
-                  setTransactions(mockTransactions);
-                  setError(null);
-                }}
-                className="mt-3 btn-glass-green text-xs"
-              >
-                📊 Показать демо-данные
-              </button>
             </div>
           )}
         </div>

@@ -10,10 +10,10 @@ import { getAllRpcEndpoints, hasMetaMask, isBrowserEnvironment } from '../config
 import { log } from '../lib/logger';
 
 // ✅ Optimized timeouts for browser environment
-const RPC_TIMEOUT = 5000; // 5 seconds for browser requests
-const MAX_RETRIES = 2; // Reduced retries for faster UX
-const REQUEST_DEBOUNCE_TIME = 100; // 100ms between requests
-const MAX_CONCURRENT_REQUESTS = 3; // Maximum 3 concurrent requests
+const RPC_TIMEOUT = 10000; // 10 seconds for browser requests
+const MAX_RETRIES = 3; // Увеличено до 3 попыток
+const REQUEST_DEBOUNCE_TIME = 200; // 200ms между запросами
+const MAX_CONCURRENT_REQUESTS = 5; // Увеличено до 5 concurrent requests
 
 // ✅ BSC Testnet Network Configuration
 const BSC_TESTNET_NETWORK = ethers.Network.from({
