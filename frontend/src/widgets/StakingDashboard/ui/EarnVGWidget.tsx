@@ -1046,7 +1046,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
   if (!isConnected) {
     return (
-      <div className={`card-ultra animate-gentle-float ${className}`}>
+      <div className={`card-ultra animate-enhanced-widget-chaos-1 ${className}`}>
         <div className="text-center">
           <Wallet className="h-16 w-16 text-blue-400 mb-6 mx-auto" />
           <h3 className="card-title text-xl font-bold text-white mb-3">Подключите кошелёк</h3>
@@ -1059,7 +1059,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={cn("backdrop-blur-xl bg-gradient-to-br from-yellow-500/6 via-orange-500/4 to-red-500/3 border border-yellow-500/15 rounded-2xl p-6 hover:from-yellow-500/8 hover:via-orange-500/6 hover:to-red-500/4 transition-all duration-300 shadow-xl shadow-yellow-500/3 animate-gentle-float", className)}>
+    <div className={`card-ultra animate-enhanced-widget-chaos-1 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

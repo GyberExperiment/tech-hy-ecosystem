@@ -467,7 +467,7 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="liquid-glass animate-gentle-float mb-8">
+      <div className="liquid-glass animate-enhanced-widget-chaos-1 mb-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -533,10 +533,10 @@ const Tokens: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {filteredTokens.map((token) => (
+              {filteredTokens.map((token, index) => (
                 <div 
                   key={token.symbol} 
-                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-gentle-float ${
+                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-enhanced-widget-chaos-${(index % 6) + 1} ${
                     selectedToken?.symbol === token.symbol 
                       ? 'ring-2 ring-blue-500/50 glass-accent animate-pulse' 
                       : ''
@@ -610,7 +610,7 @@ const Tokens: React.FC = () => {
           </h2>
 
           {selectedToken ? (
-            <div className="liquid-glass animate-glass-float">
+            <div className="liquid-glass animate-enhanced-widget-chaos-2">
               <div className="space-y-4">
                 <div className="text-center">
                   <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${selectedToken.color} flex items-center justify-center mx-auto mb-3 animate-pulse`}>
@@ -629,7 +629,7 @@ const Tokens: React.FC = () => {
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 glass-ultra rounded-lg p-1 animate-glass-float">
+                <div className="flex space-x-1 glass-ultra rounded-lg p-1 animate-enhanced-widget-chaos-3">
                   <button
                     onClick={() => setActiveTab('transfer')}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
@@ -820,7 +820,7 @@ const Tokens: React.FC = () => {
                         {allowances
                           .filter(allowance => allowance.token === selectedToken.symbol)
                           .map((allowance, index) => (
-                            <div key={index} className="glass-ultra rounded-lg p-3 animate-glass-float">
+                            <div key={index} className="glass-ultra rounded-lg p-3 animate-enhanced-widget-chaos-4">
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="font-medium text-slate-200 text-sm">{allowance.spenderName}</p>
@@ -847,7 +847,7 @@ const Tokens: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="liquid-glass text-center py-12 animate-glass-float">
+            <div className="liquid-glass text-center py-12 animate-enhanced-widget-chaos-5">
               <div className="text-4xl mb-4 animate-pulse">🪙</div>
               <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите токен</h3>
               <p className="text-gray-400">
@@ -920,7 +920,7 @@ const Tokens: React.FC = () => {
           Информация о контрактах
         </h2>
         
-        <div className="liquid-glass animate-glass-float">
+        <div className="liquid-glass animate-enhanced-widget-chaos-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {tokens.map((token) => (
               <div key={token.symbol} className="flex justify-between items-center p-3 rounded glass-ultra">

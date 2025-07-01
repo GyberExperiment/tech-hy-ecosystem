@@ -246,7 +246,7 @@ const Governance: React.FC = () => {
         
         <div className="grid-responsive-1-2-4 gap-6">
           {userStats.map((stat, index) => (
-            <div key={index} className="card-ultra animate-gentle-float">
+            <div key={index} className="card-ultra animate-enhanced-widget-chaos-1">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">{stat.title}</p>
@@ -275,7 +275,7 @@ const Governance: React.FC = () => {
         
         <div className="grid-responsive-1-2-4 gap-6">
           {protocolStats.map((stat, index) => (
-            <div key={index} className="card-ultra animate-gentle-float">
+            <div key={index} className="card-ultra animate-enhanced-widget-chaos-2">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">{stat.title}</p>
@@ -345,7 +345,7 @@ const Governance: React.FC = () => {
             )}
 
             {!loading && filteredProposals.length === 0 && (
-              <div className="liquid-glass text-center py-12 animate-gentle-float">
+              <div className="liquid-glass text-center py-12 animate-enhanced-widget-chaos-3">
                 <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-slate-200 mb-2">
                   Предложений пока нет
@@ -366,7 +366,7 @@ const Governance: React.FC = () => {
             {!loading && filteredProposals.map((proposal) => (
               <div 
                 key={proposal.id} 
-                className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-gentle-float ${
+                className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-enhanced-widget-chaos-4 ${
                   selectedProposal?.id === proposal.id 
                     ? 'ring-2 ring-purple-500/50 glass-secondary' 
                     : ''
@@ -454,7 +454,7 @@ const Governance: React.FC = () => {
           </h2>
 
           {selectedProposal ? (
-            <div className="card animate-gentle-float">
+            <div className="card animate-enhanced-widget-chaos-5">
               <div className="space-y-4">
                 <div>
                   <h3 className="font-bold text-lg mb-2">{selectedProposal.title}</h3>
@@ -526,7 +526,7 @@ const Governance: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="card text-center py-12 animate-gentle-float">
+            <div className="card text-center py-12 animate-enhanced-widget-chaos-6">
               <Vote className="w-16 h-16 text-gray-500 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-slate-200 mb-2">
                 Выберите предложение

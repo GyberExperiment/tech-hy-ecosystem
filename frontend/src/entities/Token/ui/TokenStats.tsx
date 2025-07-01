@@ -100,7 +100,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
     return (
       <div className={className}>
         <style>{lineClampStyles}</style>
-        <div className="card animate-gentle-float">
+        <div className="card animate-hyper-subtle-stats-container">
           <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
             <BarChart3 className="mr-3 text-blue-400" />
             Статистика токенов
@@ -108,7 +108,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
         
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="relative group aspect-square animate-gentle-float">
+              <div key={i} className={`relative group aspect-square animate-hyper-subtle-stat-${i}`}>
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-500/20 via-gray-500/10 to-slate-500/20 rounded-2xl blur-lg"></div>
                 <div className="relative h-full backdrop-blur-xl bg-gradient-to-br from-slate-500/10 via-gray-500/5 to-slate-500/8 border border-slate-400/20 rounded-2xl p-4 animate-pulse">
                   <div className="h-4 bg-slate-700 rounded mb-2"></div>
@@ -125,7 +125,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
   return (
     <div className={className}>
       <style>{lineClampStyles}</style>
-      <div className="card animate-gentle-float">
+      <div className="card animate-hyper-subtle-stats-container">
         <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
           <BarChart3 className="mr-3 text-blue-400" />
           Статистика токенов
@@ -174,7 +174,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
             return (
               <div 
                 key={index} 
-                className="relative group aspect-square animate-gentle-float"
+                className={`relative group aspect-square animate-hyper-subtle-stat-${(index % 4) + 1}`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-r ${scheme.gradient} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
                 <div className={`relative h-full backdrop-blur-xl bg-gradient-to-br ${scheme.bg} border ${scheme.border} rounded-2xl p-4 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1 flex flex-col justify-between`}>

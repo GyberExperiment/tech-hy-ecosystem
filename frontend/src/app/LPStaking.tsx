@@ -544,7 +544,7 @@ const LPLocking: React.FC = () => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="card text-center tablet-compact animate-gentle-float">
+              <div key={index} className="card text-center tablet-compact animate-enhanced-card-chaos-1">
                 <div className="flex items-center justify-center mb-6">
                   <div className="p-4 rounded-xl bg-blue-500/20">
                     <Icon className={`w-8 h-8 ${stat.color}`} />
@@ -572,7 +572,7 @@ const LPLocking: React.FC = () => {
           {ecosystemStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="card text-center tablet-compact animate-gentle-float">
+              <div key={index} className="card text-center tablet-compact animate-enhanced-card-chaos-2">
                 <div className="flex items-center justify-center mb-6">
                   <div className="p-4 rounded-xl bg-green-500/20">
                     <Icon className={`w-8 h-8 ${stat.color}`} />
@@ -620,7 +620,7 @@ const LPLocking: React.FC = () => {
       </div>
 
       {/* How it Works */}
-      <div className="card tablet-compact animate-gentle-float">
+      <div className="card tablet-compact animate-enhanced-widget-chaos-3">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Info className="mr-3 text-blue-400" />
           Как это работает
@@ -660,7 +660,7 @@ const LPLocking: React.FC = () => {
       </div>
 
       {/* Contract Addresses */}
-      <div className="card tablet-compact animate-gentle-float">
+      <div className="card tablet-compact animate-enhanced-widget-chaos-4">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Shield className="mr-3 text-green-400" />
           Адреса контрактов
