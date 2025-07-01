@@ -19,7 +19,7 @@ interface PoolData {
 }
 
 const CardSkeleton = () => (
-  <div className="card animate-pulse">
+  <div className="card animate-pulse animate-gentle-float">
     <div className="h-6 bg-slate-700 rounded mb-4"></div>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {[1, 2, 3, 4].map((i) => (
@@ -325,7 +325,7 @@ const StakingStats: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="card text-center text-gray-400">
+      <div className="card text-center text-gray-400 animate-gentle-float">
         <TrendingUp className="mx-auto mb-4" size={48} />
         <h3 className="text-lg font-semibold mb-2 text-slate-100">Статистика экосистемы</h3>
         <p>Подключите кошелёк для просмотра статистики</p>
@@ -339,7 +339,7 @@ const StakingStats: React.FC = () => {
 
   if (!poolData) {
     return (
-      <div className="card text-center text-gray-400">
+      <div className="card text-center text-gray-400 animate-gentle-float">
         <TrendingUp className="mx-auto mb-4" size={48} />
         <h3 className="text-lg font-semibold mb-2 text-slate-100">Ошибка загрузки</h3>
         <button onClick={() => fetchPoolStats(true)} className="btn-primary mt-4">
@@ -394,7 +394,7 @@ const StakingStats: React.FC = () => {
   return (
     <div className="space-y-6">
       <style>{lineClampStyles}</style>
-      <div className="card">
+      <div className="card animate-gentle-float">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
           <h3 className="text-xl font-semibold flex items-center text-slate-100">
@@ -500,7 +500,7 @@ const StakingStats: React.FC = () => {
         {/* User Balance */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* VC баланс */}
-          <div className="relative group">
+          <div className="relative group animate-gentle-float">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-blue-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
             <div className="relative backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-blue-500/8 border border-blue-400/20 rounded-2xl p-6 hover:border-blue-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">
@@ -525,7 +525,7 @@ const StakingStats: React.FC = () => {
           </div>
 
           {/* BNB баланс */}
-          <div className="relative group">
+          <div className="relative group animate-gentle-float">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-orange-500/10 to-yellow-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
             <div className="relative backdrop-blur-xl bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-yellow-500/8 border border-yellow-400/20 rounded-2xl p-6 hover:border-yellow-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">
@@ -551,7 +551,7 @@ const StakingStats: React.FC = () => {
         </div>
 
         {/* Potential Rewards Calculator */}
-        <div className="relative group mb-8">
+        <div className="relative group mb-8 animate-gentle-float">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-blue-500/8 to-purple-500/15 rounded-3xl blur-xl"></div>
           <div className="relative backdrop-blur-xl bg-gradient-to-br from-cyan-500/8 via-blue-500/5 to-purple-500/8 border border-cyan-400/20 rounded-3xl p-8 hover:border-cyan-400/30 transition-all duration-300">
             <h4 className="text-xl font-bold mb-6 flex items-center text-white">
@@ -563,7 +563,7 @@ const StakingStats: React.FC = () => {
           
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {exampleRewards.map((example, index) => (
-                <div key={index} className="relative group">
+                <div key={index} className="relative group animate-gentle-float">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-green-500/10 to-emerald-500/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
                   <div className="relative backdrop-blur-xl bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-emerald-500/8 border border-emerald-400/20 rounded-2xl p-6 text-center hover:border-emerald-400/40 transition-all duration-300 group-hover:scale-105">
                     <div className="text-sm text-emerald-200/80 mb-3">
@@ -598,7 +598,7 @@ const StakingStats: React.FC = () => {
         {/* System Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Статус системы */}
-          <div className="relative group">
+          <div className="relative group animate-gentle-float">
             <div className={`absolute inset-0 bg-gradient-to-r ${parseFloat(poolData.availableVG) > 0 ? 'from-green-500/20 via-emerald-500/10 to-green-500/20' : 'from-red-500/20 via-orange-500/10 to-red-500/20'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
             <div className={`relative backdrop-blur-xl bg-gradient-to-br ${parseFloat(poolData.availableVG) > 0 ? 'from-green-500/10 via-emerald-500/5 to-green-500/8 border-green-400/20 hover:border-green-400/40' : 'from-red-500/10 via-orange-500/5 to-red-500/8 border-red-400/20 hover:border-red-400/40'} border rounded-2xl p-6 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1`}>
               <div className="flex items-center justify-between mb-4">
@@ -625,7 +625,7 @@ const StakingStats: React.FC = () => {
           </div>
 
           {/* LP токены навсегда заблокированы */}
-          <div className="relative group">
+          <div className="relative group animate-gentle-float">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-indigo-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
             <div className="relative backdrop-blur-xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-indigo-500/8 border border-indigo-400/20 rounded-2xl p-6 hover:border-indigo-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
               <div className="flex items-center justify-between mb-4">

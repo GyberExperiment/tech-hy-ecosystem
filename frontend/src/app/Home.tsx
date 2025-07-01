@@ -527,7 +527,7 @@ const Home: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative z-10">
-      {/* Hero Section */}
+        {/* Hero Section */}
         <motion.section 
           className="relative pt-32 pb-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -536,7 +536,7 @@ const Home: React.FC = () => {
         >
           <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
-          <motion.div
+              <motion.div
                 className="inline-flex items-center gap-3 glass-badge-primary mb-10"
                 whileHover={{ scale: 1.05 }}
               >
@@ -546,7 +546,7 @@ const Home: React.FC = () => {
               
               <h1 className="text-6xl md:text-8xl font-black mb-10 bg-gradient-to-r from-white via-blue-200 to-cyan-400 bg-clip-text text-transparent leading-tight">
                 TECH HY
-            </h1>
+              </h1>
               
               <h2 className="text-2xl md:text-4xl font-bold mb-10 text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 Fighting fraud. Protecting investors.<br />
@@ -561,30 +561,30 @@ const Home: React.FC = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-8 justify-center">
-              <motion.button
+                <motion.button
                   className="glass-btn-primary group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleJoinEcosystem}
-              >
+                >
                   <SafeIcon IconComponent={Rocket} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   Join the Ecosystem
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+                </motion.button>
                 
-              <motion.button
+                <motion.button
                   className="glass-btn-ghost group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleReadWhitepaper}
-              >
+                >
                   <SafeIcon IconComponent={Download} className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   Read Whitepaper
                   <SafeIcon IconComponent={ExternalLink} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
         </motion.section>
 
         {/* Problems We Solve */}
@@ -682,15 +682,15 @@ const Home: React.FC = () => {
                   <div className="relative z-10">
                     <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                       <SafeIcon IconComponent={metric.icon} className="w-12 h-12 text-blue-400" />
-              </div>
+                    </div>
                     <div className="text-5xl font-black text-white mb-4 group-hover:text-blue-200 transition-colors">
                       {metric.metric}
-              </div>
+                    </div>
                     <div className="text-gray-300 font-medium text-lg">{metric.description}</div>
-            </div>
+                  </div>
                 </motion.div>
               ))}
-          </div>
+            </div>
           </div>
         </motion.section>
 
@@ -716,8 +716,8 @@ const Home: React.FC = () => {
             
             <div className="grid md:grid-cols-2 gap-10">
               {techHyEcosystem.map((component, index) => (
-              <motion.div
-                key={index}
+                <motion.div
+                  key={index}
                   variants={itemVariants}
                   className="glass-enhanced-breathing group relative overflow-hidden p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
@@ -752,12 +752,12 @@ const Home: React.FC = () => {
                       >
                         <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{feature}</span>
-              </motion.div>
-            ))}
-          </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
               ))}
-        </div>
+            </div>
           </div>
         </motion.section>
 
@@ -1035,18 +1035,18 @@ const Home: React.FC = () => {
             
             <div className="grid md:grid-cols-3 gap-10">
               {teamMembers.map((member, index) => (
-              <motion.div
-                key={index}
+                <motion.div
+                  key={index}
                   variants={itemVariants}
                   className="glass-enhanced-breathing group text-center p-8"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                     <SafeIcon IconComponent={User} className="w-16 h-16 text-blue-400" />
-                </div>
+                  </div>
                   <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-200 transition-colors">
                     {member.name}
-          </h3>
+                  </h3>
                   <p className="text-blue-400 font-medium mb-4 text-lg">{member.position}</p>
                   <p className="text-gray-300 mb-8 leading-relaxed">{member.bio}</p>
                   
@@ -1060,7 +1060,7 @@ const Home: React.FC = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <SafeIcon IconComponent={Linkedin} className="w-6 h-6 text-blue-400" />
-                </motion.a>
+                    </motion.a>
                     <motion.a
                       href={`mailto:${member.linkedin}@techhy.me`}
                       className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center hover:bg-blue-500/30 transition-colors"
@@ -1068,11 +1068,11 @@ const Home: React.FC = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <SafeIcon IconComponent={Mail} className="w-6 h-6 text-blue-400" />
-              </motion.a>
-                    </div>
-              </motion.div>
-                  ))}
-                </div>
+                    </motion.a>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.section>
 

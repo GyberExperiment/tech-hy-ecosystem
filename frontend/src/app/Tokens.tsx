@@ -445,13 +445,13 @@ const Tokens: React.FC = () => {
     <div className="animate-fade-in space-y-8 px-responsive">
       {/* Contract Status */}
       <div className="mb-8">
-      <ContractStatus />
+        <ContractStatus />
       </div>
 
       {/* Header */}
       <div className="text-center space-y-4 mb-8">
         <div className="flex items-center justify-center space-x-3">
-          <Coins className="w-8 h-8 text-blue-400 animate-pulse" />
+          <Coins className="w-8 h-8 text-blue-400" />
           <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             {t('tokens:title')}
           </h1>
@@ -463,7 +463,7 @@ const Tokens: React.FC = () => {
 
       {/* Token Statistics - Reusable Component */}
       <div className="mb-8">
-      <TokenStats />
+        <TokenStats />
       </div>
 
       {/* Search and Filter */}
@@ -499,7 +499,7 @@ const Tokens: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={loading || refreshing}
-              className="btn-glass-blue p-2 animate-pulse"
+              className="btn-glass-blue p-2"
             >
               <RefreshCw className={`w-4 h-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
             </button>
@@ -508,16 +508,16 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-responsive">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Token List */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
-            <Coins className="mr-3 text-blue-400 animate-pulse" />
+            <Coins className="mr-3 text-blue-400" />
             Ваши токены ({filteredTokens.length})
           </h2>
 
           {loading ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="liquid-glass animate-pulse">
                   <div className="flex items-center space-x-4">
@@ -532,7 +532,7 @@ const Tokens: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {filteredTokens.map((token) => (
                 <div 
                   key={token.symbol} 
@@ -605,7 +605,7 @@ const Tokens: React.FC = () => {
         {/* Action Panel */}
         <div className="space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
-            <Settings className="mr-3 text-purple-400 animate-pulse" />
+            <Settings className="mr-3 text-purple-400" />
             Действия с токенами
           </h2>
 
@@ -859,46 +859,64 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div>
+      <div className="mb-8">
         <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Zap className="mr-3 text-yellow-400 animate-pulse" />
+          <Zap className="mr-3 text-yellow-400" />
           Быстрые действия
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-responsive">
-          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <Rocket className="w-12 h-12 mx-auto mb-4 text-green-400 animate-pulse" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
-            <p className="text-gray-400 mb-4">Заблокируйте LP токены и получите VG</p>
-            <a href="/staking" className="btn-glass-green inline-block">
-              Перейти к LP Locking
-            </a>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* LP Locking */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-emerald-500/10 to-green-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-500/8 border border-green-400/20 rounded-2xl p-6 text-center hover:border-green-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 shadow-lg mx-auto mb-4 w-fit">
+                <Rocket className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">LP Locking</h3>
+              <p className="text-gray-300 mb-4 text-sm">Заблокируйте LP токены и получите VG</p>
+              <a href="/staking" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                Перейти к LP Locking
+              </a>
+            </div>
           </div>
           
-          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-purple-400 animate-pulse" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
-            <p className="text-gray-400 mb-4">Участвуйте в голосовании и управлении</p>
-            <a href="/governance" className="btn-glass-purple inline-block">
-              Перейти к Governance
-            </a>
+          {/* Governance */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/10 to-purple-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-purple-500/8 border border-purple-400/20 rounded-2xl p-6 text-center hover:border-purple-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-600/20 shadow-lg mx-auto mb-4 w-fit">
+                <Vote className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Governance</h3>
+              <p className="text-gray-300 mb-4 text-sm">Участвуйте в голосовании и управлении</p>
+              <a href="/governance" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                Перейти к Governance
+              </a>
+            </div>
           </div>
           
-          <div className="liquid-glass text-center group hover:scale-[1.017] transition-all duration-300 animate-glass-float">
-            <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-pulse" />
-            <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
-            <p className="text-gray-400 mb-4">Статистика и аналитика экосистемы</p>
-            <a href="/" className="btn-glass-blue inline-block">
-              Перейти к Dashboard
-            </a>
+          {/* Analytics */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-blue-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-blue-500/8 border border-blue-400/20 rounded-2xl p-6 text-center hover:border-blue-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-600/20 shadow-lg mx-auto mb-4 w-fit">
+                <BarChart3 className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Analytics</h3>
+              <p className="text-gray-300 mb-4 text-sm">Статистика и аналитика экосистемы</p>
+              <a href="/" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                Перейти к Dashboard
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Contract Information */}
-      <div>
+      <div className="mb-8">
         <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
-          <Shield className="mr-3 text-blue-400 animate-pulse" />
+          <Shield className="mr-3 text-blue-400" />
           Информация о контрактах
         </h2>
         
@@ -923,7 +941,9 @@ const Tokens: React.FC = () => {
       </div>
 
       {/* Transaction History */}
-      <TransactionHistory />
+      <div className="mb-8">
+        <TransactionHistory />
+      </div>
     </div>
   );
 };

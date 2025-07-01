@@ -1046,9 +1046,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
 
   if (!isConnected) {
     return (
-      <div className={`card-ultra animate-glass-float ${className}`}>
+      <div className={`card-ultra animate-gentle-float ${className}`}>
         <div className="text-center">
-          <Wallet className="h-16 w-16 text-blue-400 mb-6 mx-auto animate-glass-pulse" />
+          <Wallet className="h-16 w-16 text-blue-400 mb-6 mx-auto" />
           <h3 className="card-title text-xl font-bold text-white mb-3">Подключите кошелёк</h3>
           <p className="text-gray-300">
             Для использования LP Staking необходимо подключить MetaMask
@@ -1059,7 +1059,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={cn("backdrop-blur-xl bg-gradient-to-br from-yellow-500/6 via-orange-500/4 to-red-500/3 border border-yellow-500/15 rounded-2xl p-6 hover:from-yellow-500/8 hover:via-orange-500/6 hover:to-red-500/4 transition-all duration-300 shadow-xl shadow-yellow-500/3", className)}>
+    <div className={cn("backdrop-blur-xl bg-gradient-to-br from-yellow-500/6 via-orange-500/4 to-red-500/3 border border-yellow-500/15 rounded-2xl p-6 hover:from-yellow-500/8 hover:via-orange-500/6 hover:to-red-500/4 transition-all duration-300 shadow-xl shadow-yellow-500/3 animate-gentle-float", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -1067,7 +1067,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             <Zap className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Burn / Stake</h3>
+            <h3 className="text-xl font-bold text-white">Burn / Earn VG</h3>
             <p className="text-slate-300 text-sm">
               {mode === 'create' 
                 ? 'Create and burn LP position to earn VG (10:1)'
@@ -1107,7 +1107,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               : 'text-slate-200 hover:text-white hover:bg-purple-500/8'
           )}
         >
-          Stake
+          LP Burn
         </button>
       </div>
 
@@ -1346,7 +1346,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         ) : (
           <>
             <Zap className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-            Burn / Stake
+            Burn / Earn VG
           </>
         )}
       </button>

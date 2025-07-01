@@ -419,11 +419,14 @@
 
 /* ===== CLEAN ANIMATIONS ===== */
 @keyframes gentle-float {
-  0%, 100% { 
-    transform: translateY(0px) scale(1);
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
   }
-  50% { 
-    transform: translateY(-3px) scale(1.01);
+  33% {
+    transform: translateY(-3px) scale(1.005) rotate(0.2deg);
+  }
+  66% {
+    transform: translateY(-1px) scale(0.998) rotate(-0.1deg);
   }
 }
 
@@ -691,4 +694,196 @@
     border: 1px solid #333 !important;
     color: #333 !important;
   }
+}
+
+/* Chaotic widget animations with different patterns */
+@keyframes widget-chaos-1 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) translateX(1px) scale(1.003) rotate(0.3deg);
+  }
+  50% {
+    transform: translateY(-4px) translateX(-0.5px) scale(1.006) rotate(-0.2deg);
+  }
+  75% {
+    transform: translateY(-1px) translateX(0.8px) scale(1.001) rotate(0.1deg);
+  }
+}
+
+@keyframes widget-chaos-2 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-1px) translateX(-0.8px) scale(1.002) rotate(-0.3deg);
+  }
+  45% {
+    transform: translateY(-3px) translateX(0.3px) scale(1.005) rotate(0.2deg);
+  }
+  70% {
+    transform: translateY(-2px) translateX(-0.2px) scale(1.003) rotate(-0.1deg);
+  }
+}
+
+@keyframes widget-chaos-3 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-2.5px) translateX(0.6px) scale(1.004) rotate(0.25deg);
+  }
+  60% {
+    transform: translateY(-1.5px) translateX(-0.4px) scale(1.002) rotate(-0.15deg);
+  }
+  85% {
+    transform: translateY(-3.2px) translateX(0.2px) scale(1.006) rotate(0.05deg);
+  }
+}
+
+@keyframes widget-chaos-4 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  15% {
+    transform: translateY(-1.8px) translateX(-0.3px) scale(1.001) rotate(-0.2deg);
+  }
+  40% {
+    transform: translateY(-3.5px) translateX(0.7px) scale(1.007) rotate(0.3deg);
+  }
+  65% {
+    transform: translateY(-0.8px) translateX(-0.6px) scale(0.999) rotate(-0.1deg);
+  }
+  90% {
+    transform: translateY(-2.2px) translateX(0.1px) scale(1.003) rotate(0.15deg);
+  }
+}
+
+@keyframes widget-chaos-5 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-2.8px) translateX(0.4px) scale(1.005) rotate(0.2deg);
+  }
+  55% {
+    transform: translateY(-1.2px) translateX(-0.7px) scale(1.001) rotate(-0.25deg);
+  }
+  80% {
+    transform: translateY(-3.8px) translateX(0.5px) scale(1.008) rotate(0.1deg);
+  }
+}
+
+@keyframes widget-chaos-6 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  22% {
+    transform: translateY(-1.5px) translateX(-0.5px) scale(1.002) rotate(-0.15deg);
+  }
+  48% {
+    transform: translateY(-3.2px) translateX(0.8px) scale(1.006) rotate(0.28deg);
+  }
+  72% {
+    transform: translateY(-0.9px) translateX(-0.1px) scale(0.998) rotate(-0.08deg);
+  }
+  92% {
+    transform: translateY(-2.6px) translateX(0.3px) scale(1.004) rotate(0.18deg);
+  }
+}
+
+/* Apply chaotic animations to different widgets */
+.animate-widget-chaos-1 {
+  animation: widget-chaos-1 6.2s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.animate-widget-chaos-2 {
+  animation: widget-chaos-2 7.8s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+.animate-widget-chaos-3 {
+  animation: widget-chaos-3 5.5s ease-in-out infinite;
+  animation-delay: 1.6s;
+}
+
+.animate-widget-chaos-4 {
+  animation: widget-chaos-4 8.3s ease-in-out infinite;
+  animation-delay: 2.4s;
+}
+
+.animate-widget-chaos-5 {
+  animation: widget-chaos-5 6.9s ease-in-out infinite;
+  animation-delay: 3.2s;
+}
+
+.animate-widget-chaos-6 {
+  animation: widget-chaos-6 7.1s ease-in-out infinite;
+  animation-delay: 4.0s;
+}
+
+/* For cards - lighter chaos animations */
+@keyframes card-chaos-light-1 {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-1.5px) scale(1.002);
+  }
+}
+
+@keyframes card-chaos-light-2 {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-1px) scale(1.001);
+  }
+  66% {
+    transform: translateY(-2px) scale(1.003);
+  }
+}
+
+@keyframes card-chaos-light-3 {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  40% {
+    transform: translateY(-1.8px) scale(1.0025);
+  }
+  80% {
+    transform: translateY(-0.8px) scale(1.0015);
+  }
+}
+
+.animate-card-chaos-1 {
+  animation: card-chaos-light-1 4.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-card-chaos-2 {
+  animation: card-chaos-light-2 5.2s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+.animate-card-chaos-3 {
+  animation: card-chaos-light-3 6.1s ease-in-out infinite;
+  animation-delay: 1.9s;
+}
+
+.animate-card-chaos-4 {
+  animation: card-chaos-light-1 4.8s ease-in-out infinite;
+  animation-delay: 2.6s;
+}
+
+.animate-card-chaos-5 {
+  animation: card-chaos-light-2 5.7s ease-in-out infinite;
+  animation-delay: 3.3s;
+}
+
+.animate-card-chaos-6 {
+  animation: card-chaos-light-3 5.0s ease-in-out infinite;
+  animation-delay: 4.1s;
 }

@@ -544,18 +544,18 @@ const LPLocking: React.FC = () => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="card text-center tablet-compact">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-r from-blue-500/30 to-purple-500/30">
-                    <Icon className={`w-6 h-6 md:w-8 md:h-8 ${stat.color}`} />
+              <div key={index} className="card text-center tablet-compact animate-gentle-float">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="p-4 rounded-xl bg-blue-500/20">
+                    <Icon className={`w-8 h-8 ${stat.color}`} />
                   </div>
                 </div>
-                <h3 className="text-base md:text-lg font-bold text-white mb-2">{stat.title}</h3>
-                <div className="text-xl md:text-2xl font-bold mb-2">
+                <h3 className="text-xl font-bold text-slate-100 mb-3">{stat.title}</h3>
+                <div className="text-3xl font-bold text-blue-400 mb-2">
                   <span className={stat.color}>{stat.value}</span>
                   <span className="text-gray-400 text-sm md:text-base ml-1">{stat.unit}</span>
                 </div>
-                <p className="text-xs md:text-sm text-gray-400">{stat.description}</p>
+                <p className="text-gray-400 text-sm">{stat.description}</p>
               </div>
             );
           })}
@@ -572,18 +572,18 @@ const LPLocking: React.FC = () => {
           {ecosystemStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="card text-center tablet-compact">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-r from-green-500/30 to-blue-500/30">
-                    <Icon className={`w-6 h-6 md:w-8 md:h-8 ${stat.color}`} />
+              <div key={index} className="card text-center tablet-compact animate-gentle-float">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="p-4 rounded-xl bg-green-500/20">
+                    <Icon className={`w-8 h-8 ${stat.color}`} />
                   </div>
                 </div>
-                <h3 className="text-base md:text-lg font-bold text-white mb-2">{stat.title}</h3>
-                <div className="text-xl md:text-2xl font-bold mb-2">
+                <h3 className="text-xl font-bold text-slate-100 mb-3">{stat.title}</h3>
+                <div className="text-3xl font-bold text-green-400 mb-2">
                   <span className={stat.color}>{stat.value}</span>
                   <span className="text-gray-400 text-sm md:text-base ml-1">{stat.unit}</span>
                 </div>
-                <p className="text-xs md:text-sm text-gray-400">{stat.description}</p>
+                <p className="text-gray-400 text-sm">{stat.description}</p>
               </div>
             );
           })}
@@ -620,7 +620,7 @@ const LPLocking: React.FC = () => {
       </div>
 
       {/* How it Works */}
-      <div className="card tablet-compact">
+      <div className="card tablet-compact animate-gentle-float">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Info className="mr-3 text-blue-400" />
           Как это работает
@@ -660,7 +660,7 @@ const LPLocking: React.FC = () => {
       </div>
 
       {/* Contract Addresses */}
-      <div className="card tablet-compact">
+      <div className="card tablet-compact animate-gentle-float">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center text-slate-100">
           <Shield className="mr-3 text-green-400" />
           Адреса контрактов
