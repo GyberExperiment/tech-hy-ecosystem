@@ -516,6 +516,53 @@ const Home: React.FC = () => {
           <div className="absolute top-2/3 right-1/4 w-80 h-80 bg-purple-500/6 rounded-full blur-3xl animate-breathing-orb-2"></div>
           <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-cyan-500/8 rounded-full blur-3xl animate-breathing-orb-3"></div>
           <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-emerald-500/6 rounded-full blur-3xl animate-breathing-orb-4"></div>
+          
+          {/* Animated particles */}
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-float-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 10}s`,
+                animationDuration: `${15 + Math.random() * 10}s`
+              }}
+            />
+          ))}
+          
+          {/* Connecting lines effect */}
+          <svg className="absolute inset-0 w-full h-full opacity-10">
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.5" />
+              </linearGradient>
+            </defs>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <motion.line
+                key={i}
+                x1={`${Math.random() * 100}%`}
+                y1={`${Math.random() * 100}%`}
+                x2={`${Math.random() * 100}%`}
+                y2={`${Math.random() * 100}%`}
+                stroke="url(#lineGradient)"
+                strokeWidth="1"
+                initial={{ opacity: 0, pathLength: 0 }}
+                animate={{ 
+                  opacity: [0, 0.6, 0],
+                  pathLength: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  delay: i * 1.2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </svg>
         </div>
         
         {/* Subtle grid pattern */}
@@ -537,52 +584,132 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <motion.div
-                className="inline-flex items-center gap-3 glass-badge-primary mb-10"
+                className="inline-flex items-center gap-3 glass-badge-primary mb-10 backdrop-blur-xl"
                 whileHover={{ scale: 1.05 }}
+                animate={{ 
+                  boxShadow: [
+                    '0 0 20px rgba(59, 130, 246, 0.3)',
+                    '0 0 30px rgba(59, 130, 246, 0.5)',
+                    '0 0 20px rgba(59, 130, 246, 0.3)'
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <SafeIcon IconComponent={Shield} className="w-5 h-5" />
                 <span>Transforming Venture Industry Security</span>
               </motion.div>
               
-              <h1 className="text-6xl md:text-8xl font-black mb-10 bg-gradient-to-r from-white via-blue-200 to-cyan-400 bg-clip-text text-transparent leading-tight">
-                TECH HY
-              </h1>
+              <motion.h1 
+                className="text-6xl md:text-8xl font-black mb-10 leading-tight"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1 }}
+              >
+                <span className="bg-gradient-to-r from-white via-blue-200 to-cyan-400 bg-clip-text text-transparent">
+                  TECH
+                </span>
+                <span className="mx-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-pulse">
+                  HY
+                </span>
+              </motion.h1>
               
-              <h2 className="text-2xl md:text-4xl font-bold mb-10 text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                Fighting fraud. Protecting investors.<br />
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <motion.h2 
+                className="text-2xl md:text-4xl font-bold mb-10 max-w-4xl mx-auto leading-relaxed"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.3 }}
+              >
+                <span className="text-gray-300">Fighting fraud. Protecting investors.</span><br />
+                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
                   Building the future of venture capital.
                 </span>
-              </h2>
+              </motion.h2>
               
-              <p className="text-xl text-gray-400 max-w-4xl mx-auto mb-16 leading-relaxed">
-                The first crypto venture platform combining free KYC, AI-powered scoring, and community-driven due diligence 
+              <motion.p 
+                className="text-xl text-gray-400 max-w-4xl mx-auto mb-16 leading-relaxed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.6 }}
+              >
+                The first crypto venture platform combining <span className="text-green-400 font-semibold">free KYC</span>, <span className="text-blue-400 font-semibold">AI-powered scoring</span>, and <span className="text-purple-400 font-semibold">community-driven due diligence</span> 
                 to create a safer, more transparent investment ecosystem.
-              </p>
+              </motion.p>
               
-              <div className="flex flex-col sm:flex-row gap-8 justify-center">
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-8 justify-center"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.9 }}
+              >
                 <motion.button
-                  className="glass-btn-primary group"
+                  className="glass-btn-primary group relative overflow-hidden"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleJoinEcosystem}
+                  animate={{
+                    boxShadow: [
+                      '0 0 20px rgba(59, 130, 246, 0.4)',
+                      '0 0 40px rgba(59, 130, 246, 0.6)',
+                      '0 0 20px rgba(59, 130, 246, 0.4)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <SafeIcon IconComponent={Rocket} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   Join the Ecosystem
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
                 
                 <motion.button
-                  className="glass-btn-ghost group"
+                  className="glass-btn-ghost group relative overflow-hidden"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleReadWhitepaper}
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-600/10 to-gray-800/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <SafeIcon IconComponent={Download} className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   Read Whitepaper
                   <SafeIcon IconComponent={ExternalLink} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </motion.button>
-              </div>
+              </motion.div>
+              
+              {/* Floating stats */}
+              <motion.div 
+                className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 1.2 }}
+              >
+                {[
+                  { label: 'Fraud Prevented', value: '$2.3M+', color: 'text-green-400' },
+                  { label: 'Startups Verified', value: '150+', color: 'text-blue-400' },
+                  { label: 'AI Accuracy', value: '94.7%', color: 'text-purple-400' },
+                  { label: 'Community Members', value: '5,000+', color: 'text-cyan-400' }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    className="glass-ultra p-4 rounded-xl text-center group hover:scale-105 transition-transform"
+                    whileHover={{ y: -5 }}
+                    animate={{
+                      opacity: [0.7, 1, 0.7],
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity, 
+                      delay: index * 0.5,
+                      ease: "easeInOut" 
+                    }}
+                  >
+                    <div className={`text-2xl font-bold ${stat.color} mb-1`}>
+                      {stat.value}
+                    </div>
+                    <div className="text-gray-400 text-sm font-medium">
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
           </div>
         </motion.section>
@@ -781,67 +908,77 @@ const Home: React.FC = () => {
               </p>
             </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-10">
+            <div className="grid md:grid-cols-2 gap-12">
               {detailedServices.map((service, index) => (
-              <motion.div
-                key={index}
+                <motion.div
+                  key={index}
                   variants={itemVariants}
-                  className="glass-enhanced-breathing group relative overflow-hidden p-8"
+                  className="glass-enhanced-breathing group relative overflow-hidden"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="absolute top-6 right-6 flex gap-3">
-                    <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                      service.status === 'Live' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                      service.status === 'Beta' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                      'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                  {/* Status badges */}
+                  <div className="absolute top-6 right-6 flex gap-3 z-10">
+                    <div className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                      service.status === 'Live' ? 'bg-green-500/30 text-green-200 border border-green-400/40' :
+                      service.status === 'Beta' ? 'bg-blue-500/30 text-blue-200 border border-blue-400/40' :
+                      'bg-orange-500/30 text-orange-200 border border-orange-400/40'
                     }`}>
                       {service.status}
-                  </div>
-                    <div className="px-4 py-2 rounded-full text-sm font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    </div>
+                    <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/30 text-purple-200 border border-purple-400/40 backdrop-blur-sm">
                       {service.clients} clients
-                  </div>
-                </div>
-                  
-                  <div className="flex items-center gap-6 mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={service.icon} className="w-10 h-10 text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
-                        {service.title}
-                      </h3>
-                      <div className="text-2xl font-bold text-green-400 mt-2">{service.price}</div>
                     </div>
                   </div>
                   
-                  <p className="text-gray-300 mb-10 text-lg leading-relaxed">{service.description}</p>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-10">
-                    {service.features.map((feature, featureIndex) => (
-                      <motion.div 
-                        key={featureIndex} 
-                        className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
-                        whileHover={{ x: 5 }}
-                      >
-                        <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        <span className="text-gray-300 text-sm">{feature}</span>
-                      </motion.div>
-                  ))}
-                </div>
+                  {/* Card content with proper spacing */}
+                  <div className="p-8 pb-6 flex flex-col h-full">
+                    {/* Header section */}
+                    <div className="flex items-start gap-6 mb-6">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <SafeIcon IconComponent={service.icon} className="w-8 h-8 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-white group-hover:text-blue-200 transition-colors leading-tight mb-2">
+                          {service.title}
+                        </h3>
+                        <div className="text-2xl font-bold text-green-400">{service.price}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-gray-300 text-base leading-relaxed mb-6 flex-grow-0">
+                      {service.description}
+                    </p>
+                    
+                    {/* Features grid */}
+                    <div className="grid grid-cols-1 gap-3 mb-8 flex-grow">
+                      {service.features.map((feature, featureIndex) => (
+                        <motion.div 
+                          key={featureIndex} 
+                          className="flex items-center gap-3 p-3 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
+                          whileHover={{ x: 3 }}
+                        >
+                          <SafeIcon IconComponent={CheckCircle} className="w-4 h-4 text-green-400 flex-shrink-0" />
+                          <span className="text-gray-300 text-sm font-medium">{feature}</span>
+                        </motion.div>
+                      ))}
+                    </div>
 
-                  <motion.button
-                    className="glass-btn-ghost w-full group"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
-                  >
-                    <span>Get Started</span>
-                    <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </motion.button>
-              </motion.div>
-            ))}
+                    {/* Button */}
+                    <motion.button
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 group flex items-center justify-center gap-3"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
+                    >
+                      <span>Get Started</span>
+                      <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
         </motion.section>
 
         {/* Dual Tokenomics Section */}
