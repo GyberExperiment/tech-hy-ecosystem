@@ -107,7 +107,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
           </h2>
         
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
               <div key={i} className={`relative group aspect-square animate-hyper-subtle-stat-${i}`}>
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-500/20 via-gray-500/10 to-slate-500/20 rounded-2xl blur-lg"></div>
                 <div className="relative h-full backdrop-blur-xl bg-gradient-to-br from-slate-500/10 via-gray-500/5 to-slate-500/8 border border-slate-400/20 rounded-2xl p-4 animate-pulse">
@@ -116,7 +116,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
                 </div>
               </div>
             ))}
-          </div>
+            </div>
         </div>
       </div>
     );
@@ -178,21 +178,21 @@ const TokenStats: React.FC<TokenStatsProps> = ({
               >
                 <div className={`absolute inset-0 bg-gradient-to-r ${scheme.gradient} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
                 <div className={`relative h-full backdrop-blur-xl bg-gradient-to-br ${scheme.bg} border ${scheme.border} rounded-2xl p-4 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1 flex flex-col justify-between`}>
-                  <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
                     <div className={`p-2 rounded-lg bg-gradient-to-br ${scheme.iconBg} shadow-lg`}>
                       <stat.icon className={`w-4 h-4 ${scheme.iconColor}`} />
-                    </div>
+            </div>
                     <div className={`text-xs font-medium px-2 py-1 rounded-full ${scheme.badge}`}>
                       {stat.unit}
-                    </div>
-                  </div>
-                  
+          </div>
+        </div>
+        
                   <div className="flex-1 flex flex-col justify-center text-center">
                     <div className="text-xl sm:text-2xl font-bold text-white mb-1">
                       {stat.value}
-                    </div>
-                  </div>
-                  
+          </div>
+        </div>
+        
                   <div className="space-y-1">
                     <h3 className="text-xs font-medium text-gray-200/80 leading-tight line-clamp-2">
                       {stat.title}
@@ -202,10 +202,10 @@ const TokenStats: React.FC<TokenStatsProps> = ({
                       {index === 1 && 'Активные балансы'}
                       {index === 2 && 'Общая стоимость'}
                       {index === 3 && 'Активные approve'}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            </div>
+          </div>
+        </div>
+            </div>
             );
           })}
         </div>
