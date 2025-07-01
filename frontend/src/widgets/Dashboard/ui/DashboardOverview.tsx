@@ -12,7 +12,6 @@ import {
   Shield,
   Smile
 } from 'lucide-react';
-import { BuyVCWidget } from '../../../entities/Token/ui/BuyVCWidget';
 
 interface DashboardMetric {
   title: string;
@@ -330,11 +329,6 @@ const DashboardOverview: React.FC = () => {
             </motion.button>
           ))}
         </div>
-      </motion.div>
-
-      {/* Buy VC Widget */}
-      <motion.div variants={itemVariants} className="glass-enhanced-breathing">
-        <BuyVCWidget />
       </motion.div>
     </motion.div>
   );

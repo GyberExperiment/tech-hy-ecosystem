@@ -32,6 +32,24 @@ const CardSkeleton = () => (
   </div>
 );
 
+// CSS стили для обрезки текста
+const lineClampStyles = `
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`;
+
 const StakingStats: React.FC = () => {
   const { t } = useTranslation(['common']);
   const { 
@@ -375,6 +393,7 @@ const StakingStats: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <style>{lineClampStyles}</style>
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
@@ -399,107 +418,234 @@ const StakingStats: React.FC = () => {
         </div>
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => {
+            // Определяем цветовую схему для каждой карточки
+            const colorSchemes = {
+              0: { // LP токены
+                gradient: 'from-blue-500/20 via-cyan-500/10 to-blue-500/20',
+                bg: 'from-blue-500/10 via-cyan-500/5 to-blue-500/8',
+                border: 'border-blue-400/20 hover:border-blue-400/40',
+                iconBg: 'from-blue-500/20 to-cyan-600/20',
+                iconColor: 'text-blue-400',
+                badge: 'text-blue-300/80 bg-blue-500/10'
+              },
+              1: { // VG награды
+                gradient: 'from-yellow-500/20 via-orange-500/10 to-yellow-500/20',
+                bg: 'from-yellow-500/10 via-orange-500/5 to-yellow-500/8',
+                border: 'border-yellow-400/20 hover:border-yellow-400/40',
+                iconBg: 'from-yellow-500/20 to-orange-600/20',
+                iconColor: 'text-yellow-400',
+                badge: 'text-yellow-300/80 bg-yellow-500/10'
+              },
+              2: { // Доступно VG
+                gradient: 'from-green-500/20 via-emerald-500/10 to-green-500/20',
+                bg: 'from-green-500/10 via-emerald-500/5 to-green-500/8',
+                border: 'border-green-400/20 hover:border-green-400/40',
+                iconBg: 'from-green-500/20 to-emerald-600/20',
+                iconColor: 'text-green-400',
+                badge: 'text-green-300/80 bg-green-500/10'
+              },
+              3: { // Соотношение
+                gradient: 'from-purple-500/20 via-pink-500/10 to-purple-500/20',
+                bg: 'from-purple-500/10 via-pink-500/5 to-purple-500/8',
+                border: 'border-purple-400/20 hover:border-purple-400/40',
+                iconBg: 'from-purple-500/20 to-pink-600/20',
+                iconColor: 'text-purple-400',
+                badge: 'text-purple-300/80 bg-purple-500/10'
+              }
+            };
+
+            const scheme = colorSchemes[index as keyof typeof colorSchemes];
+
+            return (
             <div 
               key={index} 
-              className={`p-4 rounded-lg border ${stat.bgColor} transition-all hover:scale-[1.017]`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <stat.icon className={`${stat.color}`} size={20} />
-                <span className="text-xs text-gray-400">{stat.unit}</span>
+                className="relative group aspect-square"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-r ${scheme.gradient} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
+                <div className={`relative h-full backdrop-blur-xl bg-gradient-to-br ${scheme.bg} border ${scheme.border} rounded-2xl p-4 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1 flex flex-col justify-between`}>
+                  <div className="flex items-center justify-between">
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${scheme.iconBg} shadow-lg`}>
+                      <stat.icon className={`w-4 h-4 ${scheme.iconColor}`} />
+                    </div>
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${scheme.badge}`}>
+                      {stat.unit}
+                    </div>
               </div>
-              <div className="text-2xl font-semibold text-slate-100 mb-1">
+                  
+                  <div className="flex-1 flex flex-col justify-center text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-white mb-1">
                 {stat.value}
               </div>
-              <div className="text-sm text-gray-400">
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-medium text-gray-200/80 leading-tight line-clamp-2">
                 {stat.title}
+                    </h3>
+                    <div className={`text-xs ${scheme.iconColor}/70 leading-tight line-clamp-1`}>
+                      {index === 0 && 'Навсегда заблокировано'}
+                      {index === 1 && 'Выдано пользователям'}
+                      {index === 2 && parseFloat(poolData.availableVG) > 1000 ? 'Высокая доступность' : 'Ограниченная'}
+                      {index === 3 && 'Мгновенный обмен'}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* User Balance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <DollarSign className="text-blue-400" size={16} />
-              <span className="text-sm text-gray-400">Ваш VC баланс</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* VC баланс */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-blue-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-blue-500/8 border border-blue-400/20 rounded-2xl p-6 hover:border-blue-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 shadow-lg">
+                  <DollarSign className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="text-xs font-medium text-blue-300/80 bg-blue-500/10 px-2 py-1 rounded-full">
+                  VC
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-blue-200/80">Ваш VC баланс</h3>
+                <div className="text-2xl font-bold text-white">
+                  {formatNumber(poolData.userVCBalance)}
+                </div>
+                <div className="text-sm text-blue-400/70">
+                  доступно для обмена
+                </div>
+              </div>
             </div>
-            <div className="text-xl font-semibold text-slate-100">{formatNumber(poolData.userVCBalance)} VC</div>
-            <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Zap className="text-green-400" size={16} />
-              <span className="text-sm text-gray-400">Ваш BNB баланс</span>
+          {/* BNB баланс */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-orange-500/10 to-yellow-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-yellow-500/8 border border-yellow-400/20 rounded-2xl p-6 hover:border-yellow-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-600/20 shadow-lg">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div className="text-xs font-medium text-yellow-300/80 bg-yellow-500/10 px-2 py-1 rounded-full">
+                  BNB
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-yellow-200/80">Ваш BNB баланс</h3>
+                <div className="text-2xl font-bold text-white">
+                  {formatNumber(poolData.userBNBBalance)}
+                </div>
+                <div className="text-sm text-yellow-400/70">
+                  доступно для обмена
+                </div>
+              </div>
             </div>
-            <div className="text-xl font-semibold text-slate-100">{formatNumber(poolData.userBNBBalance)} BNB</div>
-            <div className="text-xs text-gray-500">доступно для обмена</div>
           </div>
         </div>
 
         {/* Potential Rewards Calculator */}
-        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-6">
-          <h4 className="text-lg font-semibold mb-4 flex items-center text-slate-100">
-            <Zap className="mr-2 text-yellow-400" size={18} />
+        <div className="relative group mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-blue-500/8 to-purple-500/15 rounded-3xl blur-xl"></div>
+          <div className="relative backdrop-blur-xl bg-gradient-to-br from-cyan-500/8 via-blue-500/5 to-purple-500/8 border border-cyan-400/20 rounded-3xl p-8 hover:border-cyan-400/30 transition-all duration-300">
+            <h4 className="text-xl font-bold mb-6 flex items-center text-white">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-600/20 shadow-lg mr-3">
+                <Zap className="w-5 h-5 text-yellow-400" />
+              </div>
             Калькулятор потенциальных VG наград
           </h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {exampleRewards.map((example, index) => (
-              <div key={index} className="bg-slate-800/50 rounded-lg p-4 text-center">
-                <div className="text-sm text-gray-400 mb-2">
+                <div key={index} className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-green-500/10 to-emerald-500/20 rounded-2xl blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative backdrop-blur-xl bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-emerald-500/8 border border-emerald-400/20 rounded-2xl p-6 text-center hover:border-emerald-400/40 transition-all duration-300 group-hover:scale-105">
+                    <div className="text-sm text-emerald-200/80 mb-3">
                   {example.vc} VC + {example.bnb} BNB
                 </div>
-                <div className="text-xl font-semibold text-yellow-400">
+                    <div className="text-2xl font-bold text-yellow-400 mb-2">
                   ≈ {formatNumber(example.vg)} VG
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-emerald-400/70">
                   мгновенная награда
+                    </div>
                 </div>
               </div>
             ))}
           </div>
           
-          <div className="mt-4 text-center">
-            <div className="text-sm text-gray-400 mb-2">
+            <div className="mt-8 text-center">
+              <div className="text-sm text-cyan-200/80 mb-4 p-4 backdrop-blur-xl bg-slate-800/30 rounded-xl border border-slate-600/30">
               Формула: LP = (VC × BNB) / {formatNumber(poolData.lpDivisor)}, VG = LP × {poolData.lpToVgRatio}
             </div>
-            <a href="/staking" className="btn-primary">
+              <a 
+                href="/staking" 
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                <Zap className="w-4 h-4 mr-2" />
               Earn VG
             </a>
+            </div>
           </div>
         </div>
 
         {/* System Status */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Clock className="text-green-400" size={16} />
-              <span className="text-sm text-gray-400">Статус системы</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Статус системы */}
+          <div className="relative group">
+            <div className={`absolute inset-0 bg-gradient-to-r ${parseFloat(poolData.availableVG) > 0 ? 'from-green-500/20 via-emerald-500/10 to-green-500/20' : 'from-red-500/20 via-orange-500/10 to-red-500/20'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
+            <div className={`relative backdrop-blur-xl bg-gradient-to-br ${parseFloat(poolData.availableVG) > 0 ? 'from-green-500/10 via-emerald-500/5 to-green-500/8 border-green-400/20 hover:border-green-400/40' : 'from-red-500/10 via-orange-500/5 to-red-500/8 border-red-400/20 hover:border-red-400/40'} border rounded-2xl p-6 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${parseFloat(poolData.availableVG) > 0 ? 'from-green-500/20 to-emerald-600/20' : 'from-red-500/20 to-orange-600/20'} shadow-lg`}>
+                  <Clock className={`w-5 h-5 ${parseFloat(poolData.availableVG) > 0 ? 'text-green-400' : 'text-red-400'}`} />
+                </div>
+                <div className={`text-xs font-medium px-2 py-1 rounded-full ${parseFloat(poolData.availableVG) > 0 ? 'text-green-300/80 bg-green-500/10' : 'text-red-300/80 bg-red-500/10'}`}>
+                  {parseFloat(poolData.availableVG) > 0 ? 'Active' : 'Limited'}
+                </div>
             </div>
-            <div className="text-lg font-semibold text-green-400">
+              
+              <div className="space-y-2">
+                <h3 className={`text-sm font-medium ${parseFloat(poolData.availableVG) > 0 ? 'text-green-200/80' : 'text-red-200/80'}`}>Статус системы</h3>
+                <div className={`text-2xl font-bold ${parseFloat(poolData.availableVG) > 0 ? 'text-green-400' : 'text-red-400'}`}>
               {parseFloat(poolData.availableVG) > 0 ? 'Активна' : 'Недостаточно VG'}
             </div>
-            <div className="text-xs text-gray-500">
+                <div className={`text-sm ${parseFloat(poolData.availableVG) > 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
               {parseFloat(poolData.availableVG) > 0 
                 ? 'Готова к выдаче наград' 
                 : 'Требуется пополнение хранилища'}
             </div>
           </div>
-
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Users className="text-blue-400" size={16} />
-              <span className="text-sm text-gray-400">LP токены навсегда заблокированы</span>
             </div>
-            <div className="text-lg font-semibold text-blue-400">
+          </div>
+
+          {/* LP токены навсегда заблокированы */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-indigo-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-indigo-500/8 border border-indigo-400/20 rounded-2xl p-6 hover:border-indigo-400/40 transition-all duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 shadow-lg">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div className="text-xs font-medium text-indigo-300/80 bg-indigo-500/10 px-2 py-1 rounded-full">
+                  Total
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-indigo-200/80">LP токены навсегда заблокированы</h3>
+                <div className="text-2xl font-bold text-white">
               {formatNumber(poolData.totalLockedLP)}
             </div>
-            <div className="text-xs text-gray-500">
-              нет возможности вывода (by design)
+                <div className="text-sm text-indigo-400/70">
+                  Участие в экосистеме
+                </div>
+              </div>
             </div>
           </div>
         </div>

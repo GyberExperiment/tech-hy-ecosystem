@@ -4,7 +4,7 @@ import {
   ArrowUpDown, 
   Settings, 
   TrendingUp, 
-  Zap,
+  Zap, 
   RefreshCw,
   Shield
 } from 'lucide-react';

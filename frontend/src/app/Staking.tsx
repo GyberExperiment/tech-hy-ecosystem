@@ -57,7 +57,7 @@ const Staking: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="mb-8">
-        <StakingStats />
+      <StakingStats />
       </div>
 
       {/* Main Staking Section - ВЕРТИКАЛЬНЫЕ ВИДЖЕТЫ */}

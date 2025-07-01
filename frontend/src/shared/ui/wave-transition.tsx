@@ -48,7 +48,7 @@ export const WaveTransition = ({
   // УЛУЧШЕННАЯ функция генерации правильных элегантных волн с надежными fallback
   const generateCleanWavePath = (phase: number, amplitude: number): string => {
     try {
-      // Строгие проверки входных параметров с дополнительной валидацией
+      // ✅ УСИЛЕННЫЕ проверки входных параметров
       if (!isFinite(phase) || isNaN(phase) || !isFinite(amplitude) || isNaN(amplitude)) {
         console.warn('Invalid parameters for wave generation, using fallback');
         return 'M0,50 L100,50 V100 H0 Z';
@@ -70,14 +70,14 @@ export const WaveTransition = ({
         const x1 = (i / segments) * 100;
         const x2 = ((i + 1) / segments) * 100;
         
-        // Безопасные вычисления Y координат с дополнительными проверками
+        // ✅ Безопасные вычисления Y координат с дополнительными проверками
         const angle1 = (i / segments) * Math.PI * 2 + safePhase;
         const angle2 = ((i + 1) / segments) * Math.PI * 2 + safePhase;
         
         const sinValue1 = Math.sin(angle1);
         const sinValue2 = Math.sin(angle2);
         
-        // Тройная проверка на валидность sin значений
+        // ✅ Тройная проверка на валидность sin значений
         if (!isFinite(sinValue1) || isNaN(sinValue1) || !isFinite(sinValue2) || isNaN(sinValue2)) {
           console.warn('Invalid sin values, using fallback segment');
           continue;
@@ -86,7 +86,7 @@ export const WaveTransition = ({
         const y1Raw = 50 + sinValue1 * safeAmplitude;
         const y2Raw = 50 + sinValue2 * safeAmplitude;
         
-        // Ограничиваем Y координаты разумными пределами с дополнительной проверкой
+        // ✅ Ограничиваем Y координаты разумными пределами с дополнительной проверкой
         const y1 = Math.max(25, Math.min(75, isFinite(y1Raw) ? y1Raw : 50));
         const y2 = Math.max(25, Math.min(75, isFinite(y2Raw) ? y2Raw : 50));
         
@@ -96,7 +96,7 @@ export const WaveTransition = ({
         const cx2 = x1 + (x2 - x1) * 0.7;
         const cy2 = y2;
         
-        // Строгая проверка всех значений перед добавлением в path
+        // ✅ Строгая проверка всех значений перед добавлением в path
         const values = [cx1, cy1, cx2, cy2, x2, y2];
         const allValuesValid = values.every(val => 
           isFinite(val) && 
@@ -106,7 +106,7 @@ export const WaveTransition = ({
         );
         
         if (allValuesValid) {
-          // Округляем значения для стабильности с проверкой
+          // ✅ Округляем значения для стабильности с проверкой
           const roundedValues = values.map(val => {
             const rounded = Math.round(val * 100) / 100;
             return isFinite(rounded) ? rounded : 50;
@@ -122,8 +122,14 @@ export const WaveTransition = ({
       
       path += ' V100 H0 Z';
       
-      // Финальная проверка валидности path
-      if (path.includes('undefined') || path.includes('NaN') || path.includes('Infinity') || path.length < 20) {
+      // ✅ ФИНАЛЬНАЯ строгая проверка валидности path
+      if (!path || 
+          typeof path !== 'string' || 
+          path.includes('undefined') || 
+          path.includes('NaN') || 
+          path.includes('Infinity') || 
+          path.length < 15 ||
+          !path.startsWith('M')) {
         console.warn('Invalid path generated, using fallback');
         return 'M0,50 L100,50 V100 H0 Z';
       }
@@ -131,7 +137,7 @@ export const WaveTransition = ({
       return path;
       
     } catch (error) {
-      console.warn('Error generating wave path:', error);
+      console.error('Error generating wave path:', error);
       return 'M0,50 L100,50 V100 H0 Z';
     }
   };
@@ -148,14 +154,15 @@ export const WaveTransition = ({
       frames.push(path);
     }
     
-    // Проверяем что все пути валидны
+    // ✅ УСИЛЕННАЯ проверка что все пути валидны
     const validFrames = frames.every(path => 
       path && 
       typeof path === 'string' && 
       path.length > 10 && 
       !path.includes('undefined') && 
       !path.includes('NaN') && 
-      !path.includes('Infinity')
+      !path.includes('Infinity') &&
+      path.startsWith('M') // ✅ Дополнительная проверка что path начинается с moveto
     );
     
     // Если есть проблемы, возвращаем безопасные fallback
@@ -241,7 +248,8 @@ export const WaveTransition = ({
                 frame.includes('undefined') || 
                 frame.includes('NaN') || 
                 frame.includes('Infinity') ||
-                frame.length < 10) {
+                frame.length < 10 ||
+                !frame.startsWith('M')) {
               console.warn(`Invalid animation frame for wave ${index}, using fallback`);
               return 'M0,50 L100,50 V100 H0 Z';
             }

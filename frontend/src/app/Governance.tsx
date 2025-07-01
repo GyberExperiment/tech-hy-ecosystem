@@ -9,7 +9,7 @@ import {
   TrendingUp, 
   CheckCircle, 
   Target, 
-  Coins, 
+  Coins,
   FileText, 
   Plus,
   Eye,
@@ -43,7 +43,7 @@ const Governance: React.FC = () => {
   
   const isConnected = !!address;
   const isCorrectNetwork = chainId === BSC_TESTNET.chainId;
-
+  
   const [selectedProposal, setSelectedProposal] = useState<GovernanceProposal | null>(null);
   const [voteAmount, setVoteAmount] = useState('');
   const [voteSupport, setVoteSupport] = useState<boolean | null>(null);

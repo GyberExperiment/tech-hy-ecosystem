@@ -112,8 +112,8 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
               <span className="font-semibold text-slate-100">
                 Статус сети
               </span>
-            </div>
-            
+      </div>
+
             <div className="flex items-center gap-2">
               <button
                 onClick={runDiagnostics}
@@ -133,8 +133,8 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                   <X className="w-4 h-4 text-gray-300" />
                 </button>
               )}
-            </div>
-          </div>
+        </div>
+      </div>
 
           {/* Status Message */}
           <div className="mb-3">
@@ -172,11 +172,11 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                       {provider.requestCount > 0 && (
                         <span className="ml-1">R:{provider.requestCount}</span>
                       )}
-                    </div>
-                  </div>
+          </div>
+        </div>
                 ))}
-              </div>
-              
+      </div>
+
               {/* Active Requests Info */}
               {diagnostics.rpcStats.activeRequests > 0 && (
                 <div className="mt-2 text-xs text-gray-400">
@@ -186,7 +186,7 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                   )}
                 </div>
               )}
-            </div>
+              </div>
           )}
 
           {/* Quick Stats */}
@@ -197,9 +197,9 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                 {diagnostics.hasMetaMask ? (
                   diagnostics.isConnected ? '🟢 Подключен' : '🟡 Не подключен'
                 ) : '🔴 Не установлен'}
-              </div>
-            </div>
-            
+        </div>
+      </div>
+
             <div className="bg-white/5 rounded-lg p-2">
               <div className="text-gray-400">Сеть</div>
               <div className="text-slate-200 font-medium">
@@ -227,9 +227,9 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </motion.div>
-              </div>
+        </div>
             </button>
-          )}
+      )}
 
           {/* Recommendations */}
           <AnimatePresence>
@@ -251,10 +251,10 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                           <div>{rec}</div>
                         ) : (
                           <div className="h-2" />
-                        )}
-                      </div>
+          )}
+        </div>
                     ))}
-                  </div>
+      </div>
                   
                   {/* Quick Actions */}
                   <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
@@ -280,16 +280,16 @@ export const NetworkStatus: React.FC<NetworkStatusProps> = ({
                       <span className="text-sm">Скачать MetaMask</span>
                     </a>
                     
-                    <a
+      <a
                       href="https://academy.binance.com/en/articles/how-to-add-bsc-to-metamask"
-                      target="_blank"
-                      rel="noopener noreferrer"
+        target="_blank"
+        rel="noopener noreferrer"
                       className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                    >
+      >
                       <ExternalLink className="w-4 h-4" />
                       <span className="text-sm">Добавить BSC в MetaMask</span>
-                    </a>
-                  </div>
+      </a>
+    </div>
                 </div>
               </motion.div>
             )}

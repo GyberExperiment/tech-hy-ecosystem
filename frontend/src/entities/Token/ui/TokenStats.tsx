@@ -55,10 +55,10 @@ const TokenStats: React.FC<TokenStatsProps> = ({
             <BarChart3 className="mr-3 text-blue-400 animate-glass-pulse" />
             Статистика токенов
           </h2>
-          
+        
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="liquid-glass animate-pulse">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="liquid-glass animate-pulse">
                 <div className="text-center">
                   <div className="h-4 bg-gray-600 rounded w-20 mb-2 animate-pulse"></div>
                   <div className="h-8 bg-gray-600 rounded w-12 animate-pulse"></div>
@@ -137,50 +137,50 @@ const TokenStats: React.FC<TokenStatsProps> = ({
           <BarChart3 className="mr-3 text-blue-400 animate-glass-pulse" />
           Статистика токенов
         </h2>
-        
+      
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="card-ultra animate-glass-float">
+        <div className="card-ultra animate-glass-float">
             <div className="flex items-center space-x-4">
               <div className="p-3 rounded-xl bg-blue-500/20">
                 <Coins className="w-8 h-8 text-blue-400 animate-glass-pulse" />
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Всего токенов</p>
+            <div>
+              <p className="text-sm text-gray-400">Всего токенов</p>
                 <p className="text-2xl font-bold text-white">{totalTokens}</p>
-              </div>
             </div>
           </div>
-          
-          <div className="card-ultra animate-glass-float">
+        </div>
+        
+        <div className="card-ultra animate-glass-float">
             <div className="flex items-center space-x-4">
               <div className="p-3 rounded-xl bg-green-500/20">
                 <Activity className="w-8 h-8 text-green-400 animate-glass-pulse" />
               </div>
-              <div>
-                <p className="text-sm text-gray-400">С балансом</p>
+            <div>
+              <p className="text-sm text-gray-400">С балансом</p>
                 <p className="text-2xl font-bold text-white">{tokensWithBalanceCount}</p>
-              </div>
             </div>
           </div>
-          
-          <div className="card-ultra animate-glass-float">
+        </div>
+        
+        <div className="card-ultra animate-glass-float">
             <div className="flex items-center space-x-4">
               <div className="p-3 rounded-xl bg-yellow-500/20">
                 <TrendingUp className="w-8 h-8 text-yellow-400 animate-glass-pulse" />
               </div>
-              <div>
-                <p className="text-sm text-gray-400">USD стоимость</p>
+            <div>
+              <p className="text-sm text-gray-400">USD стоимость</p>
                 <p className="text-2xl font-bold text-white">${totalValue.toFixed(2)}</p>
-              </div>
             </div>
           </div>
-          
-          <div className="card-ultra animate-glass-float">
+        </div>
+        
+        <div className="card-ultra animate-glass-float">
             <div className="flex items-center space-x-4">
               <div className="p-3 rounded-xl bg-purple-500/20">
                 <Shield className="w-8 h-8 text-purple-400 animate-glass-pulse" />
               </div>
-              <div>
+            <div>
                 <p className="text-sm text-gray-400">Разрешений</p>
                 <p className="text-2xl font-bold text-white">{activePermissions}</p>
               </div>

@@ -1067,7 +1067,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             <Zap className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Burn LP and Earn VG</h3>
+            <h3 className="text-xl font-bold text-white">Burn / Stake</h3>
             <p className="text-slate-300 text-sm">
               {mode === 'create' 
                 ? 'Create and burn LP position to earn VG (10:1)'
@@ -1096,7 +1096,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               : 'text-slate-200 hover:text-white hover:bg-orange-500/8'
           )}
         >
-          Burn LP
+          Burn
         </button>
         <button
           onClick={() => setMode('lock')}
@@ -1107,7 +1107,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
               : 'text-slate-200 hover:text-white hover:bg-purple-500/8'
           )}
         >
-          Lock LP
+          Stake
         </button>
       </div>
 
@@ -1346,7 +1346,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
         ) : (
           <>
             <Zap className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-            {mode === 'create' ? 'Burn LP + Earn VG' : 'Lock LP + Earn VG'}
+            Burn / Stake
           </>
         )}
       </button>

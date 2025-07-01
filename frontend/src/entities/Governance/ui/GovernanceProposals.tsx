@@ -352,7 +352,7 @@ const GovernanceProposals: React.FC = () => {
         <button
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-            filter === 'all'
+            filter === 'all' 
               ? 'btn-glass-blue text-white animate-glass-glow'
               : 'glass-card hover:glass-accent'
           }`}
@@ -362,7 +362,7 @@ const GovernanceProposals: React.FC = () => {
         <button
           onClick={() => setFilter('active')}
           className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-            filter === 'active'
+            filter === 'active' 
               ? 'btn-glass-blue text-white animate-glass-glow'
               : 'glass-card hover:glass-accent'
           }`}
@@ -481,12 +481,12 @@ const GovernanceProposals: React.FC = () => {
                       
                       <div className="flex items-center space-x-4 mb-4">
                         <div className={`px-3 py-1 rounded-lg text-xs font-semibold border animate-glass-glow ${getStatusColor(proposal.status)}`}>
-                          {getStatusLabel(proposal.status)}
-                        </div>
+                    {getStatusLabel(proposal.status)}
+                  </div>
                         <span className="text-sm text-gray-400">
                           {/* Add date formatting logic here */}
                         </span>
-                      </div>
+                    </div>
                     </div>
                     
                     <p className="text-gray-300 mb-4 line-clamp-2">
@@ -498,18 +498,18 @@ const GovernanceProposals: React.FC = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-green-400">За: {proposal.forVotes} голосов</span>
                         <span className="text-red-400">Против: {proposal.againstVotes} голосов</span>
-                      </div>
+                    </div>
                       
                       <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
-                        <div 
+                      <div 
                           className="absolute top-0 left-0 h-full bg-green-500 animate-glass-glow"
                           style={{ width: `${percentages.for}%` }}
                         />
                         <div 
                           className="absolute top-0 right-0 h-full bg-red-500 animate-glass-glow"
-                          style={{ width: `${percentages.against}%` }}
-                        />
-                        {parseFloat(proposal.abstainVotes) > 0 && (
+                        style={{ width: `${percentages.against}%` }}
+                      />
+                    {parseFloat(proposal.abstainVotes) > 0 && (
                           <div 
                             className="absolute top-0 h-full bg-gray-500 animate-glass-glow"
                             style={{ 
@@ -517,40 +517,40 @@ const GovernanceProposals: React.FC = () => {
                               width: `${percentages.abstain}%` 
                             }}
                           />
-                        )}
-                      </div>
-                    </div>
-                    
+                    )}
+                  </div>
+                </div>
+                
                     {/* Action Buttons */}
-                    {proposal.status === 'active' && parseFloat(votingPower) > 0 && (
+                {proposal.status === 'active' && parseFloat(votingPower) > 0 && (
                       <div className="flex space-x-2 mt-4">
-                        <button
-                          onClick={() => handleVote(proposal.proposalId, 1)}
+                    <button
+                      onClick={() => handleVote(proposal.proposalId, 1)}
                           disabled={parseFloat(votingPower) === 0}
                           className="btn-glass-green flex items-center space-x-2 animate-glass-glow"
-                        >
+                    >
                           <ThumbsUp className="w-4 h-4" />
-                          <span>За</span>
-                        </button>
-                        <button
-                          onClick={() => handleVote(proposal.proposalId, 0)}
+                      <span>За</span>
+                    </button>
+                    <button
+                      onClick={() => handleVote(proposal.proposalId, 0)}
                           disabled={parseFloat(votingPower) === 0}
                           className="btn-glass-fire flex items-center space-x-2 animate-glass-glow"
-                        >
+                    >
                           <ThumbsDown className="w-4 h-4" />
-                          <span>Против</span>
-                        </button>
-                        <button
-                          onClick={() => handleVote(proposal.proposalId, 2)}
+                      <span>Против</span>
+                    </button>
+                    <button
+                      onClick={() => handleVote(proposal.proposalId, 2)}
                           disabled={parseFloat(votingPower) === 0}
                           className="btn-glass-orange flex items-center space-x-2 animate-glass-glow"
-                        >
+                    >
                           <Minus className="w-4 h-4" />
-                          <span>Воздержаться</span>
-                        </button>
-                      </div>
-                    )}
-                    
+                      <span>Воздержаться</span>
+                    </button>
+                  </div>
+                )}
+                
                     {proposal.status === 'executed' && (
                       <div className="glass-accent border border-yellow-500/20 rounded-lg p-3 text-yellow-400 text-sm animate-glass-glow">
                         ✅ Предложение исполнено {/* Add date formatting logic here */}

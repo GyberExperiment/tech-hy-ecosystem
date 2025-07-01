@@ -445,7 +445,7 @@ const Tokens: React.FC = () => {
     <div className="animate-fade-in space-y-8 px-responsive">
       {/* Contract Status */}
       <div className="mb-8">
-        <ContractStatus />
+      <ContractStatus />
       </div>
 
       {/* Header */}
@@ -463,7 +463,7 @@ const Tokens: React.FC = () => {
 
       {/* Token Statistics - Reusable Component */}
       <div className="mb-8">
-        <TokenStats />
+      <TokenStats />
       </div>
 
       {/* Search and Filter */}

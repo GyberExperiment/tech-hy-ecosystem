@@ -26,7 +26,7 @@
   "forms": {
     "lpAmount": "LP Amount to Lock",
     "expectedVG": "Expected VG Tokens",
-    "lockForever": "Lock Forever"
+    "lockForever": "Burn / Stake"
   },
   "warnings": {
     "permanentLock": "⚠️ WARNING: This is a permanent lock",

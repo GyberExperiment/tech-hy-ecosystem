@@ -26,6 +26,7 @@ import { usePoolInfo } from '../../Staking/model/usePoolInfo';
 
 interface BuyVCWidgetProps {
   className?: string;
+  horizontal?: boolean;
 }
 
 interface TransactionStats {
@@ -34,7 +35,7 @@ interface TransactionStats {
   minimumReceived: string;
 }
 
-export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
+export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className, horizontal = false }) => {
   const { address, isConnected } = useAccount();
   const { getVCQuote, buyVCWithBNB, isLoading, isSuccess, error, txHash, resetState } = usePancakeSwap();
   
@@ -136,7 +137,12 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
 
   return (
     <motion.div 
-      className={cn("w-full max-w-md mx-auto", className)}
+      className={cn(
+        horizontal 
+          ? "w-full max-w-none" 
+          : "w-full max-w-md mx-auto", 
+        className
+      )}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -160,55 +166,116 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </h1>
         </div>
         
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className={cn(
+          "grid gap-6 mb-8",
+          horizontal 
+            ? "grid-cols-1 sm:grid-cols-3" 
+            : "grid-cols-1 sm:grid-cols-3"
+        )}>
+          {/* Цена VC токена */}
           <motion.div 
-            className="glass-ultra p-4 rounded-xl"
-            whileHover={{ scale: 1.05 }}
+            className="relative group"
+            whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-gray-300">Цена VC</span>
-            </div>
-            <div className="text-xl font-bold text-white mb-1">
-              {poolLoading ? '...' : `${realPrice.toFixed(6)} BNB`}
-            </div>
-            <div className="text-sm text-gray-400">
-              {poolInfo.isLoaded ? 'Реальная цена' : 'Загрузка...'}
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-emerald-500/10 to-green-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-500/8 border border-green-400/20 rounded-2xl p-6 hover:border-green-400/40 transition-all duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 shadow-lg">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                </div>
+                <div className="text-xs font-medium text-green-300/80 bg-green-500/10 px-2 py-1 rounded-full">
+                  Live
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-green-200/80">Цена VC</h3>
+                <div className="text-2xl font-bold text-white">
+                  {poolLoading ? (
+                    <div className="animate-pulse bg-green-400/20 h-8 w-24 rounded"></div>
+                  ) : (
+                    `${realPrice.toFixed(6)}`
+                  )}
+                </div>
+                <div className="text-sm text-green-300/70">
+                  {poolInfo.isLoaded ? 'BNB / Реальная цена' : 'Загрузка...'}
+                </div>
+              </div>
             </div>
           </motion.div>
           
+          {/* VC Reserve */}
           <motion.div 
-            className="glass-ultra p-4 rounded-xl"
-            whileHover={{ scale: 1.05 }}
+            className="relative group"
+            whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-gray-300">VC Reserve</span>
-            </div>
-            <div className="text-xl font-bold text-white mb-1">
-              {poolLoading ? '...' : `${vcReserve.toFixed(1)}`}
-            </div>
-            <div className="text-sm text-gray-400">
-              VC токенов
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-blue-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-blue-500/8 border border-blue-400/20 rounded-2xl p-6 hover:border-blue-400/40 transition-all duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-600/20 shadow-lg">
+                  <Activity className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="text-xs font-medium text-blue-300/80 bg-blue-500/10 px-2 py-1 rounded-full">
+                  Pool
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-blue-200/80">VC Reserve</h3>
+                <div className="text-2xl font-bold text-white">
+                  {poolLoading ? (
+                    <div className="animate-pulse bg-blue-400/20 h-8 w-20 rounded"></div>
+                  ) : (
+                    `${(vcReserve / 1000).toFixed(1)}K`
+                  )}
+                </div>
+                <div className="text-sm text-blue-300/70">
+                  VC токенов в пуле
+                </div>
+              </div>
             </div>
           </motion.div>
           
+          {/* Ликвидность */}
           <motion.div 
-            className="glass-ultra p-4 rounded-xl"
-            whileHover={{ scale: 1.05 }}
+            className="relative group"
+            whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-gray-300">Ликвидность</span>
-            </div>
-            <div className="text-xl font-bold text-white mb-1">
-              {poolLoading ? '...' : `${(totalLiquidity * realPrice).toFixed(1)}K`}
-            </div>
-            <div className="text-sm text-green-400">
-              {totalLiquidity > 0 ? 'Доступна' : 'Низкая'}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/10 to-purple-500/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+            <div className="relative backdrop-blur-xl bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-purple-500/8 border border-purple-400/20 rounded-2xl p-6 hover:border-purple-400/40 transition-all duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-600/20 shadow-lg">
+                  <Shield className="w-5 h-5 text-purple-400" />
+                </div>
+                <div className={cn(
+                  "text-xs font-medium px-2 py-1 rounded-full",
+                  totalLiquidity > 1000 
+                    ? "text-green-300/80 bg-green-500/10" 
+                    : "text-orange-300/80 bg-orange-500/10"
+                )}>
+                  {totalLiquidity > 1000 ? 'High' : 'Low'}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-purple-200/80">Ликвидность</h3>
+                <div className="text-2xl font-bold text-white">
+                  {poolLoading ? (
+                    <div className="animate-pulse bg-purple-400/20 h-8 w-16 rounded"></div>
+                  ) : (
+                    `${(totalLiquidity / 1000).toFixed(1)}K`
+                  )}
+                </div>
+                <div className={cn(
+                  "text-sm font-medium",
+                  totalLiquidity > 1000 ? "text-green-400" : "text-orange-400"
+                )}>
+                  {totalLiquidity > 1000 ? 'Высокая доступность' : 'Ограниченная'}
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -216,7 +283,7 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
 
       <motion.div 
         className="liquid-glass rounded-2xl p-8 backdrop-blur-xl bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-slate-700/50 shadow-2xl"
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: horizontal ? 1.01 : 1.02 }}
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between mb-8">
@@ -326,9 +393,17 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           )}
         </AnimatePresence>
 
+        <div className={cn(
+          horizontal 
+            ? "grid grid-cols-1 lg:grid-cols-3 gap-8 items-center" 
+            : "space-y-4"
+        )}>
+          
         <motion.div 
-          className="space-y-4 mb-6"
-          initial={{ opacity: 0, x: -20 }}
+            className={cn(
+              horizontal ? "space-y-4" : "space-y-4 mb-6"
+            )}
+            initial={{ opacity: 0, x: horizontal ? -20 : 0 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
         >
@@ -337,54 +412,62 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
               <Wallet className="w-4 h-4" />
               Вы платите
             </label>
-            <Button
-              variant="glass"
-              size="sm"
+              <Button
+                variant="glass"
+                size="sm"
               onClick={handleMaxBNB}
-              data-testid="max-button"
+                data-testid="max-button"
             >
               MAX
-            </Button>
+              </Button>
           </div>
           
           <div className="relative">
-            <Input
-              type="text"
-              inputMode="decimal"
-              pattern="[0-9]*\.?[0-9]*"
+              <Input
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
               placeholder="0.0"
               value={bnbAmount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setBnbAmount(value);
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setBnbAmount(value);
+                  }
+                }}
+                className="text-2xl font-bold pr-24 py-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50 focus:border-blue-400/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                data-testid="bnb-input"
+                aria-label="Сумма BNB для обмена"
+                rightIcon={
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
+                <span className="text-xs font-bold text-white">BNB</span>
+              </div>
                 }
-              }}
-              className="text-2xl font-bold pr-24 py-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50 focus:border-blue-400/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              data-testid="bnb-input"
-              aria-label="Сумма BNB для обмена"
-              rightIcon={
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">BNB</span>
-                </div>
-              }
-            />
+              />
           </div>
         </motion.div>
 
         <motion.div 
-          className="flex justify-center mb-6"
-          whileHover={{ scale: 1.2, rotate: 180 }}
+            className={cn(
+              "flex justify-center",
+              horizontal ? "lg:block" : "mb-6"
+            )}
+            whileHover={{ scale: 1.2, rotate: horizontal ? 90 : 180 }}
           transition={{ duration: 0.3 }}
         >
           <div className="p-4 rounded-full glass-ultra bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30">
-            <ArrowDown className="h-5 w-5 text-blue-400" />
+              <ArrowDown className={cn(
+                "h-5 w-5 text-blue-400",
+                horizontal ? "lg:rotate-90" : ""
+              )} />
           </div>
         </motion.div>
 
         <motion.div 
-          className="space-y-4 mb-6"
-          initial={{ opacity: 0, x: 20 }}
+            className={cn(
+              horizontal ? "space-y-4" : "space-y-4 mb-6"
+            )}
+            initial={{ opacity: 0, x: horizontal ? 20 : 0 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
         >
@@ -406,27 +489,28 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           </div>
           
           <div className="relative">
-            <Input
+              <Input
               type="text"
               placeholder="0.0"
               value={vcAmount}
               readOnly
-              className={cn(
-                "text-2xl font-bold pr-24 py-4 bg-gradient-to-r from-slate-700/50 to-slate-600/50 transition-all duration-300",
-                isCalculating 
-                  ? 'border-blue-400/70 shadow-[0_0_0_1px_rgb(59_130_246_/_0.7)]' 
-                  : 'border-slate-500/50'
-              )}
-              data-testid="vc-output"
-              aria-label="Количество VC токенов к получению"
-              rightIcon={
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">VC</span>
-                </div>
-              }
-            />
+                className={cn(
+                  "text-2xl font-bold pr-24 py-4 bg-gradient-to-r from-slate-700/50 to-slate-600/50 transition-all duration-300",
+                  isCalculating 
+                    ? 'border-blue-400/70 shadow-[0_0_0_1px_rgb(59_130_246_/_0.7)]' 
+                    : 'border-slate-500/50'
+                )}
+                data-testid="vc-output"
+                aria-label="Количество VC токенов к получению"
+                rightIcon={
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+                <span className="text-xs font-bold text-white">VC</span>
+              </div>
+                }
+              />
+            </div>
+          </motion.div>
           </div>
-        </motion.div>
 
         <AnimatePresence>
           {showAdvanced && isValidAmount && (
@@ -440,7 +524,12 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
             >
               <h4 className="text-lg font-semibold text-slate-200 mb-3">Детали транзакции</h4>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className={cn(
+                "text-sm gap-4",
+                horizontal 
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4" 
+                  : "grid grid-cols-2"
+              )}>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Влияние на цену:</span>
@@ -478,85 +567,94 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className }) => {
           )}
         </AnimatePresence>
 
-        {isSuccess && txHash && (
+        {/* Success and Error Messages */}
+          {isSuccess && txHash && (
           <div 
-            className="p-4 rounded-xl bg-green-500/20 border border-green-400/30 mb-6"
+              className="p-4 rounded-xl bg-green-500/20 border border-green-400/30 mb-6"
             data-testid="success-message"
-          >
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
+            >
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                <div>
                 <p className="text-green-300 font-medium">Swap выполнен успешно!</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-green-400/80 text-sm">TX:</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-green-400/80 text-sm">TX:</span>
                   <a
-                    href={`https://testnet.bscscan.com/tx/${txHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 text-sm hover:text-blue-300 transition-colors flex items-center gap-1"
+                      href={`https://testnet.bscscan.com/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 text-sm hover:text-blue-300 transition-colors flex items-center gap-1"
                     data-testid="transaction-link"
-                  >
+                    >
                     Посмотреть транзакцию
-                    <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               </div>
             </div>
           </div>
-        )}
+          )}
 
-        {error && (
+          {error && (
           <div 
-            className="p-4 rounded-xl bg-red-500/20 border border-red-400/30 mb-6"
+              className="p-4 rounded-xl bg-red-500/20 border border-red-400/30 mb-6"
             data-testid="error-message"
-          >
-            <div className="flex items-center gap-3">
+            >
+              <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-red-400" />
-              <div>
+                <div>
                 <p className="text-red-300 font-medium">Ошибка выполнения swap</p>
-                <p className="text-red-400/80 text-sm mt-1">{error}</p>
+                  <p className="text-red-400/80 text-sm mt-1">{error}</p>
+                </div>
               </div>
-            </div>
           </div>
         )}
 
-        <div className="space-y-3">
-          {!isConnected ? (
-            <Button 
-              variant="primary" 
-              size="lg" 
-              className="w-full"
-              data-testid="connect-button"
-            >
-              Подключить кошелек
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="primary"
-                size="lg"
+        {/* Action buttons - размещаются по центру в горизонтальном режиме */}
+        <div className={cn(
+          "space-y-3",
+          horizontal ? "flex justify-center" : ""
+        )}>
+          <div className={cn(
+            horizontal ? "w-full max-w-md space-y-3" : "space-y-3"
+          )}>
+        {!isConnected ? (
+              <Button 
+                variant="primary" 
+                size="lg" 
                 className="w-full"
-                disabled={!canSwap}
-                isLoading={isLoading}
-                onClick={handleSwap}
-                data-testid="swap-button"
+                data-testid="connect-button"
               >
-                {isLoading ? 'Выполняется...' : 'Купить VC токены'}
+                Подключить кошелек
               </Button>
-              
-              {(isSuccess || error) && (
+            ) : (
+              <>
                 <Button
-                  variant="glass"
+                  variant="primary"
                   size="lg"
                   className="w-full"
-                  onClick={handleReset}
-                  data-testid="reset-button"
+                  disabled={!canSwap}
+                  isLoading={isLoading}
+                  onClick={handleSwap}
+                  data-testid="swap-button"
                 >
-                  Сделать еще один swap
+                  {isLoading ? 'Выполняется...' : 'Купить VC токены'}
                 </Button>
-              )}
-            </>
-          )}
+                
+                {(isSuccess || error) && (
+                  <Button
+                    variant="glass"
+                    size="lg"
+                    className="w-full"
+                    onClick={handleReset}
+                    data-testid="reset-button"
+                  >
+                    Сделать еще один swap
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
     </motion.div>
