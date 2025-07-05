@@ -81,10 +81,17 @@ const SUPPORTED_CHAINS = [56, 1, 42161, 8453, 1101]; // BSC, Ethereum, Arbitrum,
 
 // ✅ Безопасный хук для market data с fallback
 const useMarketData = (currentChain: number, isConnected: boolean) => {
-  const queryClient = useQueryClient();
+  // Безопасный вызов useQueryClient с проверкой наличия провайдера
+  let queryClient;
+  let isQueryClientAvailable = false;
   
-  // Проверяем наличие QueryClient
-  const isQueryClientAvailable = !!queryClient;
+  try {
+    queryClient = useQueryClient();
+    isQueryClientAvailable = !!queryClient;
+  } catch (error) {
+    // QueryClientProvider не настроен (например, в тестах)
+    isQueryClientAvailable = false;
+  }
   
   const { data: marketData } = useQuery({
     queryKey: ['pancakeswap-market-data', currentChain],
