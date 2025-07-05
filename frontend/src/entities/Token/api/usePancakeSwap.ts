@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useChainId } from 'wagmi';
 
 // Temporary types until PancakeSwap packages are installed
 export type SwapVersion = 'v4' | 'v3' | 'v2';
@@ -77,6 +78,39 @@ const DYNAMIC_FEE_CONFIG = {
 
 // Supported chains for multichain
 const SUPPORTED_CHAINS = [56, 1, 42161, 8453, 1101]; // BSC, Ethereum, Arbitrum, Base, Polygon zkEVM
+
+// ✅ Безопасный хук для market data с fallback
+const useMarketData = (currentChain: number, isConnected: boolean) => {
+  const queryClient = useQueryClient();
+  
+  // Проверяем наличие QueryClient
+  const isQueryClientAvailable = !!queryClient;
+  
+  const { data: marketData } = useQuery({
+    queryKey: ['pancakeswap-market-data', currentChain],
+    queryFn: async () => {
+      // Simulate real-time data
+      return {
+        totalValueLocked: Math.random() * 1000000000, // $0-1B TVL
+        volume24h: Math.random() * 100000000, // $0-100M volume
+        fees24h: Math.random() * 1000000, // $0-1M fees
+        priceUSD: 0.001 + Math.random() * 0.002, // $0.001-0.003 price
+      };
+    },
+    refetchInterval: 30000, // 30 seconds
+    enabled: isConnected && isQueryClientAvailable,
+  });
+
+  // Fallback данные если QueryClient недоступен
+  const fallbackData = {
+    totalValueLocked: 500000000, // $500M fallback TVL
+    volume24h: 50000000, // $50M fallback volume
+    fees24h: 500000, // $500K fallback fees
+    priceUSD: 0.002, // $0.002 fallback price
+  };
+
+  return isQueryClientAvailable ? marketData : fallbackData;
+};
 
 export const usePancakeSwap = () => {
   const { address, isConnected, chain } = useAccount();
@@ -322,20 +356,7 @@ export const usePancakeSwap = () => {
   }, [chain?.id]);
 
   // Real-time market data simulation
-  const { data: marketData } = useQuery({
-    queryKey: ['pancakeswap-market-data', state.currentChain],
-    queryFn: async () => {
-      // Simulate real-time data
-      return {
-        totalValueLocked: Math.random() * 1000000000, // $0-1B TVL
-        volume24h: Math.random() * 100000000, // $0-100M volume
-        fees24h: Math.random() * 1000000, // $0-1M fees
-        priceUSD: 0.001 + Math.random() * 0.002, // $0.001-0.003 price
-      };
-    },
-    refetchInterval: 30000, // 30 seconds
-    enabled: isConnected,
-  });
+  const marketData = useMarketData(state.currentChain, isConnected);
 
   return {
     // Core swap functions
