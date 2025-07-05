@@ -16,29 +16,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 🧪 Smart Contracts Testing for Stage Debug
-  # stage-debug-contracts-test:
-  #   name: 🔗 Stage Debug Contracts Tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 📥 Checkout Code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: 📦 Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-  #
-  #     - name: 🔧 Install Dependencies
-  #       run: npm ci
-  #
-  #     - name: 🔨 Compile Contracts
-  #       run: npm run compile
-  #
-  #     - name: 🧪 Run Tests
-  #       run: npm run test
-
   # 🎨 Frontend Build for Stage Debug
   stage-debug-frontend-build:
     name: 🎨 Stage Debug Frontend Build
@@ -63,6 +40,9 @@ jobs:
       - name: 🔍 Type Check
         run: npm run type-check
 
+      - name: 🧪 Run Tests
+        run: npm run test
+
       - name: 🏗️ Build Stage Debug
         run: npm run build
         env:
@@ -85,6 +65,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tag: ${{ steps.meta.outputs.tags }}
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -102,8 +85,8 @@ jobs:
         uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📋 Extract Metadata
         id: meta
@@ -111,11 +94,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-stage-debug
-            type=sha,prefix=stage-debug-
+            type=sha,prefix=stage-debug-{{date 'YYYYMMDD-HHmmss'}}-
             type=raw,value=stage-debug-latest
 
       - name: 🏗️ Build and push Docker image
+        id: build
         uses: docker/build-push-action@v6.9.0
         with:
           context: .
@@ -156,8 +139,10 @@ jobs:
       - name: 🎯 Deploy to Stage Debug K3S
         run: |
           # Set stage-debug environment variables
-          export IMAGE_TAG="stage-debug-latest"
           export NAMESPACE="techhy-ecosystem-stage-debug"
+          export UNIQUE_TAG="stage-debug-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          
+          echo "🏷️ Using unique image tag: $UNIQUE_TAG"
           
           # Create stage-debug namespace first
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
@@ -165,28 +150,40 @@ jobs:
           # Create GHCR imagePullSecret after namespace exists
           kubectl create secret docker-registry ghcr-login \
             --docker-server=ghcr.io \
-            --docker-username="${{ secrets.GHCR_USERNAME }}" \
-            --docker-password="${{ secrets.GHCR_TOKEN }}" \
+            --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
             --docker-email="dev@techhy.me" \
             -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           # Apply stage-debug configurations using kustomize
           kubectl apply -k k8s/overlays/stage-debug/
+          
+          # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с уникальным тегом
+          echo "🔄 Updating deployment with new image..."
+          kubectl set image deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
+            techhy-ecosystem-frontend=ghcr.io/${{ github.repository }}:$UNIQUE_TAG \
+            -n $NAMESPACE
+          
+          # Ждем завершения rollout
+          echo "⏳ Waiting for deployment rollout..."
+          kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
+            -n $NAMESPACE --timeout=300s
 
-      - name: 🔍 Comprehensive Health Check & Rollback Protection
+      - name: 🔍 Health Check & Rollback Protection
         run: |
-          echo "🔍 Starting comprehensive health validation..."
+          echo "🔍 Starting health validation..."
           
           # Function to check application health
           check_health() {
             local url="https://stage.techhyecosystem.build.infra.gyber.org/"
-            local max_attempts=10
-            local wait_time=30
+            local max_attempts=8
+            local wait_time=15
             
             for i in $(seq 1 $max_attempts); do
               echo "📊 Health check attempt $i/$max_attempts..."
               
-              if curl -f -s --max-time 10 "$url" | grep -q "html"; then
+              # Проверяем HTTP статус и наличие HTML контента
+              if curl -f -s --max-time 10 "$url" | grep -q "<!DOCTYPE html"; then
                 echo "✅ Health check passed on attempt $i"
                 return 0
               else
@@ -202,37 +199,27 @@ jobs:
             return 1
           }
           
-          # Wait for pods to be ready
-          echo "⏳ Waiting for deployment rollout..."
-          if ! kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s; then
-            echo "💥 Deployment rollout failed! Initiating rollback..."
-            kubectl rollout undo deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
-            exit 1
-          fi
-          
           # Additional wait for service to be fully ready
           echo "⏳ Waiting for service to be ready..."
-          sleep 60
+          sleep 30
           
           # Perform health checks
           if ! check_health; then
             echo "💥 Health check validation FAILED! Initiating automatic rollback..."
             
-            # Get current deployment revision
-            current_revision=$(kubectl rollout history deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --revision=0 | tail -n1 | awk '{print $1}')
-            echo "📊 Current revision: $current_revision"
-            
             # Rollback to previous version
             echo "🔙 Rolling back to previous working version..."
-            kubectl rollout undo deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug
+            kubectl rollout undo deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
+              -n techhy-ecosystem-stage-debug
             
             # Wait for rollback to complete
             echo "⏳ Waiting for rollback to complete..."
-            kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment -n techhy-ecosystem-stage-debug --timeout=300s
+            kubectl rollout status deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
+              -n techhy-ecosystem-stage-debug --timeout=300s
             
             # Verify rollback health
             echo "🔍 Verifying rollback health..."
-            sleep 30
+            sleep 20
             if check_health; then
               echo "✅ Rollback successful - application is healthy"
               echo "💡 Deployment failed but was automatically rolled back to working state"
@@ -250,10 +237,11 @@ jobs:
           echo "📊 Final deployment status validation..."
           kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug
           kubectl get services -n techhy-ecosystem-stage-debug  
-          kubectl get ingress -n techhy-ecosystem-stage-debug
           
           # Verify all pods are running
-          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-stage-debug -l app=techhy-ecosystem-stage-debug --field-selector=status.phase=Running --no-headers | wc -l)
+          RUNNING_PODS=$(kubectl get pods -n techhy-ecosystem-stage-debug \
+            -l app=techhy-ecosystem-stage-debug \
+            --field-selector=status.phase=Running --no-headers | wc -l)
           EXPECTED_PODS=2
           
           if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
@@ -261,6 +249,13 @@ jobs:
           else
             echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
           fi
+          
+          # Show current image being used
+          echo "🏷️ Current image in deployment:"
+          kubectl get deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
+            -n techhy-ecosystem-stage-debug \
+            -o jsonpath='{.spec.template.spec.containers[0].image}'
+          echo ""
 
       - name: 🎉 Stage Debug Deployment Success
         if: success()
@@ -269,4 +264,4 @@ jobs:
           echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
-          echo "🏷️ Image Tag: stage-debug-latest" 
+          echo "🏷️ Image Tag: stage-debug-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}" 
