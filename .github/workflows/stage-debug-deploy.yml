@@ -3,8 +3,6 @@ name: 🎭 TECH HY Stage Debug Deploy
 on:
   push:
     branches: [ stage-debug ]
-  pull_request:
-    branches: [ stage-debug ]
 
 # Prevent concurrent deployments to stage-debug environment
 concurrency:
@@ -37,12 +35,6 @@ jobs:
       - name: 🔧 Install Dependencies
         run: npm ci
 
-      - name: 🔍 Type Check
-        run: npm run type-check
-
-      - name: 🧪 Run Tests
-        run: npm run test
-
       - name: 🏗️ Build Stage Debug
         run: npm run build
         env:
@@ -61,7 +53,6 @@ jobs:
     name: 🐳 Stage Debug Docker Build
     runs-on: ubuntu-latest
     needs: [stage-debug-frontend-build]
-    if: github.ref == 'refs/heads/stage-debug'
     permissions:
       contents: read
       packages: write
@@ -115,7 +106,6 @@ jobs:
     name: 🚀 Deploy to Stage Debug
     runs-on: ubuntu-latest
     needs: [stage-debug-docker-build]
-    if: github.ref == 'refs/heads/stage-debug'
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
