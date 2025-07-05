@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAccount, useWalletClient } from 'wagmi';
 import { useChainId } from 'wagmi';
+import { useCryptoDataManager } from '../../../shared/lib/useCryptoDataManager';
 
 // Temporary types until PancakeSwap packages are installed
 export type SwapVersion = 'v4' | 'v3' | 'v2';
@@ -79,51 +79,12 @@ const DYNAMIC_FEE_CONFIG = {
 // Supported chains for multichain
 const SUPPORTED_CHAINS = [56, 1, 42161, 8453, 1101]; // BSC, Ethereum, Arbitrum, Base, Polygon zkEVM
 
-// ✅ Безопасный хук для market data с fallback
-const useMarketData = (currentChain: number, isConnected: boolean) => {
-  // Безопасный вызов useQueryClient с проверкой наличия провайдера
-  let queryClient;
-  let isQueryClientAvailable = false;
-  
-  try {
-    queryClient = useQueryClient();
-    isQueryClientAvailable = !!queryClient;
-  } catch (error) {
-    // QueryClientProvider не настроен (например, в тестах)
-    isQueryClientAvailable = false;
-  }
-  
-  const { data: marketData } = useQuery({
-    queryKey: ['pancakeswap-market-data', currentChain],
-    queryFn: async () => {
-      // Simulate real-time data
-      return {
-        totalValueLocked: Math.random() * 1000000000, // $0-1B TVL
-        volume24h: Math.random() * 100000000, // $0-100M volume
-        fees24h: Math.random() * 1000000, // $0-1M fees
-        priceUSD: 0.001 + Math.random() * 0.002, // $0.001-0.003 price
-      };
-    },
-    refetchInterval: 30000, // 30 seconds
-    enabled: isConnected && isQueryClientAvailable,
-  });
-
-  // Fallback данные если QueryClient недоступен
-  const fallbackData = {
-    totalValueLocked: 500000000, // $500M fallback TVL
-    volume24h: 50000000, // $50M fallback volume
-    fees24h: 500000, // $500K fallback fees
-    priceUSD: 0.002, // $0.002 fallback price
-  };
-
-  return isQueryClientAvailable ? marketData : fallbackData;
-};
-
 export const usePancakeSwap = () => {
   const { address, isConnected, chain } = useAccount();
   const { data: walletClient } = useWalletClient();
-  // TODO: Интеграция с реальным PancakeSwap API через publicClient для чтения блокчейн данных
-  // const publicClient = usePublicClient(); // Заготовка для будущей реальной имплементации
+  
+  // ✅ Используем централизованную систему данных проекта
+  const { poolData, isSystemReady } = useCryptoDataManager();
   
   const [state, setState] = useState<SwapState>({
     isLoading: false,
@@ -189,10 +150,11 @@ export const usePancakeSwap = () => {
       const hooks: HookType[] = ['DynamicFee'];
       if (enableMEVGuard) hooks.push('MEVGuard');
 
-      // Simulate improved exchange rate based on version
-      let baseRate = 1000; // 1 BNB = 1000 VC base rate
+      // ✅ Используем реальные данные из централизованной системы
+      const currentPrice = parseFloat(poolData.price) || 1000; // Fallback 1000 если price недоступен
       
       // Apply version multipliers (V4 has better rates)
+      let baseRate = currentPrice;
       if (version === 'v4') baseRate *= 1.02; // 2% better rate
       else if (version === 'v3') baseRate *= 1.01; // 1% better rate
       
@@ -213,8 +175,8 @@ export const usePancakeSwap = () => {
         id: `${version}-${poolType}-pool`,
         type: poolType,
         fee: dynamicFee,
-        liquidity: (Math.random() * 5000000).toString(), // $0-5M simulated liquidity
-        tvl: Math.random() * 10000000, // $0-10M TVL
+        liquidity: poolData.totalLockedLP || '0', // ✅ Реальные данные из системы
+        tvl: parseFloat(poolData.totalLockedLP) * currentPrice || 0, // ✅ Расчет на основе реальных данных
         apr: Math.random() * 30, // 0-30% APR
         hooks,
       };
@@ -241,7 +203,7 @@ export const usePancakeSwap = () => {
       console.error('Quote error:', error);
       throw error;
     }
-  }, [calculateDynamicFee]);
+  }, [calculateDynamicFee, poolData]);
 
   // Enhanced swap execution with modern features
   const buyVCWithBNB = useCallback(async (params: ModernSwapParams) => {
@@ -301,14 +263,18 @@ export const usePancakeSwap = () => {
   // Modern pool discovery
   const getAvailablePools = useCallback(async (): Promise<PoolInfo[]> => {
     try {
+      // ✅ Используем реальные данные из централизованной системы
+      const currentPrice = parseFloat(poolData.price) || 1000;
+      const totalLiquidity = parseFloat(poolData.totalLockedLP) || 0;
+      
       // Simulate modern pool types
       const pools: PoolInfo[] = [
         {
           id: 'v4-clamm-pool',
           type: 'CLAMM',
           fee: 0.0005,
-          liquidity: '2500000',
-          tvl: 5000000,
+          liquidity: poolData.totalLockedLP,
+          tvl: totalLiquidity * currentPrice,
           apr: 12.5,
           hooks: ['DynamicFee', 'MEVGuard'],
         },
@@ -316,8 +282,8 @@ export const usePancakeSwap = () => {
           id: 'v4-lbamm-pool', 
           type: 'LBAMM',
           fee: 0.0003,
-          liquidity: '1800000',
-          tvl: 3500000,
+          liquidity: (totalLiquidity * 0.7).toString(),
+          tvl: totalLiquidity * currentPrice * 0.7,
           apr: 8.2,
           hooks: ['DynamicFee'],
         },
@@ -325,8 +291,8 @@ export const usePancakeSwap = () => {
           id: 'v3-classic-pool',
           type: 'Classic',
           fee: 0.003,
-          liquidity: '1200000', 
-          tvl: 2000000,
+          liquidity: (totalLiquidity * 0.5).toString(),
+          tvl: totalLiquidity * currentPrice * 0.5,
           apr: 6.8,
           hooks: [],
         }
@@ -337,7 +303,7 @@ export const usePancakeSwap = () => {
       console.error('Failed to get pools:', error);
       return [];
     }
-  }, []);
+  }, [poolData]);
 
   // Multi-chain support
   const switchChain = useCallback(async (chainId: number) => {
@@ -362,8 +328,13 @@ export const usePancakeSwap = () => {
     });
   }, [chain?.id]);
 
-  // Real-time market data simulation
-  const marketData = useMarketData(state.currentChain, isConnected);
+  // ✅ Market data из централизованной системы
+  const marketData = {
+    totalValueLocked: parseFloat(poolData.totalLockedLP) * parseFloat(poolData.price) || 500000000,
+    volume24h: 50000000, // Fallback данные
+    fees24h: 500000,
+    priceUSD: parseFloat(poolData.price) || 0.002,
+  };
 
   return {
     // Core swap functions
@@ -382,7 +353,7 @@ export const usePancakeSwap = () => {
     txHash: state.txHash,
     quotes: state.quotes,
     
-    // Market data
+    // ✅ Market data из централизованной системы
     marketData,
     
     // Configuration
@@ -391,6 +362,9 @@ export const usePancakeSwap = () => {
     mevGuardEnabled: MEV_GUARD_CONFIG.enabled,
     flashAccountingEnabled: FLASH_ACCOUNTING_CONFIG.enabled,
     dynamicFeesEnabled: DYNAMIC_FEE_CONFIG.enabled,
+    
+    // System status
+    isSystemReady,
     
     // Utility
     resetState,
