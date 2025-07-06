@@ -30,6 +30,11 @@
       "address": "0x2269D0D279345526C30d694db1d94075450b6A99",
       "txHash": "0xf14dcd08baafabeb9bd1dad2d6d8467cf19b0e2b6a6b4ecdf6ed199bb5ae0867",
       "kind": "uups"
+    },
+    {
+      "address": "0x587d53B1d2E857d8c514e36C59130B66d45aB408",
+      "txHash": "0xc5d46530e568a0aaa19ba9b0171fa0ac910e75795ed4e0d95eeb2f523ac5bc0d",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -928,6 +933,425 @@
               "label": "_owner",
               "type": "t_address",
               "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "da4d66e9bbd07a7f70e7eeaca930722403a560690cb25464fe22928bbcb42f63": {
+      "address": "0x5E8fDbBECaEa438d3240039FcBf0602197233c7C",
+      "txHash": "0x6f1575452b18f0f37c9076c298cfba70bb79eb19d821b22a70cf4c173a1cef97",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "saleConfig",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_struct(SaleConfig)19367_storage",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:111"
+          },
+          {
+            "label": "securityConfig",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_struct(SecurityConfig)19380_storage",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:111"
+          },
+          {
+            "label": "circuitBreaker",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_struct(CircuitBreakerState)19389_storage",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:113"
+          },
+          {
+            "label": "dailySales",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_struct(DailySales)19394_storage",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:114"
+          },
+          {
+            "label": "lastPurchaseTime",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:117"
+          },
+          {
+            "label": "lastPurchaseBlock",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:118"
+          },
+          {
+            "label": "purchasesInBlock",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:120"
+          },
+          {
+            "label": "userPurchasedVC",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:122"
+          },
+          {
+            "label": "userSpentBNB",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:124"
+          },
+          {
+            "label": "blacklistedUsers",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:127"
+          },
+          {
+            "label": "emergencyWhitelist",
+            "offset": 0,
+            "slot": "28",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "VCSaleContract",
+            "src": "contracts/VCSaleContract.sol:131"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)24_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)211_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)362_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)426_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)24_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(CircuitBreakerState)19389_storage": {
+            "label": "struct VCSaleContract.CircuitBreakerState",
+            "members": [
+              {
+                "label": "salesInWindow",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "windowStartTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "triggered",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "triggeredAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(DailySales)19394_storage": {
+            "label": "struct VCSaleContract.DailySales",
+            "members": [
+              {
+                "label": "date",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(SaleConfig)19367_storage": {
+            "label": "struct VCSaleContract.SaleConfig",
+            "members": [
+              {
+                "label": "vcTokenAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "pricePerVC",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "minPurchaseAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "maxPurchaseAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "totalVCAvailable",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "totalVCSold",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "saleActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "treasury",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "6"
+              },
+              {
+                "label": "maxDailySales",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "priceUpdateCooldown",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "lastPriceUpdate",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              }
+            ],
+            "numberOfBytes": "320"
+          },
+          "t_struct(SecurityConfig)19380_storage": {
+            "label": "struct VCSaleContract.SecurityConfig",
+            "members": [
+              {
+                "label": "mevProtectionEnabled",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "minTimeBetweenPurchases",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "maxPurchasesPerBlock",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "circuitBreakerActive",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "circuitBreakerThreshold",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "circuitBreakerWindow",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
               "offset": 0,
               "slot": "0"
             }

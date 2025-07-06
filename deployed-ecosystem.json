@@ -41,5 +41,11 @@
   "CONFIG_FIXED": {
     "LP_TOKEN_CORRECTED": "0xA221093a37396c6301db4B24D55E1C871DF31d13",
     "TIMESTAMP": "2025-06-11T15:37:01.723Z"
-  }
+  },
+  "VCSaleContract": "0x587d53B1d2E857d8c514e36C59130B66d45aB408",
+  "VCSaleContract_Implementation": "0x5E8fDbBECaEa438d3240039FcBf0602197233c7C",
+  "VCSaleContract_DeployedAt": "2025-07-06T22:22:41.003Z",
+  "VCSaleContract_Network": "BSC Testnet",
+  "VCSaleContract_Deployer": "0xe70eC2DeA28CD14B2d392E72F2fE68F8d8799D5E",
+  "VCSaleContract_Version": "2.0.0-secure"
 }
