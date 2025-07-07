@@ -457,6 +457,48 @@ section, article, .fade-in {
   animation: glass-breathing 14s ease-in-out infinite;
 }
 
+/* Shimmer Animation for Loading Skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+/* Enhanced Widget Chaos Animation */
+@keyframes enhanced-widget-chaos-1 {
+  0% {
+    transform: translateY(0px) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-enhanced-widget-chaos-1 {
+  animation: enhanced-widget-chaos-1 0.8s ease-out forwards;
+}
+
+/* Card Ultra Styling */
+.card-ultra {
+  @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* ===== ENHANCED GLASSMORPHISM CLASSES ===== */
 .glass-enhanced-breathing {
   @apply glass-enhanced animate-glass-breathing;

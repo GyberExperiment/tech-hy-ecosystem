@@ -11,7 +11,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: gyberexperiment/tech-hy-ecosystem
 
 jobs:
   # 🎨 Frontend Build for Stage Debug
@@ -151,7 +151,7 @@ jobs:
           # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с уникальным тегом
           echo "🔄 Updating deployment with new image..."
           kubectl set image deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
-            techhy-ecosystem-frontend=ghcr.io/${{ github.repository }}:$UNIQUE_TAG \
+            techhy-ecosystem-frontend=ghcr.io/gyberexperiment/tech-hy-ecosystem:$UNIQUE_TAG \
             -n $NAMESPACE
           
           # Ждем завершения rollout

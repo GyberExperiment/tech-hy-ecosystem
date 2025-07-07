@@ -1,6 +1,9 @@
 // VCSaleWidget Production-Ready Architecture
 export { default as VCSaleWidget } from './ui/VCSaleWidget';
 
+// Hooks
+export { useVCSale } from './hooks/useVCSale';
+
 // Types
 export type {
   VCSaleWidgetProps,

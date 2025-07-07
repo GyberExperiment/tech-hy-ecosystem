@@ -1,172 +1,231 @@
 import React from 'react';
+import { cn } from '../lib/cn';
 
-interface SkeletonProps {
+interface LoadingSkeletonProps {
   className?: string;
-  height?: string;
-  width?: string;
-  rounded?: boolean;
+  variant?: 'text' | 'card' | 'avatar' | 'button' | 'input' | 'stats';
+  lines?: number;
+  width?: string | number;
+  height?: string | number;
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  animated?: boolean;
 }
 
-const Skeleton: React.FC<SkeletonProps> = ({ 
-  className = '', 
-  height = 'h-4', 
-  width = 'w-full',
-  rounded = false 
+export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
+  className = '',
+  variant = 'text',
+  lines = 1,
+  width = '100%',
+  height,
+  rounded = 'md',
+  animated = true,
 }) => {
+  const baseClasses = cn(
+    'bg-gradient-to-r from-slate-700/20 via-slate-600/30 to-slate-700/20 bg-[length:200%_100%]',
+    {
+      'animate-pulse': !animated,
+      'animate-shimmer': animated,
+      'rounded-none': rounded === 'none',
+      'rounded-sm': rounded === 'sm',
+      'rounded-md': rounded === 'md',
+      'rounded-lg': rounded === 'lg',
+      'rounded-xl': rounded === 'xl',
+      'rounded-full': rounded === 'full',
+    },
+    className
+  );
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'text':
+        return {
+          width: width,
+          height: height || '1em',
+        };
+      case 'card':
+        return {
+          width: width,
+          height: height || '200px',
+        };
+      case 'avatar':
+        return {
+          width: width || '48px',
+          height: height || '48px',
+        };
+      case 'button':
+        return {
+          width: width || '120px',
+          height: height || '40px',
+        };
+      case 'input':
+        return {
+          width: width,
+          height: height || '48px',
+        };
+      case 'stats':
+        return {
+          width: width,
+          height: height || '80px',
+        };
+      default:
+        return {
+          width: width,
+          height: height || '1em',
+        };
+    }
+  };
+
+  // Multi-line text skeleton
+  if (variant === 'text' && lines > 1) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: lines }).map((_, index) => (
+          <div
+            key={index}
+            className={baseClasses}
+            style={{
+              ...getVariantStyles(),
+              width: index === lines - 1 ? '75%' : width, // Last line shorter
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div 
-      className={`
-        ${height} ${width} 
-        bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 
-        bg-[length:200%_100%] animate-pulse
-        ${rounded ? 'rounded-full' : 'rounded-lg'}
-        ${className}
-      `}
+    <div
+      className={baseClasses}
+      style={getVariantStyles()}
+      role="status"
+      aria-label="Loading content"
     />
   );
 };
 
-// Card Skeleton
-export const CardSkeleton: React.FC = () => (
-  <div className="card">
-    <div className="flex items-center justify-between mb-4">
-      <Skeleton height="h-6" width="w-32" />
-      <Skeleton height="h-5" width="w-20" />
+// Специализированные компоненты
+export const BalanceCardSkeleton: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn('backdrop-blur-xl bg-white/3 border border-white/8 rounded-xl p-4', className)}>
+    <div className="flex items-center gap-3 mb-2">
+      <LoadingSkeleton variant="avatar" width="32px" height="32px" rounded="lg" />
+      <LoadingSkeleton variant="text" width="100px" height="14px" />
     </div>
-    <div className="space-y-3">
-      <Skeleton height="h-4" width="w-full" />
-      <Skeleton height="h-4" width="w-3/4" />
-      <Skeleton height="h-4" width="w-1/2" />
+    <LoadingSkeleton variant="text" width="120px" height="28px" />
+  </div>
+);
+
+export const SaleInfoSkeleton: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn('backdrop-blur-xl bg-white/3 border border-white/8 rounded-xl p-4', className)}>
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <LoadingSkeleton variant="avatar" width="16px" height="16px" rounded="full" />
+        <LoadingSkeleton variant="text" width="140px" height="14px" />
+      </div>
     </div>
-    <div className="mt-6">
-      <Skeleton height="h-10" width="w-full" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-3">
+      {[1, 2].map((i) => (
+        <div key={i}>
+          <LoadingSkeleton variant="text" width="80px" height="14px" className="mb-1" />
+          <LoadingSkeleton variant="text" width="120px" height="16px" />
+        </div>
+      ))}
+    </div>
+    <div className="pt-3 border-t border-white/10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        {[1, 2].map((i) => (
+          <div key={i}>
+            <LoadingSkeleton variant="text" width="100px" height="14px" className="mb-1" />
+            <LoadingSkeleton variant="text" width="80px" height="16px" />
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 );
 
-// Stats Skeleton
-export const StatsSkeleton: React.FC = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="card text-center">
-        <Skeleton height="h-8" width="w-24" className="mx-auto mb-2" />
-        <Skeleton height="h-5" width="w-16" className="mx-auto" />
+export const UserStatsSkeleton: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn('backdrop-blur-xl bg-white/3 border border-white/8 rounded-xl p-4', className)}>
+    <div className="flex items-center gap-2 mb-3">
+      <LoadingSkeleton variant="avatar" width="16px" height="16px" rounded="full" />
+      <LoadingSkeleton variant="text" width="120px" height="14px" />
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i}>
+          <LoadingSkeleton variant="text" width="90px" height="14px" className="mb-1" />
+          <LoadingSkeleton variant="text" width="100px" height="16px" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Table Skeleton for TransactionHistory
+export const TableSkeleton: React.FC<{ rows?: number; className?: string }> = ({ 
+  rows = 5, 
+  className 
+}) => (
+  <div className={cn('backdrop-blur-xl bg-white/3 border border-white/8 rounded-xl p-4', className)}>
+    {/* Table Header */}
+    <div className="grid grid-cols-4 gap-4 p-3 border-b border-white/10 mb-4">
+      <LoadingSkeleton variant="text" width="80px" height="14px" />
+      <LoadingSkeleton variant="text" width="100px" height="14px" />
+      <LoadingSkeleton variant="text" width="60px" height="14px" />
+      <LoadingSkeleton variant="text" width="90px" height="14px" />
+    </div>
+    
+    {/* Table Rows */}
+    {Array.from({ length: rows }).map((_, index) => (
+      <div key={index} className="grid grid-cols-4 gap-4 p-3 border-b border-white/5 last:border-b-0">
+        <LoadingSkeleton variant="text" width="120px" height="16px" />
+        <LoadingSkeleton variant="text" width="80px" height="16px" />
+        <LoadingSkeleton variant="text" width="60px" height="16px" />
+        <LoadingSkeleton variant="text" width="100px" height="16px" />
       </div>
     ))}
   </div>
 );
 
-// Table Skeleton
-export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
-  <div className="card">
-    <div className="mb-4">
-      <Skeleton height="h-6" width="w-48" />
-    </div>
-    <div className="space-y-4">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center space-x-4 p-3 border border-slate-700 rounded-lg">
-          <Skeleton height="h-10" width="w-10" rounded />
-          <div className="flex-1 space-y-2">
-            <Skeleton height="h-4" width="w-3/4" />
-            <Skeleton height="h-3" width="w-1/2" />
-          </div>
-          <Skeleton height="h-8" width="w-20" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-// Pool Info Skeleton
-export const PoolInfoSkeleton: React.FC = () => (
-  <div className="card">
-    <div className="mb-6">
-      <Skeleton height="h-6" width="w-40" className="mb-4" />
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Skeleton height="h-4" width="w-24" className="mb-2" />
-          <Skeleton height="h-8" width="w-32" />
-        </div>
-        <div>
-          <Skeleton height="h-4" width="w-24" className="mb-2" />
-          <Skeleton height="h-8" width="w-32" />
-        </div>
-      </div>
-    </div>
-    
-    <div className="space-y-4">
-      <div className="flex justify-between">
-        <Skeleton height="h-4" width="w-20" />
-        <Skeleton height="h-4" width="w-28" />
-      </div>
-      <div className="flex justify-between">
-        <Skeleton height="h-4" width="w-24" />
-        <Skeleton height="h-4" width="w-20" />
-      </div>
-      <div className="flex justify-between">
-        <Skeleton height="h-4" width="w-28" />
-        <Skeleton height="h-4" width="w-24" />
-      </div>
-    </div>
-  </div>
-);
-
-// Input Form Skeleton
-export const InputFormSkeleton: React.FC = () => (
-  <div className="card">
-    <Skeleton height="h-6" width="w-32" className="mb-4" />
-    <div className="space-y-4">
-      <div>
-        <Skeleton height="h-4" width="w-20" className="mb-2" />
-        <Skeleton height="h-12" width="w-full" />
-      </div>
-      <div>
-        <Skeleton height="h-4" width="w-16" className="mb-2" />
-        <Skeleton height="h-12" width="w-full" />
-      </div>
-      <Skeleton height="h-10" width="w-full" />
-    </div>
-  </div>
-);
-
-// Chart Skeleton
-export const ChartSkeleton: React.FC = () => (
-  <div className="card">
+// Компонент для полного виджета
+export const VCSaleWidgetSkeleton: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn('card-ultra animate-enhanced-widget-chaos-1', className)}>
+    {/* Header Skeleton */}
     <div className="flex items-center justify-between mb-6">
-      <Skeleton height="h-6" width="w-32" />
-      <div className="flex space-x-2">
-        <Skeleton height="h-8" width="w-16" />
-        <Skeleton height="h-8" width="w-16" />
-        <Skeleton height="h-8" width="w-16" />
+      <div className="flex items-center gap-3">
+        <LoadingSkeleton variant="avatar" width="48px" height="48px" rounded="xl" />
+        <div>
+          <LoadingSkeleton variant="text" width="100px" height="20px" className="mb-1" />
+          <LoadingSkeleton variant="text" width="200px" height="14px" />
+        </div>
+      </div>
+      <LoadingSkeleton variant="button" width="48px" height="48px" rounded="xl" />
+    </div>
+
+    {/* Balances Skeleton */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <BalanceCardSkeleton />
+      <BalanceCardSkeleton />
+    </div>
+
+    {/* Sale Info Skeleton */}
+    <SaleInfoSkeleton className="mb-6" />
+
+    {/* Input Fields Skeleton */}
+    <div className="space-y-4 mb-6">
+      <div>
+        <LoadingSkeleton variant="text" width="100px" height="14px" className="mb-2" />
+        <LoadingSkeleton variant="input" rounded="xl" />
+      </div>
+      <div>
+        <LoadingSkeleton variant="text" width="120px" height="14px" className="mb-2" />
+        <LoadingSkeleton variant="input" rounded="xl" />
       </div>
     </div>
-    <div className="h-64 bg-slate-800 rounded-lg flex items-end space-x-2 p-4">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div 
-          key={i} 
-          className="flex-1 bg-gradient-to-t from-blue-500/30 to-blue-500/60 rounded-t animate-pulse"
-          style={{ height: `${Math.random() * 80 + 20}%` }}
-        />
-      ))}
-    </div>
-  </div>
-);
 
-// Page Loading
-export const PageSkeleton: React.FC = () => (
-  <div className="container mx-auto px-4 py-8">
-    <div className="mb-8">
-      <Skeleton height="h-8" width="w-64" className="mb-2" />
-      <Skeleton height="h-5" width="w-96" />
-    </div>
-    
-    <StatsSkeleton />
-    
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <CardSkeleton />
-      <CardSkeleton />
-    </div>
-  </div>
-);
+    {/* Purchase Button Skeleton */}
+    <LoadingSkeleton variant="button" height="48px" rounded="xl" className="mb-6" />
 
-export default Skeleton; 
+    {/* User Stats Skeleton */}
+    <UserStatsSkeleton />
+  </div>
+); 
