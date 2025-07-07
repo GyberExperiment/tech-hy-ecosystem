@@ -58,7 +58,8 @@ jobs:
       packages: write
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.image-tag.outputs.tag }}
+      unique-tag: ${{ steps.image-tag.outputs.unique-tag }}
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -68,6 +69,14 @@ jobs:
         with:
           name: frontend-stage-debug-dist
           path: frontend/dist/
+
+      - name: 🏷️ Create Unique Image Tag
+        id: image-tag
+        run: |
+          UNIQUE_TAG="stage-debug-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          echo "unique-tag=$UNIQUE_TAG" >> $GITHUB_OUTPUT
+          echo "tag=ghcr.io/gyberexperiment/tech-hy-ecosystem:$UNIQUE_TAG" >> $GITHUB_OUTPUT
+          echo "🏷️ Created unique tag: $UNIQUE_TAG"
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.11.0
@@ -85,7 +94,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=stage-debug-{{date 'YYYYMMDD-HHmmss'}}-
+            type=raw,value=${{ steps.image-tag.outputs.unique-tag }}
             type=raw,value=stage-debug-latest
 
       - name: 🏗️ Build and push Docker image
@@ -130,9 +139,11 @@ jobs:
         run: |
           # Set stage-debug environment variables
           export NAMESPACE="techhy-ecosystem-stage-debug"
-          export UNIQUE_TAG="stage-debug-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          export UNIQUE_TAG="${{ needs.stage-debug-docker-build.outputs.unique-tag }}"
+          export IMAGE_TAG="${{ needs.stage-debug-docker-build.outputs.image-tag }}"
           
-          echo "🏷️ Using unique image tag: $UNIQUE_TAG"
+          echo "🏷️ Using Docker-built image tag: $UNIQUE_TAG"
+          echo "🏷️ Full image path: $IMAGE_TAG"
           
           # Create stage-debug namespace first
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
@@ -148,10 +159,10 @@ jobs:
           # Apply stage-debug configurations using kustomize
           kubectl apply -k k8s/overlays/stage-debug/
           
-          # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с уникальным тегом
-          echo "🔄 Updating deployment with new image..."
+          # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с правильным тегом из Docker build
+          echo "🔄 Updating deployment with Docker-built image..."
           kubectl set image deployment/stage-debug-techhy-ecosystem-stage-debug-deployment \
-            techhy-ecosystem-frontend=ghcr.io/gyberexperiment/tech-hy-ecosystem:$UNIQUE_TAG \
+            techhy-ecosystem-frontend=$IMAGE_TAG \
             -n $NAMESPACE
           
           # Ждем завершения rollout
@@ -254,4 +265,5 @@ jobs:
           echo "🌐 Stage Debug URL: https://stage.techhyecosystem.build.infra.gyber.org"
           echo "🔧 Branch: stage-debug"
           echo "📊 Namespace: techhy-ecosystem-stage-debug"
-          echo "🏷️ Image Tag: stage-debug-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}" 
+          echo "🏷️ Image Tag: ${{ needs.stage-debug-docker-build.outputs.unique-tag }}"
+          echo "📦 Full Image: ${{ needs.stage-debug-docker-build.outputs.image-tag }}" 
