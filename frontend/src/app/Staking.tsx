@@ -5,15 +5,16 @@ import { SwapWidget } from '../widgets/SwapWidget'
 import LPPoolManager from '../widgets/StakingDashboard/ui/LPPoolManager'
 import StakingStats from '../entities/Staking/ui/StakingStats'
 import { Zap, TrendingUp, BarChart3, AlertTriangle, ArrowRightLeft } from 'lucide-react'
+import { BSC_TESTNET } from '../shared/config/contracts'
 
 const Staking: React.FC = () => {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const isCorrectNetwork = chainId === 97 // BSC Testnet
+  const isCorrectNetwork = chainId === BSC_TESTNET.chainId
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="liquid-glass text-center py-12 animate-glass-float">
           <ArrowRightLeft className="mx-auto mb-4 text-blue-400 animate-glass-pulse" size={64} />
           <h1 className="text-3xl font-bold mb-4 text-slate-100">Token Swap & LP Burn</h1>
@@ -28,7 +29,7 @@ const Staking: React.FC = () => {
 
   if (!isCorrectNetwork) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="liquid-glass text-center py-12 animate-glass-float">
           <AlertTriangle className="mx-auto mb-4 text-red-400 animate-glass-pulse" size={64} />
           <h1 className="text-3xl font-bold mb-4 text-slate-100">Неправильная сеть</h1>
@@ -44,7 +45,7 @@ const Staking: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="w-full px-4 py-8 space-y-8">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-slate-100 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">

@@ -170,7 +170,7 @@ const Header: React.FC = () => {
       <header className="relative sticky top-0 z-50">
         {/* ✨ Premium Header Container */}
         <div className="relative backdrop-blur-[20px] backdrop-saturate-[1.8] backdrop-brightness-[1.05] bg-gradient-to-r from-white/[0.85] via-white/[0.90] to-white/[0.85] border-b border-white/[0.25] shadow-[0_8px_32px_rgba(0,0,0,0.06),0_1px_0_rgba(255,255,255,0.8)_inset]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             {/* ✨ Premium Navigation Row */}
             <div className="flex items-center h-[72px]">
               
