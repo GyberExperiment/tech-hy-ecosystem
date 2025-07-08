@@ -155,20 +155,12 @@ const TransactionHistory: React.FC = () => {
         50 // Reasonable page size
       );
       
-      console.log('🔍 DEBUG: Raw BSCScan data:', {
-        normalTxsCount: normalTxs.length,
-        tokenTxsCount: tokenTxs.length,
-        normalTxsSample: normalTxs.slice(0, 2),
-        tokenTxsSample: tokenTxs.slice(0, 2)
-      });
-      
       const allTransactions: Transaction[] = [];
       
       // Process normal transactions (BNB transfers)
       for (const tx of normalTxs) {
         if (tx.to && tx.value !== '0') {
           const converted = convertBSCScanToTransaction(tx, 'normal');
-          console.log('🔍 DEBUG: Normal tx converted:', converted);
           allTransactions.push(converted);
         }
       }
@@ -194,11 +186,8 @@ const TransactionHistory: React.FC = () => {
           converted.type = 'transfer';
         }
         
-        console.log('🔍 DEBUG: Token tx converted:', converted);
         allTransactions.push(converted);
       }
-      
-      console.log('🔍 DEBUG: All transactions before sort:', allTransactions.length);
       
       // Sort by timestamp (newest first)
       allTransactions.sort((a, b) => b.timestamp - a.timestamp);
@@ -219,11 +208,6 @@ const TransactionHistory: React.FC = () => {
         .filter((tx, index, self) => index === self.findIndex(t => t.hash === tx.hash))
         .slice(0, 500); // Reasonable limit
       
-      console.log('🔍 DEBUG: Final unique transactions:', {
-        count: uniqueTransactions.length,
-        sample: uniqueTransactions.slice(0, 2)
-      });
-      
       if (isMountedRef.current) {
         setTransactions(uniqueTransactions);
         saveTransactions(uniqueTransactions);
@@ -238,13 +222,10 @@ const TransactionHistory: React.FC = () => {
           hasMore: moreAvailable
         });
         
-        console.log('🔍 DEBUG: State updated with transactions:', uniqueTransactions.length);
       }
       
     } catch (error: any) {
       if (error.name === 'AbortError') return;
-      
-      console.error('🔍 DEBUG: Transaction fetch error:', error);
       
       log.error('Failed to fetch transactions', {
         component: 'TransactionHistory',
@@ -327,17 +308,6 @@ const TransactionHistory: React.FC = () => {
     const matchesSearch = tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          getTypeLabel(tx.type).toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
-  });
-
-  // DEBUG: Log component state
-  console.log('🔍 DEBUG: Component state:', {
-    account,
-    transactionsCount: transactions.length,
-    filteredCount: filteredTransactions.length,
-    loading,
-    error,
-    filter,
-    searchTerm
   });
 
   if (!account) {

@@ -9,6 +9,46 @@ export class ValidationError extends Error {
   }
 }
 
+// NEW: Soft validation for input fields - doesn't block input
+export const validateInputAmount = (amount: string): { isValid: boolean; error?: string } => {
+  if (!amount || amount.trim() === '') {
+    return { isValid: true }; // Allow empty fields during typing
+  }
+
+  // Allow partial input like ".", "0.", "0.0"
+  if (amount === '.' || amount === '0.' || amount.endsWith('.')) {
+    return { isValid: true };
+  }
+
+  const numericAmount = parseFloat(amount);
+  
+  if (isNaN(numericAmount) || !isFinite(numericAmount)) {
+    return { isValid: false, error: 'Invalid number format' };
+  }
+
+  if (numericAmount < 0) {
+    return { isValid: false, error: 'Amount cannot be negative' };
+  }
+
+  if (numericAmount > VALIDATION_RULES.MAX_VC_AMOUNT) {
+    return { isValid: false, error: `Maximum ${VALIDATION_RULES.MAX_VC_AMOUNT} VC allowed` };
+  }
+
+  // Check for precision issues
+  if (numericAmount > VALIDATION_RULES.SAFE_INTEGER_LIMIT) {
+    return { isValid: false, error: 'Amount too large for safe calculation' };
+  }
+
+  // Validate decimal places
+  const decimalParts = amount.split('.');
+  if (decimalParts.length > 1 && decimalParts[1].length > VALIDATION_RULES.DECIMAL_PLACES) {
+    return { isValid: false, error: `Maximum ${VALIDATION_RULES.DECIMAL_PLACES} decimal places allowed` };
+  }
+
+  return { isValid: true };
+};
+
+// EXISTING: Strict validation for form submission - can throw errors
 export const validateVCAmount = (amount: string): void => {
   if (!amount || amount.trim() === '') {
     throw new ValidationError(ERROR_MESSAGES.INVALID_AMOUNT, 'EMPTY_AMOUNT');

@@ -26,20 +26,22 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 
 // 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ Официальные BSC Testnet эндпоинты (из docs.bnbchain.org)
-  'https://bsc-testnet-dataseed.bnbchain.org',
-  'https://bsc-testnet.bnbchain.org',
-  'https://bsc-prebsc-dataseed.bnbchain.org',
+  // ✅ Официальные BSC Testnet эндпоинты (проверены 2025)
+  'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+  'https://data-seed-prebsc-2-s1.bnbchain.org:8545',
+  'https://data-seed-prebsc-1-s2.bnbchain.org:8545',
+  'https://data-seed-prebsc-2-s2.bnbchain.org:8545',
+  'https://data-seed-prebsc-1-s3.bnbchain.org:8545',
+  'https://bsc-prebsc-dataseed.bnbchain.org:8545',
   
-  // ✅ Проверенные сторонние провайдеры (бесплатные, без API ключей)
+  // ✅ Проверенные публичные провайдеры (работают стабильно)
   'https://bsc-testnet-rpc.publicnode.com',
   'https://bsc-testnet.publicnode.com',
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
   'https://bsc-testnet.drpc.org',
   
-  // ✅ Дополнительные надежные провайдеры
-  'https://bsc-testnet.4everland.org/v1/97/public',
-  'https://bsc-testnet-dataseed1.defibit.io',
-  'https://bsc-testnet-dataseed1.ninicoin.io'
+  // ✅ Дополнительные надежные провайдеры  
+  'https://bsc-testnet.4everland.org/v1/97/public'
 ];
 
 // 🎯 Current network configuration

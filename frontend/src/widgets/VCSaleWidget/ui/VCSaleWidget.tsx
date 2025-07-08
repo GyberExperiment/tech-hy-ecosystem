@@ -6,9 +6,27 @@ import { VCSaleWidgetSkeleton, BalanceCardSkeleton, SaleInfoSkeleton, UserStatsS
 import { useVCSale } from '../hooks/useVCSale';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { useBreakpoint } from '../../../shared/hooks/useResponsive';
-import { formatNumber, formatCurrency } from '../../../shared/lib/format';
-import { VCSaleWidgetProps } from '../model/types';
+import type { VCSaleWidgetProps } from '../model/types';
 import { cn } from '../../../shared/lib/cn';
+
+// Helper function for currency formatting
+const formatCurrency = (value: number, decimals: number = 6): string => {
+  if (value === 0) return '0';
+  if (value < 0.000001) return '< 0.000001';
+  if (value < 0.001) return value.toFixed(6);
+  return value.toFixed(decimals);
+};
+
+// Helper function for number formatting with decimals
+const formatNumberWithDecimals = (value: string | number, decimals: number = 2): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '0';
+  if (num === 0) return '0';
+  if (num < 1000) return num.toFixed(decimals);
+  if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
+  if (num < 1000000000) return `${(num / 1000000).toFixed(1)}M`;
+  return `${(num / 1000000000).toFixed(1)}B`;
+};
 
 const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({ 
   className = '',
@@ -36,6 +54,26 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
     executePurchase,
   } = useVCSale();
 
+  // Local BNB calculation for immediate display
+  const displayBnbAmount = React.useMemo(() => {
+    if (bnbAmount) return bnbAmount; // Use calculated amount from hook
+    
+    if (vcAmount && parseFloat(vcAmount) > 0 && saleStats?.pricePerVC) {
+      const vcValue = parseFloat(vcAmount);
+      const pricePerVC = parseFloat(saleStats.pricePerVC) / 1e18;
+      const calculated = (vcValue * pricePerVC).toFixed(6);
+      return calculated;
+    }
+    
+    if (vcAmount && parseFloat(vcAmount) > 0) {
+      // Fallback calculation with 0.001 BNB per VC
+      const calculated = (parseFloat(vcAmount) * 0.001).toFixed(6);
+      return calculated;
+    }
+    
+    return '';
+  }, [bnbAmount, vcAmount, saleStats?.pricePerVC]);
+
   // Handle purchase with callback
   const handlePurchase = async () => {
     try {
@@ -56,7 +94,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
     return (
       <div className={cn('card-ultra animate-enhanced-widget-chaos-1', className)}>
         <NetworkWarning 
-          currentChainId={chainId}
+          currentChainId={chainId || 0}
           variant="card"
           className="mb-0"
         />
@@ -143,7 +181,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
               "font-bold text-white",
               isMobile ? "text-lg" : "text-xl"
             )}>
-              {formatNumber(balances.BNB || '0', 6)} BNB
+              {formatNumberWithDecimals(balances.BNB || '0', 6)} BNB
             </div>
           </div>
         )}
@@ -163,7 +201,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
               "font-bold text-white",
               isMobile ? "text-lg" : "text-xl"
             )}>
-              {formatNumber(balances.VC || '0', 2)} VC
+              {formatNumberWithDecimals(balances.VC || '0', 2)} VC
             </div>
           </div>
         )}
@@ -195,11 +233,11 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
           )}>
             <div>
               <span className="text-slate-400">Available VC:</span>
-              <div className="text-white font-medium">{formatNumber(saleStats.currentVCBalance, 0)} VC</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(saleStats.currentVCBalance, 0)} VC</div>
             </div>
             <div>
               <span className="text-slate-400">Total Sold:</span>
-              <div className="text-white font-medium">{formatNumber(saleStats.totalVCSold, 0)} VC</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(saleStats.totalVCSold, 0)} VC</div>
             </div>
           </div>
 
@@ -214,7 +252,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
               </div>
               <div>
                 <span className="text-slate-400">Total Revenue:</span>
-                <div className="text-white font-medium">{formatNumber(saleStats.totalRevenue, 4)} BNB</div>
+                <div className="text-white font-medium">{formatNumberWithDecimals(saleStats.totalRevenue, 4)} BNB</div>
               </div>
             </div>
           </div>
@@ -251,7 +289,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
           <div className="relative">
             <input
               type="text"
-              value={bnbAmount}
+              value={displayBnbAmount}
               readOnly
               placeholder={isMobile ? "Auto calculated" : "Calculated automatically"}
               className="w-full px-4 py-3 bg-white/3 border border-white/8 rounded-xl text-white placeholder-slate-500 cursor-not-allowed"
@@ -263,7 +301,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
         </div>
 
         {/* Purchase Preview */}
-        {vcAmount && bnbAmount && (
+        {vcAmount && displayBnbAmount && (
           <div className="bg-gradient-to-br from-blue-500/8 via-blue-400/5 to-cyan-400/4 border border-blue-400/20 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-blue-400" />
@@ -272,7 +310,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-400">You pay:</span>
-                <span className="text-white font-medium">{bnbAmount} BNB</span>
+                <span className="text-white font-medium">{displayBnbAmount} BNB</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">You receive:</span>
@@ -346,7 +384,7 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
             <span>Processing...</span>
           </div>
         ) : !saleStats?.saleActive ? (
-          'Sale Inactive'
+          'Enter Amount'
         ) : !vcAmount || parseFloat(vcAmount) <= 0 ? (
           'Enter Amount'
         ) : !canPurchase ? (
@@ -371,11 +409,11 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
           )}>
             <div>
               <span className="text-slate-400">Purchased VC:</span>
-              <div className="text-white font-medium">{formatNumber(userStats.purchasedVC, 2)} VC</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(userStats.purchasedVC, 2)} VC</div>
             </div>
             <div>
               <span className="text-slate-400">Spent BNB:</span>
-              <div className="text-white font-medium">{formatNumber(userStats.spentBNB, 4)} BNB</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(userStats.spentBNB, 4)} BNB</div>
             </div>
             <div>
               <span className="text-slate-400">Total Transactions:</span>
@@ -402,7 +440,7 @@ export default React.memo((props: VCSaleWidgetProps) => (
   <ErrorBoundary 
     componentName="VCSaleWidget"
     enableReporting={true}
-    onError={(error, errorInfo) => {
+    onError={(error, _errorInfo) => {
       if (props.onError) {
         props.onError(error);
       }

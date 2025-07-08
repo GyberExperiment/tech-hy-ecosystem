@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Globe, Settings, Shield } from 'lucide-react';
 import LanguageSwitcher from '../lib/LanguageSwitcher';
-import NetworkStatus from './NetworkStatus';
 import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
+import NetworkStatus from './NetworkStatus';
 
 const Header: React.FC = () => {
   const { t } = useTranslation('common');

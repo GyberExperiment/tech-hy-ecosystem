@@ -35,7 +35,6 @@ import toast from 'react-hot-toast';
 import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
 import { ContractStatus } from '../shared/lib/ContractStatus';
 import TokenStats from '../entities/Token/ui/TokenStats';
-import VCSaleWidget from '../widgets/VCSaleWidget/ui/VCSaleWidget';
 import { useTokenData } from '../entities/Token/model/useTokenData';
 import type { TokenData } from '../entities/Token/model/useTokenData';
 import { log } from '../shared/lib/logger';
@@ -465,11 +464,6 @@ const Tokens: React.FC = () => {
       {/* Token Statistics - Reusable Component */}
       <div className="mb-8">
         <TokenStats />
-      </div>
-
-      {/* VC Sale Widget - Production Ready */}
-      <div className="mb-8">
-        <VCSaleWidget className="w-full max-w-4xl mx-auto" />
       </div>
 
       {/* Search and Filter */}

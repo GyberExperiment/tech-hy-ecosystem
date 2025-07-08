@@ -23,6 +23,44 @@ const ERC20_ABI = [
   "function totalSupply() view returns (uint256)",
 ];
 
+const VCSALE_ABI = [
+  // Main purchase function
+  "function purchaseVC(uint256 vcAmount) external payable",
+  
+  // Calculation functions
+  "function calculateBNBAmount(uint256 vcAmount) external view returns (uint256)",
+  "function calculateVCAmount(uint256 bnbAmount) external view returns (uint256)",
+  "function getAvailableVC() external view returns (uint256)",
+  
+  // Statistics and monitoring
+  "function getSaleStats() external view returns (uint256 totalVCAvailable, uint256 totalVCSold, uint256 currentVCBalance, uint256 pricePerVC, bool saleActive, uint256 totalRevenue, uint256 dailySalesAmount, bool circuitBreakerActive, uint256 salesInCurrentWindow)",
+  "function getUserStats(address user) external view returns (uint256 purchasedVC, uint256 spentBNB, uint256 lastPurchaseTimestamp, bool isBlacklisted, uint256 canPurchaseNext)",
+  "function canPurchase(address user, uint256 vcAmount) external view returns (bool canPurchase, string memory reason)",
+  
+  // Configuration getters
+  "function saleConfig() external view returns (address vcTokenAddress, uint256 pricePerVC, uint256 minPurchaseAmount, uint256 maxPurchaseAmount, uint256 totalVCAvailable, uint256 totalVCSold, bool saleActive, address treasury, uint256 maxDailySales, uint256 priceUpdateCooldown, uint256 lastPriceUpdate)",
+  "function securityConfig() external view returns (bool mevProtectionEnabled, uint256 minTimeBetweenPurchases, uint256 maxPurchasesPerBlock, bool circuitBreakerActive, uint256 circuitBreakerThreshold, uint256 circuitBreakerWindow)",
+  "function circuitBreaker() external view returns (uint256 salesInWindow, uint256 windowStartTime, bool triggered, uint256 triggeredAt)",
+  "function dailySales() external view returns (uint256 date, uint256 amount)",
+  
+  // User mappings
+  "function userPurchasedVC(address user) external view returns (uint256)",
+  "function userSpentBNB(address user) external view returns (uint256)",
+  "function blacklistedUsers(address user) external view returns (bool)",
+  "function lastPurchaseTime(address user) external view returns (uint256)",
+  
+  // Admin functions (view only for frontend)
+  "function paused() external view returns (bool)",
+  
+  // Events
+  "event VCPurchased(address indexed buyer, uint256 vcAmount, uint256 bnbAmount, uint256 pricePerVC, uint256 timestamp, bytes32 indexed purchaseId)",
+  "event SecurityEvent(address indexed user, string indexed eventType, string description, uint256 timestamp)",
+  "event CircuitBreakerTriggered(uint256 salesAmount, uint256 threshold, uint256 timestamp)",
+  "event SaleConfigUpdated(address indexed updater, string indexed field, uint256 oldValue, uint256 newValue, uint256 timestamp)",
+  "event UserBlacklisted(address indexed user, address indexed admin, string reason, uint256 timestamp)",
+  "event EmergencyAction(address indexed actor, string indexed action, uint256 timestamp)"
+];
+
 const VGVOTES_ABI = [
   ...ERC20_ABI,
   "function deposit(uint256 amount) external",
@@ -95,6 +133,7 @@ interface Web3ContextType {
   lpPairContract: ethers.Contract | null;
   lpLockerContract: ethers.Contract | null;
   governorContract: ethers.Contract | null;
+  vcsaleContract: ethers.Contract | null; // Added VCSale contract
   
   // Network switching
   switchToTestnet: () => Promise<void>;
@@ -133,8 +172,8 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { switchChain } = useSwitchChain();
   
   // Используем официальные ethers.js адаптеры от Wagmi
-  const provider = useEthersProvider(chainId ? { chainId } : {});
-  const signer = useEthersSigner(chainId ? { chainId } : {});
+  const provider = useEthersProvider();
+  const signer = useEthersSigner();
 
   // ✅ Check MetaMask availability
   const metaMaskAvailable = checkMetaMaskAvailability();
@@ -233,6 +272,20 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const lpPairContract = getContract(CONTRACTS.LP_TOKEN, PANCAKE_PAIR_ABI);
   const lpLockerContract = getContract(CONTRACTS.LP_LOCKER, LPLOCKER_ABI);
   const governorContract = getContract(CONTRACTS.GOVERNOR, GOVERNOR_ABI);
+  const vcsaleContract = getContract(CONTRACTS.VCSALE, VCSALE_ABI); // Added VCSale contract
+
+  // Log VCSale contract creation
+  useEffect(() => {
+    if (vcsaleContract) {
+      log.info('VCSale contract created successfully', {
+        component: 'Web3Context',
+        contractAddress: CONTRACTS.VCSALE,
+        hasContract: !!vcsaleContract,
+        chainId,
+        isConnected
+      });
+    }
+  }, [vcsaleContract, chainId, isConnected]);
 
   // Network switching functions
   const switchToTestnet = async () => {
@@ -291,6 +344,7 @@ const Web3ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lpPairContract,
     lpLockerContract,
     governorContract,
+    vcsaleContract, // Added VCSale contract to context
     switchToTestnet,
     switchToMainnet,
     updateBSCTestnetRPC,

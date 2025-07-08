@@ -124,24 +124,32 @@ export const WaveTransition = ({
           </filter>
         </defs>
         
-        {/* УЛУЧШЕННЫЕ мягкие анимированные волны с дополнительной защитой */}
+        {/* БЕЗОПАСНЫЕ мягкие анимированные волны с полной защитой от undefined */}
         {[0, 1, 2].map((index) => {
           const basePhase = index * Math.PI * 0.5
           const baseAmplitude = Math.max(2, (height || 6) * (intensity || 0.2) * (1 - index * 0.3))
           
-          // Генерируем 3 безопасных кадра анимации
-          const frame1 = generateWavePath(basePhase, baseAmplitude)
-          const frame2 = generateWavePath(basePhase + Math.PI, baseAmplitude)
-          const frame3 = generateWavePath(basePhase + Math.PI * 2, baseAmplitude)
+          // Генерируем 3 безопасных кадра анимации с дополнительной валидацией
+          const frame1 = generateWavePath(basePhase, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
+          const frame2 = generateWavePath(basePhase + Math.PI, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
+          const frame3 = generateWavePath(basePhase + Math.PI * 2, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
+          
+          // Дополнительная проверка на валидность путей
+          const safePaths = [frame1, frame2, frame3].map(path => {
+            if (!path || path.includes('undefined') || path.includes('NaN') || path.length < 10) {
+              return 'M0,50 L100,50 V100 H0 Z'
+            }
+            return path
+          })
           
           return (
             <motion.path
               key={`wave-${index}-${cleanId}`}
-              d={frame1}
+              d={safePaths[0]} // Используем первый безопасный path как initial
               fill={`url(#${gradientId})`}
               filter={`url(#${filterId})`}
               animate={{
-                d: [frame1, frame2, frame3, frame1]
+                d: safePaths // Передаем массив безопасных путей
               }}
               transition={{
                 duration: 20 + index * 3,

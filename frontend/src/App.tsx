@@ -1,14 +1,20 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { Toaster } from 'react-hot-toast';
-import './index.css';
+import '@rainbow-me/rainbowkit/styles.css';
+import { Web3Provider } from './shared/lib/Web3Context';
+import { wagmiConfig } from './shared/config/wagmi';
+import './i18n';
+import './App.css';
 
 // Import Providers
 import I18nProvider from './i18n/I18nProvider';
-import { Web3Provider } from './shared/lib/Web3Context';
 
 // Import Layout Components
 import Header from './shared/ui/Header';
-import { NetworkStatus } from './shared/ui/NetworkStatus';
 
 // Import Pages
 import Home from './app/Home';
@@ -55,7 +61,6 @@ function App() {
               <Header />
               
               {/* ✅ Network Status Monitor - автоматически показывается при проблемах */}
-              <NetworkStatus />
               
               <main className="flex-1 py-6 md:py-8 lg:py-12 animate-clean-fade-in">
                 <div className="clean-container">
