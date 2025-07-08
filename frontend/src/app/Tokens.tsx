@@ -442,7 +442,7 @@ const Tokens: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 px-responsive">
+    <div className="animate-fade-in space-y-8">
       {/* Contract Status */}
       <div className="mb-8">
         <ContractStatus />

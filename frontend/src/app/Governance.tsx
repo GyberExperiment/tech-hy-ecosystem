@@ -210,7 +210,7 @@ const Governance: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-responsive px-responsive">
+    <div className="animate-fade-in space-y-responsive">
       {/* Header */}
       <div className="text-center space-y-6">
         <div className="flex items-center justify-center space-x-3">

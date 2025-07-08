@@ -9,7 +9,6 @@ import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
-import NetworkStatus from './NetworkStatus';
 
 const Header: React.FC = () => {
   const { t } = useTranslation('common');
@@ -254,11 +253,6 @@ const Header: React.FC = () => {
                 {/* Admin Button - Only visible to admin */}
                 <AdminButton />
                 
-                {/* Network Status - Desktop Only */}
-                <div className="hidden lg:block">
-                  <NetworkStatus compact />
-                </div>
-                
                 {/* Network Switcher - Desktop */}
                 <div className="hidden md:block">
                   <NetworkSwitcher />
@@ -486,9 +480,8 @@ const Header: React.FC = () => {
                     </button>
                   )}
                   <div className="w-full">
-                    <NetworkStatus compact className="mb-3" />
+                    <NetworkSwitcher isMobile />
                   </div>
-                  <NetworkSwitcher isMobile />
                   <LanguageContainer isMobile />
                 </div>
               </div>

@@ -63,7 +63,7 @@ function App() {
               {/* ✅ Network Status Monitor - автоматически показывается при проблемах */}
               
               <main className="flex-1 py-6 md:py-8 lg:py-12 animate-clean-fade-in">
-                <div className="w-full">{/* Убираю clean-container, ставлю w-full */}
+                <div className="w-full px-4 md:px-8 lg:px-16 xl:px-24">{/* Добавляю горизонтальные отступы */}
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/tokens" element={<Tokens />} />
