@@ -122,8 +122,8 @@ export const useVCSale = () => {
       
       const vcValue = parseFloat(state.vcAmount);
       
-      // Safe calculation checks
-      if (isNaN(vcValue) || vcValue <= 0 || vcValue > Number.MAX_SAFE_INTEGER) {
+      // Safe calculation checks - реалистичные пределы для DeFi
+      if (isNaN(vcValue) || vcValue <= 0 || vcValue > 1000000) { // max 1M VC tokens
         return '';
       }
       
@@ -132,25 +132,26 @@ export const useVCSale = () => {
       
       if (state.saleStats?.pricePerVC) {
         const contractPrice = parseFloat(state.saleStats.pricePerVC);
-        if (!isNaN(contractPrice) && contractPrice > 0 && contractPrice < Number.MAX_SAFE_INTEGER) {
+        if (!isNaN(contractPrice) && contractPrice > 0 && contractPrice < 1e20) { // Realistic max price 100 BNB per VC
           pricePerVC = contractPrice / 1e18;
         }
       }
       
-      // Safe multiplication check
-      if (pricePerVC > Number.MAX_SAFE_INTEGER || pricePerVC <= 0) {
+      // Safe price bounds check (0.000001 to 100 BNB per VC)
+      if (pricePerVC > 100 || pricePerVC < 0.000001) {
         pricePerVC = 0.001; // Fallback to safe value
       }
       
-      const maxSafeVC = Number.MAX_SAFE_INTEGER / (pricePerVC * 1e6); // Reserve space for 6 decimals
-      if (vcValue > maxSafeVC) {
-        return ''; // Amount too large for safe calculation
+      // Realistic maximum check for DeFi transactions
+      const maxReasonableVC = 100000; // 100K VC tokens max per transaction
+      if (vcValue > maxReasonableVC) {
+        return ''; // Amount too large for practical transaction
       }
       
       const calculatedBnb = vcValue * pricePerVC;
       
-      // Final safety check
-      if (!isFinite(calculatedBnb) || calculatedBnb > Number.MAX_SAFE_INTEGER || calculatedBnb < 0) {
+      // Final safety check - max 1000 BNB per transaction
+      if (!isFinite(calculatedBnb) || calculatedBnb > 1000 || calculatedBnb < 0) {
         return '';
       }
       
