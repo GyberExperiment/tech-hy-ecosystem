@@ -38,14 +38,14 @@ export const VCSALE_ABI = [
   "event CircuitBreakerTriggered(uint256 salesAmount, uint256 threshold, uint256 timestamp)"
 ] as const;
 
-// Input validation constants
+// Input validation constants - ИСПРАВЛЕНО
 export const VALIDATION_RULES = {
   MIN_VC_AMOUNT: 1,
   MAX_VC_AMOUNT: 1000,
   MIN_BNB_AMOUNT: 0.001,
   MAX_BNB_AMOUNT: 1,
   DECIMAL_PLACES: 6,
-  SAFE_INTEGER_LIMIT: Number.MAX_SAFE_INTEGER / 1e18, // For Wei calculations
+  SAFE_INTEGER_LIMIT: 1000000, // ИСПРАВЛЕНО: Safe limit for VC amounts (1M VC max for calculations)
 } as const;
 
 // Error messages - Internationalization ready

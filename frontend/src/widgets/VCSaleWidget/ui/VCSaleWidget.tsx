@@ -118,29 +118,29 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
   return (
     <div className={cn(
       'card-ultra animate-enhanced-widget-chaos-1',
-      isMobile ? 'p-3' : 'p-4', // Уменьшил отступы
+      isMobile ? 'p-3' : 'p-4',
       className
     )}>
       {/* Header */}
       <div className={cn(
-        "flex items-center justify-between mb-4", // Уменьшил margin
-        isSmallMobile ? "flex-col gap-3" : "" // Уменьшил gap
+        "flex items-center justify-between mb-4",
+        isSmallMobile ? "flex-col gap-3" : ""
       )}>
-        <div className="flex items-center gap-2"> {/* Уменьшил gap */}
+        <div className="flex items-center gap-2">
           <div className={cn(
-            "rounded-lg bg-gradient-to-br from-yellow-500/80 to-orange-600/80 flex items-center justify-center shadow-lg", // Уменьшил border-radius
-            isMobile ? "w-8 h-8" : "w-10 h-10" // Уменьшил размеры
+            "rounded-lg bg-gradient-to-br from-yellow-500/80 to-orange-600/80 flex items-center justify-center shadow-lg",
+            isMobile ? "w-8 h-8" : "w-10 h-10"
           )}>
             <ShoppingCart className={cn("text-white", isMobile ? "w-4 h-4" : "w-5 h-5")} />
           </div>
           <div>
             <h3 className={cn(
               "font-bold text-white",
-              isMobile ? "text-sm" : "text-base" // Уменьшил размер текста
+              isMobile ? "text-sm" : "text-base"
             )}>
               VC Token Sale
             </h3>
-            <p className="text-xs text-slate-400">Buy VC tokens at fixed price</p> {/* Уменьшил размер */}
+            <p className="text-xs text-slate-400">Buy VC tokens at fixed price</p>
           </div>
         </div>
         
@@ -149,13 +149,13 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
           disabled={isRefreshing}
           className={cn(
             "rounded-lg backdrop-blur-xl bg-white/8 border border-white/20 hover:bg-white/12 flex items-center justify-center transition-all duration-300 disabled:opacity-50",
-            isMobile ? "w-8 h-8" : "w-10 h-10" // Уменьшил размеры
+            isMobile ? "w-8 h-8" : "w-10 h-10"
           )}
           title="Refresh Data"
         >
           <RefreshCw className={cn("text-white transition-transform duration-300", {
             "animate-spin": isRefreshing
-          }, isMobile ? "w-3 h-3" : "w-4 h-4")} /> {/* Уменьшил размеры */}
+          }, isMobile ? "w-3 h-3" : "w-4 h-4")} />
         </button>
       </div>
 
@@ -171,23 +171,23 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
 
       {/* Balances */}
       <div className={cn(
-        "grid gap-3 mb-4", // Уменьшил gap и margin
+        "grid gap-3 mb-4",
         isSmallMobile ? "grid-cols-1" : "grid-cols-2"
       )}>
         {/* BNB Balance */}
         {balancesLoading ? (
           <BalanceCardSkeleton />
         ) : (
-          <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 hover:bg-white/5 transition-all duration-300"> {/* Уменьшил padding и border-radius */}
-            <div className="flex items-center gap-2 mb-1"> {/* Уменьшил gap и margin */}
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 flex items-center justify-center"> {/* Уменьшил размеры */}
-                <span className="text-xs font-bold text-yellow-400">BNB</span> {/* Уменьшил размер */}
+          <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 hover:bg-white/5 transition-all duration-300">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 flex items-center justify-center">
+                <span className="text-xs font-bold text-yellow-400">BNB</span>
               </div>
-              <span className="text-xs text-slate-400">BNB Balance</span> {/* Уменьшил размер */}
+              <span className="text-xs text-slate-400">BNB Balance</span>
             </div>
             <div className={cn(
               "font-bold text-white",
-              isMobile ? "text-base" : "text-lg" // Уменьшил размеры
+              isMobile ? "text-base" : "text-lg"
             )}>
               {formatNumberWithDecimals(balances.BNB || '0', 6)} BNB
             </div>
@@ -198,16 +198,16 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
         {balancesLoading ? (
           <BalanceCardSkeleton />
         ) : (
-          <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 hover:bg-white/5 transition-all duration-300"> {/* Уменьшил padding и border-radius */}
-            <div className="flex items-center gap-2 mb-1"> {/* Уменьшил gap и margin */}
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-400/20 to-purple-600/20 border border-purple-400/30 flex items-center justify-center"> {/* Уменьшил размеры */}
-                <span className="text-xs font-bold text-purple-400">VC</span> {/* Уменьшил размер */}
+          <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 hover:bg-white/5 transition-all duration-300">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-400/20 to-purple-600/20 border border-purple-400/30 flex items-center justify-center">
+                <span className="text-xs font-bold text-purple-400">VC</span>
               </div>
-              <span className="text-xs text-slate-400">VC Balance</span> {/* Уменьшил размер */}
+              <span className="text-xs text-slate-400">VC Balance</span>
             </div>
             <div className={cn(
               "font-bold text-white",
-              isMobile ? "text-base" : "text-lg" // Уменьшил размеры
+              isMobile ? "text-base" : "text-lg"
             )}>
               {formatNumberWithDecimals(balances.VC || '0', 2)} VC
             </div>
@@ -217,27 +217,27 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
 
       {/* Sale Information */}
       {!saleStats ? (
-        <SaleInfoSkeleton className="mb-4" /> {/* Уменьшил margin */}
+        <SaleInfoSkeleton className="mb-4" />
       ) : (
-        <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 mb-4"> {/* Уменьшил padding и margin */}
-          <div className="flex items-center justify-between mb-2"> {/* Уменьшил margin */}
+        <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-3 h-3 text-blue-400" /> {/* Уменьшил размер */}
-              <span className="text-xs font-medium text-white">Sale Information</span> {/* Уменьшил размер */}
+              <BarChart3 className="w-3 h-3 text-blue-400" />
+              <span className="text-xs font-medium text-white">Sale Information</span>
             </div>
             <div className={cn(
               "px-2 py-1 rounded-full text-xs font-medium",
-              saleStats.saleActive
+              saleStats?.saleActive
                 ? "bg-green-500/20 text-green-300 border border-green-400/30"
                 : "bg-red-500/20 text-red-300 border border-red-400/30"
             )}>
-              {saleStats.saleActive ? 'Active' : 'Inactive'}
+              {saleStats?.saleActive ? 'Active' : 'Inactive'}
             </div>
           </div>
 
           <div className={cn(
-            "text-xs mb-2", // Уменьшил размер текста и margin
-            isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3" // Уменьшил gap
+            "text-xs mb-2",
+            isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3"
           )}>
             <div>
               <span className="text-slate-400">Available VC:</span>
@@ -249,10 +249,10 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-white/10"> {/* Уменьшил padding */}
+          <div className="pt-2 border-t border-white/10">
             <div className={cn(
-              "text-xs", // Уменьшил размер текста
-              isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3" // Уменьшил gap
+              "text-xs",
+              isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3"
             )}>
               <div>
                 <span className="text-slate-400">Price per VC:</span>
@@ -268,10 +268,10 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
       )}
 
       {/* Purchase Form */}
-      <div className="space-y-3 mb-4"> {/* Уменьшил отступы */}
+      <div className="space-y-3 mb-4">
         {/* VC Amount Input */}
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1"> {/* Уменьшил размер и margin */}
+          <label className="block text-xs font-medium text-slate-300 mb-1">
             VC Amount
           </label>
           <div className="relative">
@@ -280,42 +280,42 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
               value={vcAmount}
               onChange={(e) => setVcAmount(e.target.value)}
               placeholder={isMobile ? "1-1000 VC" : "Enter VC amount (1-1000)"}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400/50 transition-all duration-300" // Уменьшил padding и border-radius
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400/50 transition-all duration-300"
               disabled={isLoading || !saleStats?.saleActive}
             />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2"> {/* Уменьшил отступ */}
-              <span className="text-xs text-slate-400 font-medium">VC</span> {/* Уменьшил размер */}
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+              <span className="text-xs text-slate-400 font-medium">VC</span>
             </div>
           </div>
         </div>
 
         {/* BNB Amount Display */}
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1"> {/* Уменьшил размер и margin */}
+          <label className="block text-xs font-medium text-slate-300 mb-1">
             BNB Required
           </label>
           <div className="relative">
             <input
               type="text"
-              value={displayBnbAmount || 'Enter VC amount first'} {/* Показываем сообщение если пусто */}
+              value={displayBnbAmount || 'Enter VC amount first'}
               readOnly
               placeholder={isMobile ? "Auto calculated" : "Calculated automatically"}
-              className="w-full px-3 py-2 bg-white/3 border border-white/8 rounded-lg text-white placeholder-slate-500 cursor-not-allowed" // Уменьшил padding и border-radius
+              className="w-full px-3 py-2 bg-white/3 border border-white/8 rounded-lg text-white placeholder-slate-500 cursor-not-allowed"
             />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2"> {/* Уменьшил отступ */}
-              <span className="text-xs text-slate-400 font-medium">BNB</span> {/* Уменьшил размер */}
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+              <span className="text-xs text-slate-400 font-medium">BNB</span>
             </div>
           </div>
         </div>
 
         {/* Purchase Preview */}
         {vcAmount && displayBnbAmount && (
-          <div className="bg-gradient-to-br from-blue-500/8 via-blue-400/5 to-cyan-400/4 border border-blue-400/20 rounded-lg p-3"> {/* Уменьшил padding и border-radius */}
-            <div className="flex items-center gap-2 mb-2"> {/* Уменьшил margin */}
-              <TrendingUp className="w-3 h-3 text-blue-400" /> {/* Уменьшил размер */}
-              <span className="text-xs font-medium text-blue-300">Purchase Preview</span> {/* Уменьшил размер */}
+          <div className="bg-gradient-to-br from-blue-500/8 via-blue-400/5 to-cyan-400/4 border border-blue-400/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-3 h-3 text-blue-400" />
+              <span className="text-xs font-medium text-blue-300">Purchase Preview</span>
             </div>
-            <div className="space-y-1 text-xs"> {/* Уменьшил размер текста и отступы */}
+            <div className="space-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-400">You pay:</span>
                 <span className="text-white font-medium">{displayBnbAmount} BNB</span>
@@ -379,8 +379,8 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
         onClick={handlePurchase}
         disabled={!canPurchase || isLoading}
         className={cn(
-          "w-full rounded-lg font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed", // Уменьшил border-radius
-          isMobile ? "py-2 px-3" : "py-3 px-4", // Уменьшил padding
+          "w-full rounded-lg font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed",
+          isMobile ? "py-2 px-3" : "py-3 px-4",
           canPurchase && !isLoading
             ? "bg-gradient-to-r from-yellow-500/90 to-orange-600/90 hover:from-yellow-600/90 hover:to-orange-700/90 hover:shadow-xl transform hover:scale-[1.02]"
             : "bg-gradient-to-r from-slate-600/50 to-slate-700/50"
@@ -388,8 +388,8 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
       >
         {isLoading ? (
           <div className="flex items-center justify-center gap-2">
-            <RefreshCw className="w-3 h-3 animate-spin" /> {/* Уменьшил размер */}
-            <span className="text-sm">Processing...</span> {/* Уменьшил размер */}
+            <RefreshCw className="w-3 h-3 animate-spin" />
+            <span className="text-sm">Processing...</span>
           </div>
         ) : !saleStats?.saleActive ? (
           'Enter Amount'
@@ -404,35 +404,35 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
 
       {/* User Statistics */}
       {!userStats ? (
-        <UserStatsSkeleton className="mt-4" /> {/* Уменьшил margin */}
+        <UserStatsSkeleton className="mt-4" />
       ) : (
-        <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 mt-4"> {/* Уменьшил padding, border-radius и margin */}
-          <div className="flex items-center gap-2 mb-2"> {/* Уменьшил margin */}
-            <Users className="w-3 h-3 text-purple-400" /> {/* Уменьшил размер */}
-            <span className="text-xs font-medium text-white">Your Statistics</span> {/* Уменьшил размер */}
+        <div className="backdrop-blur-xl bg-white/3 border border-white/8 rounded-lg p-3 mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-3 h-3 text-purple-400" />
+            <span className="text-xs font-medium text-white">Your Statistics</span>
           </div>
           <div className={cn(
-            "text-xs", // Уменьшил размер текста
-            isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3" // Уменьшил gap
+            "text-xs",
+            isMobile ? "grid grid-cols-1 gap-1" : "grid grid-cols-2 gap-3"
           )}>
             <div>
               <span className="text-slate-400">Purchased VC:</span>
-              <div className="text-white font-medium">{formatNumberWithDecimals(userStats.purchasedVC, 2)} VC</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(userStats?.purchasedVC || 0, 2)} VC</div>
             </div>
             <div>
               <span className="text-slate-400">Spent BNB:</span>
-              <div className="text-white font-medium">{formatNumberWithDecimals(userStats.spentBNB, 4)} BNB</div>
+              <div className="text-white font-medium">{formatNumberWithDecimals(userStats?.spentBNB || 0, 4)} BNB</div>
             </div>
             <div>
               <span className="text-slate-400">Total Transactions:</span>
-              <div className="text-white font-medium">{userStats.totalTransactions}</div>
+              <div className="text-white font-medium">{userStats?.totalTransactions || 0}</div>
             </div>
             <div>
               <span className="text-slate-400">Last Purchase:</span>
               <div className="text-white font-medium">
-                {userStats.lastPurchaseTimestamp === '0' 
+                {(userStats?.lastPurchaseTimestamp === '0' || !userStats?.lastPurchaseTimestamp)
                   ? 'Never' 
-                  : new Date(parseInt(userStats.lastPurchaseTimestamp) * 1000).toLocaleDateString()
+                  : new Date(parseInt(userStats?.lastPurchaseTimestamp || '0') * 1000).toLocaleDateString()
                 }
               </div>
             </div>
@@ -456,4 +456,4 @@ export default React.memo((props: VCSaleWidgetProps) => (
   >
     <VCSaleWidget {...props} />
   </ErrorBoundary>
-)); 
+));

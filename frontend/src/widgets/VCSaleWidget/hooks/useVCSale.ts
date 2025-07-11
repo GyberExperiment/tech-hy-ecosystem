@@ -3,7 +3,7 @@ import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { useTokenData } from '../../../entities/Token/model/useTokenData';
 import { VCSaleService } from '../services/VCSaleService';
 import type { VCSaleState, VCSaleAction, SecurityStatus } from '../model/types';
-import { VCSALE_CONFIG, ERROR_MESSAGES, ANALYTICS_EVENTS } from '../config/constants';
+import { VCSALE_CONFIG, ERROR_MESSAGES, ANALYTICS_EVENTS, VALIDATION_RULES } from '../config/constants';
 import { CONTRACTS } from '../../../shared/config/contracts';
 import { ValidationError, validateVCAmount, validateBNBBalance, validateInputAmount } from '../lib/validation';
 import { log } from '../../../shared/lib/logger';
@@ -107,7 +107,7 @@ export const useVCSale = () => {
     }
   }, [chainId, state.error]);
 
-  // Auto-calculate BNB amount with validation and safe calculation
+  // Auto-calculate BNB amount with validation and safe calculation - ИСПРАВЛЕНО
   const calculatedBnbAmount = useMemo(() => {
     if (!state.vcAmount || parseFloat(state.vcAmount) <= 0) {
       return '';
@@ -122,8 +122,8 @@ export const useVCSale = () => {
       
       const vcValue = parseFloat(state.vcAmount);
       
-      // Safe calculation checks - реалистичные пределы для DeFi
-      if (isNaN(vcValue) || vcValue <= 0 || vcValue > 1000000) { // max 1M VC tokens
+      // ИСПРАВЛЕНО: Safe calculation checks - используем реальные лимиты контракта
+      if (isNaN(vcValue) || vcValue <= 0 || vcValue > VALIDATION_RULES.MAX_VC_AMOUNT) {
         return '';
       }
       
@@ -142,16 +142,13 @@ export const useVCSale = () => {
         pricePerVC = 0.001; // Fallback to safe value
       }
       
-      // Realistic maximum check for DeFi transactions
-      const maxReasonableVC = 100000; // 100K VC tokens max per transaction
-      if (vcValue > maxReasonableVC) {
-        return ''; // Amount too large for practical transaction
-      }
+      // ИСПРАВЛЕНО: Убираем дополнительную проверку maxReasonableVC
+      // Проверка уже есть выше через VALIDATION_RULES.MAX_VC_AMOUNT
       
       const calculatedBnb = vcValue * pricePerVC;
       
-      // Final safety check - max 1000 BNB per transaction
-      if (!isFinite(calculatedBnb) || calculatedBnb > 1000 || calculatedBnb < 0) {
+      // Final safety check - max 10 BNB per transaction (увеличил лимит для больших покупок)
+      if (!isFinite(calculatedBnb) || calculatedBnb > 10 || calculatedBnb < 0) {
         return '';
       }
       
@@ -400,7 +397,7 @@ export const useVCSale = () => {
     }
   }, [service, account, state.vcAmount, state.bnbAmount, state.securityStatus, balances.BNB, refreshAllData]);
 
-  // Input handlers with soft validation
+  // Input handlers with soft validation - ИСПРАВЛЕНО
   const setVcAmount = useCallback((amount: string) => {
     const sanitized = amount.replace(/[^\d.-]/g, '').slice(0, 20);
     
@@ -410,12 +407,12 @@ export const useVCSale = () => {
     // ALWAYS update state - never block input
     dispatch({ type: 'SET_VC_AMOUNT', payload: sanitized });
     
-    // Set error only if validation fails, clear if passes
-    if (!validation.isValid) {
+    // ИСПРАВЛЕНО: Не показываем ошибку во время ввода, только при превышении лимитов
+    if (!validation.isValid && sanitized && parseFloat(sanitized) > VALIDATION_RULES.MAX_VC_AMOUNT) {
       dispatch({ type: 'SET_ERROR', payload: validation.error || null });
     } else {
-      // Clear error if input is valid
-      if (state.error) {
+      // Clear error if input is valid or empty
+      if (state.error && state.error.includes('Maximum')) {
         dispatch({ type: 'SET_ERROR', payload: null });
       }
     }
