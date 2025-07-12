@@ -584,36 +584,12 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
             )}
           </div>
 
-          {/* DEBUG: Purchase Status */}
-          <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4 text-sm">
-            <div className="text-red-300 font-medium mb-2">🔍 DEBUG: Purchase Status</div>
-            <div className="space-y-1 text-red-200">
-              <div>• canPurchase: {canPurchase ? '✅ TRUE' : '❌ FALSE'}</div>
-              <div>• vcsaleLoading: {vcsaleLoading ? '⏳ TRUE' : '✅ FALSE'}</div>
-              <div>• vcsaleVcAmount: {vcsaleVcAmount || 'EMPTY'}</div>
-              <div>• vcsaleBnbAmount: {vcsaleBnbAmount || 'EMPTY'}</div>
-              <div>• account: {account ? '✅ Connected' : '❌ Not connected'}</div>
-              <div>• isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</div>
-              <div>• saleStats: {saleStats ? '✅ Loaded' : '❌ Not loaded'}</div>
-              <div>• securityStatus: {securityStatus ? '✅ Loaded' : '❌ Not loaded'}</div>
-              <div>• vcsaleError: {vcsaleError || 'NONE'}</div>
-            </div>
-          </div>
+
 
           {/* Purchase Button */}
           <div className="space-y-4">
             <button
-              onClick={() => {
-                console.log('🚀 Buy VC button clicked!', {
-                  canPurchase,
-                  vcsaleLoading,
-                  vcsaleVcAmount,
-                  vcsaleBnbAmount,
-                  account,
-                  isConnected
-                });
-                executePurchase();
-              }}
+              onClick={executePurchase}
               disabled={!canPurchase || vcsaleLoading}
               className={cn(
                 "w-full py-4 font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl",
