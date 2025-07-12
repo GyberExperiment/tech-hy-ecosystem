@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
   // ✅ Show connection status if there are issues
   if (!metaMaskAvailable || !isConnected || !isCorrectNetwork) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <motion.div 
           className="max-w-md mx-auto"
           initial={{ opacity: 0, y: 20 }}
@@ -81,8 +81,8 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-4">
+      <div className="w-full space-y-8">{/* Убираю max-w-7xl mx-auto */}
         
       {/* Header */}
         <motion.div 
@@ -192,7 +192,7 @@ const Dashboard: React.FC = () => {
             
             {/* Buy VC Widget - горизонтальный с увеличенным отступом сверху */}
             <motion.div
-              className="mt-16 mb-12 px-4"
+              className="mt-16 mb-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}

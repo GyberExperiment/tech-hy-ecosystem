@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAdminAccess } from '../../../shared/hooks/useAdminAccess';
 import NetworkStatus from '../../../shared/ui/NetworkStatus';
+import VCSaleWidget from '../../VCSaleWidget/ui/VCSaleWidget';
 import { cn } from '../../../shared/lib/cn';
 import { getNetworkInfo, CONTRACTS, getContractUrl } from '../../../shared/config/contracts';
 
@@ -258,33 +259,101 @@ const ContractsTab: React.FC = () => {
 
 // ✅ NETWORK TAB
 const NetworkTab: React.FC = () => {
+  const networkInfo = getNetworkInfo();
+  
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Network Configuration</h3>
+      <h3 className="text-xl font-semibold">Network Configuration & Debug Info</h3>
+      
+      {/* Network Status Widget - перенесено из основного интерфейса */}
+      <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
+        <h4 className="text-lg font-medium mb-4 flex items-center">
+          <Network className="mr-2 text-blue-400" size={18} />
+          Network Status Monitor
+        </h4>
+        <NetworkStatus className="bg-transparent border-none shadow-none" />
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
           <h4 className="text-lg font-medium mb-4 flex items-center">
             <Server className="mr-2 text-blue-400" size={18} />
-            RPC Endpoints
+            RPC Endpoints Status
           </h4>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <RpcStatus url="https://data-seed-prebsc-1-s1.bnbchain.org:8545" status="healthy" latency="45ms" />
             <RpcStatus url="https://data-seed-prebsc-2-s1.bnbchain.org:8545" status="slow" latency="340ms" />
             <RpcStatus url="https://bsc-testnet-rpc.publicnode.com" status="healthy" latency="67ms" />
+            <RpcStatus url="https://bsc-prebsc-dataseed.bnbchain.org:8545" status="healthy" latency="52ms" />
+            <RpcStatus url="https://endpoints.omniatech.io/v1/bsc/testnet/public" status="error" latency="timeout" />
+          </div>
+        </div>
+
+        <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
+          <h4 className="text-lg font-medium mb-4 flex items-center">
+            <Activity className="mr-2 text-green-400" size={18} />
+            System Health Monitoring
+          </h4>
+          <div className="space-y-3">
+            <HealthCheck label="Wallet Connection" status="healthy" />
+            <HealthCheck label="Contract Connectivity" status="healthy" />
+            <HealthCheck label="Token Balances Sync" status="healthy" />
+            <HealthCheck label="Transaction History" status="warning" message="Slow API" />
+            <HealthCheck label="LP Pool Data" status="warning" message="Low liquidity" />
+            <HealthCheck label="Price Feeds" status="healthy" />
           </div>
         </div>
 
         <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
           <h4 className="text-lg font-medium mb-4 flex items-center">
             <Terminal className="mr-2 text-green-400" size={18} />
-            Quick Actions
+            Admin Actions
           </h4>
           <div className="space-y-3">
             <AdminAction label="Switch to Mainnet" icon={Network} variant="warning" />
             <AdminAction label="Clear RPC Cache" icon={RefreshCw} variant="info" />
             <AdminAction label="Test All Endpoints" icon={Activity} variant="success" />
+            <AdminAction label="Force Data Refresh" icon={RefreshCw} variant="info" />
             <AdminAction label="Emergency Mode" icon={AlertTriangle} variant="danger" />
+            <AdminAction label="Reset Connection" icon={Network} variant="warning" />
+          </div>
+        </div>
+
+        <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
+          <h4 className="text-lg font-medium mb-4 flex items-center">
+            <Code className="mr-2 text-purple-400" size={18} />
+            Network Information
+          </h4>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Network:</span>
+              <span className="text-white font-mono">{networkInfo.networkName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Chain ID:</span>
+              <span className="text-white font-mono">{networkInfo.chainId}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Currency:</span>
+              <span className="text-white font-mono">{networkInfo.nativeCurrency.symbol}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Type:</span>
+              <span className={`font-mono ${networkInfo.isTestnet ? 'text-yellow-400' : 'text-green-400'}`}>
+                {networkInfo.isTestnet ? 'Testnet' : 'Mainnet'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Block Explorer:</span>
+              <a 
+                href={networkInfo.blockExplorer} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 font-mono text-xs"
+              >
+                View Explorer
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -298,6 +367,32 @@ const TokensTab: React.FC = () => {
     <div className="space-y-6">
       <h3 className="text-xl font-semibold">Token Management</h3>
       
+      {/* VCSale Widget - выделенный блок */}
+      <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-medium text-white flex items-center">
+            <DollarSign className="mr-2 text-green-400" size={18} />
+            VC Token Sale
+          </h4>
+          <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+            <span className="text-green-400 text-sm font-medium">Admin Access</span>
+          </div>
+        </div>
+        
+        <div className="bg-slate-700/30 p-4 rounded-lg">
+          <VCSaleWidget 
+            className="bg-transparent border-slate-600/50 shadow-none"
+            onPurchaseSuccess={(txHash, amount) => {
+              // Admin purchase successful
+            }}
+            onError={(error) => {
+              // Admin purchase error
+            }}
+          />
+        </div>
+      </div>
+      
+      {/* Token Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TokenCard 
           name="VC Token"

@@ -26,20 +26,23 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 
 // 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ Официальные BSC Testnet эндпоинты (из docs.bnbchain.org)
-  'https://bsc-testnet-dataseed.bnbchain.org',
-  'https://bsc-testnet.bnbchain.org',
-  'https://bsc-prebsc-dataseed.bnbchain.org',
-  
-  // ✅ Проверенные сторонние провайдеры (бесплатные, без API ключей)
+  // ✅ ТОЛЬКО проверенные рабочие провайдеры (2025)
   'https://bsc-testnet-rpc.publicnode.com',
-  'https://bsc-testnet.publicnode.com',
+  'https://bsc-testnet.publicnode.com', 
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
   'https://bsc-testnet.drpc.org',
+  'https://bsc-testnet.rpc.thirdweb.com',
+  'https://bsc-testnet-dataseed.bnbchain.org',
   
-  // ✅ Дополнительные надежные провайдеры
-  'https://bsc-testnet.4everland.org/v1/97/public',
-  'https://bsc-testnet-dataseed1.defibit.io',
-  'https://bsc-testnet-dataseed1.ninicoin.io'
+  // ❌ УБРАНЫ проблемные endpoints:
+  // 'https://bsc-testnet.nodereal.io', // 404 Not Found  
+  // 'https://bsc-testnet.4everland.org/v1/37fa9972c1b1cd5fab542c7bdd4cde2f', // timeout
+  // 'https://data-seed-prebsc-1-s1.bnbchain.org:8545', // timeout
+  // 'https://data-seed-prebsc-2-s1.bnbchain.org:8545', // timeout
+  // 'https://data-seed-prebsc-1-s2.bnbchain.org:8545', // timeout
+  // 'https://data-seed-prebsc-2-s2.bnbchain.org:8545', // timeout
+  // 'https://data-seed-prebsc-1-s3.bnbchain.org:8545', // timeout
+  // 'https://bsc-prebsc-dataseed.bnbchain.org:8545', // timeout
 ];
 
 // 🎯 Current network configuration

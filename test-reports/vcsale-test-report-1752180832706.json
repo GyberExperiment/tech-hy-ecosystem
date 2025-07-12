@@ -1,0 +1,129 @@
+{
+  "timestamp": "2025-07-10T20:53:52.692Z",
+  "totalDuration": 130234,
+  "summary": {
+    "totalTests": 0,
+    "totalPassed": 0,
+    "totalFailed": 0,
+    "successRate": 0
+  },
+  "testSuites": [
+    {
+      "name": "Core Contract Tests",
+      "files": [
+        "test/VCSaleContract.test.ts"
+      ],
+      "description": "Basic contract functionality and initialization",
+      "critical": true,
+      "results": [
+        {
+          "testFile": "test/VCSaleContract.test.ts",
+          "description": "Core Contract Tests",
+          "passed": 0,
+          "failed": 0,
+          "duration": 9499,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "Comprehensive Contract Tests",
+      "files": [
+        "test/VCSaleContract.comprehensive.test.ts"
+      ],
+      "description": "Edge cases, security mechanisms, and advanced scenarios",
+      "critical": true,
+      "results": [
+        {
+          "testFile": "test/VCSaleContract.comprehensive.test.ts",
+          "description": "Comprehensive Contract Tests",
+          "passed": 0,
+          "failed": 0,
+          "duration": 53706,
+          "status": "error",
+          "errorMessage": "Command failed: npx hardhat test test/VCSaleContract.comprehensive.test.ts\n"
+        }
+      ]
+    },
+    {
+      "name": "Widget Component Tests",
+      "files": [
+        "frontend/src/widgets/VCSaleWidget/__tests__/VCSaleWidget.comprehensive.test.tsx"
+      ],
+      "description": "Frontend widget functionality and user interactions",
+      "critical": true,
+      "results": [
+        {
+          "testFile": "frontend/src/widgets/VCSaleWidget/__tests__/VCSaleWidget.comprehensive.test.tsx",
+          "description": "Widget Component Tests",
+          "passed": 0,
+          "failed": 0,
+          "duration": 5856,
+          "status": "error",
+          "errorMessage": "Command failed: cd frontend && npm run test frontend/src/widgets/VCSaleWidget/__tests__/VCSaleWidget.comprehensive.test.tsx\nNo test files found, exiting with code 1\n\nfilter: frontend/src/widgets/VCSaleWidget/__tests__/VCSaleWidget.comprehensive.test.tsx\ninclude: src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\nexclude:  node_modules, dist, .idea, .git, .cache\n\n"
+        }
+      ]
+    },
+    {
+      "name": "Integration Tests",
+      "files": [
+        "test/integration/VCSale.integration.test.ts"
+      ],
+      "description": "End-to-end frontend to contract integration",
+      "critical": true,
+      "results": [
+        {
+          "testFile": "test/integration/VCSale.integration.test.ts",
+          "description": "Integration Tests",
+          "passed": 0,
+          "failed": 0,
+          "duration": 40738,
+          "status": "error",
+          "errorMessage": "Command failed: npx hardhat test test/integration/VCSale.integration.test.ts\n"
+        }
+      ]
+    },
+    {
+      "name": "E2E Production Tests",
+      "files": [
+        "test/e2e/VCSale.e2e.test.ts"
+      ],
+      "description": "Real-world user scenarios and production simulations",
+      "critical": false,
+      "results": []
+    },
+    {
+      "name": "Performance Tests",
+      "files": [
+        "test/performance/VCSale.performance.test.ts"
+      ],
+      "description": "Gas optimization, throughput, and scalability",
+      "critical": false,
+      "results": []
+    },
+    {
+      "name": "Security Stress Tests",
+      "files": [
+        "test/security/VCSale.security.test.ts"
+      ],
+      "description": "Attack vectors and security mechanism testing",
+      "critical": true,
+      "results": [
+        {
+          "testFile": "test/security/VCSale.security.test.ts",
+          "description": "Security Stress Tests",
+          "passed": 0,
+          "failed": 0,
+          "duration": 20351,
+          "status": "error",
+          "errorMessage": "Command failed: npx hardhat test test/security/VCSale.security.test.ts\nAn unexpected error occurred:\n/Users/Gyber/GYBERNATY-ECOSYSTEM/tech-hy-ecosystem/test/security/VCSale.security.test.ts:291\n                    action: () => vcsaleContract.connect(attacker).blacklistUser(await legitimateUsers[0].getAddress(), true)\n                                                                                 ^^^^^\n\nSyntaxError: missing ) after argument list\n    at wrapSafe (node:internal/modules/cjs/loader:1378:20)\n    at Module._compile (node:internal/modules/cjs/loader:1428:41)\n    at Module.m._compile (/Users/Gyber/GYBERNATY-ECOSYSTEM/tech-hy-ecosystem/node_modules/ts-node/src/index.ts:1618:23)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1548:10)\n    at Object.require.extensions.<computed> [as .ts] (/Users/Gyber/GYBERNATY-ECOSYSTEM/tech-hy-ecosystem/node_modules/ts-node/src/index.ts:1621:12)\n    at Module.load (node:internal/modules/cjs/loader:1288:32)\n    at Function.Module._load (node:internal/modules/cjs/loader:1104:12)\n    at Module.require (node:internal/modules/cjs/loader:1311:19)\n    at require (node:internal/modules/helpers:179:18)\n    at /Users/Gyber/GYBERNATY-ECOSYSTEM/tech-hy-ecosystem/node_modules/mocha/lib/mocha.js:416:36\n"
+        }
+      ]
+    }
+  ],
+  "productionReadiness": {
+    "criticalTestsPassed": true,
+    "securityTestsPassed": true,
+    "performanceTestsPassed": true
+  }
+}

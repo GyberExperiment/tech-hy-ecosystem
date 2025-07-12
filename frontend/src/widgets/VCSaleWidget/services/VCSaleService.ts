@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { VCSALE_ABI, VCSALE_CONFIG, ERROR_MESSAGES, ANALYTICS_EVENTS } from '../config/constants';
 import { SaleStats, UserStats, SecurityStatus, PurchaseParams, TransactionResult } from '../model/types';
-import { ValidationError, validateNetwork, validateContractAddress, validateVCAmount, validateTransactionParams, rateLimiter, safeParseEther, safeFormatEther } from '../lib/validation';
+import { ValidationError, validateNetwork, validateContractAddress, validateVCAmount, validateTransactionParams, rateLimiter, safeParseEther, safeParseBNBAmount, safeFormatEther } from '../lib/validation';
 import { rpcService } from '../../../shared/api/rpcService';
 import { log } from '../../../shared/lib/logger';
 
@@ -23,23 +23,30 @@ export class VCSaleService {
 
   // Security validation before any operation
   private async validateSecurity(userAddress?: string): Promise<void> {
-    if (!this.provider) {
-      throw new ValidationError('Provider not initialized', 'NO_PROVIDER');
-    }
-
-    // Validate network
-    const network = await this.provider.getNetwork();
-    validateNetwork(Number(network.chainId));
-
     // Rate limiting
     if (userAddress && rateLimiter.isRateLimited(userAddress)) {
       throw new ValidationError(ERROR_MESSAGES.RATE_LIMITED, 'RATE_LIMITED');
     }
 
-    // Contract existence check
-    const code = await this.provider.getCode(this.contractAddress);
-    if (code === '0x') {
-      throw new ValidationError('Contract not found at address', 'NO_CONTRACT');
+    try {
+      // Validate network using centralized rpcService (избегаем прямых provider вызовов)
+      const network = await rpcService.withFallback(async (provider) => {
+        return await provider.getNetwork();
+      });
+      validateNetwork(Number(network.chainId));
+
+      // Contract existence check using centralized rpcService
+      const code = await rpcService.withFallback(async (provider) => {
+        return await provider.getCode(this.contractAddress);
+      });
+      if (code === '0x') {
+        throw new ValidationError('Contract not found at address', 'NO_CONTRACT');
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError('Network validation failed', 'NETWORK_ERROR');
     }
   }
 
@@ -103,7 +110,7 @@ export class VCSaleService {
     await this.validateSecurity(userAddress);
 
     try {
-      const [securityConfig, isPaused, isBlacklisted, userStats] = await Promise.all([
+      const [securityConfig, isPaused, isBlacklisted, userStats, saleStats] = await Promise.all([
         rpcService.withFallback(async (provider) => {
           const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
           return await (contract as any).securityConfig();
@@ -116,7 +123,12 @@ export class VCSaleService {
           const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
           return await (contract as any).blacklistedUsers(userAddress);
         }),
-        this.getUserStats(userAddress)
+        this.getUserStats(userAddress),
+        // ✅ Добавляем getSaleStats для получения РЕАЛЬНОГО состояния Circuit Breaker
+        rpcService.withFallback(async (provider) => {
+          const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
+          return await (contract as any).getSaleStats();
+        })
       ]);
 
       const now = Math.floor(Date.now() / 1000);
@@ -125,7 +137,7 @@ export class VCSaleService {
 
       return {
         mevProtectionEnabled: securityConfig[0],
-        circuitBreakerActive: securityConfig[3],
+        circuitBreakerActive: saleStats[7], // ✅ ИСПРАВЛЕНО: берем реальное состояние из getSaleStats[7]
         contractPaused: isPaused,
         userBlacklisted: isBlacklisted,
         rateLimited: now < canPurchaseNext,
@@ -195,7 +207,7 @@ export class VCSaleService {
 
     try {
       const vcAmountWei = safeParseEther(params.vcAmount);
-      const expectedBnbWei = safeParseEther(params.expectedBnbAmount);
+      const expectedBnbWei = safeParseBNBAmount(params.expectedBnbAmount);
       
       // Add slippage protection
       const bnbWithBuffer = expectedBnbWei + (expectedBnbWei * BigInt(Math.floor(params.slippageTolerance * 100)) / 10000n);
@@ -282,8 +294,9 @@ export class VCSaleService {
   // Get user transaction count (for analytics)
   private async getUserTransactionCount(userAddress: string): Promise<number> {
     try {
-      if (!this.provider) return 0;
-      return await this.provider.getTransactionCount(userAddress);
+      return await rpcService.withFallback(async (provider) => {
+        return await provider.getTransactionCount(userAddress);
+      });
     } catch {
       return 0;
     }

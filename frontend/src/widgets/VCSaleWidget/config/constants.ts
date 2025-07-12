@@ -2,11 +2,11 @@ import { VCSaleConfig } from '../model/types';
 
 // Production Configuration
 export const VCSALE_CONFIG: VCSaleConfig = {
-  autoRefreshInterval: 30000, // 30 seconds
-  debounceDelay: 300, // 300ms for better UX
+  autoRefreshInterval: 60000, // 60 seconds - снижена частота для оптимизации RPC
+  debounceDelay: 500, // 500ms for reduced RPC calls
   gasLimitBuffer: 1.2, // 20% gas buffer
   priceBuffer: 1.01, // 1% price buffer
-  maxRetries: 3,
+  maxRetries: 2, // Снижено с 3 до 2 для уменьшения нагрузки
   enableAnalytics: process.env.NODE_ENV === 'production',
   enableDebugLogs: process.env.NODE_ENV === 'development',
 };
@@ -38,14 +38,14 @@ export const VCSALE_ABI = [
   "event CircuitBreakerTriggered(uint256 salesAmount, uint256 threshold, uint256 timestamp)"
 ] as const;
 
-// Input validation constants
+// Input validation constants - ИСПРАВЛЕНО
 export const VALIDATION_RULES = {
   MIN_VC_AMOUNT: 1,
   MAX_VC_AMOUNT: 1000,
   MIN_BNB_AMOUNT: 0.001,
-  MAX_BNB_AMOUNT: 1,
+  MAX_BNB_AMOUNT: 10, // ИСПРАВЛЕНО: Увеличил лимит для больших покупок (1000 VC × 0.001 BNB = 1 BNB)
   DECIMAL_PLACES: 6,
-  SAFE_INTEGER_LIMIT: Number.MAX_SAFE_INTEGER / 1e18, // For Wei calculations
+  SAFE_INTEGER_LIMIT: 1000000, // ИСПРАВЛЕНО: Safe limit for VC amounts (1M VC max for calculations)
 } as const;
 
 // Error messages - Internationalization ready

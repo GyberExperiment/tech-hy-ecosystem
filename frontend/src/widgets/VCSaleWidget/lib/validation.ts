@@ -9,6 +9,46 @@ export class ValidationError extends Error {
   }
 }
 
+// NEW: Soft validation for input fields - doesn't block input
+export const validateInputAmount = (amount: string): { isValid: boolean; error?: string } => {
+  if (!amount || amount.trim() === '') {
+    return { isValid: true }; // Allow empty fields during typing
+  }
+
+  // Allow partial input like ".", "0.", "0.0"
+  if (amount === '.' || amount === '0.' || amount.endsWith('.')) {
+    return { isValid: true };
+  }
+
+  const numericAmount = parseFloat(amount);
+  
+  if (isNaN(numericAmount) || !isFinite(numericAmount)) {
+    return { isValid: false, error: 'Invalid number format' };
+  }
+
+  if (numericAmount < 0) {
+    return { isValid: false, error: 'Amount cannot be negative' };
+  }
+
+  if (numericAmount > VALIDATION_RULES.MAX_VC_AMOUNT) {
+    return { isValid: false, error: `Maximum ${VALIDATION_RULES.MAX_VC_AMOUNT} VC allowed` };
+  }
+
+  // Check for precision issues
+  if (numericAmount > VALIDATION_RULES.SAFE_INTEGER_LIMIT) {
+    return { isValid: false, error: 'Amount too large for safe calculation' };
+  }
+
+  // Validate decimal places
+  const decimalParts = amount.split('.');
+  if (decimalParts.length > 1 && decimalParts[1].length > VALIDATION_RULES.DECIMAL_PLACES) {
+    return { isValid: false, error: `Maximum ${VALIDATION_RULES.DECIMAL_PLACES} decimal places allowed` };
+  }
+
+  return { isValid: true };
+};
+
+// EXISTING: Strict validation for form submission - can throw errors
 export const validateVCAmount = (amount: string): void => {
   if (!amount || amount.trim() === '') {
     throw new ValidationError(ERROR_MESSAGES.INVALID_AMOUNT, 'EMPTY_AMOUNT');
@@ -102,7 +142,7 @@ export const isValidTransaction = (tx: any): boolean => {
 class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
   
-  isRateLimited(key: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
+  isRateLimited(key: string, maxAttempts: number = 20, windowMs: number = 60000): boolean {
     const now = Date.now();
     const attempts = this.attempts.get(key) || [];
     
@@ -134,6 +174,44 @@ export const safeParseEther = (amount: string): bigint => {
     return ethers.parseEther(amount);
   } catch (error) {
     throw new ValidationError(`Invalid amount for Wei conversion: ${amount}`, 'WEI_CONVERSION_ERROR');
+  }
+};
+
+// BNB amount parsing without VC validation
+export const safeParseBNBAmount = (amount: string): bigint => {
+  try {
+    // Basic BNB amount validation
+    if (!amount || amount.trim() === '') {
+      throw new ValidationError('BNB amount cannot be empty', 'EMPTY_BNB_AMOUNT');
+    }
+
+    const numericAmount = parseFloat(amount);
+    
+    if (isNaN(numericAmount) || !isFinite(numericAmount)) {
+      throw new ValidationError('Invalid BNB amount format', 'INVALID_BNB_AMOUNT');
+    }
+
+    if (numericAmount <= 0) {
+      throw new ValidationError('BNB amount must be positive', 'NEGATIVE_BNB_AMOUNT');
+    }
+
+    if (numericAmount > VALIDATION_RULES.MAX_BNB_AMOUNT) {
+      throw new ValidationError(`Maximum ${VALIDATION_RULES.MAX_BNB_AMOUNT} BNB allowed`, 'BNB_AMOUNT_TOO_HIGH');
+    }
+
+    // Check for precision issues
+    if (numericAmount > 1000) {
+      throw new ValidationError('BNB amount too large for safe calculation', 'UNSAFE_BNB_AMOUNT');
+    }
+
+    // Clean up trailing zeros and parse
+    const cleanAmount = parseFloat(amount).toString();
+    return ethers.parseEther(cleanAmount);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    throw new ValidationError(`Invalid BNB amount for Wei conversion: ${amount}`, 'BNB_WEI_CONVERSION_ERROR');
   }
 };
 

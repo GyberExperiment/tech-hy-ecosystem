@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Globe, Settings, Shield } from 'lucide-react';
 import LanguageSwitcher from '../lib/LanguageSwitcher';
-import NetworkStatus from './NetworkStatus';
 import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
@@ -170,7 +169,7 @@ const Header: React.FC = () => {
       <header className="relative sticky top-0 z-50">
         {/* ✨ Premium Header Container */}
         <div className="relative backdrop-blur-[20px] backdrop-saturate-[1.8] backdrop-brightness-[1.05] bg-gradient-to-r from-white/[0.85] via-white/[0.90] to-white/[0.85] border-b border-white/[0.25] shadow-[0_8px_32px_rgba(0,0,0,0.06),0_1px_0_rgba(255,255,255,0.8)_inset]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             {/* ✨ Premium Navigation Row */}
             <div className="flex items-center h-[72px]">
               
@@ -253,11 +252,6 @@ const Header: React.FC = () => {
                 
                 {/* Admin Button - Only visible to admin */}
                 <AdminButton />
-                
-                {/* Network Status - Desktop Only */}
-                <div className="hidden lg:block">
-                  <NetworkStatus compact />
-                </div>
                 
                 {/* Network Switcher - Desktop */}
                 <div className="hidden md:block">
@@ -486,9 +480,8 @@ const Header: React.FC = () => {
                     </button>
                   )}
                   <div className="w-full">
-                    <NetworkStatus compact className="mb-3" />
+                    <NetworkSwitcher isMobile />
                   </div>
-                  <NetworkSwitcher isMobile />
                   <LanguageContainer isMobile />
                 </div>
               </div>
