@@ -82,17 +82,51 @@ const MAINNET_CONTRACTS = {
 
 // ✅ CURRENT NETWORK DETECTION
 export const getCurrentNetwork = (): NetworkType => {
-  // В production можно использовать переменные окружения
-  const isMainnet = process.env.NODE_ENV === 'production' || 
-                   process.env.REACT_APP_NETWORK === 'mainnet' ||
-                   window.location.hostname.includes('app.') || // app.yourdomain.com
-                   window.location.hostname === 'yourdomain.com';
+  // ⚡ STAGE ВСЕГДА TESTNET (явное условие для stage окружений)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // Stage домены всегда используют testnet
+    if (hostname.includes('stage.') || 
+        hostname.includes('staging.') || 
+        hostname.includes('test.') ||
+        hostname.includes('dev.') ||
+        hostname.includes('techhy') || // stage.techhyecosystem.build.infra.gyber.org
+        hostname.includes('localhost') ||
+        hostname.includes('127.0.0.1')) {
+      console.log('🔍 Network Detection: STAGE/DEV detected → TESTNET', { hostname });
+      return 'testnet';
+    }
+    
+    // Production домены используют mainnet
+    if (hostname.includes('app.') || 
+        hostname === 'yourdomain.com' ||
+        hostname === 'techhyecosystem.com') {
+      console.log('🔍 Network Detection: PRODUCTION detected → MAINNET', { hostname });
+      return 'mainnet';
+    }
+  }
   
-  return isMainnet ? 'mainnet' : 'testnet';
+  // Fallback: если не можем определить по hostname, используем переменные
+  const isMainnet = process.env.REACT_APP_NETWORK === 'mainnet';
+  const network = isMainnet ? 'mainnet' : 'testnet';
+  
+  console.log('🔍 Network Detection: FALLBACK → ' + network.toUpperCase(), {
+    NODE_ENV: process.env.NODE_ENV,
+    REACT_APP_NETWORK: process.env.REACT_APP_NETWORK,
+    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server-side'
+  });
+  
+  return network;
 };
 
 // ✅ DYNAMIC CONTRACT SELECTION
-export const CONTRACTS = getCurrentNetwork() === 'mainnet' ? MAINNET_CONTRACTS : TESTNET_CONTRACTS;
+const selectedNetwork = getCurrentNetwork();
+console.log('🎯 CONTRACTS Selection:', {
+  selectedNetwork,
+  VCSALE_ADDRESS: selectedNetwork === 'mainnet' ? MAINNET_CONTRACTS.VCSALE : TESTNET_CONTRACTS.VCSALE
+});
+export const CONTRACTS = selectedNetwork === 'mainnet' ? MAINNET_CONTRACTS : TESTNET_CONTRACTS;
 
 // ✅ CURRENT BSC NETWORK CONFIG
 export const BSC_TESTNET = BSC_NETWORKS.testnet;
