@@ -584,50 +584,36 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
             )}
           </div>
 
+          {/* DEBUG: Purchase Status */}
+          <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4 text-sm">
+            <div className="text-red-300 font-medium mb-2">🔍 DEBUG: Purchase Status</div>
+            <div className="space-y-1 text-red-200">
+              <div>• canPurchase: {canPurchase ? '✅ TRUE' : '❌ FALSE'}</div>
+              <div>• vcsaleLoading: {vcsaleLoading ? '⏳ TRUE' : '✅ FALSE'}</div>
+              <div>• vcsaleVcAmount: {vcsaleVcAmount || 'EMPTY'}</div>
+              <div>• vcsaleBnbAmount: {vcsaleBnbAmount || 'EMPTY'}</div>
+              <div>• account: {account ? '✅ Connected' : '❌ Not connected'}</div>
+              <div>• isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</div>
+              <div>• saleStats: {saleStats ? '✅ Loaded' : '❌ Not loaded'}</div>
+              <div>• securityStatus: {securityStatus ? '✅ Loaded' : '❌ Not loaded'}</div>
+              <div>• vcsaleError: {vcsaleError || 'NONE'}</div>
+            </div>
+          </div>
+
           {/* Purchase Button */}
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                VC Amount to Buy
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={vcsaleVcAmount}
-                  onChange={(e) => setVcsaleVcAmount(e.target.value)}
-                  placeholder="Enter VC amount"
-                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:border-blue-500/50 focus:outline-none transition-colors"
-                  min="0"
-                  step="0.001"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-purple-400 text-sm font-medium">VC</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                BNB Required
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={vcsaleBnbAmount}
-                  readOnly
-                  placeholder="Calculated automatically"
-                  className="w-full px-4 py-3 bg-slate-900/30 border border-slate-700/30 rounded-xl text-slate-300 cursor-not-allowed"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-yellow-400 text-sm font-medium">BNB</span>
-                </div>
-              </div>
-            </div>
-
-
-
             <button
-              onClick={executePurchase}
+              onClick={() => {
+                console.log('🚀 Buy VC button clicked!', {
+                  canPurchase,
+                  vcsaleLoading,
+                  vcsaleVcAmount,
+                  vcsaleBnbAmount,
+                  account,
+                  isConnected
+                });
+                executePurchase();
+              }}
               disabled={!canPurchase || vcsaleLoading}
               className={cn(
                 "w-full py-4 font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl",
