@@ -129,32 +129,39 @@ export const WaveTransition = ({
           const basePhase = index * Math.PI * 0.5
           const baseAmplitude = Math.max(2, (height || 6) * (intensity || 0.2) * (1 - index * 0.3))
           
-          // Генерируем 3 безопасных кадра анимации с дополнительной валидацией
-          const frame1 = generateWavePath(basePhase, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
-          const frame2 = generateWavePath(basePhase + Math.PI, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
-          const frame3 = generateWavePath(basePhase + Math.PI * 2, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
+          // Генерируем стабильный initial path с валидацией
+          const initialPath = generateWavePath(basePhase, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
           
-          // Дополнительная проверка на валидность путей
-          const safePaths = [frame1, frame2, frame3].map(path => {
-            if (!path || path.includes('undefined') || path.includes('NaN') || path.length < 10) {
-              return 'M0,50 L100,50 V100 H0 Z'
-            }
-            return path
-          })
+          // Дополнительная проверка на валидность начального пути
+          const safePath = (!initialPath || initialPath.includes('undefined') || initialPath.includes('NaN') || initialPath.length < 10) 
+            ? 'M0,50 L100,50 V100 H0 Z' 
+            : initialPath
+          
+          // Генерируем второй путь с дополнительной проверкой
+          const secondPath = generateWavePath(basePhase + Math.PI, baseAmplitude) || safePath
+          const safeSecondPath = (!secondPath || secondPath.includes('undefined') || secondPath.includes('NaN') || secondPath.length < 10) 
+            ? safePath 
+            : secondPath
           
           return (
             <motion.path
               key={`wave-${index}-${cleanId}`}
-              d={safePaths[0]} // Используем первый безопасный path как initial
+              d={safePath} // Используем стабильный безопасный path
               fill={`url(#${gradientId})`}
               filter={`url(#${filterId})`}
               animate={{
-                d: safePaths // Передаем массив безопасных путей
+                // Анимируем между двумя безопасными состояниями
+                d: [
+                  safePath,
+                  safeSecondPath, // Используем проверенный второй путь
+                  safePath
+                ]
               }}
               transition={{
                 duration: 20 + index * 3,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "linear",
+                times: [0, 0.5, 1] // Ключевые точки анимации
               }}
               style={{ 
                 opacity: 0.6 - index * 0.15
