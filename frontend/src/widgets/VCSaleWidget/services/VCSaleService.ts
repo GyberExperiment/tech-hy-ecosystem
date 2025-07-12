@@ -110,7 +110,7 @@ export class VCSaleService {
     await this.validateSecurity(userAddress);
 
     try {
-      const [securityConfig, isPaused, isBlacklisted, userStats] = await Promise.all([
+      const [securityConfig, isPaused, isBlacklisted, userStats, saleStats] = await Promise.all([
         rpcService.withFallback(async (provider) => {
           const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
           return await (contract as any).securityConfig();
@@ -123,7 +123,12 @@ export class VCSaleService {
           const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
           return await (contract as any).blacklistedUsers(userAddress);
         }),
-        this.getUserStats(userAddress)
+        this.getUserStats(userAddress),
+        // ✅ Добавляем getSaleStats для получения РЕАЛЬНОГО состояния Circuit Breaker
+        rpcService.withFallback(async (provider) => {
+          const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, provider);
+          return await (contract as any).getSaleStats();
+        })
       ]);
 
       const now = Math.floor(Date.now() / 1000);
@@ -132,7 +137,7 @@ export class VCSaleService {
 
       return {
         mevProtectionEnabled: securityConfig[0],
-        circuitBreakerActive: securityConfig[3],
+        circuitBreakerActive: saleStats[7], // ✅ ИСПРАВЛЕНО: берем реальное состояние из getSaleStats[7]
         contractPaused: isPaused,
         userBlacklisted: isBlacklisted,
         rateLimited: now < canPurchaseNext,
