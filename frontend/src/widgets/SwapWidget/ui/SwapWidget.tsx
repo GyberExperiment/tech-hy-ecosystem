@@ -44,30 +44,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
     executePurchase,
   } = useVCSale();
   
-  // 🔍 DEBUG: Log canPurchase state for debugging
-  React.useEffect(() => {
-    if (account) {
-      console.log('🔍 [SwapWidget] DEBUG canPurchase state:', {
-        account,
-        vcAmount: vcsaleVcAmount,
-        parseFloatVcAmount: vcsaleVcAmount ? parseFloat(vcsaleVcAmount) : 'empty',
-        securityStatus,
-        canPurchase,
-        isLoading: vcsaleLoading,
-        saleStats,
-        isNetworkSupported,
-        // Individual checks
-        hasAccount: !!account,
-        hasVcAmount: !!vcsaleVcAmount,
-        vcAmountGt0: vcsaleVcAmount ? parseFloat(vcsaleVcAmount) > 0 : false,
-        notContractPaused: !securityStatus?.contractPaused,
-        notUserBlacklisted: !securityStatus?.userBlacklisted,  
-        notCircuitBreakerActive: !securityStatus?.circuitBreakerActive,
-        notRateLimited: !securityStatus?.rateLimited,
-        notIsLoading: !vcsaleLoading,
-      });
-    }
-  }, [account, vcsaleVcAmount, securityStatus, canPurchase, vcsaleLoading, saleStats, isNetworkSupported]);
+
   
   // State management for modes
   const [mode, setMode] = useState<'buyvc' | 'earnvg'>('buyvc'); // Default to BuyVC
