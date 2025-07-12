@@ -1,8 +1,9 @@
 import '@rainbow-me/rainbowkit/styles.css';
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { darkTheme } from '@rainbow-me/rainbowkit';
-import { createConfig, http } from 'wagmi';
+import { createConfig, http, fallback } from 'wagmi';
 import { bscTestnet, bsc } from 'wagmi/chains';
+import { BSC_TESTNET_RPC_ENDPOINTS } from '../shared/config/rpcEndpoints';
 import { 
   metaMaskWallet,
   trustWallet,
@@ -85,8 +86,10 @@ export const rainbowConfig = createConfig({
   connectors,
   chains: [bscTestnet, bsc],
   transports: {
-    [bscTestnet.id]: http(),
-    [bsc.id]: http(),
+    [bscTestnet.id]: fallback(
+      BSC_TESTNET_RPC_ENDPOINTS.map(endpoint => http(endpoint))
+    ),
+    [bsc.id]: http(), // Mainnet оставляем default
   },
   multiInjectedProviderDiscovery: false, // Убираем автоматическое обнаружение кошельков
   ssr: false, // Мы используем CRA

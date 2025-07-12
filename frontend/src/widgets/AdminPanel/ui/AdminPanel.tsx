@@ -281,11 +281,11 @@ const NetworkTab: React.FC = () => {
             RPC Endpoints Status
           </h4>
           <div className="space-y-3">
-            <RpcStatus url="https://data-seed-prebsc-1-s1.bnbchain.org:8545" status="healthy" latency="45ms" />
-            <RpcStatus url="https://data-seed-prebsc-2-s1.bnbchain.org:8545" status="slow" latency="340ms" />
-            <RpcStatus url="https://bsc-testnet-rpc.publicnode.com" status="healthy" latency="67ms" />
-            <RpcStatus url="https://bsc-prebsc-dataseed.bnbchain.org:8545" status="healthy" latency="52ms" />
-            <RpcStatus url="https://endpoints.omniatech.io/v1/bsc/testnet/public" status="error" latency="timeout" />
+                                                      <RpcStatus url="https://bsc-testnet-rpc.publicnode.com" status="healthy" latency="45ms" />
+              <RpcStatus url="https://bsc-testnet.drpc.org" status="healthy" latency="65ms" />
+              <RpcStatus url="https://bsc-testnet.rpc.thirdweb.com" status="healthy" latency="67ms" />
+              <RpcStatus url="https://bsc-testnet.bnbchain.org" status="healthy" latency="52ms" />
+              <RpcStatus url="https://bsc-testnet.blockpi.network/v1/rpc/public" status="healthy" latency="78ms" />
           </div>
         </div>
 
