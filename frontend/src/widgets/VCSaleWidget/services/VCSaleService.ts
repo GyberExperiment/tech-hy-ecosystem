@@ -23,23 +23,30 @@ export class VCSaleService {
 
   // Security validation before any operation
   private async validateSecurity(userAddress?: string): Promise<void> {
-    if (!this.provider) {
-      throw new ValidationError('Provider not initialized', 'NO_PROVIDER');
-    }
-
-    // Validate network
-    const network = await this.provider.getNetwork();
-    validateNetwork(Number(network.chainId));
-
     // Rate limiting
     if (userAddress && rateLimiter.isRateLimited(userAddress)) {
       throw new ValidationError(ERROR_MESSAGES.RATE_LIMITED, 'RATE_LIMITED');
     }
 
-    // Contract existence check
-    const code = await this.provider.getCode(this.contractAddress);
-    if (code === '0x') {
-      throw new ValidationError('Contract not found at address', 'NO_CONTRACT');
+    try {
+      // Validate network using centralized rpcService (избегаем прямых provider вызовов)
+      const network = await rpcService.withFallback(async (provider) => {
+        return await provider.getNetwork();
+      });
+      validateNetwork(Number(network.chainId));
+
+      // Contract existence check using centralized rpcService
+      const code = await rpcService.withFallback(async (provider) => {
+        return await provider.getCode(this.contractAddress);
+      });
+      if (code === '0x') {
+        throw new ValidationError('Contract not found at address', 'NO_CONTRACT');
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError('Network validation failed', 'NETWORK_ERROR');
     }
   }
 
@@ -282,8 +289,9 @@ export class VCSaleService {
   // Get user transaction count (for analytics)
   private async getUserTransactionCount(userAddress: string): Promise<number> {
     try {
-      if (!this.provider) return 0;
-      return await this.provider.getTransactionCount(userAddress);
+      return await rpcService.withFallback(async (provider) => {
+        return await provider.getTransactionCount(userAddress);
+      });
     } catch {
       return 0;
     }

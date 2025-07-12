@@ -2,11 +2,11 @@ import { VCSaleConfig } from '../model/types';
 
 // Production Configuration
 export const VCSALE_CONFIG: VCSaleConfig = {
-  autoRefreshInterval: 30000, // 30 seconds
-  debounceDelay: 300, // 300ms for better UX
+  autoRefreshInterval: 60000, // 60 seconds - снижена частота для оптимизации RPC
+  debounceDelay: 500, // 500ms for reduced RPC calls
   gasLimitBuffer: 1.2, // 20% gas buffer
   priceBuffer: 1.01, // 1% price buffer
-  maxRetries: 3,
+  maxRetries: 2, // Снижено с 3 до 2 для уменьшения нагрузки
   enableAnalytics: process.env.NODE_ENV === 'production',
   enableDebugLogs: process.env.NODE_ENV === 'development',
 };

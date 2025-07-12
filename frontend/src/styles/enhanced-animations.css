@@ -1,6 +1,6 @@
 /* ===== SUBTLE CHAOTIC ANIMATIONS - MINIMALLY VISIBLE ===== */
 
-/* Subtle widget animations with gentle movement */
+/* Subtle widget animations with gentle movement - EXCLUDES SVG ELEMENTS */
 @keyframes enhanced-widget-chaos-1 {
   0%, 100% {
     transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
@@ -128,68 +128,68 @@
   }
 }
 
-/* Subtle animation classes with longer durations */
-.animate-enhanced-widget-chaos-1 {
+/* Subtle animation classes with longer durations - EXCLUDES SVG ELEMENTS */
+.animate-enhanced-widget-chaos-1:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-1 5.5s ease-in-out infinite;
   animation-delay: 0s;
 }
 
-.animate-enhanced-widget-chaos-2 {
+.animate-enhanced-widget-chaos-2:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-2 6.2s ease-in-out infinite;
   animation-delay: 0.8s;
 }
 
-.animate-enhanced-widget-chaos-3 {
+.animate-enhanced-widget-chaos-3:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-3 5.8s ease-in-out infinite;
   animation-delay: 1.6s;
 }
 
-.animate-enhanced-widget-chaos-4 {
+.animate-enhanced-widget-chaos-4:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-1 6.5s ease-in-out infinite;
   animation-delay: 2.4s;
 }
 
-.animate-enhanced-widget-chaos-5 {
+.animate-enhanced-widget-chaos-5:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-2 5.9s ease-in-out infinite;
   animation-delay: 3.2s;
 }
 
-.animate-enhanced-widget-chaos-6 {
+.animate-enhanced-widget-chaos-6:not(svg):not(svg *) {
   animation: enhanced-widget-chaos-3 6.1s ease-in-out infinite;
   animation-delay: 4.0s;
 }
 
-.animate-enhanced-card-chaos-1 {
+.animate-enhanced-card-chaos-1:not(svg):not(svg *) {
   animation: enhanced-card-chaos-1 4.5s ease-in-out infinite;
   animation-delay: 0.5s;
 }
 
-.animate-enhanced-card-chaos-2 {
+.animate-enhanced-card-chaos-2:not(svg):not(svg *) {
   animation: enhanced-card-chaos-2 5.1s ease-in-out infinite;
   animation-delay: 1.2s;
 }
 
-.animate-enhanced-card-chaos-3 {
+.animate-enhanced-card-chaos-3:not(svg):not(svg *) {
   animation: enhanced-card-chaos-3 4.8s ease-in-out infinite;
   animation-delay: 1.9s;
 }
 
-.animate-enhanced-card-chaos-4 {
+.animate-enhanced-card-chaos-4:not(svg):not(svg *) {
   animation: enhanced-card-chaos-1 5.3s ease-in-out infinite;
   animation-delay: 2.6s;
 }
 
-.animate-enhanced-card-chaos-5 {
+.animate-enhanced-card-chaos-5:not(svg):not(svg *) {
   animation: enhanced-card-chaos-2 4.9s ease-in-out infinite;
   animation-delay: 3.3s;
 }
 
-.animate-enhanced-card-chaos-6 {
+.animate-enhanced-card-chaos-6:not(svg):not(svg *) {
   animation: enhanced-card-chaos-3 5.0s ease-in-out infinite;
   animation-delay: 4.1s;
 }
 
-.animate-enhanced-float-bg {
+.animate-enhanced-float-bg:not(svg):not(svg *) {
   animation: enhanced-float-background 8.0s ease-in-out infinite;
 }
 
@@ -203,7 +203,7 @@
   }
 }
 
-.animate-pulse-glow {
+.animate-pulse-glow:not(svg):not(svg *) {
   animation: pulse-glow 6s ease-in-out infinite;
 }
 
@@ -217,7 +217,7 @@
   }
 }
 
-.animate-breathing-scale {
+.animate-breathing-scale:not(svg):not(svg *) {
   animation: breathing-scale 8s ease-in-out infinite;
 }
 
@@ -278,37 +278,37 @@
 }
 
 /* Ultra subtle animation classes for tokens */
-.animate-ultra-subtle-token-1 {
+.animate-ultra-subtle-token-1:not(svg):not(svg *) {
   animation: ultra-subtle-token-1 7.5s ease-in-out infinite;
   animation-delay: 0.3s;
 }
 
-.animate-ultra-subtle-token-2 {
+.animate-ultra-subtle-token-2:not(svg):not(svg *) {
   animation: ultra-subtle-token-2 8.2s ease-in-out infinite;
   animation-delay: 1.1s;
 }
 
-.animate-ultra-subtle-token-3 {
+.animate-ultra-subtle-token-3:not(svg):not(svg *) {
   animation: ultra-subtle-token-3 7.8s ease-in-out infinite;
   animation-delay: 1.9s;
 }
 
-.animate-ultra-subtle-token-4 {
+.animate-ultra-subtle-token-4:not(svg):not(svg *) {
   animation: ultra-subtle-token-1 8.5s ease-in-out infinite;
   animation-delay: 2.7s;
 }
 
-.animate-ultra-subtle-token-5 {
+.animate-ultra-subtle-token-5:not(svg):not(svg *) {
   animation: ultra-subtle-token-2 7.9s ease-in-out infinite;
   animation-delay: 3.5s;
 }
 
-.animate-ultra-subtle-token-6 {
+.animate-ultra-subtle-token-6:not(svg):not(svg *) {
   animation: ultra-subtle-token-3 8.1s ease-in-out infinite;
   animation-delay: 4.3s;
 }
 
-.animate-ultra-subtle-container {
+.animate-ultra-subtle-container:not(svg):not(svg *) {
   animation: ultra-subtle-container 12s ease-in-out infinite;
   animation-delay: 0s;
 }
@@ -370,27 +370,27 @@
 }
 
 /* Hyper subtle animation classes for stat cards */
-.animate-hyper-subtle-stat-1 {
+.animate-hyper-subtle-stat-1:not(svg):not(svg *) {
   animation: hyper-subtle-stat-1 9.5s ease-in-out infinite;
   animation-delay: 0.2s;
 }
 
-.animate-hyper-subtle-stat-2 {
+.animate-hyper-subtle-stat-2:not(svg):not(svg *) {
   animation: hyper-subtle-stat-2 10.2s ease-in-out infinite;
   animation-delay: 0.8s;
 }
 
-.animate-hyper-subtle-stat-3 {
+.animate-hyper-subtle-stat-3:not(svg):not(svg *) {
   animation: hyper-subtle-stat-3 9.8s ease-in-out infinite;
   animation-delay: 1.4s;
 }
 
-.animate-hyper-subtle-stat-4 {
+.animate-hyper-subtle-stat-4:not(svg):not(svg *) {
   animation: hyper-subtle-stat-1 10.5s ease-in-out infinite;
   animation-delay: 2.0s;
 }
 
-.animate-hyper-subtle-stats-container {
+.animate-hyper-subtle-stats-container:not(svg):not(svg *) {
   animation: hyper-subtle-stats-container 15s ease-in-out infinite;
   animation-delay: 0s;
 } 

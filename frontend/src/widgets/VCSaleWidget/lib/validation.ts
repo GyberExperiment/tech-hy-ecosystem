@@ -142,7 +142,7 @@ export const isValidTransaction = (tx: any): boolean => {
 class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
   
-  isRateLimited(key: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
+  isRateLimited(key: string, maxAttempts: number = 20, windowMs: number = 60000): boolean {
     const now = Date.now();
     const attempts = this.attempts.get(key) || [];
     

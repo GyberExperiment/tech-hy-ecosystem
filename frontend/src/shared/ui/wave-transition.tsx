@@ -41,32 +41,54 @@ export const WaveTransition = ({
     '#8BC34A'  // Clean Light Green
   ]
 
-  // Простая и надежная функция генерации SVG path
+  // БЕЗОПАСНАЯ функция генерации SVG path - гарантированно без undefined
   const generateWavePath = (phase: number = 0, amplitude: number = 10): string => {
+    // Константные безопасные пути
+    const SAFE_STATIC_PATH = 'M0,50 L100,50 V100 H0 Z'
+    
     try {
-      // Безопасные значения по умолчанию
-      const safePhase = Number.isFinite(phase) ? phase : 0
-      const safeAmplitude = Number.isFinite(amplitude) && amplitude > 0 ? amplitude : 10
+      // Проверка входных параметров
+      if (!Number.isFinite(phase) || !Number.isFinite(amplitude)) {
+        return SAFE_STATIC_PATH
+      }
       
-      // Простая синусоидальная волна
-      const points = []
-      for (let x = 0; x <= 100; x += 10) {
-        const y = 50 + Math.sin((x / 100) * Math.PI * 2 + safePhase) * safeAmplitude
-        const safeY = Math.max(20, Math.min(80, y))
-        points.push(`${x},${safeY}`)
+      const safePhase = Number(phase) || 0
+      const safeAmplitude = Math.max(1, Math.min(15, Number(amplitude) || 10))
+      
+      // Генерация точек с дополнительными проверками
+      const points: string[] = []
+      for (let x = 0; x <= 100; x += 20) { // Увеличиваем шаг для меньшего количества точек
+        const angleRad = (x / 100) * Math.PI * 2 + safePhase
+        const sinValue = Math.sin(angleRad)
+        
+        // Проверка на корректность вычислений
+        if (!Number.isFinite(sinValue)) {
+          return SAFE_STATIC_PATH
+        }
+        
+        const y = 50 + sinValue * safeAmplitude
+        const safeY = Math.max(20, Math.min(80, Math.round(y)))
+        const safeX = Math.round(x)
+        
+        points.push(`${safeX},${safeY}`)
+      }
+      
+      // Проверка корректности точек
+      if (points.length === 0 || points.some(p => p.includes('undefined') || p.includes('NaN'))) {
+        return SAFE_STATIC_PATH
       }
       
       const path = `M0,50 L${points.join(' L')} L100,50 V100 H0 Z`
       
-      // Финальная проверка
-      if (!path || path.includes('undefined') || path.includes('NaN')) {
-        return 'M0,50 L100,50 V100 H0 Z'
+      // Финальная проверка на undefined/NaN
+      if (!path || path.includes('undefined') || path.includes('NaN') || path.length < 10) {
+        return SAFE_STATIC_PATH
       }
       
       return path
     } catch (error) {
-      console.warn('Wave generation error:', error)
-      return 'M0,50 L100,50 V100 H0 Z'
+      console.warn('Wave generation error, using safe fallback:', error)
+      return SAFE_STATIC_PATH
     }
   }
 
@@ -124,44 +146,32 @@ export const WaveTransition = ({
           </filter>
         </defs>
         
-        {/* БЕЗОПАСНЫЕ мягкие анимированные волны с полной защитой от undefined */}
+        {/* СТАТИЧЕСКИЕ БЕЗОПАСНЫЕ волны без анимации для устранения undefined ошибок */}
         {[0, 1, 2].map((index) => {
-          const basePhase = index * Math.PI * 0.5
-          const baseAmplitude = Math.max(2, (height || 6) * (intensity || 0.2) * (1 - index * 0.3))
+          // Используем статические безопасные пути для каждого слоя
+          const staticPaths = [
+            'M0,55 L20,52 L40,58 L60,48 L80,62 L100,50 V100 H0 Z', // Слой 1
+            'M0,48 L20,58 L40,45 L60,55 L80,42 L100,50 V100 H0 Z', // Слой 2  
+            'M0,52 L20,46 L40,54 L60,44 L80,56 L100,50 V100 H0 Z'  // Слой 3
+          ]
           
-          // Генерируем стабильный initial path с валидацией
-          const initialPath = generateWavePath(basePhase, baseAmplitude) || 'M0,50 L100,50 V100 H0 Z'
-          
-          // Дополнительная проверка на валидность начального пути
-          const safePath = (!initialPath || initialPath.includes('undefined') || initialPath.includes('NaN') || initialPath.length < 10) 
-            ? 'M0,50 L100,50 V100 H0 Z' 
-            : initialPath
-          
-          // Генерируем второй путь с дополнительной проверкой
-          const secondPath = generateWavePath(basePhase + Math.PI, baseAmplitude) || safePath
-          const safeSecondPath = (!secondPath || secondPath.includes('undefined') || secondPath.includes('NaN') || secondPath.length < 10) 
-            ? safePath 
-            : secondPath
+          const safePath = staticPaths[index] || 'M0,50 L100,50 V100 H0 Z'
           
           return (
             <motion.path
               key={`wave-${index}-${cleanId}`}
-              d={safePath} // Используем стабильный безопасный path
+              d={safePath}
               fill={`url(#${gradientId})`}
               filter={`url(#${filterId})`}
               animate={{
-                // Анимируем между двумя безопасными состояниями
-                d: [
-                  safePath,
-                  safeSecondPath, // Используем проверенный второй путь
-                  safePath
-                ]
+                // Простая анимация opacity вместо path morphing
+                opacity: [0.4, 0.7, 0.4]
               }}
               transition={{
-                duration: 20 + index * 3,
+                duration: 8 + index * 2,
                 repeat: Infinity,
-                ease: "linear",
-                times: [0, 0.5, 1] // Ключевые точки анимации
+                ease: "easeInOut",
+                delay: index * 0.3
               }}
               style={{ 
                 opacity: 0.6 - index * 0.15

@@ -44,6 +44,31 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
     executePurchase,
   } = useVCSale();
   
+  // 🔍 DEBUG: Log canPurchase state for debugging
+  React.useEffect(() => {
+    if (account) {
+      console.log('🔍 [SwapWidget] DEBUG canPurchase state:', {
+        account,
+        vcAmount: vcsaleVcAmount,
+        parseFloatVcAmount: vcsaleVcAmount ? parseFloat(vcsaleVcAmount) : 'empty',
+        securityStatus,
+        canPurchase,
+        isLoading: vcsaleLoading,
+        saleStats,
+        isNetworkSupported,
+        // Individual checks
+        hasAccount: !!account,
+        hasVcAmount: !!vcsaleVcAmount,
+        vcAmountGt0: vcsaleVcAmount ? parseFloat(vcsaleVcAmount) > 0 : false,
+        notContractPaused: !securityStatus?.contractPaused,
+        notUserBlacklisted: !securityStatus?.userBlacklisted,  
+        notCircuitBreakerActive: !securityStatus?.circuitBreakerActive,
+        notRateLimited: !securityStatus?.rateLimited,
+        notIsLoading: !vcsaleLoading,
+      });
+    }
+  }, [account, vcsaleVcAmount, securityStatus, canPurchase, vcsaleLoading, saleStats, isNetworkSupported]);
+  
   // State management for modes
   const [mode, setMode] = useState<'buyvc' | 'earnvg'>('buyvc'); // Default to BuyVC
   
@@ -582,30 +607,103 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
             )}
           </div>
 
-          {/* Buy VC Action Button */}
-          <button
-            onClick={executePurchase}
-            disabled={!canPurchase || vcsaleLoading}
-            className={cn(
-              "w-full py-4 font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl",
-              canPurchase && !vcsaleLoading
-                ? "bg-gradient-to-r from-blue-500/90 to-purple-600/90 hover:from-blue-600/90 hover:to-purple-700/90 hover:shadow-xl transform hover:scale-[1.02]"
-                : "bg-gradient-to-r from-slate-600/50 to-slate-700/50"
-            )}
-          >
-            {vcsaleLoading ? (
-              <div className="flex items-center justify-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Processing...</span>
+          {/* Purchase Button */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                VC Amount to Buy
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={vcsaleVcAmount}
+                  onChange={(e) => setVcsaleVcAmount(e.target.value)}
+                  placeholder="Enter VC amount"
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:border-blue-500/50 focus:outline-none transition-colors"
+                  min="0"
+                  step="0.001"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="text-purple-400 text-sm font-medium">VC</span>
+                </div>
               </div>
-            ) : !vcsaleVcAmount || parseFloat(vcsaleVcAmount) <= 0 ? (
-              'Enter Amount'
-            ) : !canPurchase ? (
-              'Cannot Purchase'
-            ) : (
-              `Buy ${vcsaleVcAmount} VC`
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                BNB Required
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={vcsaleBnbAmount}
+                  readOnly
+                  placeholder="Calculated automatically"
+                  className="w-full px-4 py-3 bg-slate-900/30 border border-slate-700/30 rounded-xl text-slate-300 cursor-not-allowed"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="text-yellow-400 text-sm font-medium">BNB</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 🔍 TEMPORARY DEBUG INFO - показываем для диагностики */}
+            {process.env.NODE_ENV === 'development' && account && (
+              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-3 text-xs">
+                <div className="text-red-300 font-medium mb-2">🔍 DEBUG: Purchase Block Diagnosis</div>
+                <div className="space-y-1 text-red-200">
+                  <div>Account: {account ? '✅' : '❌'} {account?.slice(0, 8)}...</div>
+                  <div>VC Amount: {vcsaleVcAmount || 'empty'} {vcsaleVcAmount && parseFloat(vcsaleVcAmount) > 0 ? '✅' : '❌'}</div>
+                  <div>Network: {isNetworkSupported ? '✅' : '❌'}</div>
+                  <div>Loading: {vcsaleLoading ? '❌ (loading)' : '✅'}</div>
+                  <div className="border-t border-red-500/20 pt-1 mt-1">
+                    <div>Security Status:</div>
+                    <div className="ml-2">
+                      <div>Contract Paused: {securityStatus?.contractPaused ? '❌ YES' : '✅ NO'}</div>
+                      <div>User Blacklisted: {securityStatus?.userBlacklisted ? '❌ YES' : '✅ NO'}</div>
+                      <div>Circuit Breaker: {securityStatus?.circuitBreakerActive ? '❌ YES' : '✅ NO'}</div>
+                      <div>Rate Limited: {securityStatus?.rateLimited ? '❌ YES' : '✅ NO'}</div>
+                    </div>
+                  </div>
+                  <div className="border-t border-red-500/20 pt-1 mt-1">
+                    <div>Sale Stats:</div>
+                    <div className="ml-2">
+                      <div>Sale Active: {saleStats?.saleActive ? '✅ YES' : '❌ NO'}</div>
+                      <div>Available VC: {saleStats?.currentVCBalance || 'unknown'}</div>
+                      <div>Price: {saleStats?.pricePerVC ? (parseFloat(saleStats.pricePerVC) / 1e18).toFixed(6) : 'unknown'} BNB</div>
+                    </div>
+                  </div>
+                  <div className="border-t border-red-500/20 pt-1 mt-1 font-bold">
+                    <div>Final canPurchase: {canPurchase ? '✅ TRUE' : '❌ FALSE'}</div>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
+
+            <button
+              onClick={executePurchase}
+              disabled={!canPurchase || vcsaleLoading}
+              className={cn(
+                "w-full py-4 font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl",
+                canPurchase && !vcsaleLoading
+                  ? "bg-gradient-to-r from-blue-500/90 to-purple-600/90 hover:from-blue-600/90 hover:to-purple-700/90 hover:shadow-xl transform hover:scale-[1.02]"
+                  : "bg-gradient-to-r from-slate-600/50 to-slate-700/50"
+              )}
+            >
+              {vcsaleLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </div>
+              ) : !vcsaleVcAmount || parseFloat(vcsaleVcAmount) <= 0 ? (
+                'Enter Amount'
+              ) : !canPurchase ? (
+                'Cannot Purchase'
+              ) : (
+                `Buy ${vcsaleVcAmount} VC`
+              )}
+            </button>
+          </div>
         </>
       ) : (
         /* Earn VG Mode - Active */
