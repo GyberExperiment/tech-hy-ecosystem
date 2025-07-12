@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { VCSALE_ABI, VCSALE_CONFIG, ERROR_MESSAGES, ANALYTICS_EVENTS } from '../config/constants';
 import { SaleStats, UserStats, SecurityStatus, PurchaseParams, TransactionResult } from '../model/types';
-import { ValidationError, validateNetwork, validateContractAddress, validateVCAmount, validateTransactionParams, rateLimiter, safeParseEther, safeFormatEther } from '../lib/validation';
+import { ValidationError, validateNetwork, validateContractAddress, validateVCAmount, validateTransactionParams, rateLimiter, safeParseEther, safeParseBNBAmount, safeFormatEther } from '../lib/validation';
 import { rpcService } from '../../../shared/api/rpcService';
 import { log } from '../../../shared/lib/logger';
 
@@ -207,7 +207,7 @@ export class VCSaleService {
 
     try {
       const vcAmountWei = safeParseEther(params.vcAmount);
-      const expectedBnbWei = safeParseEther(params.expectedBnbAmount);
+      const expectedBnbWei = safeParseBNBAmount(params.expectedBnbAmount);
       
       // Add slippage protection
       const bnbWithBuffer = expectedBnbWei + (expectedBnbWei * BigInt(Math.floor(params.slippageTolerance * 100)) / 10000n);

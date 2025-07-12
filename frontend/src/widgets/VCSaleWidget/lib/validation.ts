@@ -177,6 +177,44 @@ export const safeParseEther = (amount: string): bigint => {
   }
 };
 
+// BNB amount parsing without VC validation
+export const safeParseBNBAmount = (amount: string): bigint => {
+  try {
+    // Basic BNB amount validation
+    if (!amount || amount.trim() === '') {
+      throw new ValidationError('BNB amount cannot be empty', 'EMPTY_BNB_AMOUNT');
+    }
+
+    const numericAmount = parseFloat(amount);
+    
+    if (isNaN(numericAmount) || !isFinite(numericAmount)) {
+      throw new ValidationError('Invalid BNB amount format', 'INVALID_BNB_AMOUNT');
+    }
+
+    if (numericAmount <= 0) {
+      throw new ValidationError('BNB amount must be positive', 'NEGATIVE_BNB_AMOUNT');
+    }
+
+    if (numericAmount > VALIDATION_RULES.MAX_BNB_AMOUNT) {
+      throw new ValidationError(`Maximum ${VALIDATION_RULES.MAX_BNB_AMOUNT} BNB allowed`, 'BNB_AMOUNT_TOO_HIGH');
+    }
+
+    // Check for precision issues
+    if (numericAmount > 1000) {
+      throw new ValidationError('BNB amount too large for safe calculation', 'UNSAFE_BNB_AMOUNT');
+    }
+
+    // Clean up trailing zeros and parse
+    const cleanAmount = parseFloat(amount).toString();
+    return ethers.parseEther(cleanAmount);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    throw new ValidationError(`Invalid BNB amount for Wei conversion: ${amount}`, 'BNB_WEI_CONVERSION_ERROR');
+  }
+};
+
 export const safeFormatEther = (wei: bigint): string => {
   try {
     return ethers.formatEther(wei);

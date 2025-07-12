@@ -43,7 +43,7 @@ export const VALIDATION_RULES = {
   MIN_VC_AMOUNT: 1,
   MAX_VC_AMOUNT: 1000,
   MIN_BNB_AMOUNT: 0.001,
-  MAX_BNB_AMOUNT: 1,
+  MAX_BNB_AMOUNT: 10, // ИСПРАВЛЕНО: Увеличил лимит для больших покупок (1000 VC × 0.001 BNB = 1 BNB)
   DECIMAL_PLACES: 6,
   SAFE_INTEGER_LIMIT: 1000000, // ИСПРАВЛЕНО: Safe limit for VC amounts (1M VC max for calculations)
 } as const;
