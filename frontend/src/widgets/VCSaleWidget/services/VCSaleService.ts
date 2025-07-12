@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { VCSALE_ABI, VCSALE_CONFIG, ERROR_MESSAGES, ANALYTICS_EVENTS } from '../config/constants';
-import { SaleStats, UserStats, SecurityStatus, PurchaseParams, TransactionResult } from '../model/types';
+import type { SaleStats, UserStats, SecurityStatus, PurchaseParams, TransactionResult } from '../model/types';
 import { ValidationError, validateNetwork, validateContractAddress, validateVCAmount, validateTransactionParams, rateLimiter, safeParseEther, safeParseBNBAmount, safeFormatEther } from '../lib/validation';
 import { rpcService } from '../../../shared/api/rpcService';
 import { log } from '../../../shared/lib/logger';
@@ -37,10 +37,17 @@ export class VCSaleService {
 
       // Contract existence check using centralized rpcService
       const code = await rpcService.withFallback(async (provider) => {
-        return await provider.getCode(this.contractAddress);
+        const result = await provider.getCode(this.contractAddress);
+        console.log('🔍 Contract code check:', {
+          address: this.contractAddress,
+          codeLength: result.length,
+          codePreview: result.substring(0, 20),
+          isEmpty: result === '0x'
+        });
+        return result;
       });
       if (code === '0x') {
-        throw new ValidationError('Contract not found at address', 'NO_CONTRACT');
+        throw new ValidationError(`Contract not found at address: ${this.contractAddress}. Code: ${code}`, 'NO_CONTRACT');
       }
     } catch (error) {
       if (error instanceof ValidationError) {
@@ -212,12 +219,14 @@ export class VCSaleService {
       // Add slippage protection
       const bnbWithBuffer = expectedBnbWei + (expectedBnbWei * BigInt(Math.floor(params.slippageTolerance * 100)) / 10000n);
 
-      // Validate transaction parameters
-      validateTransactionParams({
-        to: this.contractAddress,
-        value: bnbWithBuffer,
-        gasLimit: params.gasLimit,
-      });
+      // Validate transaction parameters (only when gasLimit is defined)
+      if (params.gasLimit) {
+        validateTransactionParams({
+          to: this.contractAddress,
+          value: bnbWithBuffer,
+          gasLimit: params.gasLimit,
+        });
+      }
 
       const contract = new ethers.Contract(this.contractAddress, VCSALE_ABI, this.signer);
 
