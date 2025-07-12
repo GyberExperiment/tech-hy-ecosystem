@@ -624,38 +624,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className = '' }) => {
               </div>
             </div>
 
-            {/* 🔍 TEMPORARY DEBUG INFO - показываем для диагностики */}
-            {process.env.NODE_ENV === 'development' && account && (
-              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-3 text-xs">
-                <div className="text-red-300 font-medium mb-2">🔍 DEBUG: Purchase Block Diagnosis</div>
-                <div className="space-y-1 text-red-200">
-                  <div>Account: {account ? '✅' : '❌'} {account?.slice(0, 8)}...</div>
-                  <div>VC Amount: {vcsaleVcAmount || 'empty'} {vcsaleVcAmount && parseFloat(vcsaleVcAmount) > 0 ? '✅' : '❌'}</div>
-                  <div>Network: {isNetworkSupported ? '✅' : '❌'}</div>
-                  <div>Loading: {vcsaleLoading ? '❌ (loading)' : '✅'}</div>
-                  <div className="border-t border-red-500/20 pt-1 mt-1">
-                    <div>Security Status:</div>
-                    <div className="ml-2">
-                      <div>Contract Paused: {securityStatus?.contractPaused ? '❌ YES' : '✅ NO'}</div>
-                      <div>User Blacklisted: {securityStatus?.userBlacklisted ? '❌ YES' : '✅ NO'}</div>
-                      <div>Circuit Breaker: {securityStatus?.circuitBreakerActive ? '❌ YES' : '✅ NO'}</div>
-                      <div>Rate Limited: {securityStatus?.rateLimited ? '❌ YES' : '✅ NO'}</div>
-                    </div>
-                  </div>
-                  <div className="border-t border-red-500/20 pt-1 mt-1">
-                    <div>Sale Stats:</div>
-                    <div className="ml-2">
-                      <div>Sale Active: {saleStats?.saleActive ? '✅ YES' : '❌ NO'}</div>
-                      <div>Available VC: {saleStats?.currentVCBalance || 'unknown'}</div>
-                      <div>Price: {saleStats?.pricePerVC ? (parseFloat(saleStats.pricePerVC) / 1e18).toFixed(6) : 'unknown'} BNB</div>
-                    </div>
-                  </div>
-                  <div className="border-t border-red-500/20 pt-1 mt-1 font-bold">
-                    <div>Final canPurchase: {canPurchase ? '✅ TRUE' : '❌ FALSE'}</div>
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             <button
               onClick={executePurchase}
