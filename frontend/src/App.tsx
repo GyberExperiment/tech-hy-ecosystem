@@ -37,8 +37,8 @@ function App() {
           }}
         >
           {/* ✅ ФОН НА ВЕСЬ ЭКРАН - вынесен из основного контейнера */}
-          <div className="fixed inset-0 bg-pure-white">
-            <div className="clean-bg absolute inset-0"></div>
+          <div className="fixed inset-0" style={{ background: 'var(--primary-bg)' }}>
+            <div className="dark-bg absolute inset-0"></div>
             
             {/* Clean Minimalist Background Elements - на весь экран */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -51,12 +51,12 @@ function App() {
             </div>
           </div>
           
-          <div className="min-h-screen text-dark-gray relative overflow-hidden">
+          <div className="min-h-screen relative overflow-hidden" style={{ color: 'var(--space-text)' }}>
             {/* Main Application Content */}
             <div className="relative z-10">
               <Header />
               
-              <main className="flex-1 py-4 md:py-6 lg:py-8 animate-clean-fade-in">{/* Уменьшил отступы */}
+              <main className="flex-1 py-4 md:py-6 lg:py-8 animate-dark-fade-in">{/* Уменьшил отступы */}
                 <div className="w-full px-3 md:px-6 lg:px-12 xl:px-16">{/* Уменьшил горизонтальные отступы */}
                   <Routes>
                     <Route path="/" element={<Home />} />

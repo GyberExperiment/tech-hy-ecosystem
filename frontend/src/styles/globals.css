@@ -125,7 +125,7 @@ a:active, button:active, [role="button"]:active {
   
   border: 1px solid rgba(255, 255, 255, 0.15);
   
-  /* Premium shadows with inset light for dark theme */
+  /* Premium shadows for dark theme */
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 1px 0 rgba(255, 255, 255, 0.15) inset,

@@ -1,5 +1,5 @@
-/* 🚀 TECH HY ECOSYSTEM - ULTRA MODERN DESIGN SYSTEM 2025 🚀 */
-/* ⚡ Cutting-Edge, Bold & Sophisticated Design Language ⚡ */
+/* 🚀 TECH HY ECOSYSTEM - DARK THEME DESIGN SYSTEM 2025 🚀 */
+/* ⚡ Dark, Bold & Sophisticated Design Language ⚡ */
 
 :root {
   /* ===== ULTRA MODERN NEOSPACE PALETTE 2025 ===== */
@@ -10,18 +10,22 @@
   --neo-solar-orange: #FF6B00;       /* Solar Orange - Warning */
   --neo-crimson-red: #FF1744;        /* Crimson Red - Danger */
   --neo-pure-white: #FFFFFF;         /* Pure White */
-  --neo-arctic-blue: #F0F9FF;        /* Arctic Blue Light */
   
   /* ===== DARK SPACE FOUNDATION ===== */
   --space-black: #000000;            /* Pure Black */
   --space-void: #0A0A0F;             /* Deep Void */
   --space-dark: #111118;             /* Dark Space */
   --space-medium: #1A1A24;           /* Medium Space */
-  --space-light: #2A2A35;            /* Light Space */
-  --space-lighter: #3A3A45;          /* Lighter Space */
+  --space-surface: #2A2A35;          /* Surface Space */
+  --space-elevated: #3A3A45;         /* Elevated Space */
   --space-muted: #4A4A55;            /* Muted Space */
   --space-text: #E1E5E9;             /* Space Text */
   --space-text-bright: #F8FAFC;      /* Bright Text */
+  
+  /* ===== UNIFIED BACKGROUND SYSTEM ===== */
+  --primary-bg: var(--space-void);
+  --secondary-bg: var(--space-dark);
+  --tertiary-bg: var(--space-medium);
   
   /* ===== ULTRA MODERN GRADIENTS ===== */
   --gradient-cyber: linear-gradient(135deg, var(--neo-electric-blue) 0%, var(--neo-plasma-purple) 100%);
@@ -44,25 +48,24 @@
   
   /* ===== NEOMORPHIC GLASS SYSTEM ===== */
   --glass-blur-sharp: 12px;
-  --glass-blur-medium: 20px;
-  --glass-blur-soft: 32px;
-  --glass-blur-ultra: 48px;
-  --glass-brightness-boost: 130%;
-  --glass-contrast-high: 125%;
-  --glass-saturation-vivid: 140%;
+  --glass-blur-medium: 24px;
+  --glass-blur-soft: 36px;
+  --glass-blur-ultra: 52px;
+  --glass-brightness-boost: 140%;
+  --glass-contrast-high: 130%;
+  --glass-saturation-vivid: 150%;
   
   /* ===== GLASS OPACITY LEVELS ===== */
   --glass-opacity-subtle: 0.05;
-  --glass-opacity-light: 0.1;
-  --glass-opacity-medium: 0.15;
+  --glass-opacity-medium: 0.12;
   --glass-opacity-strong: 0.25;
   --glass-opacity-solid: 0.4;
   
   /* ===== MODERN GLASS BACKGROUNDS ===== */
-  --glass-cyber: rgba(0, 212, 255, var(--glass-opacity-light));
-  --glass-plasma: rgba(139, 92, 246, var(--glass-opacity-light));
-  --glass-neon: rgba(0, 255, 136, var(--glass-opacity-light));
-  --glass-laser: rgba(255, 0, 128, var(--glass-opacity-light));
+  --glass-cyber: rgba(0, 212, 255, var(--glass-opacity-medium));
+  --glass-plasma: rgba(139, 92, 246, var(--glass-opacity-medium));
+  --glass-neon: rgba(0, 255, 136, var(--glass-opacity-medium));
+  --glass-laser: rgba(255, 0, 128, var(--glass-opacity-medium));
   --glass-dark: rgba(26, 26, 36, var(--glass-opacity-strong));
   --glass-neutral: rgba(255, 255, 255, var(--glass-opacity-subtle));
   
@@ -71,15 +74,15 @@
   --border-plasma: rgba(139, 92, 246, 0.4);
   --border-neon: rgba(0, 255, 136, 0.4);
   --border-laser: rgba(255, 0, 128, 0.4);
-  --border-space: rgba(255, 255, 255, 0.1);
-  --border-bright: rgba(255, 255, 255, 0.2);
+  --border-space: rgba(255, 255, 255, 0.15);
+  --border-bright: rgba(255, 255, 255, 0.25);
   
   /* ===== PROFESSIONAL SHADOW SYSTEM ===== */
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-soft: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-  --shadow-medium: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-  --shadow-large: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  --shadow-extra: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 3px 6px rgba(0, 0, 0, 0.4), 0 3px 6px rgba(0, 0, 0, 0.6);
+  --shadow-medium: 0 10px 20px rgba(0, 0, 0, 0.5), 0 6px 6px rgba(0, 0, 0, 0.7);
+  --shadow-large: 0 14px 28px rgba(0, 0, 0, 0.6), 0 10px 10px rgba(0, 0, 0, 0.8);
+  --shadow-extra: 0 19px 38px rgba(0, 0, 0, 0.7), 0 15px 12px rgba(0, 0, 0, 0.9);
   
   /* ===== NEON GLOW EFFECTS ===== */
   --glow-cyber: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3), 0 0 60px rgba(0, 212, 255, 0.1);
@@ -126,9 +129,9 @@
   --font-mono: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   
   /* ===== PROFESSIONAL TEXT SHADOWS ===== */
-  --text-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --text-shadow-medium: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --text-shadow-strong: 0 3px 6px rgba(0, 0, 0, 0.3);
+  --text-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --text-shadow-medium: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --text-shadow-strong: 0 3px 6px rgba(0, 0, 0, 0.7);
   --text-shadow-glow: 0 0 10px var(--neo-electric-blue);
   
   /* ===== ADVANCED ANIMATION SYSTEM ===== */
@@ -179,30 +182,6 @@
   --z-maximum: 100;
 }
 
-/* ===== ULTRA MODERN LIGHT MODE ===== */
-@media (prefers-color-scheme: light) {
-  :root {
-    --primary-bg: var(--space-text-bright);
-    --secondary-bg: var(--neo-arctic-blue);
-    --tertiary-bg: var(--neo-pure-white);
-    --glass-brightness-boost: 110%;
-    --glass-contrast-high: 105%;
-    --glass-saturation-vivid: 120%;
-  }
-}
-
-/* ===== ULTRA MODERN DARK MODE ===== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary-bg: var(--space-void);
-    --secondary-bg: var(--space-dark);
-    --tertiary-bg: var(--space-medium);
-    --glass-brightness-boost: 140%;
-    --glass-contrast-high: 130%;
-    --glass-saturation-vivid: 150%;
-  }
-}
-
 /* ===== PERFORMANCE OPTIMIZATIONS ===== */
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -244,215 +223,10 @@
 /* ===== HIGH CONTRAST MODE ===== */
 @media (prefers-contrast: high) {
   :root {
-    --glass-opacity-light: 0.3;
     --glass-opacity-medium: 0.4;
     --glass-opacity-strong: 0.6;
     --border-cyber: var(--neo-electric-blue);
     --border-plasma: var(--neo-plasma-purple);
     --border-neon: var(--neo-neon-green);
-  }
-}
-
-/* ✨ TECH HY ECOSYSTEM - CLEAN GLASSMORPHISM 2025 ✨ */
-/* 🎯 Minimalist, Pure & Sophisticated Design Language 🎯 */
-
-:root {
-  /* ===== CLEAN MINIMALIST PALETTE 2025 ===== */
-  --pure-white: #FFFFFF;              /* Pure White Background */
-  --snow-white: #FAFAFA;              /* Snow White */
-  --pearl-white: #F8F9FA;             /* Pearl White */
-  --soft-gray: #F1F3F4;               /* Soft Gray */
-  --light-gray: #E8EAED;              /* Light Gray */
-  --medium-gray: #DADCE0;             /* Medium Gray */
-  --border-gray: #C4C7C5;             /* Border Gray */
-  --text-gray: #5F6368;               /* Text Gray */
-  --dark-gray: #3C4043;               /* Dark Gray */
-  --charcoal: #202124;                /* Charcoal */
-  
-  /* ===== CLEAN ACCENT COLORS ===== */
-  --accent-blue: #4285F4;             /* Clean Blue */
-  --accent-green: #34A853;            /* Clean Green */
-  --accent-orange: #FF8F00;           /* Clean Orange */
-  --accent-red: #EA4335;              /* Clean Red */
-  --accent-purple: #9C27B0;           /* Clean Purple */
-  --accent-teal: #00BCD4;             /* Clean Teal */
-  
-  /* ===== GLASSMORPHISM FOUNDATION ===== */
-  --glass-white: rgba(255, 255, 255, 0.9);        /* Clean white glass */
-  --glass-light: rgba(255, 255, 255, 0.7);        /* Light glass */
-  --glass-medium: rgba(255, 255, 255, 0.5);       /* Medium glass */
-  --glass-subtle: rgba(255, 255, 255, 0.3);       /* Subtle glass */
-  --glass-frosted: rgba(248, 249, 250, 0.8);      /* Frosted glass */
-  
-  /* ===== NEOMORPHISM COLORS ===== */
-  --neo-light: #FFFFFF;                            /* Light side */
-  --neo-shadow: rgba(163, 177, 198, 0.6);         /* Soft shadow */
-  --neo-highlight: rgba(255, 255, 255, 0.8);      /* Highlight */
-  --neo-surface: #F0F2F5;                         /* Surface color */
-  --neo-pressed: #E4E6EA;                         /* Pressed state */
-  
-  /* ===== MODERN GLASS BLUR SYSTEM ===== */
-  --glass-blur-light: 10px;           /* Light blur */
-  --glass-blur-medium: 20px;          /* Medium blur */
-  --glass-blur-strong: 40px;          /* Strong blur */
-  --glass-blur-ultra: 60px;           /* Ultra blur */
-  --glass-brightness: 110%;           /* Brightness boost */
-  --glass-contrast: 105%;             /* Contrast enhancement */
-  --glass-saturation: 110%;           /* Saturation boost */
-  
-  /* ===== CLEAN GRADIENTS ===== */
-  --gradient-clean: linear-gradient(135deg, var(--pure-white) 0%, var(--pearl-white) 100%);
-  --gradient-glass: linear-gradient(135deg, var(--glass-white) 0%, var(--glass-light) 100%);
-  --gradient-subtle: linear-gradient(135deg, var(--snow-white) 0%, var(--soft-gray) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-teal) 100%);
-  --gradient-surface: linear-gradient(135deg, #F8F9FA 0%, #E8EAED 100%);
-  
-  /* ===== MINIMALIST BORDERS ===== */
-  --border-clean: rgba(218, 220, 224, 0.8);       /* Clean border */
-  --border-subtle: rgba(196, 199, 197, 0.6);      /* Subtle border */
-  --border-accent: rgba(66, 133, 244, 0.3);       /* Accent border */
-  --border-focus: rgba(66, 133, 244, 0.6);        /* Focus border */
-  
-  /* ===== CLEAN SHADOWS ===== */
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.08);
-  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.12);
-  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.14);
-  
-  /* ===== NEOMORPHISM SHADOWS ===== */
-  --neo-shadow-inset: inset 6px 6px 12px var(--neo-shadow), inset -6px -6px 12px var(--neo-highlight);
-  --neo-shadow-raised: 6px 6px 12px var(--neo-shadow), -6px -6px 12px var(--neo-highlight);
-  --neo-shadow-pressed: inset 3px 3px 6px var(--neo-shadow), inset -3px -3px 6px var(--neo-highlight);
-  --neo-shadow-float: 12px 12px 24px var(--neo-shadow), -12px -12px 24px var(--neo-highlight);
-  
-  /* ===== MODERN SPACING (4pt Base) ===== */
-  --space-0: 0rem;
-  --space-1: 0.25rem;      /* 4px */
-  --space-2: 0.5rem;       /* 8px */
-  --space-3: 0.75rem;      /* 12px */
-  --space-4: 1rem;         /* 16px */
-  --space-5: 1.25rem;      /* 20px */
-  --space-6: 1.5rem;       /* 24px */
-  --space-8: 2rem;         /* 32px */
-  --space-10: 2.5rem;      /* 40px */
-  --space-12: 3rem;        /* 48px */
-  --space-16: 4rem;        /* 64px */
-  --space-20: 5rem;        /* 80px */
-  --space-24: 6rem;        /* 96px */
-  --space-32: 8rem;        /* 128px */
-  
-  /* ===== CLEAN BORDER RADIUS ===== */
-  --radius-sm: 0.375rem;   /* 6px */
-  --radius-md: 0.5rem;     /* 8px */
-  --radius-lg: 0.75rem;    /* 12px */
-  --radius-xl: 1rem;       /* 16px */
-  --radius-2xl: 1.5rem;    /* 24px */
-  --radius-3xl: 2rem;      /* 32px */
-  --radius-full: 9999px;   /* Full round */
-  
-  /* ===== CLEAN TYPOGRAPHY ===== */
-  --font-clean: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
-  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  
-  /* ===== SMOOTH ANIMATIONS ===== */
-  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --ease-swift: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-gentle: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  
-  /* ===== CLEAN DURATIONS ===== */
-  --duration-fast: 0.15s;
-  --duration-normal: 0.25s;
-  --duration-medium: 0.35s;
-  --duration-slow: 0.5s;
-  
-  /* ===== CLEAN TRANSITIONS ===== */
-  --transition-fast: all var(--duration-fast) var(--ease-swift);
-  --transition-normal: all var(--duration-normal) var(--ease-smooth);
-  --transition-medium: all var(--duration-medium) var(--ease-gentle);
-  --transition-bounce: all var(--duration-medium) var(--ease-bounce);
-  
-  /* ===== SUBTLE HOVER EFFECTS ===== */
-  --hover-scale: 1.02;
-  --hover-lift: -2px;
-  --hover-rotate: 0.5deg;
-  
-  /* ===== Z-INDEX SYSTEM ===== */
-  --z-base: 0;
-  --z-content: 10;
-  --z-sticky: 20;
-  --z-fixed: 30;
-  --z-modal: 50;
-  --z-tooltip: 70;
-  --z-maximum: 100;
-}
-
-/* ===== LIGHT MODE ENHANCEMENT ===== */
-@media (prefers-color-scheme: light) {
-  :root {
-    --primary-bg: var(--pure-white);
-    --secondary-bg: var(--snow-white);
-    --tertiary-bg: var(--pearl-white);
-    --glass-brightness: 108%;
-    --glass-contrast: 102%;
-    --glass-saturation: 105%;
-  }
-}
-
-/* ===== DARK MODE MINIMAL ===== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pure-white: #1A1A1A;
-    --snow-white: #242424;
-    --pearl-white: #2A2A2A;
-    --soft-gray: #303030;
-    --light-gray: #3A3A3A;
-    --medium-gray: #444444;
-    --text-gray: #E0E0E0;
-    --dark-gray: #F0F0F0;
-    --charcoal: #FFFFFF;
-    
-    --glass-white: rgba(26, 26, 26, 0.9);
-    --glass-light: rgba(36, 36, 36, 0.8);
-    --glass-medium: rgba(42, 42, 42, 0.7);
-    --neo-surface: #242424;
-    --neo-shadow: rgba(0, 0, 0, 0.3);
-    --neo-highlight: rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* ===== PERFORMANCE MODE ===== */
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --duration-fast: 0s;
-    --duration-normal: 0s;
-    --duration-medium: 0s;
-    --duration-slow: 0s;
-    --ease-bounce: ease;
-    --ease-gentle: ease;
-  }
-}
-
-/* ===== MOBILE OPTIMIZATIONS ===== */
-@media (max-width: 768px) {
-  :root {
-    --glass-blur-light: 8px;
-    --glass-blur-medium: 16px;
-    --glass-blur-strong: 32px;
-    --glass-blur-ultra: 48px;
-    --hover-scale: 1.01;
-    --hover-lift: -1px;
-    --hover-rotate: 0deg;
-  }
-}
-
-/* ===== HIGH CONTRAST MODE ===== */
-@media (prefers-contrast: high) {
-  :root {
-    --glass-white: rgba(255, 255, 255, 1);
-    --glass-light: rgba(248, 249, 250, 1);
-    --border-clean: rgba(0, 0, 0, 0.2);
-    --border-subtle: rgba(0, 0, 0, 0.3);
   }
 } 

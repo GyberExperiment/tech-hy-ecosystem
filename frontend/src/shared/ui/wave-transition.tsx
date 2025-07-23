@@ -38,7 +38,7 @@ export const WaveTransition = ({
     '#FF8F00', // Clean Orange
     '#607D8B', // Clean Blue Gray
     '#795548', // Clean Brown
-    '#8BC34A'  // Clean Light Green
+    '#8BC34A'  // Dark Neon Green
   ]
 
   // БЕЗОПАСНАЯ функция генерации SVG path - гарантированно без undefined
@@ -204,7 +204,7 @@ export const WaveTransition = ({
         }}
       />
       
-      {/* Clean edge highlights */}
+              {/* Dark edge highlights */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{

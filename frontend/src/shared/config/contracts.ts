@@ -135,24 +135,34 @@ export const CURRENT_BSC_NETWORK = BSC_NETWORKS[getCurrentNetwork()];
 
 // Token Information - универсальная для обеих сетей
 export const TOKEN_INFO = {
-  VC: {
-    name: "Venture Card",
-    symbol: "VC",
+  SVC: {
+    name: "Venture Capital Token",
+    symbol: "SVC",
     decimals: 18,
   },
-  VG: {
-    name: "Venture Gift", 
-    symbol: "VG",
+  SVG: {
+    name: "Venture Growth Token", 
+    symbol: "SVG",
     decimals: 18,
   },
-  VG_VOTES: {
-    name: "Venture Gift Votes",
-    symbol: "VGV",
+  VCT: {
+    name: "Venture Club Token",
+    symbol: "VCT",
+    decimals: 18,
+  },
+  VGT: {
+    name: "Venture Gift Token",
+    symbol: "VGT",
+    decimals: 18,
+  },
+  SVG_VOTES: {
+    name: "Venture Growth Votes",
+    symbol: "SVGV",
     decimals: 18,
   },
   LP: {
-    name: "VC-BNB LP Token",
-    symbol: "VC-BNB LP",
+    name: "SVC-BNB LP Token",
+    symbol: "SVC-BNB LP",
     decimals: 18,
   },
   WBNB: {
