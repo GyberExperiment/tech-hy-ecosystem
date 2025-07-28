@@ -10,122 +10,117 @@ import {
   BarChart3,
   Coins,
   Shield,
-  Smile
+  Smile,
+  TrendingUp,
+  Activity,
+  Plus,
+  Gift,
+  ShoppingCart,
+  Vote,
+  Wallet,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { useRealDashboardData } from '../hooks/useRealDashboardData';
 
-interface DashboardMetric {
-  title: string;
-  value: string;
-  change: string;
-  changeType: 'positive' | 'negative' | 'neutral';
-  icon: React.ComponentType<any>;
-}
+// Icon mapping for dynamic icons
+const IconMap = {
+  DollarSign,
+  Target,
+  Coins,
+  Award,
+  TrendingUp,
+  Activity,
+  Plus,
+  Gift,
+  ShoppingCart,
+  Vote,
+  Wallet,
+  Shield,
+};
 
-interface Portfolio {
-  name: string;
-  symbol: string;
-  amount: string;
-  value: string;
-  change: string;
-  changeType: 'positive' | 'negative';
-}
+  const DashboardOverview: React.FC = () => {
+  const {
+    metrics,
+    portfolio,
+    recentActivity,
+    stats,
+    portfolioValue,
+    loading,
+    error,
+    isConnected,
+    refreshData,
+  } = useRealDashboardData();
 
-interface Activity {
-  type: string;
-  description: string;
-  timestamp: string;
-  amount?: string;
-  status: 'completed' | 'pending' | 'failed';
-}
+  // Helper function to format time ago
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    return date.toLocaleDateString();
+  };
 
-const DashboardOverview: React.FC = () => {
-  const metrics: DashboardMetric[] = [
-    {
-      title: 'Total Portfolio Value',
-      value: '$42,834.67',
-      change: '+12.3%',
-      changeType: 'positive',
-      icon: DollarSign
-    },
-    {
-      title: 'Active Investments',
-      value: '8',
-      change: '+2',
-      changeType: 'positive',
-      icon: Target
-    },
-    {
-      title: 'VG Tokens Earned',
-      value: '1,247.89',
-      change: '+24.7%',
-      changeType: 'positive',
-      icon: Coins
-    },
-    {
-      title: 'Reputation Score',
-      value: '98/100',
-      change: '+5',
-      changeType: 'positive',
-      icon: Award
-    }
-  ];
+  // Loading state for non-connected users
+  if (!isConnected) {
+    return (
+      <motion.div
+        className="space-y-6 animate-section-breathing-subtle"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+        }}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div 
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+          className="glass-enhanced-breathing p-6"
+        >
+          <div className="text-center py-12">
+            <Wallet className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
+            <p className="text-gray-300">
+              Connect your wallet to view your personalized dashboard with real portfolio data
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
 
-  const portfolio: Portfolio[] = [
-    {
-      name: 'VC Token',
-      symbol: 'VC',
-      amount: '15,000',
-      value: '$28,500',
-      change: '+15.2%',
-      changeType: 'positive'
-    },
-    {
-      name: 'VG Token',
-      symbol: 'VG',
-      amount: '1,247.89',
-      value: '$8,735.23',
-      change: '+24.7%',
-      changeType: 'positive'
-    },
-    {
-      name: 'BNB',
-      symbol: 'BNB',
-      amount: '12.5',
-      value: '$5,599.44',
-      change: '-2.1%',
-      changeType: 'negative'
-    }
-  ];
-
-  const recentActivity: Activity[] = [
-    {
-      type: 'Stake',
-      description: 'Staked 5,000 VC tokens in LP pool',
-      timestamp: '2 hours ago',
-      amount: '5,000 VC',
-      status: 'completed'
-    },
-    {
-      type: 'Earn',
-      description: 'Earned VG tokens from burn mechanism',
-      timestamp: '1 day ago',
-      amount: '+247.89 VG',
-      status: 'completed'
-    },
-    {
-      type: 'Investment',
-      description: 'Invested in AI Startup Project #247',
-      timestamp: '3 days ago',
-      amount: '$2,500',
-      status: 'pending'
-    },
-    {
-      type: 'KYC',
-      description: 'Completed KYC verification',
-      timestamp: '1 week ago',
-      status: 'completed'
-    }
-  ];
+  // Error state
+  if (error) {
+    return (
+      <motion.div
+        className="space-y-6 animate-section-breathing-subtle"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="glass-enhanced-breathing p-6">
+          <div className="text-center py-12">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Failed to Load Dashboard</h3>
+            <p className="text-gray-300 mb-4">{error}</p>
+            <button
+              onClick={refreshData}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -166,41 +161,85 @@ const DashboardOverview: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Investor!</h1>
               <p className="text-gray-300">Here's what's happening in your TECH HY ecosystem</p>
+              {portfolioValue.totalValue > 0 && (
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="text-sm text-gray-400">
+                    Portfolio: <span className="text-blue-300 font-semibold">{portfolioValue.formatted}</span>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    Assets: <span className="text-purple-300 font-semibold">{portfolio.length}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 glass-badge-success">
-            <Shield className="w-4 h-4" />
-            <span>KYC Verified</span>
+          <div className="flex items-center gap-4">
+            {portfolioValue.totalValue > 0 && (
+              <div className="text-right">
+                <div className="text-sm text-gray-400">Total Value</div>
+                <div className="text-xl font-bold text-green-300">{portfolioValue.formatted}</div>
+              </div>
+            )}
+            <div className="flex items-center gap-2 glass-badge-success">
+              <Shield className="w-4 h-4" />
+              <span>KYC Verified</span>
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Metrics Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
-          <motion.div
-            key={index}
-            variants={itemVariants}
-            className="glass-card-breathing group relative overflow-hidden"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <metric.icon className="w-6 h-6 text-blue-400" />
+        {metrics.map((metric, index) => {
+          const IconComponent = IconMap[metric.icon as keyof typeof IconMap] || DollarSign;
+          
+          return (
+            <motion.div
+              key={metric.title}
+              variants={itemVariants}
+              className="glass-card-breathing group relative overflow-hidden"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                  {metric.isLoading ? (
+                    <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                  ) : (
+                    <IconComponent className="w-6 h-6 text-blue-400" />
+                  )}
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  metric.changeType === 'positive' ? 'bg-green-500/20 text-green-300' :
+                  metric.changeType === 'negative' ? 'bg-red-500/20 text-red-300' :
+                  'bg-gray-500/20 text-gray-300'
+                }`}>
+                  {metric.change}
+                </div>
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                metric.changeType === 'positive' ? 'bg-green-500/20 text-green-300' :
-                metric.changeType === 'negative' ? 'bg-red-500/20 text-red-300' :
-                'bg-gray-500/20 text-gray-300'
-              }`}>
-                {metric.change}
-              </div>
-            </div>
-            
-            <h3 className="text-2xl font-bold text-white mb-1">{metric.value}</h3>
-            <p className="text-gray-400 text-sm">{metric.title}</p>
-          </motion.div>
-        ))}
+              
+              <h3 className="text-2xl font-bold text-white mb-1">
+                {metric.isLoading ? '...' : metric.value}
+              </h3>
+              <p className="text-gray-400 text-sm">{metric.title}</p>
+              
+              {/* Mini trend chart */}
+              {metric.trend && metric.trend.length > 0 && !metric.isLoading && (
+                <div className="mt-4 h-6 flex items-end space-x-1">
+                  {metric.trend.map((value, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 bg-blue-400/30 rounded-sm transition-all duration-300 group-hover:bg-blue-400/50"
+                      style={{ 
+                        height: `${(value / Math.max(...metric.trend)) * 100}%`,
+                        minHeight: '2px'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -222,32 +261,52 @@ const DashboardOverview: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {portfolio.map((asset, index) => (
-              <motion.div
-                key={index}
-                className="flex items-center justify-between p-4 glass-ultra rounded-lg group hover:bg-white/5 transition-colors"
-                whileHover={{ x: 5 }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {asset.symbol}
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">{asset.name}</p>
-                    <p className="text-gray-400 text-sm">{asset.amount} {asset.symbol}</p>
-                  </div>
-                </div>
+            {portfolio.length === 0 ? (
+              <div className="text-center py-8">
+                <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No assets found</p>
+                <p className="text-gray-500 text-xs">Purchase tokens to see your portfolio</p>
+              </div>
+            ) : (
+              portfolio.map((asset, index) => {
+                const IconComponent = IconMap[asset.icon as keyof typeof IconMap] || Coins;
                 
-                <div className="text-right">
-                  <p className="text-white font-semibold">{asset.value}</p>
-                  <p className={`text-sm ${
-                    asset.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {asset.change}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                return (
+                  <motion.div
+                    key={asset.symbol}
+                    className="flex items-center justify-between p-4 glass-ultra rounded-lg group hover:bg-white/5 transition-colors"
+                    whileHover={{ x: 5 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center border border-blue-400/30">
+                        <IconComponent className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">{asset.name}</p>
+                        <p className="text-gray-400 text-sm">{asset.amount} {asset.symbol}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-white font-semibold">{asset.value}</p>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm ${
+                          asset.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {asset.change}
+                        </p>
+                        <div className="text-xs text-gray-500">
+                          ({asset.percentage.toFixed(1)}%)
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
           </div>
         </motion.div>
 
@@ -262,33 +321,55 @@ const DashboardOverview: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <motion.div
-                key={index}
-                className="flex items-start gap-3 p-3 glass-ultra rounded-lg group hover:bg-white/5 transition-colors"
-                whileHover={{ x: 3 }}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  activity.status === 'completed' ? 'bg-green-500/20 text-green-300' :
-                  activity.status === 'pending' ? 'bg-orange-500/20 text-orange-300' :
-                  'bg-red-500/20 text-red-300'
-                }`}>
-                  {activity.type[0]}
-                </div>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-8">
+                <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No recent activity</p>
+                <p className="text-gray-500 text-xs">Start trading to see your activity</p>
+              </div>
+            ) : (
+              recentActivity.map((activity, index) => {
+                const IconComponent = IconMap[activity.icon as keyof typeof IconMap] || Activity;
+                const timestamp = new Date(activity.timestamp);
+                const timeAgo = getTimeAgo(timestamp);
                 
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium leading-relaxed">
-                    {activity.description}
-                  </p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-gray-400 text-xs">{activity.timestamp}</p>
-                    {activity.amount && (
-                      <p className="text-blue-400 text-xs font-semibold">{activity.amount}</p>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                return (
+                  <motion.div
+                    key={`${activity.type}-${index}`}
+                    className="flex items-start gap-3 p-3 glass-ultra rounded-lg group hover:bg-white/5 transition-colors"
+                    whileHover={{ x: 3 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      activity.status === 'completed' ? 'bg-green-500/20 text-green-300' :
+                      activity.status === 'pending' ? 'bg-orange-500/20 text-orange-300' :
+                      'bg-red-500/20 text-red-300'
+                    }`}>
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium leading-relaxed">
+                        {activity.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-gray-400 text-xs">{timeAgo}</p>
+                        {activity.amount && (
+                          <p className="text-blue-400 text-xs font-semibold">{activity.amount}</p>
+                        )}
+                      </div>
+                      {activity.txHash && (
+                        <p className="text-gray-500 text-xs mt-1 truncate">
+                          Tx: {activity.txHash.slice(0, 8)}...{activity.txHash.slice(-6)}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
           </div>
           
           <motion.button
@@ -304,18 +385,43 @@ const DashboardOverview: React.FC = () => {
 
       {/* Quick Actions */}
       <motion.div variants={itemVariants} className="glass-enhanced-breathing">
-        <h2 className="text-xl font-bold text-white mb-6">Quick Actions</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white">Quick Actions</h2>
+          <div className="text-sm text-gray-400">
+            {portfolio.length > 0 ? 'Manage your portfolio' : 'Get started'}
+          </div>
+        </div>
         
         <div className="grid md:grid-cols-4 gap-4">
           {[
-            { title: 'Stake Tokens', icon: Coins, color: 'blue' },
-            { title: 'Browse Projects', icon: Target, color: 'purple' },
-            { title: 'Earn VG', icon: Zap, color: 'green' },
-            { title: 'Join Community', icon: Users, color: 'orange' }
+            { 
+              title: portfolio.length > 0 ? 'Add Liquidity' : 'Buy VC Tokens', 
+              icon: portfolio.length > 0 ? Plus : ShoppingCart, 
+              color: 'blue',
+              description: portfolio.length > 0 ? 'Earn fees' : 'Start investing'
+            },
+            { 
+              title: 'Stake & Earn', 
+              icon: Coins, 
+              color: 'purple',
+              description: 'Earn VG rewards'
+            },
+            { 
+              title: stats.stakingRewards > 0 ? 'Claim Rewards' : 'Start Staking', 
+              icon: Gift, 
+              color: 'green',
+              description: stats.stakingRewards > 0 ? `$${stats.stakingRewards.toFixed(2)} available` : 'Passive income'
+            },
+            { 
+              title: 'Governance', 
+              icon: Vote, 
+              color: 'orange',
+              description: stats.governanceParticipation > 0 ? `${stats.governanceParticipation.toFixed(0)}% participation` : 'Vote on proposals'
+            }
           ].map((action, index) => (
             <motion.button
-              key={index}
-              className="glass-btn-ghost group flex flex-col items-center !py-6"
+              key={`${action.title}-${index}`}
+              className="glass-btn-ghost group flex flex-col items-center !py-6 text-center"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -325,7 +431,8 @@ const DashboardOverview: React.FC = () => {
                 action.color === 'green' ? 'text-green-400' :
                 'text-orange-400'
               }`} />
-              <span className="text-sm font-medium">{action.title}</span>
+              <span className="text-sm font-medium mb-1">{action.title}</span>
+              <span className="text-xs text-gray-400">{action.description}</span>
             </motion.button>
           ))}
         </div>

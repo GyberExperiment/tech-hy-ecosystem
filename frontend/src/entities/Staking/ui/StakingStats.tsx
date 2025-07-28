@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, Zap, RefreshCw } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+
 import { CONTRACTS } from '../../../shared/config/contracts';
 import { log } from '../../../shared/lib/logger';
 import { rpcService } from '../../../shared/api/rpcService';
@@ -51,7 +51,7 @@ const lineClampStyles = `
 `;
 
 const StakingStats: React.FC = () => {
-  const { t } = useTranslation(['common']);
+
   const { 
     account, 
     isConnected, 
@@ -327,8 +327,8 @@ const StakingStats: React.FC = () => {
     return (
       <div className="card text-center text-gray-400 animate-enhanced-card-chaos-1">
         <TrendingUp className="mx-auto mb-4" size={48} />
-        <h3 className="text-lg font-semibold mb-2 text-slate-100">Статистика экосистемы</h3>
-        <p>Подключите кошелёк для просмотра статистики</p>
+                        <h3 className="text-lg font-semibold mb-2 text-slate-100">Ecosystem Statistics</h3>
+        <p>Connect wallet to view statistics</p>
       </div>
     );
   }
@@ -351,7 +351,7 @@ const StakingStats: React.FC = () => {
 
   const stats = [
     {
-      title: 'Заблокировано LP токенов',
+      title: 'Locked LP Tokens',
       value: formatNumber(poolData.totalLockedLP),
       unit: 'LP',
       icon: DollarSign,
@@ -359,7 +359,7 @@ const StakingStats: React.FC = () => {
       bgColor: 'bg-blue-500/10 border-blue-500/20',
     },
     {
-      title: 'Выдано VG наград',
+      title: 'VG Rewards Issued',
       value: formatNumber(poolData.totalVGIssued),
       unit: 'VG',
       icon: Zap,
@@ -367,7 +367,7 @@ const StakingStats: React.FC = () => {
       bgColor: 'bg-yellow-500/10 border-yellow-500/20',
     },
     {
-      title: 'Доступно VG в хранилище',
+      title: 'VG Available in Vault',
       value: formatNumber(poolData.availableVG),
       unit: 'VG',
       icon: TrendingUp,
@@ -375,7 +375,7 @@ const StakingStats: React.FC = () => {
       bgColor: 'bg-green-500/10 border-green-500/20',
     },
     {
-      title: 'Соотношение LP → VG',
+      title: 'LP → VG Ratio',
       value: poolData.lpToVgRatio,
       unit: 'x',
       icon: RefreshCw,
@@ -399,7 +399,7 @@ const StakingStats: React.FC = () => {
           <div className="flex items-center space-x-4">
           <h3 className="text-xl font-semibold flex items-center text-slate-100">
             <TrendingUp className="mr-3 text-blue-400" />
-            Статистика экосистемы
+                            Ecosystem Statistics
           </h3>
             {refreshing && (
               <div className="flex items-center space-x-2 text-blue-400">
@@ -513,12 +513,12 @@ const StakingStats: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-blue-200/80">Ваш VC баланс</h3>
+                <h3 className="text-sm font-medium text-blue-200/80">Your VC Balance</h3>
                 <div className="text-2xl font-bold text-white">
                   {formatNumber(poolData.userVCBalance)}
                 </div>
                 <div className="text-sm text-blue-400/70">
-                  доступно для обмена
+                  available for exchange
                 </div>
               </div>
             </div>
@@ -538,12 +538,12 @@ const StakingStats: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-yellow-200/80">Ваш BNB баланс</h3>
+                <h3 className="text-sm font-medium text-yellow-200/80">Your BNB Balance</h3>
                 <div className="text-2xl font-bold text-white">
                   {formatNumber(poolData.userBNBBalance)}
                 </div>
                 <div className="text-sm text-yellow-400/70">
-                  доступно для обмена
+                  available for exchange
                 </div>
               </div>
             </div>
@@ -558,7 +558,7 @@ const StakingStats: React.FC = () => {
               <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-600/20 shadow-lg mr-3">
                 <Zap className="w-5 h-5 text-yellow-400" />
               </div>
-            Калькулятор потенциальных VG наград
+                          Potential VG Rewards Calculator
           </h4>
           
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -573,7 +573,7 @@ const StakingStats: React.FC = () => {
                   ≈ {formatNumber(example.vg)} VG
                 </div>
                     <div className="text-xs text-emerald-400/70">
-                  мгновенная награда
+                                      instant reward
                     </div>
                 </div>
               </div>
@@ -582,7 +582,7 @@ const StakingStats: React.FC = () => {
           
             <div className="mt-8 text-center">
               <div className="text-sm text-cyan-200/80 mb-4 p-4 backdrop-blur-xl bg-slate-800/30 rounded-xl border border-slate-600/30">
-              Формула: LP = (VC × BNB) / {formatNumber(poolData.lpDivisor)}, VG = LP × {poolData.lpToVgRatio}
+              Formula: LP = (VC × BNB) / {formatNumber(poolData.lpDivisor)}, VG = LP × {poolData.lpToVgRatio}
             </div>
               <a 
                 href="/staking" 
@@ -611,14 +611,14 @@ const StakingStats: React.FC = () => {
             </div>
               
               <div className="space-y-2">
-                <h3 className={`text-sm font-medium ${parseFloat(poolData.availableVG) > 0 ? 'text-green-200/80' : 'text-red-200/80'}`}>Статус системы</h3>
+                                  <h3 className={`text-sm font-medium ${parseFloat(poolData.availableVG) > 0 ? 'text-green-200/80' : 'text-red-200/80'}`}>System Status</h3>
                 <div className={`text-2xl font-bold ${parseFloat(poolData.availableVG) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {parseFloat(poolData.availableVG) > 0 ? 'Активна' : 'Недостаточно VG'}
+              {parseFloat(poolData.availableVG) > 0 ? 'Active' : 'Insufficient VG'}
             </div>
                 <div className={`text-sm ${parseFloat(poolData.availableVG) > 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
               {parseFloat(poolData.availableVG) > 0 
-                ? 'Готова к выдаче наград' 
-                : 'Требуется пополнение хранилища'}
+                ? 'Ready to distribute rewards' 
+                : 'Vault needs refilling'}
             </div>
           </div>
             </div>
@@ -638,12 +638,12 @@ const StakingStats: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-indigo-200/80">LP токены навсегда заблокированы</h3>
+                <h3 className="text-sm font-medium text-indigo-200/80">LP tokens permanently locked</h3>
                 <div className="text-2xl font-bold text-white">
               {formatNumber(poolData.totalLockedLP)}
             </div>
                 <div className="text-sm text-indigo-400/70">
-                  Участие в экосистеме
+                  Ecosystem Participation
                 </div>
               </div>
             </div>

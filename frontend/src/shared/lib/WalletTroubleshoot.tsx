@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, Info, ExternalLink, Zap, Shield } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+
 
 interface WalletInfo {
   name: string;
@@ -10,7 +10,7 @@ interface WalletInfo {
 }
 
 const WalletTroubleshoot: React.FC = () => {
-  const { t } = useTranslation(['common']);
+
   const [wallets, setWallets] = useState<WalletInfo[]>([]);
   const [showDetails, setShowDetails] = useState(false);
 

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { TableSkeleton } from '../../../shared/ui/LoadingSkeleton';
-import { useTranslation } from 'react-i18next';
+
 import { ethers } from 'ethers';
 import { CONTRACTS } from '../../../shared/config/contracts';
 import { BSCScanAPI, convertBSCScanToTransaction } from '../../../shared/lib/bscscanApi';
@@ -41,7 +41,7 @@ interface Transaction {
 }
 
 const TransactionHistory: React.FC = () => {
-  const { t } = useTranslation(['common']);
+
   const { account } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);

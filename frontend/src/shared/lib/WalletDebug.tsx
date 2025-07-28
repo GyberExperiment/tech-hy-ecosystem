@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAccount, useConnect } from 'wagmi';
-import { useTranslation } from 'react-i18next';
+
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 const WalletDebug: React.FC = () => {
-  const { t } = useTranslation('common');
+
   const { address, isConnected, connector } = useAccount();
   const { connectors, error, isLoading, pendingConnector } = useConnect();
   const [debugInfo, setDebugInfo] = useState<any>({});

@@ -7,7 +7,6 @@ import './i18n';
 import './App.css';
 
 // Import Providers
-import I18nProvider from './i18n/I18nProvider';
 
 // Import Layout Components
 import Header from './shared/ui/Header';
@@ -28,7 +27,6 @@ import { StyleShowcase } from './shared/ui/StyleShowcase';
 
 function App() {
   return (
-    <I18nProvider>
       <Web3Provider>
         <Router
           future={{
@@ -107,7 +105,6 @@ function App() {
           />
         </Router>
       </Web3Provider>
-    </I18nProvider>
   );
 }
 

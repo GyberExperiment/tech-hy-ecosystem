@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Globe, Settings, Shield } from 'lucide-react';
-import LanguageSwitcher from '../lib/LanguageSwitcher';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Settings, Shield } from 'lucide-react';
 import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
 
 const Header: React.FC = () => {
-  const { t } = useTranslation('common');
   const location = useLocation();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
@@ -20,10 +17,10 @@ const Header: React.FC = () => {
   const { isAdmin } = useAdminAccess();
 
   const navigation = [
-    { name: t('navigation.dashboard'), href: '/dashboard', icon: BarChart3 },
-    { name: t('navigation.tokens'), href: '/tokens', icon: Coins },
-    { name: t('navigation.locking'), href: '/staking', icon: Rocket },
-    { name: t('navigation.governance'), href: '/governance', icon: Vote },
+    { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    { name: 'Tokens', href: '/tokens', icon: Coins },
+    { name: 'Staking', href: '/staking', icon: Rocket },
+    { name: 'Governance', href: '/governance', icon: Vote },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -134,35 +131,7 @@ const Header: React.FC = () => {
     );
   };
 
-  // ✨ Premium Language Container
-  const LanguageContainer = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={`
-      group relative overflow-hidden
-      ${isMobile ? 'w-full' : 'min-w-[100px]'}
-      h-[44px]
-      backdrop-blur-[12px] backdrop-saturate-[1.8] backdrop-brightness-[1.1]
-      bg-gradient-to-br from-white/[0.15] via-white/[0.1] to-white/[0.05]
-      border border-white/[0.2] hover:border-white/[0.3]
-      rounded-[14px]
-      shadow-[0_4px_16px_rgba(0,0,0,0.08),0_1px_0_rgba(255,255,255,0.1)_inset]
-      hover:shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_0_rgba(255,255,255,0.15)_inset]
-      hover:scale-[1.02] hover:-translate-y-[1px]
-      transition-all duration-300 ease-out
-    `}>
-      <div className="relative flex items-center space-x-2.5 px-4 py-2 h-full">
-        <Globe className="h-4 w-4 text-slate-600 group-hover:text-slate-800 transition-all duration-300 group-hover:scale-110" />
-        <div className="relative text-slate-700 group-hover:text-slate-900 transition-colors duration-300">
-          <LanguageSwitcher />
-        </div>
-      </div>
-      
-      {/* Неоморфный внутренний свет */}
-      <div className="absolute inset-[1px] rounded-[13px] bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
-      {/* Shimmer эффект */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.15] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-out" />
-    </div>
-  );
+
 
   return (
     <>
@@ -258,10 +227,7 @@ const Header: React.FC = () => {
                   <NetworkSwitcher />
                 </div>
                 
-                {/* Language Switcher - Desktop */}
-                <div className="hidden md:block">
-                  <LanguageContainer />
-                </div>
+
                 
                 {/* ✨ Premium Connect Button */}
                 <ConnectButton.Custom>
@@ -482,7 +448,7 @@ const Header: React.FC = () => {
                   <div className="w-full">
                     <NetworkSwitcher isMobile />
                   </div>
-                  <LanguageContainer isMobile />
+
                 </div>
               </div>
             </div>

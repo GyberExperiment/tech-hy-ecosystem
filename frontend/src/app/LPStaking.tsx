@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { useWeb3 } from '../shared/lib/Web3Context';
 import { ethers } from 'ethers';
 import { CONTRACTS, BSC_TESTNET } from '../shared/config/contracts';
@@ -67,7 +67,7 @@ interface UserBalances {
 }
 
 const LPLocking: React.FC = () => {
-  const { t } = useTranslation(['locking', 'common']);
+
   const { 
     account, 
     isConnected, 

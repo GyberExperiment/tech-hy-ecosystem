@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { useAccount, useChainId } from 'wagmi';
 import { ethers } from 'ethers';
 import { CONTRACTS, TOKEN_INFO, BSC_TESTNET } from '../shared/config/contracts';
@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import TransactionHistory from '../entities/Transaction/ui/TransactionHistory';
-import { ContractStatus } from '../shared/lib/ContractStatus';
+// import { ContractStatus } from '../shared/lib/ContractStatus';
 import TokenStats from '../entities/Token/ui/TokenStats';
 import { useTokenData } from '../entities/Token/model/useTokenData';
 import type { TokenData } from '../entities/Token/model/useTokenData';
@@ -77,7 +77,7 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => 
 };
 
 const Tokens: React.FC = () => {
-  const { t } = useTranslation(['tokens', 'common']);
+
   const { address } = useAccount();
   const chainId = useChainId();
 
@@ -416,8 +416,8 @@ const Tokens: React.FC = () => {
   if (!address) {
     return (
       <PageConnectionPrompt
-        title={t('tokens:title')}
-        subtitle="Подключите кошелек для управления токенами"
+        title="Token Management"
+        subtitle="Connect wallet to manage tokens"
         icon={Coins}
         iconColor="text-blue-400"
         titleGradient="from-blue-400 to-purple-500"
@@ -430,8 +430,8 @@ const Tokens: React.FC = () => {
   if (chainId !== BSC_TESTNET.chainId) {
     return (
       <PageConnectionPrompt
-        title={t('tokens:title')}
-        subtitle="Подключите кошелек для управления токенами"
+        title="Token Management"
+        subtitle="Connect wallet to manage tokens"
         icon={Coins}
         iconColor="text-blue-400"
         titleGradient="from-blue-400 to-purple-500"
@@ -443,21 +443,21 @@ const Tokens: React.FC = () => {
 
   return (
     <div className="animate-fade-in space-y-8">
-      {/* Contract Status */}
-      <div className="mb-8">
+      {/* Contract Status - DISABLED FOR PRODUCTION */}
+      {/* <div className="mb-8">
         <ContractStatus />
-      </div>
+      </div> */}
 
       {/* Header */}
       <div className="text-center space-y-4 mb-8">
         <div className="flex items-center justify-center space-x-3">
           <Coins className="w-8 h-8 text-blue-400" />
           <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {t('tokens:title')}
+            Token Management
           </h1>
         </div>
         <p className="hero-subtitle text-xl text-gray-300 max-w-2xl mx-auto">
-          {t('tokens:subtitle')}
+          Manage your TECH HY Ecosystem tokens
         </p>
       </div>
 
@@ -474,7 +474,7 @@ const Tokens: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Поиск по названию или символу..."
+                placeholder="Search by name or symbol..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-10 w-full"
@@ -490,9 +490,9 @@ const Tokens: React.FC = () => {
                 onChange={(e) => setFilterType(e.target.value as any)}
                 className="input-field"
               >
-                <option value="all">Все токены</option>
-                <option value="withBalance">С балансом</option>
-                <option value="governance">Governance токены</option>
+                <option value="all">All tokens</option>
+                <option value="withBalance">With balance</option>
+                <option value="governance">Governance tokens</option>
               </select>
             </div>
             
@@ -513,7 +513,7 @@ const Tokens: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
             <Coins className="mr-3 text-blue-400" />
-            Ваши токены ({filteredTokens.length})
+            Your Tokens ({filteredTokens.length})
           </h2>
 
           {loading ? (
@@ -606,7 +606,7 @@ const Tokens: React.FC = () => {
         <div className="space-y-6">
           <h2 className="section-title text-2xl font-bold flex items-center text-slate-100">
             <Settings className="mr-3 text-purple-400" />
-            Действия с токенами
+            Token Actions
           </h2>
 
           {selectedToken ? (
@@ -727,12 +727,12 @@ const Tokens: React.FC = () => {
                       {transactionLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Отправка...</span>
+                          <span>Sending...</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          <span>Отправить</span>
+                          <span>Send</span>
                         </>
                       )}
                     </button>
@@ -849,9 +849,9 @@ const Tokens: React.FC = () => {
           ) : (
             <div className="liquid-glass text-center py-12 animate-enhanced-widget-chaos-5">
               <div className="text-4xl mb-4 animate-pulse">🪙</div>
-              <h3 className="text-xl font-bold mb-2 text-slate-100">Выберите токен</h3>
+                              <h3 className="text-xl font-bold mb-2 text-slate-100">Select Token</h3>
               <p className="text-gray-400">
-                Выберите токен из списка для выполнения операций
+                Select a token from the list to perform operations
               </p>
             </div>
           )}
@@ -862,7 +862,7 @@ const Tokens: React.FC = () => {
       <div className="mb-8">
         <h2 className="section-title text-2xl font-bold mb-6 flex items-center text-slate-100">
           <Zap className="mr-3 text-yellow-400" />
-          Быстрые действия
+          Quick Actions
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

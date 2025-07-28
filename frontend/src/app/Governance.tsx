@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { useAccount, useChainId } from 'wagmi';
 import { 
   Vote, 
@@ -25,7 +25,7 @@ import { cn } from '../shared/lib/cn';
 import { useGovernanceData, type GovernanceProposal } from '../entities/Governance/api/useGovernanceData';
 
 const Governance: React.FC = () => {
-  const { t } = useTranslation(['governance', 'common']);
+
   const { address } = useAccount();
   const chainId = useChainId();
   

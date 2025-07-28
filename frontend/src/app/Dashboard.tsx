@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { useAccount, useChainId } from 'wagmi';
 import { useWeb3 } from '../shared/lib/Web3Context';
 import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
@@ -31,7 +30,6 @@ interface AccountStats {
 }
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation(['dashboard', 'common']);
   const { address, isConnected } = useAccount();
   const { metaMaskAvailable, isCorrectNetwork } = useWeb3();
   const chainId = useChainId();
@@ -67,8 +65,8 @@ const Dashboard: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <PageConnectionPrompt
-            title={t('dashboard:title')}
-            subtitle={t('dashboard:subtitle')}
+            title="Ecosystem Dashboard"
+            subtitle="LP Ecosystem with governance functions"
             icon={BarChart3}
             iconColor="text-blue-400"
             titleGradient="from-blue-400 to-purple-500"
@@ -93,11 +91,11 @@ const Dashboard: React.FC = () => {
         >
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-          {t('dashboard:title')}
-        </h1>
+              Ecosystem Dashboard
+            </h1>
             <p className="text-slate-400">
-          {t('dashboard:subtitle')}
-        </p>
+              LP Ecosystem with governance functions
+            </p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -134,7 +132,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2">
               <div className="text-2xl font-bold text-white">{accountStats.totalValue}</div>
-              <div className="text-sm text-slate-400">Общая стоимость портфеля</div>
+                              <div className="text-sm text-slate-400">Total Portfolio Value</div>
             </div>
           </div>
 
@@ -147,7 +145,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2">
               <div className="text-2xl font-bold text-white">{accountStats.vcBalance}</div>
-              <div className="text-sm text-slate-400">VC Баланс</div>
+                              <div className="text-sm text-slate-400">VC Balance</div>
             </div>
           </div>
 
@@ -160,7 +158,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2">
               <div className="text-2xl font-bold text-white">{accountStats.vgBalance}</div>
-              <div className="text-sm text-slate-400">VG Токены</div>
+                              <div className="text-sm text-slate-400">VG Tokens</div>
             </div>
                 </div>
 
@@ -173,7 +171,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="space-y-2">
               <div className="text-2xl font-bold text-white">{accountStats.lockedLP}</div>
-              <div className="text-sm text-slate-400">Заблокированные LP</div>
+                              <div className="text-sm text-slate-400">Locked LP</div>
             </div>
           </div>
         </motion.div>
@@ -226,7 +224,7 @@ const Dashboard: React.FC = () => {
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <div className="flex items-center space-x-3 mb-6">
                 <Activity className="w-5 h-5 text-blue-400" />
-                <h3 className="text-xl font-bold text-white">Последняя активность</h3>
+                <h3 className="text-xl font-bold text-white">Recent Activity</h3>
               </div>
 
               <div className="space-y-4">
@@ -235,10 +233,10 @@ const Dashboard: React.FC = () => {
                     <div className="p-2 rounded-lg bg-green-500/20">
                       <ArrowUpRight className="w-4 h-4 text-green-400" />
                     </div>
-                    <div>
-                      <div className="text-white font-medium">LP Locked</div>
-                      <div className="text-xs text-slate-400">2 часа назад</div>
-                    </div>
+                                          <div>
+                        <div className="text-white font-medium">LP Locked</div>
+                        <div className="text-xs text-slate-400">2 hours ago</div>
+                      </div>
                   </div>
                   <div className="text-green-400 font-bold">+159 LP</div>
                 </div>
@@ -248,10 +246,10 @@ const Dashboard: React.FC = () => {
                     <div className="p-2 rounded-lg bg-purple-500/20">
                       <Zap className="w-4 h-4 text-purple-400" />
                     </div>
-                    <div>
-                      <div className="text-white font-medium">VG Received</div>
-                      <div className="text-xs text-slate-400">2 часа назад</div>
-                    </div>
+                                          <div>
+                        <div className="text-white font-medium">VG Received</div>
+                        <div className="text-xs text-slate-400">2 hours ago</div>
+                      </div>
                   </div>
                   <div className="text-purple-400 font-bold">+1.6K VG</div>
                 </div>
@@ -263,7 +261,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-white font-medium">VC Transfer</div>
-                      <div className="text-xs text-slate-400">1 день назад</div>
+                      <div className="text-xs text-slate-400">1 day ago</div>
                     </div>
                   </div>
                   <div className="text-blue-400 font-bold">+89M VC</div>
@@ -275,7 +273,7 @@ const Dashboard: React.FC = () => {
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <div className="flex items-center space-x-3 mb-6">
                 <Zap className="w-5 h-5 text-orange-400" />
-                <h3 className="text-xl font-bold text-white">Быстрые действия</h3>
+                <h3 className="text-xl font-bold text-white">Quick Actions</h3>
               </div>
               
               <div className="space-y-3">
@@ -283,7 +281,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Lock className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">Заблокировать LP</span>
+                      <span className="text-white font-medium">Lock LP</span>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
                   </div>
@@ -293,7 +291,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Coins className="w-5 h-5 text-green-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">Управление токенами</span>
+                      <span className="text-white font-medium">Token Management</span>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
                   </div>
@@ -303,7 +301,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Users className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">DAO Голосование</span>
+                      <span className="text-white font-medium">DAO Governance</span>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
                   </div>
@@ -315,13 +313,13 @@ const Dashboard: React.FC = () => {
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
               <div className="flex items-center space-x-3 mb-6">
                 <BarChart3 className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-xl font-bold text-white">Распределение портфеля</h3>
+                <h3 className="text-xl font-bold text-white">Portfolio Distribution</h3>
               </div>
               
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-400">VC Токены</span>
+                    <span className="text-slate-400">VC Tokens</span>
                     <span className="text-white">68.5%</span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
@@ -331,7 +329,7 @@ const Dashboard: React.FC = () => {
 
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-400">VG Токены</span>
+                    <span className="text-slate-400">VG Tokens</span>
                     <span className="text-white">22.3%</span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">

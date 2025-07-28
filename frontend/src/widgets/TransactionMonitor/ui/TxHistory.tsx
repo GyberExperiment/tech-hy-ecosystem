@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search,
@@ -12,117 +12,128 @@ import {
   RefreshCw,
   Download,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  AlertCircle,
+  Coins,
+  Award,
+  Activity,
+  Zap,
+  Wallet
 } from 'lucide-react';
+import { useWeb3 } from '../../../shared/lib/Web3Context';
+import { transactionService, TransactionType, type RealTransaction, type TransactionFilter } from '../services/TransactionService';
+import { useFormatUtils } from '../../../shared/hooks/useCalculations';
+import { WIDGET_CONFIG } from '../../../shared/config/widgets';
 
-interface Transaction {
-  id: string;
-  hash: string;
-  type: 'send' | 'receive' | 'swap' | 'stake' | 'unstake' | 'vote' | 'burn';
-  status: 'completed' | 'pending' | 'failed';
-  amount: string;
-  token: string;
-  to?: string;
-  from?: string;
-  timestamp: string;
-  fee: string;
-  value: number;
-}
+// Icon mapping for transaction types
+const IconMap = {
+  ArrowUpRight,
+  ArrowDownLeft,
+  Coins,
+  Award,
+  Activity,
+  Zap,
+  RefreshCw,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+};
 
 const TxHistory: React.FC = () => {
+  const { account, isConnected } = useWeb3();
+  const { formatTokenAmount, formatAddress, formatHash } = useFormatUtils();
+  
+  const [transactions, setTransactions] = useState<RealTransaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | Transaction['type']>('all');
-  const [filterStatus, setFilterStatus] = useState<'all' | Transaction['status']>('all');
+  const [filterType, setFilterType] = useState<'all' | TransactionType>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'success' | 'failed' | 'pending'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status'>('date');
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const transactions: Transaction[] = [
-    {
-      id: 'tx-001',
-      hash: '0xa7b2c9d4e8f1a3b6c9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5b8',
-      type: 'receive',
-      status: 'completed',
-      amount: '2,500.00',
-      token: 'VC',
-      from: '0x742d...A5E9',
-      timestamp: '2025-01-15T14:30:00Z',
-      fee: '0.002',
-      value: 4750
-    },
-    {
-      id: 'tx-002',
-      hash: '0xb8c1d4e7f0a3b6c9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5b8c1',
-      type: 'swap',
-      status: 'completed',
-      amount: '1,000.00',
-      token: 'VC → VG',
-      timestamp: '2025-01-15T12:15:00Z',
-      fee: '0.001',
-      value: 1900
-    },
-    {
-      id: 'tx-003',
-      hash: '0xc9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2',
-      type: 'stake',
-      status: 'completed',
-      amount: '5,000.00',
-      token: 'VC',
-      to: 'LP Pool',
-      timestamp: '2025-01-14T18:45:00Z',
-      fee: '0.003',
-      value: 9500
-    },
-    {
-      id: 'tx-004',
-      hash: '0xd0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2e5f8a1b4c7d0e3',
-      type: 'burn',
-      status: 'pending',
-      amount: '100.00',
-      token: 'VC',
-      timestamp: '2025-01-15T16:00:00Z',
-      fee: '0.001',
-      value: 190
-    },
-    {
-      id: 'tx-005',
-      hash: '0xe1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4',
-      type: 'vote',
-      status: 'failed',
-      amount: '0',
-      token: 'VC',
-      timestamp: '2025-01-13T09:30:00Z',
-      fee: '0.001',
-      value: 0
-    },
-    {
-      id: 'tx-006',
-      hash: '0xf2a5b8c1d4e7f0a3b6c9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5',
-      type: 'send',
-      status: 'completed',
-      amount: '500.00',
-      token: 'VG',
-      to: '0x8F3A...B2C7',
-      timestamp: '2025-01-12T20:15:00Z',
-      fee: '0.002',
-      value: 3500
+  /**
+   * 🔄 Load transactions
+   */
+  const loadTransactions = useCallback(async (pageNum: number = 1, append: boolean = false) => {
+    if (!account || !isConnected) return;
+
+    setLoading(!append);
+    setError(null);
+
+    try {
+      const txFilter: TransactionFilter = {};
+      if (filterType !== 'all') {
+        txFilter.type = filterType as TransactionType;
+      }
+      if (filterStatus !== 'all') {
+        txFilter.status = filterStatus as 'success' | 'failed' | 'pending';
+      }
+
+      const result = await transactionService.getUserTransactions(
+        account,
+        pageNum,
+        WIDGET_CONFIG.TRANSACTION_HISTORY.TRANSACTIONS_PER_PAGE,
+        txFilter
+      );
+
+      if (append) {
+        setTransactions(prev => [...prev, ...result.transactions]);
+      } else {
+        setTransactions(result.transactions);
+      }
+
+      setHasMore(result.hasMore);
+      setPage(pageNum);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load transactions';
+      setError(errorMessage);
+      console.error('Transaction loading failed:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [account, isConnected, filterType, filterStatus]);
 
+  /**
+   * 🔄 Refresh transactions
+   */
+  const refreshTransactions = useCallback(async () => {
+    setRefreshing(true);
+    transactionService.clearCache();
+    await loadTransactions(1, false);
+    setRefreshing(false);
+  }, [loadTransactions]);
+
+  /**
+   * 📄 Load more transactions
+   */
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      loadTransactions(page + 1, true);
+    }
+  }, [loading, hasMore, page, loadTransactions]);
+
+  // Filter transactions based on search term (client-side filtering for immediate feedback)
   const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.token.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (tx.to && tx.to.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (tx.from && tx.from.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = filterType === 'all' || tx.type === filterType;
-    const matchesStatus = filterStatus === 'all' || tx.status === filterStatus;
-    
-    return matchesSearch && matchesType && matchesStatus;
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      tx.hash.toLowerCase().includes(searchLower) ||
+      tx.relatedToken.toLowerCase().includes(searchLower) ||
+      tx.description.toLowerCase().includes(searchLower) ||
+      tx.from.toLowerCase().includes(searchLower) ||
+      tx.to.toLowerCase().includes(searchLower)
+    );
   }).sort((a, b) => {
     switch (sortBy) {
       case 'date':
-        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        return parseInt(b.timeStamp) - parseInt(a.timeStamp);
       case 'amount':
-        return b.value - a.value;
+        return parseFloat(b.formattedAmount) - parseFloat(a.formattedAmount);
       case 'status':
         return a.status.localeCompare(b.status);
       default:
@@ -130,24 +141,92 @@ const TxHistory: React.FC = () => {
     }
   });
 
-  const getTypeIcon = (type: Transaction['type']) => {
-    switch (type) {
-      case 'send': return <ArrowUpRight className="w-4 h-4 text-red-400" />;
-      case 'receive': return <ArrowDownLeft className="w-4 h-4 text-green-400" />;
-      case 'swap': return <RefreshCw className="w-4 h-4 text-blue-400" />;
-      case 'stake': return <TrendingUp className="w-4 h-4 text-purple-400" />;
-      case 'unstake': return <ArrowDownLeft className="w-4 h-4 text-orange-400" />;
-      case 'vote': return <CheckCircle className="w-4 h-4 text-cyan-400" />;
-      case 'burn': return <XCircle className="w-4 h-4 text-red-500" />;
+  // Load transactions when component mounts or dependencies change
+  useEffect(() => {
+    if (account && isConnected) {
+      loadTransactions();
     }
+  }, [account, isConnected, filterType, filterStatus]);
+
+  // Refresh transactions periodically
+  useEffect(() => {
+    if (!account || !isConnected) return;
+
+    const interval = setInterval(
+      refreshTransactions,
+      WIDGET_CONFIG.TRANSACTION_HISTORY.AUTO_REFRESH_INTERVAL
+    );
+
+    return () => clearInterval(interval);
+  }, [refreshTransactions]);
+
+  const getTypeIcon = (iconName: string) => {
+    const IconComponent = IconMap[iconName as keyof typeof IconMap] || ArrowUpRight;
+    return <IconComponent className="w-4 h-4" />;
   };
 
-  const getStatusIcon = (status: Transaction['status']) => {
+  const getStatusIcon = (status: 'success' | 'failed' | 'pending') => {
     switch (status) {
-      case 'completed': return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'success': return <CheckCircle className="w-4 h-4 text-green-400" />;
       case 'pending': return <Clock className="w-4 h-4 text-orange-400" />;
       case 'failed': return <XCircle className="w-4 h-4 text-red-400" />;
     }
+  };
+
+  const getStatusColor = (status: 'success' | 'failed' | 'pending') => {
+    switch (status) {
+      case 'success': return 'text-green-400';
+      case 'pending': return 'text-orange-400';
+      case 'failed': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  // Loading state for non-connected users
+  if (!isConnected) {
+    return (
+      <motion.div
+        className="space-y-6 animate-section-breathing-subtle"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="glass-enhanced-breathing p-6">
+          <div className="text-center py-12">
+            <Wallet className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
+            <p className="text-gray-300">
+              Connect your wallet to view your transaction history
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Error state
+  if (error && transactions.length === 0) {
+    return (
+      <motion.div
+        className="space-y-6 animate-section-breathing-subtle"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="glass-enhanced-breathing p-6">
+          <div className="text-center py-12">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Failed to Load Transactions</h3>
+            <p className="text-gray-300 mb-4">{error}</p>
+            <button
+              onClick={refreshTransactions}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
   };
 
   const getStatusColor = (status: Transaction['status']) => {

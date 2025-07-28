@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { useSwitchChain } from 'wagmi';
 import { Lock, AlertTriangle, LucideIcon, RefreshCw } from 'lucide-react';
 import { bscTestnet } from 'wagmi/chains';
@@ -31,7 +31,7 @@ export const PageConnectionPrompt: React.FC<PageConnectionPromptProps> = ({
   isCorrectNetwork = true,
   children
 }) => {
-  const { t } = useTranslation(['common']);
+
   const { switchChain } = useSwitchChain();
 
   const handleSwitchNetwork = async () => {

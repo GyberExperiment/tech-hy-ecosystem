@@ -67,30 +67,30 @@ const TokenStats: React.FC<TokenStatsProps> = ({
 
   const stats = [
     {
-      title: 'Всего токенов',
-      value: totalTokens,
-      unit: 'шт',
+              title: 'Total Tokens',
+        value: totalTokens,
+        unit: 'pcs',
       icon: Coins,
       color: 'text-blue-400',
     },
     {
-      title: 'С балансом',
-      value: tokensWithBalanceCount,
-      unit: 'шт',
+              title: 'With Balance',
+        value: tokensWithBalanceCount,
+        unit: 'pcs',
       icon: Activity,
       color: 'text-green-400',
     },
     {
-      title: 'USD стоимость',
+      title: 'USD Value',
       value: totalValue.toFixed(2),
       unit: '$',
       icon: TrendingUp,
       color: 'text-yellow-400',
     },
     {
-      title: 'Разрешений',
-      value: activePermissions,
-      unit: 'шт',
+              title: 'Permissions',
+        value: activePermissions,
+        unit: 'pcs',
       icon: Shield,
       color: 'text-purple-400',
     },
@@ -103,7 +103,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
         <div className="card animate-hyper-subtle-stats-container">
           <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
             <BarChart3 className="mr-3 text-blue-400" />
-            Статистика токенов
+            Token Statistics
           </h2>
         
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -128,7 +128,7 @@ const TokenStats: React.FC<TokenStatsProps> = ({
       <div className="card animate-hyper-subtle-stats-container">
         <h2 className="text-2xl font-bold mb-6 text-slate-100 flex items-center">
           <BarChart3 className="mr-3 text-blue-400" />
-          Статистика токенов
+          Token Statistics
         </h2>
       
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -198,10 +198,10 @@ const TokenStats: React.FC<TokenStatsProps> = ({
                       {stat.title}
                     </h3>
                     <div className={`text-xs ${scheme.iconColor}/70 leading-tight line-clamp-1`}>
-                      {index === 0 && 'Доступно в экосистеме'}
-                      {index === 1 && 'Активные балансы'}
-                      {index === 2 && 'Общая стоимость'}
-                      {index === 3 && 'Активные approve'}
+                      {index === 0 && 'Available in ecosystem'}
+                                              {index === 1 && 'Active balances'}
+                                              {index === 2 && 'Total value'}
+                                              {index === 3 && 'Active approvals'}
             </div>
           </div>
         </div>
