@@ -71,6 +71,28 @@ export const getAllRpcEndpoints = (): string[] => {
   return isTestnet ? BSC_TESTNET_RPC_ENDPOINTS : BSC_MAINNET_RPC_ENDPOINTS;
 };
 
+// ✅ DYNAMIC RPC ENDPOINTS BASED ON CHAIN ID
+export const getRpcEndpointsByChainId = (chainId: number | undefined): string[] => {
+  // Если chainId не передан, используем статический fallback
+  if (!chainId) {
+    console.log('🔄 getRpcEndpointsByChainId: Using static fallback');
+    return getAllRpcEndpoints();
+  }
+  
+  // Динамический выбор по chainId
+  if (chainId === 56) { // BSC Mainnet
+    console.log('🎯 getRpcEndpointsByChainId: MAINNET endpoints selected', { chainId });
+    return BSC_MAINNET_RPC_ENDPOINTS;
+  } else if (chainId === 97) { // BSC Testnet  
+    console.log('🎯 getRpcEndpointsByChainId: TESTNET endpoints selected', { chainId });
+    return BSC_TESTNET_RPC_ENDPOINTS;
+  } else {
+    // Для неподдерживаемых сетей используем testnet по умолчанию
+    console.warn('🚨 getRpcEndpointsByChainId: Unsupported chainId, using TESTNET fallback', { chainId });
+    return BSC_TESTNET_RPC_ENDPOINTS;
+  }
+};
+
 // 🌍 Network configuration
 export const NETWORK_CONFIG = {
   mainnet: {

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import '@rainbow-me/rainbowkit/styles.css';
 import { Web3Provider } from './shared/lib/Web3Context';
+import { useRpcService } from './shared/hooks/useRpcService';
 import './i18n';
 import './App.css';
 
@@ -28,9 +29,16 @@ import { StyleShowcase } from './shared/ui/StyleShowcase';
 // Import Debug Components (if needed)
 // import WalletDebug from './components/WalletDebug';
 
+// ✅ RPC Service Network Monitor - отслеживает chainId и переключает RPC провайдеры
+const RpcServiceMonitor: React.FC = () => {
+  useRpcService(); // This hook automatically switches RPC endpoints when chainId changes
+  return null; // This component doesn't render anything
+};
+
 function App() {
   return (
       <Web3Provider>
+        <RpcServiceMonitor />
         <Router
           future={{
             v7_startTransition: true,

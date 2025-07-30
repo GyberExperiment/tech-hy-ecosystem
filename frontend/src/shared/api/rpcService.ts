@@ -418,6 +418,75 @@ class OptimizedRpcService {
     }
   }
 
+  // ✅ Update RPC endpoints dynamically (for network switching)
+  updateEndpoints(newEndpoints: string[]) {
+    log.info('RPC Service: Updating endpoints', {
+      component: 'RpcService',
+      oldCount: this.providers.length,
+      newCount: newEndpoints.length,
+      newEndpoints
+    });
+    
+    // Cleanup old providers
+    this.providers.forEach(p => {
+      p.provider.destroy();
+    });
+    
+    // Clear current providers
+    this.providers = [];
+    this.currentProviderIndex = 0;
+    
+    // Initialize with new endpoints
+    this.initializeProvidersWithEndpoints(newEndpoints);
+    
+    log.info('RPC Service: Endpoints updated successfully', {
+      component: 'RpcService',
+      providersCount: this.providers.length
+    });
+  }
+  
+  // ✅ Initialize providers with specific endpoints (helper method)
+  private initializeProvidersWithEndpoints(endpoints: string[]) {
+    if (!isBrowserEnvironment()) {
+      log.warn('RPC Service: Skipping initialization in non-browser environment');
+      return;
+    }
+
+    endpoints.forEach((url, index) => {
+      try {
+        // ✅ Use BSC Testnet network for all providers (will be overridden by MetaMask if connected)
+        const provider = new ethers.JsonRpcProvider(url, BSC_TESTNET_NETWORK, {
+          timeout: RPC_TIMEOUT,
+          throttleSlowResponseTime: 2000,
+          throttleLimit: 1
+        });
+
+        this.providers.push({
+          url,
+          provider,
+          isHealthy: true,
+          consecutiveErrors: 0,
+          lastErrorTime: 0,
+          requestCount: 0,
+          lastRequestTime: 0
+        });
+
+        log.info(`RPC Service: Provider ${index + 1} initialized`, {
+          component: 'RpcService',
+          url,
+          totalProviders: this.providers.length
+        });
+
+      } catch (error) {
+        log.error(`RPC Service: Failed to initialize provider`, {
+          component: 'RpcService',
+          url,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+  }
+
   destroy() {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
