@@ -18,6 +18,9 @@ import Staking from './app/Staking';
 import Governance from './app/Governance';
 import Dashboard from './app/Dashboard';
 
+// Import Widgets
+import NetworkSwitcher from './widgets/NetworkSwitcher/ui/NetworkSwitcher';
+
 // Import Showcase Component
 import { StyleShowcase } from './shared/ui/StyleShowcase';
 // import { WaveTransition } from './components/ui/wave-transition';
@@ -62,6 +65,7 @@ function App() {
                     <Route path="/staking" element={<Staking />} />
                     <Route path="/governance" element={<Governance />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/network" element={<NetworkSwitcher />} />
                     
                     {/* Development/Debug Routes */}
                     <Route path="/showcase" element={<StyleShowcase />} />

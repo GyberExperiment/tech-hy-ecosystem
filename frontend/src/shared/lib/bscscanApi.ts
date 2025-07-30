@@ -1,4 +1,5 @@
 import { log } from './logger';
+import { getCurrentNetwork } from '../config/contracts';
 
 interface BSCScanTransaction {
   blockNumber: string;
@@ -58,6 +59,22 @@ interface BSCScanEventLog {
   transactionIndex: string;
 }
 
+interface BSCScanContractInfo {
+  SourceCode: string;
+  ABI: string;
+  ContractName: string;
+  CompilerVersion: string;
+  OptimizationUsed: string;
+  Runs: string;
+  ConstructorArguments: string;
+  EVMVersion: string;
+  Library: string;
+  LicenseType: string;
+  Proxy: string;
+  Implementation: string;
+  SwarmSource: string;
+}
+
 /*
  * BSCScan API Configuration
  * 
@@ -72,18 +89,35 @@ interface BSCScanEventLog {
  * 
  * Note: The same API key works for both mainnet and testnet
  */
-// ✅ ИСПРАВЛЕНИЕ: Добавляем демо API ключ для тестирования или используем переменную окружения
-const BSCSCAN_API_KEY = process.env.VITE_BSCSCAN_API_KEY || 'YourApiKeyHere'; // Add your BSCScan API key here
-const BSCSCAN_BASE_URL = 'https://api-testnet.bscscan.com/api';
+
+// ✅ MAINNET/TESTNET DYNAMIC CONFIG
+const BSCSCAN_API_KEY = process.env.VITE_BSCSCAN_API_KEY || 'YourApiKeyHere';
+
+// ✅ Dynamic BSCScan URLs based on current network
+const getBSCScanConfig = () => {
+  const currentNetwork = getCurrentNetwork();
+  
+  return {
+    baseUrl: currentNetwork === 'mainnet' 
+      ? 'https://api.bscscan.com/api'
+      : 'https://api-testnet.bscscan.com/api',
+    explorerUrl: currentNetwork === 'mainnet'
+      ? 'https://bscscan.com'
+      : 'https://testnet.bscscan.com',
+    networkName: currentNetwork === 'mainnet' ? 'BSC Mainnet' : 'BSC Testnet'
+  };
+};
 
 // Add warning about API key requirement ONLY when API is called
 let apiKeyWarningShown = false;
 
 export class BSCScanAPI {
   private static async fetchWithRetry(url: string, retries = 2): Promise<any> {
+    const config = getBSCScanConfig();
+    
     // Show API key warning only once
     if (!BSCSCAN_API_KEY && !apiKeyWarningShown) {
-      console.warn('⚠️ BSCScan API Key is missing. Please add your API key to enable transaction history.');
+      console.warn(`⚠️ BSCScan API Key is missing. Please add your API key to enable transaction history on ${config.networkName}.`);
       apiKeyWarningShown = true;
     }
     
@@ -101,7 +135,7 @@ export class BSCScanAPI {
         // BSCScan returns status: "0" for errors
         if (data.status === '0') {
           if (data.message === 'NOTOK' && data.result === 'Missing/Invalid API Key') {
-            throw new Error('BSCScan API Key is required. Please add your API key to enable transaction history.');
+            throw new Error(`BSCScan API Key is required. Please add your API key to enable transaction history on ${config.networkName}.`);
           }
           if (data.message === 'NOTOK') {
             throw new Error(data.result || 'BSCScan API error');
@@ -113,6 +147,7 @@ export class BSCScanAPI {
         log.warn('BSCScan API attempt failed', {
           component: 'BSCScanAPI',
           function: 'fetchWithRetry',
+          network: config.networkName,
           url,
           attempt: i + 1,
           retries
@@ -134,6 +169,130 @@ export class BSCScanAPI {
     throw lastError!;
   }
 
+  // ✅ NEW: Get contract source code and ABI
+  static async getContractSource(contractAddress: string): Promise<BSCScanContractInfo | null> {
+    const config = getBSCScanConfig();
+    const url = `${config.baseUrl}?module=contract&action=getsourcecode&address=${contractAddress}${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
+    
+    try {
+      const data = await this.fetchWithRetry(url);
+      
+      if (Array.isArray(data.result) && data.result.length > 0) {
+        return data.result[0];
+      }
+      
+      return null;
+    } catch (error) {
+      log.warn('BSCScan getContractSource failed', {
+        component: 'BSCScanAPI',
+        function: 'getContractSource',
+        network: config.networkName,
+        contractAddress
+      }, error as Error);
+      return null;
+    }
+  }
+
+  // ✅ NEW: Validate contract exists and is not empty
+  static async validateContract(contractAddress: string): Promise<{
+    exists: boolean;
+    isContract: boolean;
+    hasSource: boolean;
+    contractName?: string;
+    error?: string;
+  }> {
+    const config = getBSCScanConfig();
+    
+    try {
+      // Check if contract exists and has code
+      const codeUrl = `${config.baseUrl}?module=proxy&action=eth_getCode&address=${contractAddress}&tag=latest${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
+      const codeData = await this.fetchWithRetry(codeUrl);
+      
+      const hasCode = codeData.result && codeData.result !== '0x';
+      
+      if (!hasCode) {
+        return {
+          exists: false,
+          isContract: false,
+          hasSource: false,
+          error: 'Address is not a contract or has no code'
+        };
+      }
+
+      // Try to get source code
+      const sourceInfo = await this.getContractSource(contractAddress);
+      
+      return {
+        exists: true,
+        isContract: true,
+        hasSource: !!(sourceInfo?.SourceCode && sourceInfo.SourceCode !== ''),
+        contractName: sourceInfo?.ContractName || 'Unknown',
+        error: null
+      };
+      
+    } catch (error) {
+      log.error('BSCScan validateContract failed', {
+        component: 'BSCScanAPI',
+        function: 'validateContract',
+        network: config.networkName,
+        contractAddress
+      }, error as Error);
+      
+      return {
+        exists: false,
+        isContract: false,
+        hasSource: false,
+        error: (error as Error).message
+      };
+    }
+  }
+
+  // ✅ NEW: Get token information
+  static async getTokenInfo(contractAddress: string): Promise<{
+    name?: string;
+    symbol?: string;
+    decimals?: number;
+    totalSupply?: string;
+    error?: string;
+  }> {
+    const config = getBSCScanConfig();
+    
+    try {
+      // Get token info using multiple parallel requests
+      const promises = [
+        fetch(`${config.baseUrl}?module=stats&action=tokensupply&contractaddress=${contractAddress}${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`),
+        // We can also use contract calls if needed
+      ];
+
+      const [supplyResponse] = await Promise.allSettled(promises);
+      
+      let totalSupply = '0';
+      if (supplyResponse.status === 'fulfilled') {
+        const supplyData = await supplyResponse.value.json();
+        if (supplyData.status === '1') {
+          totalSupply = supplyData.result;
+        }
+      }
+
+      return {
+        totalSupply,
+        error: null
+      };
+      
+    } catch (error) {
+      log.error('BSCScan getTokenInfo failed', {
+        component: 'BSCScanAPI',
+        function: 'getTokenInfo',
+        network: config.networkName,
+        contractAddress
+      }, error as Error);
+      
+      return {
+        error: (error as Error).message
+      };
+    }
+  }
+
   // Get normal transactions for an address
   static async getNormalTransactions(
     address: string, 
@@ -142,7 +301,8 @@ export class BSCScanAPI {
     page = 1,
     offset = 20
   ): Promise<BSCScanTransaction[]> {
-    const url = `${BSCSCAN_BASE_URL}?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=${endBlock}&page=${page}&offset=${offset}&sort=desc${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
+    const config = getBSCScanConfig();
+    const url = `${config.baseUrl}?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=${endBlock}&page=${page}&offset=${offset}&sort=desc${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
     
     try {
       const data = await this.fetchWithRetry(url);
@@ -157,6 +317,7 @@ export class BSCScanAPI {
       log.warn('BSCScan getNormalTransactions failed', {
         component: 'BSCScanAPI',
         function: 'getNormalTransactions',
+        network: config.networkName,
         address,
         startBlock,
         endBlock
@@ -174,7 +335,8 @@ export class BSCScanAPI {
     page = 1,
     offset = 20
   ): Promise<BSCScanTokenTransfer[]> {
-    let url = `${BSCSCAN_BASE_URL}?module=account&action=tokentx&address=${address}&startblock=${startBlock}&endblock=${endBlock}&page=${page}&offset=${offset}&sort=desc${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
+    const config = getBSCScanConfig();
+    let url = `${config.baseUrl}?module=account&action=tokentx&address=${address}&startblock=${startBlock}&endblock=${endBlock}&page=${page}&offset=${offset}&sort=desc${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
     
     if (contractAddress) {
       url += `&contractaddress=${contractAddress}`;
@@ -193,6 +355,7 @@ export class BSCScanAPI {
       log.warn('BSCScan getTokenTransfers failed', {
         component: 'BSCScanAPI',
         function: 'getTokenTransfers',
+        network: config.networkName,
         address,
         contractAddress: contractAddress ? contractAddress : 'undefined',
         startBlock,
@@ -214,7 +377,8 @@ export class BSCScanAPI {
     topic2?: string,
     topic3?: string
   ): Promise<BSCScanEventLog[]> {
-    let url = `${BSCSCAN_BASE_URL}?module=logs&action=getLogs&address=${contractAddress}&fromBlock=${fromBlock}&toBlock=${toBlock}&apikey=${BSCSCAN_API_KEY}`;
+    const config = getBSCScanConfig();
+    let url = `${config.baseUrl}?module=logs&action=getLogs&address=${contractAddress}&fromBlock=${fromBlock}&toBlock=${toBlock}${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
     
     if (topic0) url += `&topic0=${topic0}`;
     if (topic1) url += `&topic1=${topic1}`;
@@ -228,6 +392,7 @@ export class BSCScanAPI {
       log.warn('BSCScan getEventLogs failed', {
         component: 'BSCScanAPI',
         function: 'getEventLogs',
+        network: config.networkName,
         contractAddress,
         fromBlock,
         toBlock,
@@ -242,7 +407,8 @@ export class BSCScanAPI {
 
   // Get transaction receipt
   static async getTransactionReceipt(txHash: string): Promise<any> {
-    const url = `${BSCSCAN_BASE_URL}?module=proxy&action=eth_getTransactionReceipt&txhash=${txHash}&apikey=${BSCSCAN_API_KEY}`;
+    const config = getBSCScanConfig();
+    const url = `${config.baseUrl}?module=proxy&action=eth_getTransactionReceipt&txhash=${txHash}${BSCSCAN_API_KEY ? `&apikey=${BSCSCAN_API_KEY}` : ''}`;
     
     try {
       const data = await this.fetchWithRetry(url);
@@ -251,6 +417,7 @@ export class BSCScanAPI {
       log.warn('BSCScan getTransactionReceipt failed', {
         component: 'BSCScanAPI',
         function: 'getTransactionReceipt',
+        network: config.networkName,
         txHash
       }, error as Error);
       return null;

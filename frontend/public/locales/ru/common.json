@@ -1,0 +1,70 @@
+{
+  "navigation": {
+    "dashboard": "Дашборд",
+    "tokens": "Токены", 
+    "staking": "Стейкинг",
+    "governance": "Управление",
+    "network": "Сеть"
+  },
+  "buttons": {
+    "connect": "Подключить",
+    "disconnect": "Отключить",
+    "confirm": "Подтвердить",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "refresh": "Обновить",
+    "back": "Назад",
+    "next": "Далее",
+    "submit": "Отправить",
+    "approve": "Одобрить",
+    "swap": "Обменять",
+    "stake": "Застейкать",
+    "withdraw": "Вывести",
+    "claim": "Получить"
+  },
+  "labels": {
+    "balance": "Баланс",
+    "amount": "Количество",
+    "address": "Адрес",
+    "transaction": "Транзакция",
+    "status": "Статус",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "pending": "В ожидании",
+    "completed": "Завершено",
+    "failed": "Неудачно"
+  },
+  "messages": {
+    "connectWallet": "Пожалуйста, подключите ваш кошелек для продолжения",
+    "wrongNetwork": "Переключитесь на правильную сеть",
+    "transactionPending": "Транзакция обрабатывается...",
+    "transactionSuccess": "Транзакция успешна!",
+    "transactionFailed": "Транзакция не удалась",
+    "insufficientBalance": "Недостаточно средств",
+    "approvalRequired": "Требуется одобрение токена",
+    "invalidAmount": "Неверное количество",
+    "networkError": "Ошибка сети. Попробуйте позже",
+    "unknownError": "Произошла неизвестная ошибка"
+  },
+  "time": {
+    "seconds": "секунд",
+    "minutes": "минут", 
+    "hours": "часов",
+    "days": "дней",
+    "weeks": "недель",
+    "months": "месяцев",
+    "years": "лет",
+    "ago": "назад",
+    "remaining": "осталось"
+  },
+  "units": {
+    "bnb": "BNB",
+    "vc": "VC",
+    "vg": "VG", 
+    "lp": "LP",
+    "usd": "$",
+    "percent": "%",
+    "apy": "APY"
+  }
+} 

@@ -19,6 +19,7 @@
     "deploy": "hardhat run scripts/deploy.ts",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network bscTestnet",
     "deploy:mainnet": "hardhat run scripts/deploy.ts --network bscMainnet",
+    "deploy:mainnet:production": "hardhat run scripts/deploy/mainnet-production-deploy.js --network bsc",
     "node": "hardhat node",
     "clean": "hardhat clean"
   },

@@ -1,0 +1,60 @@
+{
+  "title": "DAO Управление",
+  "subtitle": "Участвуйте в управлении экосистемой с помощью вашей силы голоса VG",
+  "voting": {
+    "title": "Голосование",
+    "vote": "Голосовать",
+    "votingPower": "Сила голоса",
+    "votesFor": "Голосов ЗА",
+    "votesAgainst": "Голосов ПРОТИВ",
+    "quorum": "Кворум",
+    "threshold": "Порог",
+    "deadline": "Крайний срок",
+    "status": "Статус",
+    "active": "Активно",
+    "passed": "Принято",
+    "failed": "Отклонено",
+    "pending": "В ожидании",
+    "executed": "Исполнено"
+  },
+  "proposal": {
+    "title": "Предложение",
+    "create": "Создать предложение",
+    "description": "Описание",
+    "proposer": "Автор",
+    "startTime": "Время начала",
+    "endTime": "Время окончания",
+    "executionTime": "Время исполнения",
+    "category": "Категория",
+    "treasury": "Казна",
+    "protocol": "Протокол",
+    "community": "Сообщество",
+    "emergency": "Срочное"
+  },
+  "actions": {
+    "delegate": "Делегировать",
+    "undelegate": "Отменить делегирование",
+    "createProposal": "Создать предложение",
+    "voteFor": "Голосовать ЗА",
+    "voteAgainst": "Голосовать ПРОТИВ",
+    "abstain": "Воздержаться",
+    "execute": "Исполнить",
+    "queue": "Поставить в очередь"
+  },
+  "delegation": {
+    "title": "Делегирование",
+    "delegate": "Делегат",
+    "delegatedTo": "Делегировано",
+    "delegatedFrom": "Получено от",
+    "selfDelegate": "Самоделегирование",
+    "changeDelegation": "Изменить делегирование"
+  },
+  "stats": {
+    "totalSupply": "Общее предложение",
+    "circulatingSupply": "В обращении",
+    "totalDelegated": "Всего делегировано",
+    "uniqueDelegators": "Уникальных делегаторов",
+    "activeProposals": "Активных предложений",
+    "passedProposals": "Принятых предложений"
+  }
+} 

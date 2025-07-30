@@ -1,0 +1,44 @@
+{
+  "title": "Дашборд экосистемы",
+  "subtitle": "LP экосистема с функциями управления",
+  "welcome": "Добро пожаловать в экосистему",
+  "stats": {
+    "totalValue": "Общая стоимость",
+    "yourBalance": "Ваш баланс",
+    "totalStaked": "Всего в стейкинге",
+    "totalRewards": "Общие награды",
+    "apy": "Годовая доходность",
+    "volume24h": "Объем за 24ч",
+    "liquidity": "Ликвидность",
+    "marketCap": "Капитализация"
+  },
+  "sections": {
+    "overview": "Обзор",
+    "portfolio": "Портфолио",
+    "staking": "Стейкинг",
+    "rewards": "Награды",
+    "governance": "Управление",
+    "transactions": "Транзакции"
+  },
+  "widgets": {
+    "swapWidget": "Обмен токенов",
+    "stakingWidget": "Стейкинг виджет",
+    "rewardsWidget": "Награды",
+    "portfolioWidget": "Портфолио"
+  },
+  "actions": {
+    "viewAll": "Посмотреть все",
+    "trade": "Торговать",
+    "addLiquidity": "Добавить ликвидность",
+    "removeLiquidity": "Убрать ликвидность",
+    "claimRewards": "Получить награды",
+    "compound": "Реинвестировать"
+  },
+  "portfolio": {
+    "totalValue": "Общая стоимость портфолио",
+    "tokens": "Токены",
+    "stakes": "Стейки",
+    "rewards": "Награды",
+    "history": "История"
+  }
+} 

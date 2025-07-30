@@ -4,6 +4,7 @@ import { useSwitchChain } from 'wagmi';
 import { Lock, AlertTriangle, LucideIcon, RefreshCw } from 'lucide-react';
 import { bscTestnet } from 'wagmi/chains';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface PageConnectionPromptProps {
   // Page specific customization
@@ -28,28 +29,18 @@ export const PageConnectionPrompt: React.FC<PageConnectionPromptProps> = ({
   iconColor = 'text-gray-400',
   titleGradient = 'from-blue-400 to-purple-500',
   isConnected = false,
-  isCorrectNetwork = true,
+  isCorrectNetwork = false,
   children
 }) => {
-
+  const { t } = useTranslation();
   const { switchChain } = useSwitchChain();
 
-  const handleSwitchNetwork = async () => {
+  const handleSwitchToTestnet = async () => {
     try {
-      toast.loading('Переключение на BSC Testnet...', { id: 'switch-network' });
       await switchChain({ chainId: bscTestnet.id });
-      toast.success('Сеть успешно переключена!', { id: 'switch-network' });
+      toast.success('Сеть успешно переключена на BSC Testnet');
     } catch (error: any) {
-      console.error('Network switch failed:', error);
-      
-      let errorMessage = 'Ошибка переключения сети';
-      if (error.message?.includes('User rejected')) {
-        errorMessage = 'Переключение отклонено пользователем';
-      } else if (error.message?.includes('Unrecognized chain ID')) {
-        errorMessage = 'Добавьте BSC Testnet в MetaMask';
-      }
-      
-      toast.error(errorMessage, { id: 'switch-network' });
+      toast.error('Ошибка переключения сети: ' + (error?.message || 'Неизвестная ошибка'));
     }
   };
 
@@ -69,7 +60,7 @@ export const PageConnectionPrompt: React.FC<PageConnectionPromptProps> = ({
           {/* Network Switch Button */}
           <div className="space-y-4">
             <button
-              onClick={handleSwitchNetwork}
+              onClick={handleSwitchToTestnet}
               className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105"
             >
               <RefreshCw className="w-5 h-5" />

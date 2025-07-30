@@ -379,17 +379,17 @@ const TokensTab: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-slate-700/30 p-4 rounded-lg">
-          <VCSaleWidget 
-            className="bg-transparent border-slate-600/50 shadow-none"
-            onPurchaseSuccess={(txHash, amount) => {
-              // Admin purchase successful
-            }}
-            onError={(error) => {
-              // Admin purchase error
-            }}
-          />
-        </div>
+        {/* VCSale Widget */}
+        {/* Temporarily disabled for mainnet deployment
+        <VCSaleWidget
+          className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/20"
+          onPurchaseSuccess={() => {
+            toast.success('VC покупка прошла успешно!');
+            refreshData();
+          }}
+          onError={(error) => toast.error(`VC Sale ошибка: ${error}`)}
+        />
+        */}
       </div>
       
       {/* Token Cards */}

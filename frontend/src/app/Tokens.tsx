@@ -81,14 +81,29 @@ const Tokens: React.FC = () => {
   const { address } = useAccount();
   const chainId = useChainId();
 
-  // Use shared token data hook
+  // Use shared token data hook with proper error handling
   const { 
     tokens, 
+    balances,
     loading, 
     refreshing, 
     refreshData, 
-    formatBalance 
+    formatBalance,
+    isInitialized,
+    hasAnyBalance
   } = useTokenData();
+
+  // Diagnostic logging
+  React.useEffect(() => {
+    console.log('🔍 Tokens Page Debug:', {
+      isConnected: !!address,
+      tokensCount: tokens.length,
+      balances,
+      loading,
+      isInitialized,
+      hasAnyBalance
+    });
+  }, [address, tokens, balances, loading, isInitialized, hasAnyBalance]);
 
   const [allowances, setAllowances] = useState<TokenAllowance[]>([]);
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
@@ -113,6 +128,7 @@ const Tokens: React.FC = () => {
       case 'VG': return <Gift className="w-6 h-6" />;
       case 'VGVotes': return <Vote className="w-6 h-6" />;
       case 'LP': return <Rocket className="w-6 h-6" />;
+      case 'BNB': return <Coins className="w-6 h-6 text-yellow-400" />;
       default: return <Coins className="w-6 h-6" />;
     }
   }
@@ -176,23 +192,41 @@ const Tokens: React.FC = () => {
     }
   }, [address, chainId]);
 
-  // Filter tokens based on search and filter criteria
-  const filteredTokens = tokens.filter(token => {
-    // Search filter
-    const matchesSearch = searchTerm === '' || 
-      token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter tokens based on search and filter criteria + добавляем BNB
+  const filteredTokens = React.useMemo(() => {
+    let allTokens = [...tokens];
     
-    // Type filter
-    let matchesFilter = true;
-    if (filterType === 'withBalance') {
-      matchesFilter = parseFloat(token.balance) > 0;
-    } else if (filterType === 'governance') {
-      matchesFilter = token.symbol === 'VG' || token.symbol === 'VGV';
+    // Добавляем BNB как токен если есть баланс или показываем все
+    if (balances.BNB && (parseFloat(balances.BNB) > 0 || filterType === 'all')) {
+      allTokens.unshift({
+        symbol: 'BNB',
+        name: 'BNB Smart Chain',
+        address: 'native',
+        balance: balances.BNB,
+        decimals: 18,
+        totalSupply: '0', // BNB не имеет фиксированного supply
+        contract: null,
+        color: 'from-yellow-500 to-orange-500'
+      });
     }
     
-    return matchesSearch && matchesFilter;
-  });
+    return allTokens.filter(token => {
+      // Search filter
+      const matchesSearch = searchTerm === '' || 
+        token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Type filter
+      let matchesFilter = true;
+      if (filterType === 'withBalance') {
+        matchesFilter = parseFloat(token.balance) > 0;
+      } else if (filterType === 'governance') {
+        matchesFilter = token.symbol === 'VG' || token.symbol === 'VGVotes';
+      }
+      
+      return matchesSearch && matchesFilter;
+    });
+  }, [tokens, balances.BNB, searchTerm, filterType]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -409,9 +443,21 @@ const Tokens: React.FC = () => {
     }
   };
 
-  const handleRefresh = () => {
-    refreshData();
-  };
+  const handleRefresh = useCallback(async () => {
+    console.log('🔄 Manual refresh triggered');
+    if (refreshing || loading) {
+      console.log('⏳ Refresh already in progress, skipping');
+      return;
+    }
+    
+    try {
+      await refreshData();
+      console.log('✅ Refresh completed successfully');
+    } catch (error) {
+      console.error('❌ Refresh failed:', error);
+      toast.error('Ошибка обновления данных');
+    }
+  }, [refreshData, refreshing, loading]);
 
   if (!address) {
     return (
@@ -518,82 +564,97 @@ const Tokens: React.FC = () => {
 
           {loading ? (
             <div className="space-y-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="liquid-glass animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="liquid-glass p-6 animate-pulse">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
+                    <div className="w-12 h-12 bg-slate-700 rounded-full"></div>
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-600 rounded w-1/4 mb-2"></div>
-                      <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+                      <div className="h-4 bg-slate-700 rounded w-1/4 mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-1/6"></div>
                     </div>
-                    <div className="h-6 bg-gray-600 rounded w-20"></div>
+                    <div className="text-right">
+                      <div className="h-4 bg-slate-700 rounded w-24 mb-2"></div>
+                      <div className="h-3 bg-slate-700 rounded w-16"></div>
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
+          ) : filteredTokens.length === 0 ? (
+            <div className="liquid-glass text-center py-12">
+              <div className="text-4xl mb-4">🪙</div>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Токены не найдены</h3>
+              <p className="text-gray-400 mb-4">
+                {tokens.length === 0 
+                  ? 'Подключите кошелек для загрузки ваших токенов' 
+                  : 'Попробуйте изменить критерии фильтрации'
+                }
+              </p>
+              {tokens.length === 0 && (
+                <div className="flex flex-col items-center gap-3">
+                  <button 
+                    onClick={() => refreshData()}
+                    className="btn-glass-blue flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Обновить
+                  </button>
+                  <p className="text-sm text-gray-500">
+                    Убедитесь что подключены к правильной сети (BSC)
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
               {filteredTokens.map((token, index) => (
                 <div 
-                  key={token.symbol} 
-                  className={`liquid-glass cursor-pointer transition-all duration-300 hover:scale-[1.005] animate-enhanced-widget-chaos-${(index % 6) + 1} ${
-                    selectedToken?.symbol === token.symbol 
-                      ? 'ring-2 ring-blue-500/50 glass-accent animate-pulse' 
-                      : ''
+                  key={`${token.symbol}-${token.address}`} 
+                  className={`liquid-glass p-6 cursor-pointer transition-all duration-300 hover:border-blue-400/30 group ${
+                    selectedToken?.symbol === token.symbol ? 'border-blue-400/50 bg-blue-400/5' : ''
                   }`}
                   onClick={() => setSelectedToken(token)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${token.color} flex items-center justify-center animate-pulse`}>
-                        {token.icon}
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${token.color || 'from-gray-500/20 to-gray-600/20'} shadow-lg flex-shrink-0`}>
+                        {getTokenIcon(token.symbol)}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-slate-100 text-lg">{token.name}</h3>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm text-gray-400">{token.symbol}</p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(token.address);
-                            }}
-                            className="text-gray-400 hover:text-white transition-colors duration-300 glass-ultra rounded p-1"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                          <a
-                            href={`${BSC_TESTNET.blockExplorer}/token/${token.address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-gray-400 hover:text-blue-400 transition-colors duration-300 glass-ultra rounded p-1"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-300 transition-colors">
+                          {token.symbol}
+                        </h3>
+                        <p className="text-gray-400 text-sm truncate">{token.name}</p>
+                        <div className="flex items-center mt-1 space-x-2">
+                          <p className="text-xs text-gray-500 font-mono truncate">
+                            {token.address === 'native' ? 'Native Token' : `${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                          </p>
+                          {token.address !== 'native' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(token.address);
+                              }}
+                              className="p-1 hover:bg-gray-600/50 rounded transition-colors"
+                            >
+                              <Copy className="w-3 h-3 text-gray-400 hover:text-gray-200" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
                     
-                    <div className="text-right">
-                      <p className="font-bold text-slate-100 text-lg">
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xl font-bold text-slate-100">
                         {formatBalance(token.balance)}
                       </p>
-                      <p className="text-sm text-gray-400">
-                        {token.symbol}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-700/50">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-400">Total Supply</p>
-                        <p className="text-slate-200 font-medium">{formatBalance(token.totalSupply)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Decimals</p>
-                        <p className="text-slate-200 font-medium">{token.decimals}</p>
-                      </div>
+                      <p className="text-gray-400 text-sm">{token.symbol}</p>
+                      {parseFloat(token.balance) > 0 && (
+                        <div className="flex items-center mt-1 text-green-400 text-xs">
+                          <Activity className="w-3 h-3 mr-1" />
+                          <span>Active</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -848,11 +909,31 @@ const Tokens: React.FC = () => {
             </div>
           ) : (
             <div className="liquid-glass text-center py-12 animate-enhanced-widget-chaos-5">
-              <div className="text-4xl mb-4 animate-pulse">🪙</div>
-                              <h3 className="text-xl font-bold mb-2 text-slate-100">Select Token</h3>
-              <p className="text-gray-400">
-                Select a token from the list to perform operations
+              <div className="text-4xl mb-4 animate-pulse">⚡</div>
+              <h3 className="text-xl font-bold mb-2 text-slate-100">Token Actions</h3>
+              <p className="text-gray-400 mb-6">
+                Выберите токен из списка для выполнения операций
               </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-md mx-auto">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-400/20">
+                  <Send className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                  <p className="text-sm text-blue-300 font-medium">Transfer</p>
+                  <p className="text-xs text-gray-400">Отправка токенов</p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-400/20">
+                  <CheckCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                  <p className="text-sm text-green-300 font-medium">Approve</p>
+                  <p className="text-xs text-gray-400">Разрешения</p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-400/20">
+                  <Shield className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                  <p className="text-sm text-purple-300 font-medium">Allowances</p>
+                  <p className="text-xs text-gray-400">Управление</p>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -4,7 +4,7 @@ import { useAccount, useChainId } from 'wagmi';
 import { useWeb3 } from '../shared/lib/Web3Context';
 import PageConnectionPrompt from '../shared/ui/PageConnectionPrompt';
 import StakingStats from '../entities/Staking/ui/StakingStats';
-import { BuyVCWidget } from '../entities/Token';
+import { SwapWidget } from '../widgets/SwapWidget';
 import { 
   Wallet,
   BarChart3,
@@ -201,7 +201,7 @@ const Dashboard: React.FC = () => {
                 
                 {/* Основной виджет */}
                 <div className="relative">
-                  <BuyVCWidget horizontal className="w-full" />
+                  <SwapWidget className="w-full" />
                 </div>
               </div>
             </motion.div>
@@ -270,43 +270,13 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="flex items-center space-x-3 mb-6">
-                <Zap className="w-5 h-5 text-orange-400" />
-                <h3 className="text-xl font-bold text-white">Quick Actions</h3>
-              </div>
+            <div className="card-ultra p-6 animate-enhanced-widget-chaos-7">
+              <h3 className="card-title text-lg font-bold mb-4 flex items-center">
+                <Zap className="mr-2 text-yellow-400" />
+                Быстрые действия
+              </h3>
               
-              <div className="space-y-3">
-                <button className="w-full p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-300 group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Lock className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">Lock LP</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
-                  </div>
-                </button>
-
-                <button className="w-full p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-xl hover:from-green-500/30 hover:to-blue-500/30 transition-all duration-300 group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Coins className="w-5 h-5 text-green-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">Token Management</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
-                  </div>
-                </button>
-
-                <button className="w-full p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300 group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Users className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-white font-medium">DAO Governance</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300" />
-                  </div>
-                </button>
-              </div>
+              <SwapWidget className="w-full" />
             </div>
 
             {/* Portfolio Allocation */}

@@ -23,13 +23,19 @@ import { PageConnectionPrompt } from '../shared/ui/PageConnectionPrompt';
 import { log } from '../shared/lib/logger';
 import { cn } from '../shared/lib/cn';
 import { useGovernanceData, type GovernanceProposal } from '../entities/Governance/api/useGovernanceData';
+import { WidgetReadiness, getSystemStatus } from '../shared/lib/contractStatus';
+import ComingSoonGovernance from '../widgets/ComingSoon/ui/ComingSoonGovernance';
 
 const Governance: React.FC = () => {
 
   const { address } = useAccount();
   const chainId = useChainId();
   
-  // ✅ Используем реальные данные governance
+  // ✅ Проверяем готовность Governance системы
+  const governanceReadiness = WidgetReadiness.GovernanceWidget();
+  const systemStatus = getSystemStatus();
+  
+  // ✅ Используем реальные данные governance только если система готова
   const {
     proposals,
     stats,
@@ -48,6 +54,11 @@ const Governance: React.FC = () => {
   const [voteAmount, setVoteAmount] = useState('');
   const [voteSupport, setVoteSupport] = useState<boolean | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // ✅ ГЛАВНАЯ ПРОВЕРКА: если Governance контракты не готовы - показываем Coming Soon
+  if (!governanceReadiness.isReady) {
+    return <ComingSoonGovernance />;
+  }
 
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
@@ -184,7 +195,7 @@ const Governance: React.FC = () => {
   if (!isConnected) {
     return (
       <PageConnectionPrompt
-        title={t('governance:title')}
+        title="Governance"
         subtitle="Подключите кошелек для участия в governance экосистемы"
         icon={Vote}
         iconColor="text-purple-400"
@@ -198,7 +209,7 @@ const Governance: React.FC = () => {
   if (!isCorrectNetwork) {
     return (
       <PageConnectionPrompt
-        title={t('governance:title')}
+        title="Governance"
         subtitle="Подключите кошелек для участия в governance экосистемы"
         icon={Vote}
         iconColor="text-purple-400"
@@ -216,7 +227,7 @@ const Governance: React.FC = () => {
         <div className="flex items-center justify-center space-x-3">
           <Vote className="w-8 h-8 text-purple-400 animate-glass-pulse" />
           <h1 className="hero-title text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">
-            {t('governance:title')}
+            Governance
           </h1>
           <button
             onClick={refreshData}
@@ -227,7 +238,7 @@ const Governance: React.FC = () => {
           </button>
         </div>
         <p className="hero-subtitle text-xl text-gray-300 max-w-2xl mx-auto">
-          {t('governance:subtitle')}
+          Участвуйте в управлении протоколом через децентрализованное голосование
         </p>
         
         {error && (
