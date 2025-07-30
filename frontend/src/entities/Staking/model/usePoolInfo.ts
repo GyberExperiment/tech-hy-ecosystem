@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACTS } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { log } from '../../../shared/lib/logger';
 import { rpcService } from '../../../shared/api/rpcService';
 
@@ -31,6 +31,9 @@ const poolInfoCache = new Map<string, { data: PoolInfo; timestamp: number }>();
 const CACHE_DURATION = 300000; // 5 minutes
 
 export const usePoolInfo = (): UsePoolInfoReturn => {
+  // ✅ Dynamic contracts based on current network
+  const { contracts } = useContracts();
+  
   const [poolInfo, setPoolInfo] = useState<PoolInfo>({
     vcReserve: '0',
     bnbReserve: '0',
@@ -88,17 +91,17 @@ export const usePoolInfo = (): UsePoolInfoReturn => {
     try {
       const result = await rpcService.withFallback(async (provider) => {
         const lpPairContract = new ethers.Contract(
-          CONTRACTS.LP_TOKEN, 
+          contracts.LP_TOKEN, 
           PAIR_ABI, 
           provider
         );
 
         const [reserves, token0] = await Promise.all([
           lpPairContract.getReserves?.() || Promise.resolve([0n, 0n, 0]),
-          lpPairContract.token0?.() || Promise.resolve(CONTRACTS.VC_TOKEN)
+          lpPairContract.token0?.() || Promise.resolve(contracts.VC_TOKEN)
         ]);
 
-        const isVCToken0 = token0.toLowerCase() === CONTRACTS.VC_TOKEN.toLowerCase();
+        const isVCToken0 = token0.toLowerCase() === contracts.VC_TOKEN.toLowerCase();
         const vcReserve = isVCToken0 ? reserves[0] : reserves[1];
         const bnbReserve = isVCToken0 ? reserves[1] : reserves[0];
 

@@ -117,7 +117,32 @@ console.log('🎯 CONTRACTS Selection:', {
   selectedNetwork,
   VCSALE_ADDRESS: selectedNetwork === 'mainnet' ? MAINNET_CONTRACTS.VCSALE : TESTNET_CONTRACTS.VCSALE
 });
+
+// Static export for backward compatibility
 export const CONTRACTS = selectedNetwork === 'mainnet' ? MAINNET_CONTRACTS : TESTNET_CONTRACTS;
+
+// ✅ DYNAMIC CONTRACTS BASED ON CHAIN ID
+export const getContractsByChainId = (chainId: number | undefined): typeof TESTNET_CONTRACTS => {
+  // Если chainId не передан, используем hostname fallback
+  if (!chainId) {
+    const fallbackNetwork = getCurrentNetwork();
+    console.log('🔄 getContractsByChainId: Using hostname fallback', { fallbackNetwork });
+    return fallbackNetwork === 'mainnet' ? MAINNET_CONTRACTS : TESTNET_CONTRACTS;
+  }
+  
+  // Динамический выбор по chainId
+  if (chainId === 56) { // BSC Mainnet
+    console.log('🎯 getContractsByChainId: MAINNET contracts selected', { chainId });
+    return MAINNET_CONTRACTS;
+  } else if (chainId === 97) { // BSC Testnet  
+    console.log('🎯 getContractsByChainId: TESTNET contracts selected', { chainId });
+    return TESTNET_CONTRACTS;
+  } else {
+    // Для неподдерживаемых сетей используем testnet по умолчанию
+    console.warn('🚨 getContractsByChainId: Unsupported chainId, using TESTNET fallback', { chainId });
+    return TESTNET_CONTRACTS;
+  }
+};
 
 // ✅ CURRENT BSC NETWORK CONFIG
 export const BSC_TESTNET = BSC_NETWORKS.testnet;

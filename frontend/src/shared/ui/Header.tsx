@@ -20,7 +20,7 @@ const Header: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Tokens', href: '/tokens', icon: Coins },
     { name: 'Staking', href: '/staking', icon: Rocket },
-    { name: 'Governance', href: '/governance', icon: Vote },
+    { name: 'Governance', href: '/governance', icon: Vote, disabled: true },
     { name: 'Network', href: '/network', icon: Network },
   ];
 
@@ -161,6 +161,37 @@ const Header: React.FC = () => {
                 {navigation.map((item, index) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
+                  const isDisabled = item.disabled;
+                  
+                  if (isDisabled) {
+                    return (
+                      <div
+                        key={item.name}
+                        className={`
+                          group relative overflow-hidden
+                          flex items-center space-x-2.5
+                          h-[44px] px-5 py-2
+                          font-semibold text-[14px] tracking-[0.01em]
+                          rounded-[14px]
+                          transition-all duration-300 ease-out
+                          opacity-50 cursor-not-allowed
+                          backdrop-blur-[8px] backdrop-saturate-[1.5]
+                          bg-gradient-to-br from-gray-300/[0.12] via-gray-300/[0.08] to-gray-300/[0.04]
+                          border border-gray-300/[0.15]
+                          text-gray-500
+                          shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_0_rgba(255,255,255,0.1)_inset]
+                        `}
+                        style={{ 
+                          animationDelay: `${index * 100}ms` 
+                        }}
+                        title="Coming Soon - Governance contracts are being deployed"
+                      >
+                        <Icon className="w-4 h-4 text-gray-400" />
+                        <span>{item.name}</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent translate-x-[-200%] transition-transform duration-700 ease-out" />
+                      </div>
+                    );
+                  }
                   
                   return (
                     <Link
@@ -378,6 +409,36 @@ const Header: React.FC = () => {
                   {navigation.map((item, index) => {
                     const Icon = item.icon;
                     const active = isActive(item.href);
+                    const isDisabled = item.disabled;
+                    
+                    if (isDisabled) {
+                      return (
+                        <div
+                          key={item.name}
+                          className={`
+                            group relative overflow-hidden
+                            flex items-center space-x-3
+                            w-full h-[52px] px-4 py-3
+                            font-semibold text-[15px] tracking-[0.01em]
+                            rounded-[16px]
+                            transition-all duration-300 ease-out
+                            opacity-50 cursor-not-allowed
+                            backdrop-blur-[8px] backdrop-saturate-[1.5]
+                            bg-gradient-to-br from-gray-300/[0.12] via-gray-300/[0.08] to-gray-300/[0.04]
+                            border border-gray-300/[0.15]
+                            text-gray-500
+                            shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_0_rgba(255,255,255,0.1)_inset]
+                          `}
+                          style={{ 
+                            animationDelay: `${index * 100}ms` 
+                          }}
+                        >
+                          <Icon className="w-5 h-5 text-gray-400" />
+                          <span>{item.name}</span>
+                          <span className="text-xs text-gray-400 ml-auto">Coming Soon</span>
+                        </div>
+                      );
+                    }
                     
                     return (
                       <Link

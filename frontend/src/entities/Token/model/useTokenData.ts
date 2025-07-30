@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
-import { CONTRACTS, TOKEN_INFO } from '../../../shared/config/contracts';
+import { TOKEN_INFO } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { toast } from 'react-hot-toast';
 import { log } from '../../../shared/lib/logger';
 import { rpcService } from '../../../shared/api/rpcService';
@@ -64,6 +65,9 @@ export const useTokenData = () => {
     isCorrectNetwork, 
     provider 
   } = useWeb3();
+  
+  // ✅ Dynamic contracts based on current network
+  const { contracts } = useContracts();
 
   const [balances, setBalances] = useState<TokenBalances>({
     VC: '0',
@@ -205,25 +209,25 @@ export const useTokenData = () => {
         { 
           symbol: 'VC', 
           name: TOKEN_INFO.SVC.name, 
-          address: CONTRACTS.VC_TOKEN,
+          address: contracts.VC_TOKEN,
           color: 'from-blue-500 to-cyan-500'
         },
         { 
           symbol: 'VG', 
           name: TOKEN_INFO.SVG.name, 
-          address: CONTRACTS.VG_TOKEN,
+          address: contracts.VG_TOKEN,
           color: 'from-yellow-500 to-orange-500'
         },
         { 
           symbol: 'VGVotes', 
           name: TOKEN_INFO.SVG_VOTES.name, 
-          address: CONTRACTS.VG_TOKEN_VOTES,
+          address: contracts.VG_TOKEN_VOTES,
           color: 'from-purple-500 to-pink-500'
         },
         { 
           symbol: 'LP', 
           name: TOKEN_INFO.LP.name, 
-          address: CONTRACTS.LP_TOKEN,
+          address: contracts.LP_TOKEN,
           color: 'from-green-500 to-emerald-500'
         }
       ];
