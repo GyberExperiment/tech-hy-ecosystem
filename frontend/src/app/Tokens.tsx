@@ -93,18 +93,6 @@ const Tokens: React.FC = () => {
     hasAnyBalance
   } = useTokenData();
 
-  // Diagnostic logging
-  React.useEffect(() => {
-    console.log('🔍 Tokens Page Debug:', {
-      isConnected: !!address,
-      tokensCount: tokens.length,
-      balances,
-      loading,
-      isInitialized,
-      hasAnyBalance
-    });
-  }, [address, tokens, balances, loading, isInitialized, hasAnyBalance]);
-
   const [allowances, setAllowances] = useState<TokenAllowance[]>([]);
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [transferTo, setTransferTo] = useState('');
@@ -192,9 +180,71 @@ const Tokens: React.FC = () => {
     }
   }, [address, chainId]);
 
+  // Fallback: создаем токены из balances если tokens массив пустой
+  const tokensFromBalances = React.useMemo(() => {
+    if (tokens.length > 0) return tokens; // Если токены есть, используем их
+    
+    // Если tokens пустой но balances содержит данные, создаем токены
+    const fallbackTokens = [];
+    
+    if (balances.VC !== '0') {
+      fallbackTokens.push({
+        symbol: 'VC',
+        name: 'Venture Capital Token',
+        address: CONTRACTS.VC_TOKEN,
+        balance: balances.VC,
+        decimals: 18,
+        totalSupply: '0',
+        contract: null,
+        color: 'from-blue-500 to-cyan-500'
+      });
+    }
+    
+    if (balances.VG !== '0') {
+      fallbackTokens.push({
+        symbol: 'VG',
+        name: 'Venture Growth Token', 
+        address: CONTRACTS.VG_TOKEN,
+        balance: balances.VG,
+        decimals: 18,
+        totalSupply: '0',
+        contract: null,
+        color: 'from-yellow-500 to-orange-500'
+      });
+    }
+    
+    if (balances.VGVotes !== '0') {
+      fallbackTokens.push({
+        symbol: 'VGVotes',
+        name: 'VG Voting Token',
+        address: CONTRACTS.VG_TOKEN_VOTES,
+        balance: balances.VGVotes,
+        decimals: 18,
+        totalSupply: '0',
+        contract: null,
+        color: 'from-purple-500 to-pink-500'
+      });
+    }
+    
+    if (balances.LP !== '0') {
+      fallbackTokens.push({
+        symbol: 'LP',
+        name: 'LP Token',
+        address: CONTRACTS.LP_TOKEN,
+        balance: balances.LP,
+        decimals: 18,
+        totalSupply: '0',
+        contract: null,
+        color: 'from-green-500 to-emerald-500'
+      });
+    }
+    
+    return fallbackTokens;
+  }, [tokens, balances]);
+
   // Filter tokens based on search and filter criteria + добавляем BNB
   const filteredTokens = React.useMemo(() => {
-    let allTokens = [...tokens];
+    let allTokens = [...tokensFromBalances]; // Используем tokensFromBalances вместо tokens
     
     // Добавляем BNB как токен если есть баланс или показываем все
     if (balances.BNB && (parseFloat(balances.BNB) > 0 || filterType === 'all')) {
@@ -226,7 +276,42 @@ const Tokens: React.FC = () => {
       
       return matchesSearch && matchesFilter;
     });
-  }, [tokens, balances.BNB, searchTerm, filterType]);
+  }, [tokensFromBalances, balances.BNB, searchTerm, filterType]);
+
+  // Diagnostic logging with more details
+  React.useEffect(() => {
+    console.log('🔍 Tokens Page Debug:', {
+      isConnected: !!address,
+      originalTokensCount: tokens.length,
+      originalTokensList: tokens.map(t => ({ symbol: t.symbol, balance: t.balance, address: t.address })),
+      tokensFromBalancesCount: tokensFromBalances.length,
+      tokensFromBalancesList: tokensFromBalances.map(t => ({ symbol: t.symbol, balance: t.balance })),
+      balances,
+      loading,
+      refreshing,
+      isInitialized,
+      hasAnyBalance,
+      filteredCount: filteredTokens.length
+    });
+    
+    // Детальный анализ balances
+    console.log('💰 BALANCES ANALYSIS:', {
+      'balances.VC': balances.VC,
+      'balances.VG': balances.VG, 
+      'balances.VGVotes': balances.VGVotes,
+      'balances.LP': balances.LP,
+      'balances.BNB': balances.BNB,
+      'VC !== "0"': balances.VC !== '0',
+      'VG !== "0"': balances.VG !== '0',
+      'parseFloat(VC)': parseFloat(balances.VC || '0'),
+      'parseFloat(VG)': parseFloat(balances.VG || '0'),
+    });
+    
+    if (tokens.length === 0 && (balances.VC !== '0' || balances.VG !== '0')) {
+      console.log('⚠️ MISMATCH: balances object has data but tokens array is empty! Using fallback.');
+      console.log('Balances object:', balances);
+    }
+  }, [address, tokens, tokensFromBalances, balances, loading, isInitialized, hasAnyBalance, filteredTokens]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -585,12 +670,12 @@ const Tokens: React.FC = () => {
               <div className="text-4xl mb-4">🪙</div>
               <h3 className="text-xl font-bold mb-2 text-slate-100">Токены не найдены</h3>
               <p className="text-gray-400 mb-4">
-                {tokens.length === 0 
+                {tokensFromBalances.length === 0 
                   ? 'Подключите кошелек для загрузки ваших токенов' 
                   : 'Попробуйте изменить критерии фильтрации'
                 }
               </p>
-              {tokens.length === 0 && (
+              {tokensFromBalances.length === 0 && (
                 <div className="flex flex-col items-center gap-3">
                   <button 
                     onClick={() => refreshData()}

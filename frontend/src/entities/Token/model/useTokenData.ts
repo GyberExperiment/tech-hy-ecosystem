@@ -204,19 +204,19 @@ export const useTokenData = () => {
       const tokenContracts = [
         { 
           symbol: 'VC', 
-          name: TOKEN_INFO.VC.name, 
+          name: TOKEN_INFO.SVC.name, 
           address: CONTRACTS.VC_TOKEN,
           color: 'from-blue-500 to-cyan-500'
         },
         { 
           symbol: 'VG', 
-          name: TOKEN_INFO.VG.name, 
+          name: TOKEN_INFO.SVG.name, 
           address: CONTRACTS.VG_TOKEN,
           color: 'from-yellow-500 to-orange-500'
         },
         { 
           symbol: 'VGVotes', 
-          name: TOKEN_INFO.VG_VOTES.name, 
+          name: TOKEN_INFO.SVG_VOTES.name, 
           address: CONTRACTS.VG_TOKEN_VOTES,
           color: 'from-purple-500 to-pink-500'
         },
@@ -242,9 +242,9 @@ export const useTokenData = () => {
             const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
             
             // Параллельные запросы с индивидуальными fallback
-            const balancePromise = contract.balanceOf(account).catch(() => BigInt(0));
-            const decimalsPromise = contract.decimals().catch(() => BigInt(18));
-            const totalSupplyPromise = contract.totalSupply().catch(() => BigInt(0));
+            const balancePromise = contract.balanceOf?.(account)?.catch(() => BigInt(0)) || Promise.resolve(BigInt(0));
+            const decimalsPromise = contract.decimals?.()?.catch(() => BigInt(18)) || Promise.resolve(BigInt(18));
+            const totalSupplyPromise = contract.totalSupply?.()?.catch(() => BigInt(0)) || Promise.resolve(BigInt(0));
             
             return await Promise.all([balancePromise, decimalsPromise, totalSupplyPromise]);
           });
@@ -341,7 +341,19 @@ export const useTokenData = () => {
       log.error('useTokenData: Critical error during token data fetch', {
         component: 'useTokenData',
         address: account,
-        error: error.message
+        error: error.message,
+        stack: error.stack,
+        errorDetails: error
+      });
+      
+      // Дополнительная диагностика
+      console.error('🚨 USETOKEN DATA ERROR DETAILS:', {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        errorType: error.constructor.name,
+        fullError: error,
+        balancesAtError: balances,
+        account: account
       });
       
       if (showRefreshToast) {
@@ -454,5 +466,4 @@ export const useTokenData = () => {
   };
 };
 
-// Re-export types for better TypeScript compatibility
-export type { TokenData, TokenBalances }; 
+// Re-export types are already exported above 

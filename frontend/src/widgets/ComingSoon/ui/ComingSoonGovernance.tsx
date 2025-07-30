@@ -18,7 +18,6 @@ import {
   Users,
   Target,
   CheckCircle,
-  Circle,
   ArrowRight,
   ExternalLink,
   Bell,
@@ -152,7 +151,7 @@ export const ComingSoonGovernance: React.FC = () => {
     switch (status) {
       case 'completed': return CheckCircle;
       case 'in-progress': return Clock;
-      default: return Circle;
+      default: return Target;
     }
   };
 

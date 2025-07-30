@@ -99,7 +99,7 @@ const Governance: React.FC = () => {
 
     try {
       // TODO: Реализовать голосование через rpcService и Governor контракт
-      toast.error('Голосование будет реализовано в следующем обновлении');
+      toast.error('Контракты управления еще не развернуты в основной сети');
       
       log.info('Vote attempted', {
         component: 'Governance',

@@ -88,64 +88,14 @@ const GovernanceProposals: React.FC = () => {
     
     setLoading(true);
     try {
+      // TODO: Реализовать реальную загрузку proposals через Governor контракт
       // Fetch proposal created events and build proposal list
-      // For demo purposes, we'll use mock data
-      const mockProposals: Proposal[] = [
-        {
-          id: '1',
-          proposalId: 1,
-          title: 'Увеличить награды за стейкинг до 15% APY',
-          description: 'Предлагается увеличить награды за стейкинг LP токенов с текущих 10% до 15% APY для привлечения большего количества ликвидности в протокол.',
-          proposer: '0x742...abc',
-          startBlock: 12345600,
-          endBlock: 12346000,
-          forVotes: '250000',
-          againstVotes: '80000',
-          abstainVotes: '20000',
-          status: 'active',
-          targets: ['0x9269baba99cE0388Daf814E351b4d556fA728D32'],
-          values: ['0'],
-          calldatas: ['0x'],
-          category: 'protocol',
-        },
-        {
-          id: '2',
-          proposalId: 2,
-          title: 'Создать фонд развития протокола',
-          description: 'Предлагается выделить 100,000 VG токенов из казны для создания фонда развития протокола и маркетинговых активностей.',
-          proposer: '0x123...def',
-          startBlock: 12345000,
-          endBlock: 12345400,
-          forVotes: '180000',
-          againstVotes: '320000',
-          abstainVotes: '50000',
-          status: 'defeated',
-          targets: ['0x786133467f52813Ce0855023D4723A244524563E'],
-          values: ['0'],
-          calldatas: ['0x'],
-          category: 'treasury',
-        },
-        {
-          id: '3',
-          proposalId: 3,
-          title: 'Обновить параметры голосования',
-          description: 'Изменить порог кворума с 4% до 3% и период голосования с 3 дней до 5 дней для увеличения участия в голосованиях.',
-          proposer: '0x456...ghi',
-          startBlock: 12346500,
-          endBlock: 12347000,
-          forVotes: '0',
-          againstVotes: '0',
-          abstainVotes: '0',
-          status: 'pending',
-          targets: ['0x786133467f52813Ce0855023D4723A244524563E'],
-          values: ['0'],
-          calldatas: ['0x'],
-          category: 'protocol',
-        }
-      ];
+      const proposals: Proposal[] = [];
       
-      setProposals(mockProposals);
-    } catch (error: any) {
+      // Временно показываем пустое состояние пока не подключены контракты
+      setProposals(proposals);
+      setLoading(false);
+    } catch (error) {
       log.error('Failed to fetch proposals', {
         component: 'GovernanceProposals',
         function: 'fetchProposals'

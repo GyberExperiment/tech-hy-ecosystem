@@ -33,20 +33,61 @@ const TokenStats: React.FC<TokenStatsProps> = ({
     tokens, 
     tokensWithBalance, 
     totalTokens, 
-    loading 
+    loading,
+    balances // Добавляем balances для диагностики
   } = useTokenData();
+
+  // Диагностика для TokenStats
+  React.useEffect(() => {
+    console.log('📊 TokenStats Debug:', {
+      tokens: tokens.length,
+      tokensWithBalance: tokensWithBalance.length,
+      totalTokens,
+      loading,
+      balances,
+      tokensData: tokens.map(t => ({ symbol: t.symbol, balance: t.balance }))
+    });
+  }, [tokens, tokensWithBalance, totalTokens, loading, balances]);
+
+  // Fallback для статистики если tokens пустой но balances есть данные
+  const effectiveTokensWithBalance = React.useMemo(() => {
+    if (tokensWithBalance.length > 0) return tokensWithBalance;
+    
+    // Если tokens пустой, создаем виртуальные токены из balances для подсчета
+    const virtualTokens = [];
+    if (balances && parseFloat(balances.VC || '0') > 0) {
+      virtualTokens.push({ symbol: 'VC', balance: balances.VC });
+    }
+    if (balances && parseFloat(balances.VG || '0') > 0) {
+      virtualTokens.push({ symbol: 'VG', balance: balances.VG });
+    }
+    if (balances && parseFloat(balances.VGVotes || '0') > 0) {
+      virtualTokens.push({ symbol: 'VGVotes', balance: balances.VGVotes });
+    }
+    if (balances && parseFloat(balances.LP || '0') > 0) {
+      virtualTokens.push({ symbol: 'LP', balance: balances.LP });
+    }
+    if (balances && parseFloat(balances.BNB || '0') > 0) {
+      virtualTokens.push({ symbol: 'BNB', balance: balances.BNB });
+    }
+    return virtualTokens;
+  }, [tokensWithBalance, balances]);
+
+  const effectiveTotalTokens = React.useMemo(() => {
+    return Math.max(totalTokens, effectiveTokensWithBalance.length);
+  }, [totalTokens, effectiveTokensWithBalance]);
 
   // Calculate total allowances from available token data
   const totalAllowances = React.useMemo(() => {
-    return tokensWithBalance.reduce((total, token) => {
+    return effectiveTokensWithBalance.reduce((total, token) => {
       // Count tokens with positive allowances to contracts
       return total + (token.allowance && parseFloat(token.allowance) > 0 ? 1 : 0);
     }, 0);
-  }, [tokensWithBalance]);
+  }, [effectiveTokensWithBalance]);
 
   // Calculate total USD value of all tokens (using realistic estimates)
   const totalValue = React.useMemo(() => {
-    return tokensWithBalance.reduce((total, token) => {
+    return effectiveTokensWithBalance.reduce((total, token) => {
       const balance = parseFloat(token.balance);
       if (balance <= 0) return total;
       
@@ -65,6 +106,9 @@ const TokenStats: React.FC<TokenStatsProps> = ({
         case 'LP':
           estimatedPrice = 0.1; // $0.1 per LP token (liquidity provision)
           break;
+        case 'BNB':
+          estimatedPrice = 315; // Current BNB price estimate
+          break;
         default:
           estimatedPrice = 0.001; // Default small value for unknown tokens
       }
@@ -72,29 +116,24 @@ const TokenStats: React.FC<TokenStatsProps> = ({
       const tokenValue = balance * estimatedPrice;
       return total + tokenValue;
     }, 0);
-  }, [tokensWithBalance]);
+  }, [effectiveTokensWithBalance]);
 
   // Calculate active permissions/allowances count
   const activePermissions = React.useMemo(() => {
     return totalAllowances;
   }, [totalAllowances]);
 
-  // Calculate count of tokens with balance
-  const tokensWithBalanceCount = React.useMemo(() => {
-    return tokensWithBalance.length;
-  }, [tokensWithBalance]);
-
   const stats = [
     {
               title: 'Total Tokens',
-        value: totalTokens,
+        value: effectiveTotalTokens,
         unit: 'pcs',
       icon: Coins,
       color: 'text-blue-400',
     },
     {
               title: 'With Balance',
-        value: tokensWithBalanceCount,
+        value: effectiveTokensWithBalance.length,
         unit: 'pcs',
       icon: Activity,
       color: 'text-green-400',

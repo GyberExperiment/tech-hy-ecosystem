@@ -33,7 +33,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
   const [lpAmount, setLpAmount] = useState('');
   const [currentAllowance, setCurrentAllowance] = useState<string>('0');
   const [checkingAllowance, setCheckingAllowance] = useState(false);
-  
+
   // State для Buy VC через PancakeSwap
   const [buyVcBnbAmount, setBuyVcBnbAmount] = useState('');
   const [buyVcAmount, setBuyVcAmount] = useState('');
@@ -127,7 +127,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
   // Проверка allowance для VC/LP токенов
   const checkAllowance = useCallback(async () => {
     if (!vcContract || !lpLockerContract || checkingAllowance) return;
-
+    
     setCheckingAllowance(true);
     try {
       // Simplified allowance check
@@ -162,13 +162,13 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
       toast.success('LP создан и заблокирован! VG токены начислены', { id: 'create-lock' });
 
       // Сброс форм
-      setVcAmount('');
-      setBnbAmount('');
+        setVcAmount('');
+        setBnbAmount('');
       setLpAmount('');
-      
+        
       // Обновление данных
-      await triggerGlobalRefresh();
-      await refreshPoolInfo();
+        await triggerGlobalRefresh();
+        await refreshPoolInfo();
     } catch (error: any) {
       log.error('SwapWidget', error as Error, { function: 'handleCreateAndLock' });
       
@@ -199,8 +199,8 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
       
       toast.success('LP токены заблокированы! VG токены начислены', { id: 'lock' });
 
-      setLpAmount('');
-      await triggerGlobalRefresh();
+        setLpAmount('');
+        await triggerGlobalRefresh();
     } catch (error: any) {
       log.error('SwapWidget', 'handleDirectLock() Error in direct lock', error);
       toast.error('Ошибка стейкинга: ' + (error?.message || 'Неизвестная ошибка'));
@@ -216,15 +216,15 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
 
   const formatBalance = (balance: string) => {
     try {
-      const num = parseFloat(balance);
-      if (num === 0) return '0';
+    const num = parseFloat(balance);
+    if (num === 0) return '0';
       if (num < 0.0001) return '<0.0001';
       if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
       if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
       return num.toFixed(4);
-    } catch {
-      return '0';
-    }
+      } catch {
+        return '0';
+      }
   };
 
   // Расчеты для покупки VC через PancakeSwap
@@ -443,15 +443,15 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                 placeholder="0.0"
                 className="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-blue-400/50 focus:outline-none"
               />
-            </div>
+                </div>
             
             <div className="flex justify-center">
               <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-slate-600/50 flex items-center justify-center">
                 <ArrowDownUp className="w-5 h-5 text-slate-400" />
               </div>
-            </div>
+                </div>
 
-            <div>
+                <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">Receive (VC)</label>
               <input
                 type="number"
@@ -460,7 +460,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                 placeholder="0.0"
                 className="w-full bg-slate-800/30 border border-slate-600/30 rounded-xl px-4 py-3 text-white placeholder-slate-400 cursor-not-allowed"
               />
-            </div>
+                </div>
 
             {/* Slippage Settings */}
             <div className="flex items-center justify-between">
@@ -507,7 +507,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                   parseFloat(priceImpact) > 5 ? 'text-red-300' : 'text-yellow-300'
                 )}>
                   Price Impact: {priceImpact}%
-                </span>
+                    </span>
               </div>
             )}
 
@@ -536,34 +536,34 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
         /* Earn VG Mode */
         <>
           <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/8 via-purple-400/5 to-pink-400/4 border border-purple-400/20 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400/30 flex items-center justify-center">
-                <Coins className="w-4 h-4 text-purple-300/90" />
-              </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400/30 flex items-center justify-center">
+                      <Coins className="w-4 h-4 text-purple-300/90" />
+                    </div>
               <div className="text-sm text-purple-200/80">VC Balance</div>
-            </div>
-            <div className="text-2xl font-bold text-purple-300/90">
-              {balancesLoading ? (
-                <div className="animate-pulse bg-purple-400/20 h-6 w-16 rounded"></div>
-              ) : (
+                  </div>
+                  <div className="text-2xl font-bold text-purple-300/90">
+                    {balancesLoading ? (
+                      <div className="animate-pulse bg-purple-400/20 h-6 w-16 rounded"></div>
+                    ) : (
                 formatBalance(balances.VC || '0')
-              )}
-            </div>
-          </div>
+                    )}
+                  </div>
+                </div>
           <div className="backdrop-blur-xl bg-gradient-to-br from-green-500/8 via-green-400/5 to-emerald-400/4 border border-green-400/20 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-green-500/25 border border-green-400/30 flex items-center justify-center">
-                <Coins className="w-4 h-4 text-green-300/90" />
-              </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/25 border border-green-400/30 flex items-center justify-center">
+                      <Coins className="w-4 h-4 text-green-300/90" />
+                    </div>
               <div className="text-sm text-green-200/80">LP Balance</div>
-            </div>
-            <div className="text-2xl font-bold text-green-300/90">
-              {balancesLoading ? (
-                <div className="animate-pulse bg-green-400/20 h-6 w-16 rounded"></div>
-              ) : (
+                  </div>
+                  <div className="text-2xl font-bold text-green-300/90">
+                    {balancesLoading ? (
+                      <div className="animate-pulse bg-green-400/20 h-6 w-16 rounded"></div>
+                    ) : (
                 formatBalance(balances.LP || '0')
-              )}
-            </div>
+                    )}
+                  </div>
           </div>
 
           {/* Input Forms */}
@@ -571,9 +571,9 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">VC Amount</label>
               <input
-                type="number"
-                value={vcAmount}
-                onChange={(e) => setVcAmount(e.target.value)}
+                  type="number"
+                  value={vcAmount}
+                  onChange={(e) => setVcAmount(e.target.value)}
                 placeholder="0.0"
                 className="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-blue-400/50 focus:outline-none"
               />
@@ -588,7 +588,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                 placeholder="0.0"
                 className="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-blue-400/50 focus:outline-none"
               />
-            </div>
+          </div>
 
             {vgReward && (
               <div className="bg-gradient-to-br from-green-500/8 via-green-400/5 to-emerald-400/4 border border-green-400/20 rounded-xl p-4">
@@ -598,11 +598,11 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                 </div>
                 <div className="text-2xl font-bold text-green-300">
                   {vgReward} VG
-                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            <button
+              <button
               onClick={handleCreateAndLock}
               disabled={!vcAmount || !bnbAmount || loading || parseFloat(vcAmount) <= 0 || parseFloat(bnbAmount) <= 0}
               className={cn(
@@ -619,9 +619,9 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
                 </div>
               ) : (
                 'Create LP & Stake'
-              )}
-            </button>
-          </div>
+                )}
+              </button>
+            </div>
         </>
       )}
 

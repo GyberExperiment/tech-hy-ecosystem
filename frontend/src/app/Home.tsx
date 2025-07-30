@@ -39,6 +39,7 @@ import {
   Newspaper,
   RefreshCw,
   Play,
+  Store,
   Box
 } from 'lucide-react';
 
@@ -119,7 +120,7 @@ const Home: React.FC = () => {
       component: '$VC Token Economy',
       description: 'Utility token powering the ecosystem with real business revenue',
       features: ['Service Payments', 'Staking Rewards', 'Governance Rights', 'Bitcoin Buybacks'],
-      icon: Bitcoin,
+      icon: Coins,
       status: 'Launching'
     },
     {
@@ -237,7 +238,7 @@ const Home: React.FC = () => {
       description: 'B2B marketplace connecting startups with 100+ verified service providers across 30+ categories',
       features: ['Legal Services', 'Marketing & PR', 'Development', 'Design & Branding'],
       price: 'Market Rates',
-      icon: Settings,
+      icon: Store,
       status: 'Live',
       clients: '1000+'
     }
@@ -245,14 +246,14 @@ const Home: React.FC = () => {
 
   const dualTokenomics = {
     vcToken: {
-      name: '$VC (Venture Capital Token)',
+      name: 'VC (Venture Club Token)',
       purpose: 'Ecosystem utility and governance',
       supply: '1,000,000,000',
       contract: '0x1ea36ffe7e81fa21c18477741d2a75da3881e78e',
       utilities: ['Service Payments', 'Staking Rewards', 'Governance Voting', 'Bitcoin Buybacks']
     },
     vgToken: {
-      name: '$VG (Venture Growth Token)',
+      name: 'VG (Venture Gift Token)',
       purpose: 'Revenue sharing and mining rewards',
       supply: '500,000,000',
       contract: '0x2fb47ggf8f92gb32c19588ae1e3a26gf4992f89f',
@@ -491,16 +492,6 @@ const Home: React.FC = () => {
     window.open('https://calendly.com/techhy/consultation', '_blank');
   };
 
-  // ✅ Utility function для безопасного рендера иконок
-  const SafeIcon: React.FC<{ 
-    IconComponent: React.ComponentType<any> | undefined, 
-    className?: string,
-    fallbackIcon?: React.ComponentType<any>
-  }> = ({ IconComponent, className = "", fallbackIcon = Box }) => {
-    const Icon = IconComponent && typeof IconComponent === 'function' ? IconComponent : fallbackIcon;
-    return <Icon className={className} />;
-  };
-
   return (
     <div className="min-h-screen relative overflow-x-hidden">
       {/* ✨ Modern Background with Animated Effects */}
@@ -595,7 +586,7 @@ const Home: React.FC = () => {
                 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <SafeIcon IconComponent={Shield} className="w-5 h-5" />
+                <Shield className="w-5 h-5" />
                 <span>Transforming Venture Industry Security</span>
               </motion.div>
               
@@ -656,7 +647,7 @@ const Home: React.FC = () => {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <SafeIcon IconComponent={Rocket} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <Rocket className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   Join the Ecosystem
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
@@ -668,9 +659,9 @@ const Home: React.FC = () => {
                   onClick={handleReadWhitepaper}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-gray-600/10 to-gray-800/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <SafeIcon IconComponent={Download} className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   Read Whitepaper
-                  <SafeIcon IconComponent={ExternalLink} className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <ExternalLink className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 </motion.button>
               </motion.div>
               
@@ -725,7 +716,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
-                <SafeIcon IconComponent={AlertTriangle} className="w-5 h-5" />
+                <AlertTriangle className="w-5 h-5" />
                 <span>Critical Industry Problems</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">The Venture Crisis We're Solving</h2>
@@ -746,7 +737,7 @@ const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-18 h-18 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl flex items-center justify-center">
-                      <SafeIcon IconComponent={TrendingDown} className="w-10 h-10 text-red-400" />
+                      <TrendingDown className="w-10 h-10 text-red-400" />
                 </div>
                     <div>
                       <h3 className="text-lg font-bold text-red-400 mb-2">PROBLEM</h3>
@@ -756,7 +747,7 @@ const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-18 h-18 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={item.icon} className="w-10 h-10 text-green-400" />
+                      {React.createElement(item.icon, { className: "w-10 h-10 text-green-400" })}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-green-400 mb-2">OUR SOLUTION</h3>
@@ -789,7 +780,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-success mb-8">
-                <SafeIcon IconComponent={BarChart3} className="w-5 h-5" />
+                <BarChart3 className="w-5 h-5" />
                 <span>Proven Track Record</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-6">Real Results, Real Impact</h2>
@@ -808,7 +799,7 @@ const Home: React.FC = () => {
                   
                   <div className="relative z-10">
                     <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={metric.icon} className="w-12 h-12 text-blue-400" />
+                      {React.createElement(metric.icon, { className: "w-12 h-12 text-blue-400" })}
                     </div>
                     <div className="text-5xl font-black text-white mb-4 group-hover:text-blue-200 transition-colors">
                       {metric.metric}
@@ -832,7 +823,7 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                <SafeIcon IconComponent={Network} className="w-5 h-5" />
+                <Network className="w-5 h-5" />
                 <span>Integrated Ecosystem</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">The TECH HY Ecosystem</h2>
@@ -861,7 +852,7 @@ const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={component.icon} className="w-10 h-10 text-blue-400" />
+                      {React.createElement(component.icon, { className: "w-10 h-10 text-blue-400" })}
                     </div>
                     <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
                       {component.component}
@@ -877,7 +868,7 @@ const Home: React.FC = () => {
                         className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                         whileHover={{ x: 5 }}
                       >
-                        <SafeIcon IconComponent={CheckCircle} className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span className="text-gray-300 text-sm">{feature}</span>
                       </motion.div>
                     ))}
@@ -899,7 +890,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                <SafeIcon IconComponent={Settings} className="w-5 h-5" />
+                <Briefcase className="w-5 h-5" />
                 <span>Professional Services</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">Comprehensive Startup Services</h2>
@@ -935,7 +926,7 @@ const Home: React.FC = () => {
                     {/* Header section */}
                     <div className="flex items-start gap-6 mb-6">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                        <SafeIcon IconComponent={service.icon} className="w-8 h-8 text-blue-400" />
+                        {React.createElement(service.icon, { className: "w-8 h-8 text-blue-400" })}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-xl font-bold text-white group-hover:text-blue-200 transition-colors leading-tight mb-2">
@@ -958,7 +949,7 @@ const Home: React.FC = () => {
                           className="flex items-center gap-3 p-3 glass-ultra rounded-lg group-hover:bg-white/5 transition-colors"
                           whileHover={{ x: 3 }}
                         >
-                          <SafeIcon IconComponent={CheckCircle} className="w-4 h-4 text-green-400 flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                           <span className="text-gray-300 text-sm font-medium">{feature}</span>
                         </motion.div>
                       ))}
@@ -972,7 +963,7 @@ const Home: React.FC = () => {
                       onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
                     >
                       <span>Get Started</span>
-                      <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </motion.button>
                   </div>
                 </motion.div>
@@ -992,7 +983,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
-                <SafeIcon IconComponent={Coins} className="w-5 h-5" />
+                <Coins className="w-5 h-5" />
                 <span>Dual Token Economy</span>
               </div>
               <h2 className="text-5xl font-bold mb-8 text-white">Two Tokens, Unlimited Potential</h2>
@@ -1008,7 +999,7 @@ const Home: React.FC = () => {
                 
                 <div className="flex items-center gap-6 mb-10">
                   <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <SafeIcon IconComponent={Bitcoin} className="w-12 h-12 text-blue-400" />
+                    <span className="text-2xl font-bold text-blue-400">VC</span>
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vcToken.name}</h3>
@@ -1031,16 +1022,16 @@ const Home: React.FC = () => {
 
                 <div className="space-y-5">
                   {dualTokenomics.vcToken.utilities.map((utility, index) => (
-              <motion.div
-                key={index}
+                    <motion.div
+                      key={index}
                       className="flex items-center gap-4 p-5 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                       whileHover={{ x: 5 }}
                     >
-                      <SafeIcon IconComponent={CheckCircle} className="w-6 h-6 text-blue-400 flex-shrink-0" />
+                      <CheckCircle className="w-6 h-6 text-blue-400 flex-shrink-0" />
                       <span className="text-gray-300 text-lg">{utility}</span>
-              </motion.div>
-            ))}
-          </div>
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
 
               {/* $VG Token */}
@@ -1049,7 +1040,7 @@ const Home: React.FC = () => {
                 
                 <div className="flex items-center gap-6 mb-10">
                   <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <SafeIcon IconComponent={TrendingUp} className="w-12 h-12 text-green-400" />
+                    <span className="text-2xl font-bold text-green-400">VG</span>
         </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vgToken.name}</h3>
@@ -1077,7 +1068,7 @@ const Home: React.FC = () => {
                       className="flex items-center gap-4 p-5 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                       whileHover={{ x: 5 }}
                     >
-                      <SafeIcon IconComponent={CheckCircle} className="w-6 h-6 text-green-400 flex-shrink-0" />
+                      <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
                       <span className="text-gray-300 text-lg">{utility}</span>
                     </motion.div>
                   ))}
@@ -1098,9 +1089,9 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                <SafeIcon IconComponent={Newspaper} className="w-5 h-5" />
+                <Newspaper className="w-5 h-5" />
                 <span>Latest Updates</span>
-          </div>
+              </div>
               <h2 className="text-5xl font-bold text-white mb-8">What's Happening at TECH HY</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
                 Stay updated with our latest developments, partnerships, and community milestones
@@ -1123,7 +1114,7 @@ const Home: React.FC = () => {
           
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={news.icon} className="w-8 h-8 text-blue-400" />
+                      {React.createElement(news.icon, { className: "w-8 h-8 text-blue-400" })}
                     </div>
                     <div className="flex-1">
                       <span className="text-blue-400 text-sm font-semibold">{news.category}</span>
@@ -1142,7 +1133,7 @@ const Home: React.FC = () => {
                 onClick={() => handleReadMore(news.title.toLowerCase().replace(/\s+/g, '-'))}
                   >
                     Read More
-                    <SafeIcon IconComponent={ArrowRight} className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
               </motion.div>
             ))}
@@ -1161,7 +1152,7 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-accent mb-8">
-                <SafeIcon IconComponent={User} className="w-5 h-5" />
+                <User className="w-5 h-5" />
                 <span>Meet the Team</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">Leaders Behind the Vision</h2>
@@ -1179,7 +1170,7 @@ const Home: React.FC = () => {
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <SafeIcon IconComponent={User} className="w-16 h-16 text-blue-400" />
+                    <User className="w-16 h-16 text-blue-400" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-200 transition-colors">
                     {member.name}
@@ -1196,7 +1187,7 @@ const Home: React.FC = () => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <SafeIcon IconComponent={Linkedin} className="w-6 h-6 text-blue-400" />
+                      <Linkedin className="w-6 h-6 text-blue-400" />
                     </motion.a>
                     <motion.a
                       href={`mailto:${member.linkedin}@techhy.me`}
@@ -1204,7 +1195,7 @@ const Home: React.FC = () => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <SafeIcon IconComponent={Mail} className="w-6 h-6 text-blue-400" />
+                      <Mail className="w-6 h-6 text-blue-400" />
                     </motion.a>
                   </div>
                 </motion.div>
@@ -1224,7 +1215,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                <SafeIcon IconComponent={Handshake} className="w-5 h-5" />
+                <Handshake className="w-5 h-5" />
                 <span>Strategic Partners</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">Trusted by Industry Leaders</h2>
@@ -1268,7 +1259,7 @@ const Home: React.FC = () => {
               <div className="grid lg:grid-cols-2 gap-12 p-12">
                 <div>
                   <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                    <SafeIcon IconComponent={Send} className="w-5 h-5" />
+                    <Send className="w-5 h-5" />
                     <span>Get in Touch</span>
                   </div>
                   
@@ -1282,7 +1273,7 @@ const Home: React.FC = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center">
-                        <SafeIcon IconComponent={Mail} className="w-6 h-6 text-blue-400" />
+                        <Mail className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
                         <p className="text-white font-semibold">Business Inquiries</p>
@@ -1299,7 +1290,7 @@ const Home: React.FC = () => {
                     
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
-                        <SafeIcon IconComponent={Building2} className="w-6 h-6 text-green-400" />
+                        <Building2 className="w-6 h-6 text-green-400" />
                       </div>
                       <div>
                         <p className="text-white font-semibold">Legal Entity</p>
@@ -1321,7 +1312,7 @@ const Home: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <SafeIcon IconComponent={Twitter} className="w-8 h-8 text-blue-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                      <Twitter className="w-8 h-8 text-blue-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
                       <p className="text-white font-semibold">Twitter</p>
                       <p className="text-gray-400 text-sm">@techhy_official</p>
                     </motion.a>
@@ -1334,7 +1325,7 @@ const Home: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <SafeIcon IconComponent={Linkedin} className="w-8 h-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                      <Linkedin className="w-8 h-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform" />
                       <p className="text-white font-semibold">LinkedIn</p>
                       <p className="text-gray-400 text-sm">company/techhy</p>
                     </motion.a>
@@ -1364,7 +1355,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-primary mb-8">
-                <SafeIcon IconComponent={Calendar} className="w-5 h-5" />
+                <Calendar className="w-5 h-5" />
                 <span>Development Progress</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">Roadmap & Milestones</h2>
@@ -1393,7 +1384,7 @@ const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <SafeIcon IconComponent={Calendar} className="w-10 h-10 text-purple-400" />
+                      <Calendar className="w-10 h-10 text-purple-400" />
                     </div>
                     <div>
               <h3 className="text-2xl font-bold text-white">{quarter.title}</h3>
@@ -1424,7 +1415,7 @@ const Home: React.FC = () => {
                         className="flex items-center gap-4 p-4 glass-ultra rounded-xl group-hover:bg-white/5 transition-colors"
                         whileHover={{ x: 5 }}
                       >
-                      <SafeIcon IconComponent={achievement.icon} className="w-5 h-5 text-green-400 flex-shrink-0" />
+                      {React.createElement(achievement.icon, { className: "w-5 h-5 text-green-400 flex-shrink-0" })}
                         <span className="text-gray-300 text-sm">{achievement.text}</span>
               </motion.div>
             ))}
@@ -1446,7 +1437,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="text-center mb-20">
               <div className="inline-flex items-center gap-3 glass-badge-success mb-8">
-                <SafeIcon IconComponent={MessageSquare} className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5" />
                 <span>Client Success Stories</span>
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">What Our Clients Say</h2>
@@ -1467,7 +1458,7 @@ const Home: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                        <SafeIcon key={i} IconComponent={Star} className="w-5 h-5 text-yellow-400 fill-current" />
+                        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
                       <span className="text-yellow-400 font-bold text-lg">5.0</span>
@@ -1476,7 +1467,7 @@ const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl flex items-center justify-center">
-                      <SafeIcon IconComponent={User} className="w-10 h-10 text-yellow-400" />
+                      <User className="w-10 h-10 text-yellow-400" />
               </div>
                 <div>
                       <div className="text-xl font-bold text-white">{testimonial.author}</div>
@@ -1512,7 +1503,7 @@ const Home: React.FC = () => {
         <div className="max-w-5xl mx-auto text-center">
             <motion.div variants={itemVariants} className="glass-enhanced-breathing p-16">
               <div className="w-32 h-32 mx-auto mb-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
-                <SafeIcon IconComponent={Rocket} className="w-16 h-16 text-blue-400" />
+                <Rocket className="w-16 h-16 text-blue-400" />
           </div>
               
               <h2 className="text-5xl font-bold text-white mb-8">Ready to Transform Your Venture?</h2>
@@ -1527,9 +1518,9 @@ const Home: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                   onClick={handleStartJourney}
               >
-                  <SafeIcon IconComponent={Play} className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
                   Start Your Journey
-                  <SafeIcon IconComponent={ArrowRight} className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </motion.button>
               <motion.button
                 className="glass-btn-ghost group text-xl px-12 py-6"
@@ -1537,9 +1528,9 @@ const Home: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                   onClick={handleScheduleCall}
               >
-                  <SafeIcon IconComponent={Calendar} className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <Calendar className="w-6 h-6 group-hover:scale-110 transition-transform" />
                   Schedule a Call
-                  <SafeIcon IconComponent={ExternalLink} className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                  <ExternalLink className="w-6 h-6 group-hover:rotate-12 transition-transform" />
               </motion.button>
             </div>
           </motion.div>
@@ -1557,7 +1548,7 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-12 text-center">
               <div className="glass-ultra p-8">
-                <SafeIcon IconComponent={Building2} className="w-12 h-12 text-blue-400 mx-auto mb-6" />
+                <Building2 className="w-12 h-12 text-blue-400 mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-white mb-4">Legal Entity</h3>
                 <p className="text-gray-300 mb-2">TECH HY SDN. BHD</p>
                 <p className="text-gray-400 text-sm">Registered in Malaysia</p>
@@ -1565,7 +1556,7 @@ const Home: React.FC = () => {
             </div>
               
               <div className="glass-ultra p-8">
-                <SafeIcon IconComponent={Globe} className="w-12 h-12 text-green-400 mx-auto mb-6" />
+                <Globe className="w-12 h-12 text-green-400 mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-white mb-4">Contact</h3>
                 <motion.a 
                   href="mailto:i@techhy.me"
@@ -1580,7 +1571,7 @@ const Home: React.FC = () => {
             </div>
               
               <div className="glass-ultra p-8">
-                <SafeIcon IconComponent={Database} className="w-12 h-12 text-purple-400 mx-auto mb-6" />
+                <Database className="w-12 h-12 text-purple-400 mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-white mb-4">Technology</h3>
                 <p className="text-gray-300 mb-2">Multi-chain Compatible</p>
                 <p className="text-gray-400 text-sm">BSC • Ethereum • Polygon</p>

@@ -11,16 +11,16 @@ const TokenManagementWidget: React.FC<TokenManagementWidgetProps> = ({ className
     <div className={cn("space-y-6", className)}>
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-4">
-          Управление токенами
+            Управление токенами
         </h2>
         <p className="text-gray-400">
           Покупайте, продавайте и управляйте вашими токенами
         </p>
       </div>
 
-      {/* BuyVCWidget */}
+        {/* BuyVCWidget */}
       {/* Temporarily disabled for mainnet deployment
-      <BuyVCWidget />
+          <BuyVCWidget />
       */}
       
       <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
@@ -33,6 +33,6 @@ const TokenManagementWidget: React.FC<TokenManagementWidgetProps> = ({ className
       </div>
     </div>
   );
-};
+}; 
 
 export default TokenManagementWidget; 

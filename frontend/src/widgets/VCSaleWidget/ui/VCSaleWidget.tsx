@@ -85,10 +85,11 @@ const VCSaleWidget: React.FC<VCSaleWidgetProps> = ({
   // Handle purchase with callback
   const handlePurchase = async () => {
     try {
-      await executePurchase();
+      const result = await executePurchase();
       if (onPurchaseSuccess && vcAmount) {
-        // The transaction hash would be available in the hook
-        onPurchaseSuccess('transaction-hash-placeholder', vcAmount);
+        // Extract transaction hash from result if available
+        const txHash = result?.hash || result?.transactionHash || 'pending';
+        onPurchaseSuccess(txHash, vcAmount);
       }
     } catch (error) {
       if (onError && error instanceof Error) {

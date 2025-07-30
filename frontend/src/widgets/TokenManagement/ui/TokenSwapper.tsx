@@ -1,13 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { ArrowUpDown, Settings, Info, Zap } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { 
-  ArrowUpDown, 
-  Settings, 
-  TrendingUp, 
-  Zap, 
-  RefreshCw,
-  Shield
-} from 'lucide-react';
+import { useTokenData } from '../../../entities/Token/model/useTokenData';
 
 interface Token {
   symbol: string;
@@ -34,11 +29,10 @@ const TokenSwapper: React.FC = () => {
     deadline: 20
   });
 
-  // TODO: Подключить реальные токены из контрактной системы
-  // const tokens: Token[] = [...]; // Будет использоваться для token selector
+  const { tokens } = useTokenData();
 
   // Simulate price calculation
-  useEffect(() => {
+  useCallback(() => {
     if (fromToken && toToken && fromAmount) {
       const timeout = setTimeout(() => {
         // Вычисляем конвертацию без сохранения промежуточного fromValue

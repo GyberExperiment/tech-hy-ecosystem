@@ -1193,7 +1193,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
             {!poolInfo.isLoaded && (
               <div className="flex items-center gap-1 text-xs text-yellow-300/80">
                 <AlertCircle className="w-3 h-3" />
-                Fallback
+                Загрузка данных
               </div>
             )}
           </div>
@@ -1261,7 +1261,7 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
                 </div>
                 <input
                   type="number"
-                  placeholder={poolInfo.isLoaded ? "Auto-calculated from VC" : "Using fallback ratio"}
+                  placeholder={poolInfo.isLoaded ? "Auto-calculated from VC" : "Стандартное соотношение"}
                   value={bnbAmount}
                   onChange={(e) => setBnbAmount(e.target.value)}
                   disabled={loading}
