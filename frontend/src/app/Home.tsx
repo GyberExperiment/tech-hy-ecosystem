@@ -284,7 +284,7 @@ const Home: React.FC = () => {
       title: 'AI Scoring Engine Beta Launch',
       excerpt: 'Revolutionary GPT-4 powered scoring system now available for beta testing with select partners.',
       date: '2025-01-05',
-      author: 'Alex Rodriguez, CTO',
+      author: 'Gyber, CTO',
       category: 'Technology',
       readTime: '4 min read',
       icon: Rocket
@@ -316,14 +316,7 @@ const Home: React.FC = () => {
       linkedin: 'hanna-techhy',
       expertise: ['Business Development', 'Strategic Partnerships', 'Market Expansion']
     },
-    {
-      name: 'Nik',
-      position: 'CTO',
-      bio: 'Technology architect building scalable blockchain infrastructure and smart contracts',
-      image: 'NI',
-      linkedin: 'nik-techhy',
-      expertise: ['Blockchain Development', 'Smart Contracts', 'System Architecture']
-    },
+
     {
       name: 'Marina',
       position: 'CMO',
@@ -342,11 +335,11 @@ const Home: React.FC = () => {
     },
     {
       name: 'Gyber',
-      position: 'Blockchain & AI Technology Expert',
-      bio: 'Advanced technology specialist in blockchain and AI integration',
+      position: 'CTO',
+      bio: 'Chief Technology Officer leading blockchain and AI technology development',
       image: 'GY',
       linkedin: 'gyber-techhy',
-      expertise: ['Blockchain Technology', 'AI/ML', 'Technical Innovation']
+      expertise: ['Blockchain Development', 'AI/ML', 'System Architecture', 'Smart Contracts']
     },
     {
       name: 'Dasha',
