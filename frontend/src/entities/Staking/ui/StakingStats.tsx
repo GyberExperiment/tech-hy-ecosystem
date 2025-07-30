@@ -3,7 +3,7 @@ import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { ethers } from 'ethers';
 import { TrendingUp, Users, Clock, DollarSign, Zap, RefreshCw } from 'lucide-react';
 
-import { CONTRACTS } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { log } from '../../../shared/lib/logger';
 import { rpcService } from '../../../shared/api/rpcService';
 
@@ -60,6 +60,9 @@ const StakingStats: React.FC = () => {
     vcContract,
     provider 
   } = useWeb3();
+
+  // ✅ Dynamic contracts based on current network
+  const { contracts } = useContracts();
 
   const [poolData, setPoolData] = useState<PoolData | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -163,8 +166,8 @@ const StakingStats: React.FC = () => {
       ];
 
       // Contract addresses
-      const LP_LOCKER_ADDRESS = CONTRACTS.LP_LOCKER;
-      const VC_TOKEN_ADDRESS = CONTRACTS.VC_TOKEN;
+      const LP_LOCKER_ADDRESS = contracts.LP_LOCKER;
+      const VC_TOKEN_ADDRESS = contracts.VC_TOKEN;
 
       // Pool info from LPLocker
       const poolInfo = await rpcService.withFallback(async (rpcProvider) => {

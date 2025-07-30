@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
-import { CONTRACTS } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { toast } from 'react-hot-toast';
 import { Coins, Zap, TrendingUp, Wallet, Info, RefreshCw, AlertCircle } from 'lucide-react';
 import { cn } from '../../../shared/lib/cn';
@@ -20,6 +20,9 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
   // Use centralized hooks
   const { balances, loading: balancesLoading, triggerGlobalRefresh } = useTokenData();
   const { poolInfo, loading: poolLoading, refreshPoolInfo } = usePoolInfo();
+  
+  // ✅ Dynamic contracts based on current network
+  const { contracts } = useContracts();
   
   // State management
   const [loading, setLoading] = useState(false);
@@ -108,11 +111,11 @@ const EarnVGWidget: React.FC<EarnVGWidgetProps> = ({ className = '' }) => {
       }
       
       const allowance = await rpcService.withFallback(async (provider) => {
-        const readOnlyVCContract = new ethers.Contract(CONTRACTS.VC_TOKEN, [
+        const readOnlyVCContract = new ethers.Contract(contracts.VC_TOKEN, [
           "function allowance(address owner, address spender) view returns (uint256)"
         ], provider);
         
-        return await (readOnlyVCContract as any).allowance(account, CONTRACTS.LP_LOCKER);
+        return await (readOnlyVCContract as any).allowance(account, contracts.LP_LOCKER);
       });
       
       const allowanceFormatted = ethers.formatEther(allowance);

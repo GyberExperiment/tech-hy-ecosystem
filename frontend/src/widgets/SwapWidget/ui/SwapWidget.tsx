@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
-import { CONTRACTS } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { Coins, RefreshCw, AlertTriangle, Info, Zap, Wallet, ArrowDownUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../../shared/lib/cn';
@@ -19,6 +19,7 @@ export interface SwapWidgetProps {
 const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
   const { isConnected } = useAccount();
   const { lpLockerContract, vcContract, vgContract } = useWeb3();
+  const { contracts } = useContracts();
   const { balances, loading: balancesLoading, triggerGlobalRefresh } = useTokenData();
   const { poolInfo, loading: poolLoading, refreshPoolInfo } = usePoolInfo();
   
@@ -280,7 +281,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
       const signer = await provider.getSigner();
       
       const routerContract = new ethers.Contract(
-        CONTRACTS.PANCAKE_ROUTER,
+        contracts.PANCAKE_ROUTER,
         [
           'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',
           'function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)'
@@ -293,7 +294,7 @@ const SwapWidget: React.FC<SwapWidgetProps> = ({ className }) => {
       const minVcOut = ethers.parseEther((parseFloat(buyVcAmount) * (10000 - slippageBps) / 10000).toString());
       
       // Path: WBNB -> VC
-      const path = [CONTRACTS.WBNB, CONTRACTS.VC_TOKEN];
+      const path = [contracts.WBNB, contracts.VC_TOKEN];
       const deadline = Math.floor(Date.now() / 1000) + 1200; // 20 minutes
       
       toast.loading('Покупка VC через PancakeSwap...', { id: 'buy-vc' });

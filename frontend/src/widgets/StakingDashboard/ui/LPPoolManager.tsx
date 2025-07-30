@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../../../shared/lib/Web3Context';
-import { CONTRACTS, LP_POOL_CONFIG } from '../../../shared/config/contracts';
+import { LP_POOL_CONFIG } from '../../../shared/config/contracts';
+import { useContracts } from '../../../shared/hooks/useContracts';
 import { Calculator, Plus, Minus, AlertTriangle, Info, RefreshCw, BarChart3, TrendingUp, Activity, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TableSkeleton as PoolInfoSkeleton } from '../../../shared/ui/LoadingSkeleton';
@@ -70,6 +71,9 @@ const LPPoolManager: React.FC = () => {
   // ✅ Используем централизованные хуки для данных
   const { balances, loading: balancesLoading, refreshData: refreshTokens } = useTokenData();
   const { poolInfo, loading: poolLoading, refreshPoolInfo, error: poolError } = usePoolInfo();
+  
+  // ✅ Dynamic contracts based on current network
+  const { contracts } = useContracts();
 
   const [pairAddress, setPairAddress] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -162,13 +166,13 @@ const LPPoolManager: React.FC = () => {
       log.info('Fetching pair address from factory', {
           component: 'LPPoolManager',
         function: 'fetchPairAddress',
-        vcToken: CONTRACTS.VC_TOKEN,
-        wbnb: CONTRACTS.WBNB
+        vcToken: contracts.VC_TOKEN,
+        wbnb: contracts.WBNB
       });
 
       const pairAddress = await rpcService.withFallback(async (provider) => {
-        const pancakeFactoryContract = new ethers.Contract(CONTRACTS.PANCAKE_FACTORY, PANCAKE_FACTORY_ABI, provider);
-        return await pancakeFactoryContract.getPair(CONTRACTS.VC_TOKEN, CONTRACTS.WBNB);
+        const pancakeFactoryContract = new ethers.Contract(contracts.PANCAKE_FACTORY, PANCAKE_FACTORY_ABI, provider);
+        return await pancakeFactoryContract.getPair(contracts.VC_TOKEN, contracts.WBNB);
       });
 
       if (pairAddress && pairAddress !== ethers.ZeroAddress) {
@@ -294,8 +298,8 @@ const LPPoolManager: React.FC = () => {
 
     try {
       const allowance = await rpcService.withFallback(async (provider) => {
-        const vcContract = new ethers.Contract(CONTRACTS.VC_TOKEN, ERC20_ABI, provider);
-        return await vcContract.allowance(account, CONTRACTS.PANCAKE_ROUTER);
+        const vcContract = new ethers.Contract(contracts.VC_TOKEN, ERC20_ABI, provider);
+        return await vcContract.allowance(account, contracts.PANCAKE_ROUTER);
       });
       
       const requiredAmount = vcInput ? ethers.parseEther(vcInput) : 0n;
@@ -315,7 +319,7 @@ const LPPoolManager: React.FC = () => {
     try {
       const allowance = await rpcService.withFallback(async (provider) => {
         const lpPairContract = new ethers.Contract(pairAddress, PANCAKE_PAIR_ABI, provider);
-        return await lpPairContract.allowance(account, CONTRACTS.PANCAKE_ROUTER);
+        return await lpPairContract.allowance(account, contracts.PANCAKE_ROUTER);
       });
       
       const requiredAmount = lpTokensInput ? ethers.parseEther(lpTokensInput) : 0n;
@@ -334,9 +338,9 @@ const LPPoolManager: React.FC = () => {
     if (!account || !signer) return;
 
     try {
-      const vcContract = new ethers.Contract(CONTRACTS.VC_TOKEN, ERC20_ABI, signer);
+      const vcContract = new ethers.Contract(contracts.VC_TOKEN, ERC20_ABI, signer);
       const amount = ethers.parseEther(vcInput);
-      const tx = await vcContract.approve(CONTRACTS.PANCAKE_ROUTER, amount);
+      const tx = await vcContract.approve(contracts.PANCAKE_ROUTER, amount);
       
       toast.loading('Approving VC tokens...', { id: 'approve-vc' });
       await tx.wait();
@@ -358,7 +362,7 @@ const LPPoolManager: React.FC = () => {
     try {
       const lpPairContract = new ethers.Contract(pairAddress, PANCAKE_PAIR_ABI, signer);
       const amount = ethers.parseEther(lpTokensInput);
-      const tx = await lpPairContract.approve(CONTRACTS.PANCAKE_ROUTER, amount);
+      const tx = await lpPairContract.approve(contracts.PANCAKE_ROUTER, amount);
       
       toast.loading('Approving LP tokens...', { id: 'approve-lp' });
       await tx.wait();
@@ -379,7 +383,7 @@ const LPPoolManager: React.FC = () => {
     if (!signer || !calculation || !account) return;
 
     try {
-      const pancakeRouterContract = new ethers.Contract(CONTRACTS.PANCAKE_ROUTER, PANCAKE_ROUTER_ABI, signer);
+      const pancakeRouterContract = new ethers.Contract(contracts.PANCAKE_ROUTER, PANCAKE_ROUTER_ABI, signer);
       
       const vcAmount = ethers.parseEther(calculation.vcAmount);
       const bnbAmount = ethers.parseEther(calculation.bnbAmount);
@@ -391,7 +395,7 @@ const LPPoolManager: React.FC = () => {
       const deadline = Math.floor(Date.now() / 1000) + 1200; // 20 minutes
 
       const tx = await pancakeRouterContract.addLiquidityETH(
-        CONTRACTS.VC_TOKEN,
+        contracts.VC_TOKEN,
         vcAmount,
         minVcAmount,
         minBnbAmount,
@@ -428,7 +432,7 @@ const LPPoolManager: React.FC = () => {
     if (!signer || !lpTokensInput || !account) return;
 
     try {
-      const pancakeRouterContract = new ethers.Contract(CONTRACTS.PANCAKE_ROUTER, PANCAKE_ROUTER_ABI, signer);
+      const pancakeRouterContract = new ethers.Contract(contracts.PANCAKE_ROUTER, PANCAKE_ROUTER_ABI, signer);
       
       const lpAmount = ethers.parseEther(lpTokensInput);
       
@@ -439,7 +443,7 @@ const LPPoolManager: React.FC = () => {
       const deadline = Math.floor(Date.now() / 1000) + 1200; // 20 minutes
 
       const tx = await pancakeRouterContract.removeLiquidityETH(
-        CONTRACTS.VC_TOKEN,
+        contracts.VC_TOKEN,
         lpAmount,
         minVcAmount,
         minBnbAmount,
