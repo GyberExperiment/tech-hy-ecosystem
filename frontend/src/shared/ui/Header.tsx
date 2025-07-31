@@ -21,7 +21,6 @@ const Header: React.FC = () => {
     { name: 'Tokens', href: '/tokens', icon: Coins },
     { name: 'Staking', href: '/staking', icon: Rocket },
     { name: 'Governance', href: '/governance', icon: Vote, disabled: true },
-    { name: 'Network', href: '/network', icon: Network },
   ];
 
   const isActive = (path: string) => location.pathname === path;

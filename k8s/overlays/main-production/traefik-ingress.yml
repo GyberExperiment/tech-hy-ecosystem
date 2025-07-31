@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-techhy-main-production-traefik-ingress
+  namespace: techhy-main-production
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  labels:
+    app: techhy-main-production
+    environment: production
+spec:
+  tls:
+  - hosts:
+    - techhy.app
+    - www.techhy.app
+    secretName: techhy-main-production-traefik-tls
+  rules:
+  - host: techhy.app
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: main-techhy-main-production-service
+            port:
+              number: 80
+  - host: www.techhy.app
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: main-techhy-main-production-service
+            port:
+              number: 80 

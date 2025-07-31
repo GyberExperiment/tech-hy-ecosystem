@@ -1071,7 +1071,8 @@ const Home: React.FC = () => {
           </div>
         </motion.section>
 
-        {/* Latest News & Updates */}
+        {/* Latest News & Updates - ВРЕМЕННО ОТКЛЮЧЕНО */}
+        {/* 
         <motion.section 
           className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -1133,8 +1134,10 @@ const Home: React.FC = () => {
           </div>
         </div>
         </motion.section>
+        */}
 
-        {/* Team & About Us */}
+        {/* Team & About Us - ВРЕМЕННО ОТКЛЮЧЕНО */}
+        {/* 
         <motion.section 
           className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -1196,6 +1199,7 @@ const Home: React.FC = () => {
             </div>
           </div>
         </motion.section>
+        */}
 
         {/* Trusted Partners */}
         <motion.section 
@@ -1287,7 +1291,7 @@ const Home: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-white font-semibold">Legal Entity</p>
-                        <p className="text-gray-300">TECH HY SDN. BHD, Malaysia</p>
+                        <p className="text-gray-300">TECH HY Venture Club</p>
                       </div>
                     </div>
                   </div>
@@ -1337,7 +1341,8 @@ const Home: React.FC = () => {
           </div>
         </motion.section>
 
-        {/* Development Roadmap */}
+        {/* Development Roadmap - ВРЕМЕННО ОТКЛЮЧЕНО */}
+        {/* 
         <motion.section 
           className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -1418,8 +1423,10 @@ const Home: React.FC = () => {
         </div>
         </div>
         </motion.section>
+        */}
 
-        {/* Client Success Stories */}
+        {/* Client Success Stories - ВРЕМЕННО ОТКЛЮЧЕНО */}
+        {/* 
         <motion.section 
           className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -1484,6 +1491,7 @@ const Home: React.FC = () => {
           </div>
         </div>
         </motion.section>
+        */}
 
         {/* Call to Action */}
         <motion.section 
@@ -1543,9 +1551,9 @@ const Home: React.FC = () => {
               <div className="glass-ultra p-8">
                 <Building2 className="w-12 h-12 text-blue-400 mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-white mb-4">Legal Entity</h3>
-                <p className="text-gray-300 mb-2">TECH HY SDN. BHD</p>
-                <p className="text-gray-400 text-sm">Registered in Malaysia</p>
-                <p className="text-gray-400 text-sm">Company No: 202301044363</p>
+                <p className="text-gray-300 mb-2">TECH HY Venture Club</p>
+                <p className="text-gray-400 text-sm">Global Investment Platform</p>
+                <p className="text-gray-400 text-sm">Empowering Innovation</p>
             </div>
               
               <div className="glass-ultra p-8">
@@ -1578,7 +1586,7 @@ const Home: React.FC = () => {
                 Together, we're building a safer, more accessible investment ecosystem for everyone.
               </p>
               <p className="text-gray-500 text-sm">
-                © 2025 TECH HY SDN. BHD. All rights reserved. | Building the future of venture capital.
+                © 2025 TECH HY Venture Club. All rights reserved. | Building the future of venture capital.
               </p>
             </motion.div>
           </div>

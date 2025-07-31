@@ -1,8 +1,7 @@
 resources:
   - deployment.yml
   - service.yml
-  - istio-gateway.yml
-  - istio-virtualservice.yml
+  - traefik-ingress.yml
   - certificate.yml
 
 namespace: techhy-main-production

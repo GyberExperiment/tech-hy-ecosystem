@@ -73,7 +73,7 @@ function App() {
                     <Route path="/staking" element={<Staking />} />
                     <Route path="/governance" element={<Governance />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/network" element={<NetworkSwitcher />} />
+                    {/* <Route path="/network" element={<NetworkSwitcher />} /> */}
                     
                     {/* Development/Debug Routes */}
                     <Route path="/showcase" element={<StyleShowcase />} />
