@@ -210,7 +210,7 @@ export const FORMAT_CONFIG = {
 export const getEnvironmentConfig = () => {
   const isDevelopment = process.env.NODE_ENV === 'development';
   const isProduction = process.env.NODE_ENV === 'production';
-  const isTestnet = process.env.REACT_APP_NETWORK !== 'mainnet';
+  const isTestnet = true; // process.env.REACT_APP_NETWORK !== 'mainnet'; // ФОРСИРОВАНО НА TESTNET
 
   return {
     ...WIDGET_CONFIG,

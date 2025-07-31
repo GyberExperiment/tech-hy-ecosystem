@@ -45,8 +45,8 @@ export const BSC_TESTNET_RPC_ENDPOINTS = [
   // 'https://bsc-prebsc-dataseed.bnbchain.org:8545', // timeout
 ];
 
-// 🎯 Current network configuration
-export const CURRENT_NETWORK = process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet';
+// 🎯 Current network configuration - ФОРСИРОВАНО НА TESTNET
+export const CURRENT_NETWORK = 'testnet'; // process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet';
 
 // 🔗 Get primary RPC endpoint for current network
 export const getPrimaryRpcEndpoint = (): string => {
@@ -63,10 +63,10 @@ export const getPrimaryRpcEndpoint = (): string => {
 
 // 🔄 Get all RPC endpoints for current network (with fallbacks)
 export const getAllRpcEndpoints = (): string[] => {
-  // Check if we're targeting testnet (default for development)
-  const isTestnet = process.env.NODE_ENV === 'development' || 
-                   window.location.hostname.includes('stage') ||
-                   window.location.hostname.includes('testnet');
+  // ФОРСИРОВАНО НА TESTNET - все домены используют тестнет
+  const isTestnet = true; // process.env.NODE_ENV === 'development' || 
+                   // window.location.hostname.includes('stage') ||
+                   // window.location.hostname.includes('testnet');
   
   return isTestnet ? BSC_TESTNET_RPC_ENDPOINTS : BSC_MAINNET_RPC_ENDPOINTS;
 };

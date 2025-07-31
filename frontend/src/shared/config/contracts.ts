@@ -82,24 +82,24 @@ export const getCurrentNetwork = (): NetworkType => {
         hostname.includes('staging.') || 
         hostname.includes('test.') ||
         hostname.includes('dev.') ||
-        hostname.includes('techhy') || // stage.techhyecosystem.build.infra.gyber.org
+        hostname.includes('techhy') || // stage.techhyecosystem.build.infra.gyber.org + techhy.app
         hostname.includes('localhost') ||
         hostname.includes('127.0.0.1')) {
       console.log('🔍 Network Detection: STAGE/DEV detected → TESTNET', { hostname });
       return 'testnet';
     }
     
-    // Production домены используют mainnet
-    if (hostname.includes('app.') || 
-        hostname === 'yourdomain.com' ||
-        hostname === 'techhyecosystem.com') {
-      console.log('🔍 Network Detection: PRODUCTION detected → MAINNET', { hostname });
-      return 'mainnet';
-    }
+    // Production домены используют mainnet - ВРЕМЕННО ОТКЛЮЧЕНО
+    // if (hostname.includes('app.') || 
+    //     hostname === 'yourdomain.com' ||
+    //     hostname === 'techhyecosystem.com') {
+    //   console.log('🔍 Network Detection: PRODUCTION detected → MAINNET', { hostname });
+    //   return 'mainnet';
+    // }
   }
   
-  // Fallback: если не можем определить по hostname, используем переменные
-  const isMainnet = process.env.REACT_APP_NETWORK === 'mainnet';
+  // Fallback: ФОРСИРОВАНО НА TESTNET
+  const isMainnet = false; // process.env.REACT_APP_NETWORK === 'mainnet';
   const network = isMainnet ? 'mainnet' : 'testnet';
   
   console.log('🔍 Network Detection: FALLBACK → ' + network.toUpperCase(), {
