@@ -11,27 +11,18 @@ import { ContractAnalyzer, type MainnetTokenData } from '../../../shared/lib/con
 import { useWeb3 } from '../../../shared/lib/Web3Context';
 import { Card } from '../../../shared/ui/Card';
 import { Button } from '../../../shared/ui/Button';
+import { Shield } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export const NetworkSwitcher: React.FC = () => {
   const { isConnected, account, isCorrectNetwork } = useWeb3();
-  const [currentNetwork, setCurrentNetwork] = useState(getCurrentNetwork());
+  // 🔒 LOCKED TO TESTNET - Network switching disabled
+  const [currentNetwork] = useState('testnet'); // Fixed to testnet
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [mainnetAnalysis, setMainnetAnalysis] = useState<MainnetTokenData | null>(null);
   const [showAnalysisReport, setShowAnalysisReport] = useState(false);
 
-  // Обновляем текущую сеть при изменениях
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newNetwork = getCurrentNetwork();
-      if (newNetwork !== currentNetwork) {
-        setCurrentNetwork(newNetwork);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [currentNetwork]);
-
+  // Network switching disabled - testnet only
   const networkInfo = getNetworkInfo();
   const networkStatus = NETWORK_STATUS[currentNetwork];
 
@@ -79,12 +70,23 @@ export const NetworkSwitcher: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Network Locked Notification */}
+      <Card className="p-4 border border-amber-500/20 bg-amber-500/5">
+        <div className="flex items-center space-x-3">
+          <Shield className="h-5 w-5 text-amber-400" />
+          <div>
+            <h3 className="text-lg font-medium text-amber-400">Network Locked to BSC Testnet</h3>
+            <p className="text-sm text-gray-300">Network switching is disabled. Application runs on BSC Testnet only.</p>
+          </div>
+        </div>
+      </Card>
+
       {/* Текущая сеть */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">Network Status</h3>
           <div className={`px-3 py-1 rounded-full text-sm font-medium text-white ${getNetworkBadgeColor()}`}>
-            {networkInfo.networkName}
+            {networkInfo.networkName} (Locked)
           </div>
         </div>
 

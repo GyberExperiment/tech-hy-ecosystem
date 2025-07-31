@@ -81,54 +81,43 @@ const Header: React.FC = () => {
     );
   };
 
-  // ✨ Premium Network Switcher с качественным glassmorphism
+  // ✨ Network Display (Locked to Testnet) 
   const NetworkSwitcher = ({ isMobile = false }: { isMobile?: boolean }) => {
-    const networkName = isTestnet ? 'Testnet' : isMainnet ? 'Mainnet' : 'Unknown';
-    const isOnline = isTestnet || isMainnet;
-
+    // 🔒 LOCKED TO TESTNET ONLY - No switching allowed
+    const networkName = 'Testnet';
+    
     return (
-      <button
-        onClick={handleNetworkSwitch}
-        disabled={!isOnline}
+      <div
         className={`
-          group relative overflow-hidden
+          relative overflow-hidden
           ${isMobile ? 'w-full' : 'min-w-[120px]'}
           h-[44px] px-4 py-2
           backdrop-blur-[12px] backdrop-saturate-[1.8] backdrop-brightness-[1.1]
           bg-gradient-to-br from-white/[0.15] via-white/[0.1] to-white/[0.05]
-          border border-white/[0.2] hover:border-white/[0.3]
+          border border-white/[0.2]
           rounded-[14px]
           shadow-[0_4px_16px_rgba(0,0,0,0.08),0_1px_0_rgba(255,255,255,0.1)_inset]
-          hover:shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_0_rgba(255,255,255,0.15)_inset]
-          hover:scale-[1.02] hover:-translate-y-[1px]
-          active:scale-[0.98] active:translate-y-[0px]
-          transition-all duration-300 ease-out
-          disabled:opacity-50 disabled:cursor-not-allowed
+          opacity-75 cursor-default
           ${isMobile ? 'justify-start' : 'justify-center'}
         `}
-        title={isTestnet ? 'Switch to Mainnet' : 'Switch to Testnet'}
+        title="Network locked to BSC Testnet"
       >
-        <div className="relative flex items-center space-x-2.5 text-slate-700 group-hover:text-slate-900">
+        <div className="relative flex items-center space-x-2.5 text-slate-700">
           <div className="relative flex items-center justify-center">
-            <Network className="h-4 w-4 transition-all duration-300 group-hover:scale-110" />
-            <div className={`
-              absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full 
-              ${isTestnet ? 'bg-amber-400 animate-pulse' : isMainnet ? 'bg-emerald-400' : 'bg-slate-400'}
-              shadow-[0_0_8px_currentColor]
-            `} />
+            <Network className="h-4 w-4" />
+            <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_currentColor]" />
           </div>
           <span className="font-semibold text-sm tracking-[0.01em]">{networkName}</span>
           {!isMobile && (
-            <Wifi className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 transition-all duration-300" />
+            <Wifi className="h-3.5 w-3.5 opacity-70" />
           )}
         </div>
         
-        {/* Неоморфный внутренний свет */}
-        <div className="absolute inset-[1px] rounded-[13px] bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Shimmer эффект */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.15] to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-out" />
-      </button>
+        {/* Locked indicator */}
+        <div className="absolute top-1 right-1 text-amber-400 opacity-60">
+          <Shield className="h-3 w-3" />
+        </div>
+      </div>
     );
   };
 
