@@ -162,7 +162,7 @@ jobs:
           # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с правильным тегом из Docker build
           echo "🔄 Updating deployment with Docker-built image..."
           kubectl set image deployment/main-techhy-main-production-deployment \
-            main-techhy-main-frontend=$IMAGE_TAG \
+            techhy-main-frontend=$IMAGE_TAG \
             -n $NAMESPACE
           
           # Ждем завершения rollout
