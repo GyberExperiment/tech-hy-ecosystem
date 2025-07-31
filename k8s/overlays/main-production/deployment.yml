@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: main-techhy-main-production-deployment
+  name: techhy-main-production-deployment
   namespace: techhy-main-production
   labels:
     app: techhy-main-production
