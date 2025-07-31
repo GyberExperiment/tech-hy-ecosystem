@@ -1,64 +1,11 @@
+# 🚀 TECH HY Ecosystem - DeFi Innovation Platform
 
-  
-  <!-- Hero Banner -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:00F7FF,50:FF6B6B,100:4ECDC4&height=300&section=header&text=TECH%20HY&fontSize=90&fontAlignY=35&desc=Venture%20Governance%20Defi%20Ecosystem&descAlignY=55&descAlign=50&fontColor=fff&animation=fadeIn" />
-  
-  <!-- Animated Typing Text -->
-  [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=2000&pause=1000&color=7ED321&center=true&vCenter=true&multiline=true&width=900&height=220&lines=🔒+Permanent+LP+Locking;💎+Enterprise+DeFi+Platform;⚡+BSC+Smart+Contracts;🚀+DAO+Governance+System;💰+MEV+Protection+Built-in)](https://git.io/typing-svg)
-  
-</div>
+[![CI/CD](https://github.com/GyberExperiment/tech-hy-ecosystem/actions/workflows/main-production-deploy.yml/badge.svg)](https://github.com/GyberExperiment/tech-hy-ecosystem/actions/workflows/main-production-deploy.yml)
 
-<!-- Advanced Badges Section -->
-<div align="center">
+## 🌐 Live Deployments
 
-  
-  
-  <h2>🏆 Platform Stats</h2>
-  
-  <table>
-    <tr>
-      <td align="center">
-        <img src="https://img.shields.io/badge/🔒%20LOCKED%20LP-2000%20VC%20%2B%200.2%20WBNB-success?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="Locked LP"/>
-      </td>
-      <td align="center">
-        <img src="https://img.shields.io/badge/💎%20VG%20REWARDS-80M%20AVAILABLE-blue?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="VG Rewards"/>
-      </td>
-      <td align="center">
-        <img src="https://img.shields.io/badge/⚡%20NETWORK-BSC%20TESTNET-50E3C2?style=for-the-badge&logoColor=white&labelColor=1a1a1a" alt="Network"/>
-      </td>
-    </tr>
-  </table>
-  
-  <br>
-  
-  <!-- Contract Status -->
-  <table>
-    <tr>
-      <td align="center">
-        <img src="https://img.shields.io/badge/🔍%20VERIFIED-BSCScan-brightgreen?style=flat-square&logo=ethereum" />
-      </td>
-      <td align="center">
-        <img src="https://img.shields.io/badge/🛡️%20AUDITED-OpenZeppelin-blue?style=flat-square" />
-      </td>
-      <td align="center">
-        <img src="https://img.shields.io/badge/🔄%20UPGRADEABLE-UUPS%20Proxy-purple?style=flat-square" />
-      </td>
-      <td align="center">
-        <img src="https://img.shields.io/badge/⚡%20TESTS-98.85%25%20PASS-success?style=flat-square" />
-      </td>
-    </tr>
-  </table>
-  
-  <br><br>
-  
-  <!-- Snake Animation -->
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/platane/platane/output/github-contribution-grid-snake-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/platane/platane/output/github-contribution-grid-snake.svg">
-    <img alt="github contribution grid snake animation" src="https://raw.githubusercontent.com/platane/platane/output/github-contribution-grid-snake.svg">
-  </picture>
-  
-</div>
+- 🔴 **Production**: [https://techhy.app](https://techhy.app) - Main production deployment
+- 🟡 **Stage**: [https://stage.techhyecosystem.build.infra.gyber.org](https://stage.techhyecosystem.build.infra.gyber.org)
 
 ---
 
