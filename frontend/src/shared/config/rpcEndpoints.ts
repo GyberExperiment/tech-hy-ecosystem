@@ -26,13 +26,14 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 
 // 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ ТОЛЬКО проверенные рабочие провайдеры (2025)
+  // ✅ Приоритетные провайдеры с лучшей поддержкой CORS
   'https://bsc-testnet-rpc.publicnode.com',
   'https://bsc-testnet.publicnode.com', 
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
   'https://bsc-testnet.drpc.org',
   'https://bsc-testnet.rpc.thirdweb.com',
   'https://bsc-testnet-dataseed.bnbchain.org',
+  // ⚠️ Проблемный endpoint (CORS + rate limiting) - переместлен в конец
+  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
   
   // ❌ УБРАНЫ проблемные endpoints:
   // 'https://bsc-testnet.nodereal.io', // 404 Not Found  
