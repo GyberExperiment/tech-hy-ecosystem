@@ -1,11 +1,11 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: techhy-ecosystem-stage-debug-gateway
+  name: techhy-main-production-gateway
   namespace: default
   labels:
-    app: techhy-ecosystem-stage-debug
-    environment: stage-debug
+    app: techhy-main-production
+    environment: production
 spec:
   selector:
     istio: ingressgateway
@@ -15,14 +15,16 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - stage.techhyecosystem.build.infra.gyber.org
+    - techhy.app
+    - www.techhy.app
     # Убираем httpsRedirect - настроим через VirtualService
   - port:
       number: 443
       name: https
       protocol: HTTPS
     hosts:
-    - stage.techhyecosystem.build.infra.gyber.org
+    - techhy.app
+    - www.techhy.app
     tls:
       mode: SIMPLE
-      credentialName: techhy-stage-istio-tls
+      credentialName: techhy-main-production-tls

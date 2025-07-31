@@ -1,16 +1,17 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: techhy-ecosystem-stage-debug-vs
-  namespace: techhy-ecosystem-stage-debug
+  name: techhy-main-production-vs
+  namespace: techhy-main-production
   labels:
-    app: techhy-ecosystem-stage-debug
-    environment: stage-debug
+    app: techhy-main-production
+    environment: production
 spec:
   hosts:
-  - stage.techhyecosystem.build.infra.gyber.org
+  - techhy.app
+  - www.techhy.app
   gateways:
-  - default/techhy-ecosystem-stage-debug-gateway
+  - default/techhy-main-production-gateway
   http:
   # 1. ACME Challenge - направляем в istio-system
   - match:
@@ -27,6 +28,6 @@ spec:
         prefix: /
     route:
     - destination:
-        host: stage-debug-techhy-ecosystem-stage-debug-service.techhy-ecosystem-stage-debug.svc.cluster.local
+        host: main-techhy-main-production-service.techhy-main-production.svc.cluster.local
         port:
           number: 80

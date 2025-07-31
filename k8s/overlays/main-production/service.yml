@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: techhy-ecosystem-stage-debug-service
-  namespace: techhy-ecosystem-stage-debug
+  name: techhy-main-production-service
+  namespace: techhy-main-production
   labels:
-    app: techhy-ecosystem-stage-debug
-    environment: stage-debug
+    app: techhy-main-production
+    environment: production
     component: frontend
 spec:
   type: ClusterIP
@@ -15,5 +15,5 @@ spec:
     targetPort: 80
     protocol: TCP
   selector:
-    app: techhy-ecosystem-stage-debug
-    environment: stage-debug 
+    app: techhy-main-production
+    environment: production 

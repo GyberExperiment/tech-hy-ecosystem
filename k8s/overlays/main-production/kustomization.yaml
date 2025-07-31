@@ -1,10 +1,19 @@
 resources:
+  - ../../base
   - deployment.yml
   - service.yml
   - istio-gateway.yml
   - istio-virtualservice.yml
 
-namePrefix: stage-debug-
+namespace: techhy-main-production
+
 commonLabels:
-  environment: stage-debug
-  app: techhy-ecosystem
+  app: techhy-main-production
+  environment: production
+
+# 🚀 Main Production Specific Configuration
+namePrefix: main-
+
+images:
+  - name: ghcr.io/gyberexperiment/tech-hy-ecosystem
+    newTag: main-latest
