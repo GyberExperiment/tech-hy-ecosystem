@@ -7,6 +7,7 @@ import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
+import { createDebouncedConnector, resetConnectionState } from '../lib/walletConnection';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -268,6 +269,16 @@ const Header: React.FC = () => {
                       (!authenticationStatus ||
                         authenticationStatus === 'authenticated');
 
+                    // Создаем дебаунсированную версию коннектора
+                    const debouncedConnect = createDebouncedConnector(openConnectModal);
+
+                    // Сбрасываем состояние при успешном подключении
+                    React.useEffect(() => {
+                      if (connected) {
+                        resetConnectionState();
+                      }
+                    }, [connected]);
+
                     return (
                       <div
                         {...(!ready && {
@@ -283,7 +294,7 @@ const Header: React.FC = () => {
                           if (!connected) {
                             return (
                               <button 
-                                onClick={openConnectModal} 
+                                onClick={debouncedConnect} 
                                 type="button"
                                 className="
                                   group relative overflow-hidden

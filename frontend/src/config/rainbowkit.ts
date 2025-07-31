@@ -91,7 +91,7 @@ export const rainbowConfig = createConfig({
     ),
     [bsc.id]: http(), // Mainnet оставляем default
   },
-  multiInjectedProviderDiscovery: false, // Убираем автоматическое обнаружение кошельков
+  multiInjectedProviderDiscovery: true, // Включаем для правильной работы с MetaMask
   ssr: false, // Мы используем CRA
 });
 
