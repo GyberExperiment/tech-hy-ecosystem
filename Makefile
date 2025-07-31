@@ -176,6 +176,36 @@ info: version ## Show project information
 	@echo ""
 	@echo "🌐 TECH HY Ecosystem Information:"
 	@echo "   Main Site: https://techhy.me"
+	@echo "   Main App: https://techhy.app"
 	@echo "   Ecosystem: https://ecosystem.techhy.me"
 	@echo "   Repository: https://github.com/GyberExperiment/tech-hy-ecosystem"
-	@echo "   Support: i@techhy.me" 
+	@echo "   Support: i@techhy.me"
+
+# Main Production Commands (techhy.app)
+deploy-main-production: ## Deploy to main production (techhy.app)
+	@echo "🚀 Deploying to Main Production (techhy.app)..."
+	kubectl apply -k k8s-new/overlays/main-production/
+	@echo "✅ Main Production deployed!"
+
+monitor-main-production: ## Monitor main production deployment
+	@echo "📊 Monitoring Main Production deployment..."
+	kubectl get pods -n techhy-app-production -w
+
+logs-main-production: ## Show main production logs  
+	@echo "📜 Main Production logs:"
+	kubectl logs -n techhy-app-production -l app=techhy-app-main --tail=100 -f
+
+health-main-production: ## Check main production health
+	@echo "🏥 Checking Main Production health..."
+	@echo "🌐 URL: https://techhy.app"
+	@curl -f -s https://techhy.app/health || echo "❌ Health check failed"
+	@echo ""
+	@kubectl get pods -n techhy-app-production -l app=techhy-app-main
+
+status-main-production: ## Show main production environment status
+	@echo "📊 Main Production Environment Status:"
+	@kubectl get all -n techhy-app-production
+	@echo "🌐 Ingress:"
+	@kubectl get ingress -n techhy-app-production  
+	@echo "🔒 TLS Certificates:"
+	@kubectl get certificates -n techhy-app-production 
