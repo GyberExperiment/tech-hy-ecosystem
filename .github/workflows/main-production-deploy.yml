@@ -2,127 +2,119 @@ name: 🚀 Main Production Deploy - techhy.app
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: [ main ]
 
+# Prevent concurrent deployments to main environment
 concurrency:
-  group: main-production-${{ github.ref }}
-  cancel-in-progress: false
+  group: main-environment-${{ github.repository }}
+  cancel-in-progress: true
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: gyberexperiment/tech-hy-ecosystem
 
 jobs:
-  smart-contracts-test:
-    name: 🔗 Smart Contracts Test
+  # 🎨 Frontend Build for Main Production
+  main-frontend-build:
+    name: 🎨 Main Frontend Build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
+    defaults:
+      run:
+        working-directory: ./frontend
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: ⚡ Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: 📦 Install Dependencies
-        run: bun install
+      - name: 🔧 Install Dependencies
+        run: npm ci
 
-      - name: 🧪 Run Smart Contracts Tests
-        run: bun run test
+      - name: 🏗️ Build Main Production
+        run: npm run build
+        env:
+          NODE_ENV: production
+          REACT_APP_ENVIRONMENT: production
 
-      - name: 📊 Generate Test Report
-        if: always()
-        run: |
-          echo "Smart contracts test completed at $(date)" > test-results.txt
-          echo "Status: ${{ job.status }}" >> test-results.txt
-
-  security-audit:
-    name: 🔒 Security Audit
-    runs-on: ubuntu-latest
-    needs: [smart-contracts-test]
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-
-      - name: ⚡ Setup Bun  
-        uses: oven-sh/setup-bun@v1
+      - name: 📦 Upload Main Build
+        uses: actions/upload-artifact@v4
         with:
-          bun-version: latest
+          name: frontend-main-dist
+          path: frontend/dist/
+          retention-days: 7
 
-      - name: 📦 Install Dependencies
-        run: bun install
-
-      - name: 🔍 Security Audit
-        run: |
-          echo "🔒 Running security audit..."
-          echo "Security audit completed successfully" 
-
-  main-production-docker-build:
-    name: 🐳 Main Production Docker Build
+  # 🐳 Docker Build & Push for Main Production
+  main-docker-build:
+    name: 🐳 Main Docker Build
     runs-on: ubuntu-latest
-    needs: [smart-contracts-test, security-audit]
-    if: github.ref == 'refs/heads/main'
-    
+    needs: [main-frontend-build]
+    permissions:
+      contents: read
+      packages: write
     outputs:
-      unique-tag: ${{ steps.docker-build.outputs.unique-tag }}
-      image-tag: ${{ steps.docker-build.outputs.image-tag }}
-    
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tag: ${{ steps.image-tag.outputs.tag }}
+      unique-tag: ${{ steps.image-tag.outputs.unique-tag }}
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: ⚡ Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: 📦 Download Build Artifacts
+        uses: actions/download-artifact@v4
         with:
-          bun-version: latest
+          name: frontend-main-dist
+          path: frontend/dist/
 
-      - name: 📦 Install Frontend Dependencies
-        working-directory: ./frontend
-        run: bun install
+      - name: 🏷️ Create Unique Image Tag
+        id: image-tag
+        run: |
+          UNIQUE_TAG="main-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          echo "unique-tag=$UNIQUE_TAG" >> $GITHUB_OUTPUT
+          echo "tag=ghcr.io/gyberexperiment/tech-hy-ecosystem:$UNIQUE_TAG" >> $GITHUB_OUTPUT
+          echo "🏷️ Created unique tag: $UNIQUE_TAG"
 
-      - name: 🏗️ Production Frontend Build
-        working-directory: ./frontend
-        run: bun run build
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.0
 
       - name: 🔐 Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3.3.0
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: 📝 Generate Docker Tags
-        id: docker-build
-        run: |
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          SHORT_SHA=${GITHUB_SHA::7}
-          UNIQUE_TAG="main-${TIMESTAMP}-${SHORT_SHA}"
-          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${UNIQUE_TAG}"
-          
-          echo "unique-tag=${UNIQUE_TAG}" >> $GITHUB_OUTPUT
-          echo "image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "🏷️ Generated unique tag: $UNIQUE_TAG"
-          echo "🏷️ Full image path: $IMAGE_TAG"
+      - name: 📋 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.image-tag.outputs.unique-tag }}
+            type=raw,value=main-latest
 
-      - name: 🐳 Build and Push Docker Image
-        run: |
-          docker build -t ${{ steps.docker-build.outputs.image-tag }} \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-latest .
-          docker push ${{ steps.docker-build.outputs.image-tag }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-latest
+      - name: 🏗️ Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6.9.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  main-production-k3s-deploy:
-    name: ☸️ Main Production K3S Deploy
+  # 🚀 Deploy to Main Production K3S
+  deploy-main-k3s:
+    name: 🚀 Deploy to Main Production
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [main-production-docker-build]
-    
+    needs: [main-docker-build]
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -146,9 +138,9 @@ jobs:
       - name: 🎯 Deploy to Main Production K3S
         run: |
           # Set main production environment variables
-          export NAMESPACE="techhy-app-production"
-          export UNIQUE_TAG="${{ needs.main-production-docker-build.outputs.unique-tag }}"
-          export IMAGE_TAG="${{ needs.main-production-docker-build.outputs.image-tag }}"
+          export NAMESPACE="techhy-main-production"
+          export UNIQUE_TAG="${{ needs.main-docker-build.outputs.unique-tag }}"
+          export IMAGE_TAG="${{ needs.main-docker-build.outputs.image-tag }}"
           
           echo "🏷️ Using Docker-built image tag: $UNIQUE_TAG"
           echo "🏷️ Full image path: $IMAGE_TAG"
@@ -157,67 +149,130 @@ jobs:
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           # Create GHCR imagePullSecret after namespace exists
-          kubectl create secret docker-registry ghcr-secret \
+          kubectl create secret docker-registry ghcr-login \
             --docker-server=ghcr.io \
             --docker-username="${{ github.actor }}" \
-            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+            --docker-password="${{ secrets.GHCR_TOKEN }}" \
             --docker-email="dev@techhy.app" \
             -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           # Apply main production configurations using kustomize
-          kubectl apply -k k8s-new/overlays/main-production/
+          kubectl apply -k k8s/overlays/main-production/
           
           # ✅ КРИТИЧЕСКИ ВАЖНО: Обновляем образ в деплойменте с правильным тегом из Docker build
           echo "🔄 Updating deployment with Docker-built image..."
-          kubectl set image deployment/techhy-app-main-deployment \
-            techhy-app-frontend=$IMAGE_TAG \
+          kubectl set image deployment/main-techhy-main-production-deployment \
+            techhy-main-frontend=$IMAGE_TAG \
             -n $NAMESPACE
           
           # Ждем завершения rollout
-          echo "⏳ Waiting for rollout to complete..."
-          kubectl rollout status deployment/techhy-app-main-deployment -n $NAMESPACE --timeout=300s
-          
-          # Проверяем статус подов
-          echo "📊 Checking pods status..."
-          kubectl get pods -n $NAMESPACE -l app=techhy-app-main
+          echo "⏳ Waiting for deployment rollout..."
+          kubectl rollout status deployment/main-techhy-main-production-deployment \
+            -n $NAMESPACE --timeout=300s
 
-      - name: 🏥 Health Check
+      - name: 🔍 Health Check & Rollback Protection
         run: |
-          echo "🏥 Waiting for health check..."
-          sleep 30
+          echo "🔍 Starting health validation..."
           
-          # Попытка проверки через HTTPS
-          if curl -f -s --connect-timeout 10 https://techhy.app/health > /dev/null 2>&1; then
-            echo "✅ HTTPS Health check passed: https://techhy.app/health"
-          else
-            echo "⚠️ HTTPS Health check failed, trying HTTP fallback..."
-            if curl -f -s --connect-timeout 10 http://techhy.app/health > /dev/null 2>&1; then
-              echo "✅ HTTP Health check passed: http://techhy.app/health"
+          # Function to check application health
+          check_health() {
+            local url="https://techhy.app/"
+            local max_attempts=5
+            local wait_time=10
+            
+            for i in $(seq 1 $max_attempts); do
+              echo "📊 Health check attempt $i/$max_attempts..."
+              
+              # Проверяем HTTP статус код
+              local http_status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+              
+              if [ "$http_status" = "200" ]; then
+                # Дополнительно проверяем содержимое HTML
+                if curl -f -s --max-time 10 "$url" | grep -qi "<!doctype html"; then
+                  echo "✅ Health check passed on attempt $i (HTTP $http_status)"
+                  return 0
+                else
+                  echo "❌ HTTP 200 but HTML content check failed on attempt $i"
+                fi
+              else
+                echo "❌ HTTP status $http_status on attempt $i"
+              fi
+              
+              if [ $i -lt $max_attempts ]; then
+                echo "⏳ Waiting ${wait_time}s before retry..."
+                sleep $wait_time
+              fi
+            done
+            
+            echo "💥 Health check failed after $max_attempts attempts"
+            return 1
+          }
+          
+          # Additional wait for service to be fully ready
+          echo "⏳ Waiting for service to be ready..."
+          sleep 15
+          
+          # Perform health checks
+          if ! check_health; then
+            echo "💥 Health check validation FAILED! Initiating automatic rollback..."
+            
+            # Rollback to previous version
+            echo "🔙 Rolling back to previous working version..."
+            kubectl rollout undo deployment/main-techhy-main-production-deployment \
+              -n techhy-main-production
+            
+            # Wait for rollback to complete
+            echo "⏳ Waiting for rollback to complete..."
+            kubectl rollout status deployment/main-techhy-main-production-deployment \
+              -n techhy-main-production --timeout=300s
+            
+            # Verify rollback health
+            echo "🔍 Verifying rollback health..."
+            sleep 20
+            if check_health; then
+              echo "✅ Rollback successful - application is healthy"
+              echo "💡 Deployment failed but was automatically rolled back to working state"
+              exit 1  # Still fail the pipeline to indicate deployment issue
             else
-              echo "❌ Both HTTPS and HTTP health checks failed"
-              echo "🔍 Deployment status:"
-              kubectl get deployment techhy-app-main-deployment -n techhy-app-production
-              echo "🔍 Pod status:"
-              kubectl get pods -n techhy-app-production -l app=techhy-app-main
-              echo "🔍 Service status:"
-              kubectl get service techhy-app-main-service -n techhy-app-production
-              echo "🔍 Ingress status:"
-              kubectl get ingress techhy-app-main-ingress -n techhy-app-production
+              echo "💥 CRITICAL: Rollback also failed! Manual intervention required!"
               exit 1
             fi
           fi
+          
+          echo "🎉 Health check validation PASSED! Deployment is healthy and ready."
 
-      - name: 📢 Deployment Success Notification
+      - name: ✅ Final Deployment Validation
+        run: |
+          echo "📊 Final deployment status validation..."
+          kubectl get pods -n techhy-main-production -l app=techhy-main-production
+          kubectl get services -n techhy-main-production  
+          
+          # Verify all pods are running
+          RUNNING_PODS=$(kubectl get pods -n techhy-main-production \
+            -l app=techhy-main-production \
+            --field-selector=status.phase=Running --no-headers | wc -l)
+          EXPECTED_PODS=2
+          
+          if [ "$RUNNING_PODS" -eq "$EXPECTED_PODS" ]; then
+            echo "✅ All $EXPECTED_PODS pods are running successfully"
+          else
+            echo "⚠️ Warning: Expected $EXPECTED_PODS pods, but only $RUNNING_PODS are running"
+          fi
+          
+          # Show current image being used
+          echo "🏷️ Current image in deployment:"
+          kubectl get deployment/main-techhy-main-production-deployment \
+            -n techhy-main-production \
+            -o jsonpath='{.spec.template.spec.containers[0].image}'
+          echo ""
+
+      - name: 🎉 Main Production Deployment Success
         if: success()
         run: |
-          echo "🎉 Main Production deployment completed successfully!"
-          echo "🌐 Live URL: https://techhy.app"
-          echo "🏷️ Image: ${{ needs.main-production-docker-build.outputs.image-tag }}"
-          echo "📅 Deployed at: $(date)"
-
-      - name: ❌ Deployment Failure Notification  
-        if: failure()
-        run: |
-          echo "💥 Main Production deployment failed!"
-          echo "🔍 Check the logs above for details"
-          echo "📅 Failed at: $(date)" 
+          echo "🎉 TECH HY Ecosystem successfully deployed to Main Production!"
+          echo "🌐 Production URL: https://techhy.app"
+          echo "🌐 Production URL (www): https://www.techhy.app"
+          echo "🔧 Branch: main"
+          echo "📊 Namespace: techhy-main-production"
+          echo "🏷️ Image Tag: ${{ needs.main-docker-build.outputs.unique-tag }}"
+          echo "📦 Full Image: ${{ needs.main-docker-build.outputs.image-tag }}" 

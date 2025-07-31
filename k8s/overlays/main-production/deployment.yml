@@ -1,31 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: techhy-app-main-deployment
-  namespace: techhy-app-production
+  name: main-techhy-main-production-deployment
+  namespace: techhy-main-production
   labels:
-    app: techhy-app-main
+    app: techhy-main-production
     environment: production
     component: frontend
-    branch: main
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: techhy-app-main
+      app: techhy-main-production
       environment: production
   template:
     metadata:
       labels:
-        app: techhy-app-main
+        app: techhy-main-production
         environment: production
         component: frontend
-        branch: main
     spec:
       imagePullSecrets:
-      - name: ghcr-secret
+      - name: ghcr-login
       containers:
-      - name: techhy-app-frontend
+      - name: techhy-main-frontend
+        # ✅ ВАЖНО: Этот образ обновляется в CI/CD pipeline через kubectl set image
+        # с уникальными SHA-based тегами (например: main-06d9a4e)
+        # Базовый тег main-latest используется только как fallback
         image: ghcr.io/gyberexperiment/tech-hy-ecosystem:main-latest
         imagePullPolicy: Always
         ports:
@@ -37,20 +38,20 @@ spec:
           mountPath: /var/run
         resources:
           limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
             cpu: 200m
-            memory: 256Mi
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         livenessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 30
         readinessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 10

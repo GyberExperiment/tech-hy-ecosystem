@@ -1,0 +1,10 @@
+resources:
+  - deployment.yml
+  - service.yml
+  - istio-gateway.yml
+  - istio-virtualservice.yml
+
+namePrefix: stage-debug-
+commonLabels:
+  environment: stage-debug
+  app: techhy-ecosystem
