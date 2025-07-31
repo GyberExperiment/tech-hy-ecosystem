@@ -11,7 +11,7 @@ spec:
   - techhy.app
   - www.techhy.app
   gateways:
-  - default/techhy-main-production-gateway
+  - default/main-techhy-main-production-gateway
   http:
   # 1. ACME Challenge - направляем в istio-system
   - match:

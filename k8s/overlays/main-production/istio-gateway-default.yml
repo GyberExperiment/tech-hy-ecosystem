@@ -1,0 +1,30 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: main-techhy-main-production-gateway
+  namespace: default
+  labels:
+    app: techhy-main-production
+    environment: production
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - techhy.app
+    - www.techhy.app
+    # Убираем httpsRedirect - настроим через VirtualService
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - techhy.app
+    - www.techhy.app
+    tls:
+      mode: SIMPLE
+      credentialName: techhy-main-production-tls 

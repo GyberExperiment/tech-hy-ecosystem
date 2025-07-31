@@ -3,6 +3,7 @@ resources:
   - service.yml
   - istio-gateway.yml
   - istio-virtualservice.yml
+  - certificate.yml
 
 namespace: techhy-main-production
 

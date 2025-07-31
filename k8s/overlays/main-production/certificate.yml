@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: techhy-main-production-tls
+  namespace: techhy-main-production
+spec:
+  secretName: techhy-main-production-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - techhy.app
+    - www.techhy.app 
