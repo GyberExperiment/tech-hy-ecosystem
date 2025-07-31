@@ -1,0 +1,19 @@
+resources:
+  - ../../addons
+  - ../../cluster
+  - namespace.yml
+  - deployment.yml
+  - service.yml
+  - ingress.yml
+
+namespace: techhy-app-production
+
+commonLabels:
+  app: techhy-app-main
+  environment: production
+  branch: main
+  domain: techhy.app
+
+images:
+  - name: ghcr.io/gyberexperiment/tech-hy-ecosystem
+    newTag: main-latest 
