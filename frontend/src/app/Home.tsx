@@ -73,7 +73,7 @@ const Home: React.FC = () => {
   const problemsWeeSolve = [
     {
       problem: 'Venture Industry Fraud',
-      solution: 'Free KYC & Scoring System',
+              solution: 'KYC & Scoring System',
       description: 'Combat fraud with comprehensive verification and transparent scoring for all projects',
       icon: Shield,
       impact: '95% fraud reduction'
@@ -632,7 +632,7 @@ const Home: React.FC = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 0.6 }}
               >
-                The first crypto venture platform combining <span className="text-green-400 font-semibold">free KYC</span>, <span className="text-blue-400 font-semibold">AI-powered scoring</span>, and <span className="text-purple-400 font-semibold">community-driven due diligence</span> 
+                The first crypto venture platform combining <span className="text-green-400 font-semibold">KYC</span>, <span className="text-blue-400 font-semibold">AI-powered scoring</span>, and <span className="text-purple-400 font-semibold">community-driven due diligence</span> 
                 to create a safer, more transparent investment ecosystem.
               </motion.p>
               
@@ -684,9 +684,9 @@ const Home: React.FC = () => {
               >
                 {[
                   { label: 'Fraud Prevented', value: '$2.3M+', color: 'text-green-400' },
-                  { label: 'Startups Verified', value: '150+', color: 'text-blue-400' },
+                  { label: 'Startups Verified', value: '50+', color: 'text-blue-400' },
                   { label: 'AI Accuracy', value: '94.7%', color: 'text-purple-400' },
-                  { label: 'Community Members', value: '5,000+', color: 'text-cyan-400' }
+                  { label: 'Community Members', value: '15000+', color: 'text-cyan-400' }
                 ].map((stat, index) => (
                   <motion.div
                     key={index}
@@ -905,7 +905,7 @@ const Home: React.FC = () => {
               </div>
               <h2 className="text-5xl font-bold text-white mb-8">Comprehensive Startup Services</h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-                From free KYC verification to AI-powered scoring, we provide everything startups need to succeed
+                From KYC verification to AI-powered scoring, we provide everything startups need to succeed
               </p>
             </motion.div>
             
