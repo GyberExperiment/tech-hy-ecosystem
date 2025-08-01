@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Settings, Shield } from 'lucide-react';
+import { useChainId, useSwitchChain } from 'wagmi';
+import { Menu, X, BarChart3, Coins, Rocket, Vote, Network, Wifi, Shield } from 'lucide-react';
 import AdminPanel from '../../widgets/AdminPanel/ui/AdminPanel';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { WaveTransition } from './wave-transition';
 import { bscTestnet, bsc } from 'wagmi/chains';
 import { createDebouncedConnector, resetConnectionState } from '../lib/walletConnection';
 
+
 const Header: React.FC = () => {
   const location = useLocation();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const { isAdmin } = useAdminAccess();
 
   const navigation = [
@@ -30,20 +32,15 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   const toggleAdminPanel = () => {
     setIsAdminPanelOpen(!isAdminPanelOpen);
   };
 
   const isTestnet = chainId === bscTestnet.id;
-  const isMainnet = chainId === bsc.id;
-
-  const handleNetworkSwitch = () => {
-    if (isTestnet) {
-      switchChain({ chainId: bsc.id });
-    } else {
-      switchChain({ chainId: bscTestnet.id });
-    }
-  };
 
   // ✨ Admin Button Component
   const AdminButton = () => {
@@ -256,7 +253,6 @@ const Header: React.FC = () => {
                     account,
                     chain,
                     openAccountModal,
-                    openChainModal,
                     openConnectModal,
                     authenticationStatus,
                     mounted,

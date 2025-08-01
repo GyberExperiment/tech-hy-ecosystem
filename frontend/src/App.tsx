@@ -11,6 +11,7 @@ import './App.css';
 
 // Import Layout Components
 import Header from './shared/ui/Header';
+import NetworkAlert from './shared/ui/NetworkAlert';
 
 // Import Pages
 import Home from './app/Home';
@@ -64,6 +65,11 @@ function App() {
             {/* Main Application Content */}
             <div className="relative z-10">
               <Header />
+              
+              {/* Network compatibility alert - shows for unsupported networks like Fantom */}
+              <div className="sticky top-0 z-50 px-3 md:px-6 lg:px-12 xl:px-16 pt-2">
+                <NetworkAlert compact={true} />
+              </div>
               
               <main className="flex-1 py-4 md:py-6 lg:py-8 animate-dark-fade-in">{/* Уменьшил отступы */}
                 <div className="w-full px-3 md:px-6 lg:px-12 xl:px-16">{/* Уменьшил горизонтальные отступы */}
