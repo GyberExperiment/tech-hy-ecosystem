@@ -869,9 +869,24 @@ const Home: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center gap-6 mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      {React.createElement(component.icon, { className: "w-10 h-10 text-blue-400" })}
-                    </div>
+                    {component.component === 'Techhy Ecosystem' ? (
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform p-2 gap-1">
+                        <img 
+                          src="/icons/VC Token-Tech Hy- SVG.svg" 
+                          alt="VC Token" 
+                          className="w-8 h-8 object-contain"
+                        />
+                        <img 
+                          src="/icons/VG Token-Tech Hy- SVG.svg" 
+                          alt="VG Token" 
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        {React.createElement(component.icon, { className: "w-10 h-10 text-blue-400" })}
+                      </div>
+                    )}
                     <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
                       {component.component}
                     </h3>
@@ -1023,8 +1038,12 @@ const Home: React.FC = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-bl-full" />
                 
                 <div className="flex items-center gap-6 mb-10">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-2xl font-bold text-blue-400">VC</span>
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform p-2">
+                    <img 
+                      src="/icons/VC Token-Tech Hy- SVG.svg" 
+                      alt="VC Token Logo" 
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vcToken.name}</h3>
@@ -1064,9 +1083,13 @@ const Home: React.FC = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-500/10 to-transparent rounded-bl-full" />
                 
                 <div className="flex items-center gap-6 mb-10">
-                  <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-2xl font-bold text-green-400">VG</span>
-        </div>
+                  <div className="w-24 h-24 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform p-2">
+                    <img 
+                      src="/icons/VG Token-Tech Hy- SVG.svg" 
+                      alt="VG Token Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">{dualTokenomics.vgToken.name}</h3>
                     <p className="text-green-400 font-medium text-lg">{dualTokenomics.vgToken.purpose}</p>

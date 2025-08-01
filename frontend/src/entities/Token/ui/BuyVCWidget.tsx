@@ -159,7 +159,11 @@ export const BuyVCWidget: React.FC<BuyVCWidgetProps> = ({ className, horizontal 
             whileHover={{ scale: 1.1, rotate: 360 }}
             transition={{ duration: 0.4 }}
           >
-            <Zap className="w-6 h-6 text-white" />
+            <img 
+              src="/icons/VC Token-Tech Hy- SVG.svg" 
+              alt="VC Token" 
+              className="w-6 h-6 object-contain"
+            />
           </motion.div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Купить VC Токены

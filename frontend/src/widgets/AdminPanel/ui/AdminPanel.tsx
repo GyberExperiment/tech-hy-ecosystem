@@ -535,13 +535,38 @@ const TokenCard: React.FC<{
   address: string;
 }> = ({ name, symbol, balance, price, change, address }) => {
   const isPositive = change.startsWith('+');
+  
+  // Get token logo based on symbol
+  const getTokenLogo = (symbol: string) => {
+    switch(symbol) {
+      case 'VC':
+        return "/icons/VC Token-Tech Hy- SVG.svg";
+      case 'VG':
+        return "/icons/VG Token-Tech Hy- SVG.svg";
+      default:
+        return null;
+    }
+  };
+
+  const tokenLogo = getTokenLogo(symbol);
 
   return (
     <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h4 className="text-lg font-medium text-white">{name}</h4>
-          <p className="text-sm text-gray-400">{symbol}</p>
+        <div className="flex items-center gap-3">
+          {tokenLogo && (
+            <div className="w-10 h-10 rounded-lg bg-slate-700/30 p-1.5 flex items-center justify-center">
+              <img 
+                src={tokenLogo} 
+                alt={`${symbol} Logo`} 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          )}
+          <div>
+            <h4 className="text-lg font-medium text-white">{name}</h4>
+            <p className="text-sm text-gray-400">{symbol}</p>
+          </div>
         </div>
         <div className="text-right">
           <div className="text-lg font-semibold text-white">{price}</div>

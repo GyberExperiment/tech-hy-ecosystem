@@ -112,8 +112,22 @@ const Tokens: React.FC = () => {
 
   function getTokenIcon(symbol: string) {
     switch (symbol) {
-      case 'VC': return <CreditCard className="w-6 h-6" />;
-      case 'VG': return <Gift className="w-6 h-6" />;
+      case 'VC': 
+        return (
+          <img 
+            src="/icons/VC Token-Tech Hy- SVG.svg" 
+            alt="VC Token" 
+            className="w-6 h-6 object-contain"
+          />
+        );
+      case 'VG': 
+        return (
+          <img 
+            src="/icons/VG Token-Tech Hy- SVG.svg" 
+            alt="VG Token" 
+            className="w-6 h-6 object-contain"
+          />
+        );
       case 'VGVotes': return <Vote className="w-6 h-6" />;
       case 'LP': return <Rocket className="w-6 h-6" />;
       case 'BNB': return <Coins className="w-6 h-6 text-yellow-400" />;
@@ -196,7 +210,8 @@ const Tokens: React.FC = () => {
         decimals: 18,
         totalSupply: '0',
         contract: null,
-        color: 'from-blue-500 to-cyan-500'
+        color: 'from-blue-500 to-cyan-500',
+        logo: '/icons/VC Token-Tech Hy- SVG.svg'
       });
     }
     
@@ -209,7 +224,8 @@ const Tokens: React.FC = () => {
         decimals: 18,
         totalSupply: '0',
         contract: null,
-        color: 'from-yellow-500 to-orange-500'
+        color: 'from-yellow-500 to-orange-500',
+        logo: '/icons/VG Token-Tech Hy- SVG.svg'
       });
     }
     
