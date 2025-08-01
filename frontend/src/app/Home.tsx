@@ -1075,7 +1075,8 @@ const Home: React.FC = () => {
 
         {/* Team & About Us - ВРЕМЕННО ОТКЛЮЧЕНО */}
 
-        {/* Trusted Partners */}
+        {/* Trusted Partners - ВРЕМЕННО ОТКЛЮЧЕНО */}
+        {/*
         <motion.section 
           className="py-24 px-8 animate-section-breathing-subtle"
           variants={containerVariants}
@@ -1116,6 +1117,7 @@ const Home: React.FC = () => {
           </div>
         </div>
         </motion.section>
+        */}
 
         {/* Contact & Social */}
         <motion.section 
