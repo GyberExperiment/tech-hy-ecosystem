@@ -144,7 +144,7 @@ const Header: React.FC = () => {
 
               {/* ✨ Premium Desktop Navigation */}
               <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center mx-8">
-                {navigation.map((item, index) => {
+                {navigation?.map((item, index) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
                   const isDisabled = item.disabled;
@@ -401,7 +401,7 @@ const Header: React.FC = () => {
               <div className="pt-4 space-y-3">
                 {/* Mobile Navigation Links */}
                 <div className="space-y-2">
-                  {navigation.map((item, index) => {
+                  {navigation?.map((item, index) => {
                     const Icon = item.icon;
                     const active = isActive(item.href);
                     const isDisabled = item.disabled;
