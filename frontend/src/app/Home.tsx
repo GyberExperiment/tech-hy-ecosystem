@@ -247,17 +247,17 @@ const Home: React.FC = () => {
   const dualTokenomics = {
     vcToken: {
       name: 'VC (Venture Club Token)',
-      purpose: 'Ecosystem utility and governance',
-      supply: '1,000,000,000',
+      purpose: 'Ecosystem utility',
+      supply: '5,000,000,000',
       contract: '0x1ea36ffe7e81fa21c18477741d2a75da3881e78e',
-      utilities: ['Service Payments', 'Staking Rewards', 'Governance Voting', 'Bitcoin Buybacks']
+      utilities: ['Service Payments', 'NFT Boosters Mint']
     },
     vgToken: {
       name: 'VG (Venture Gift Token)',
-      purpose: 'Revenue sharing and mining rewards',
+      purpose: 'Revenue sharing and governance',
       supply: '500,000,000',
       contract: '0x2fb47ggf8f92gb32c19588ae1e3a26gf4992f89f',
-      utilities: ['Mining Rewards', 'Revenue Distribution', 'Premium Features', 'VIP Access']
+      utilities: ['Staking Rewards', 'Revenue Distribution', 'Governance Voting', 'VIP Access']
     }
   };
 
