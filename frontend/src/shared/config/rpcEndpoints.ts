@@ -32,8 +32,9 @@ export const BSC_TESTNET_RPC_ENDPOINTS = [
   'https://bsc-testnet.drpc.org',
   'https://bsc-testnet.rpc.thirdweb.com',
   'https://bsc-testnet-dataseed.bnbchain.org',
-  // ⚠️ Проблемный endpoint (CORS + rate limiting) - переместлен в конец
-  'https://endpoints.omniatech.io/v1/bsc/testnet/public',
+  // ✅ Дополнительные стабильные endpoints
+  'https://bsc-testnet.public.blastapi.io',
+  'https://binance-testnet.core.chainstack.com',
   
   // ❌ УБРАНЫ проблемные endpoints:
   // 'https://bsc-testnet.nodereal.io', // 404 Not Found  

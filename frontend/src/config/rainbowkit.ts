@@ -87,12 +87,18 @@ export const rainbowConfig = createConfig({
   chains: [bscTestnet, bsc],
   transports: {
     [bscTestnet.id]: fallback(
-      BSC_TESTNET_RPC_ENDPOINTS.map(endpoint => http(endpoint))
+      BSC_TESTNET_RPC_ENDPOINTS.map(endpoint => http(endpoint, {
+        timeout: 10_000, // 10 секунд таймаут
+        retryCount: 3,   // 3 попытки подключения
+        retryDelay: 1000 // 1 секунда между попытками
+      }))
     ),
     [bsc.id]: http(), // Mainnet оставляем default
   },
   multiInjectedProviderDiscovery: true, // Включаем для правильной работы с MetaMask
   ssr: false, // Мы используем CRA
+  // ✅ Добавляем политику переподключения
+  pollingInterval: 4_000, // Проверяем статус каждые 4 секунды
 });
 
 export { rainbowConfig as config }; 
