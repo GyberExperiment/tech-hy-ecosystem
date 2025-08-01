@@ -119,7 +119,7 @@ const Home: React.FC = () => {
     {
       component: 'Techhy Ecosystem',
       description: 'Complete token economy with VC utility token and VG governance token',
-      features: ['Service Payments', 'NFT Boosters Mint', 'LP permanent lock for VG mint', 'Loyalty Program'],
+      features: ['Service Payments', 'NFT Boosters Mint', 'LP permanent lock for VG mint', 'Loyalty Program', 'Staking Rewards', 'Revenue Distribution', 'Governance Voting', 'VIP Access'],
       icon: Coins,
       status: 'Launching'
     },
