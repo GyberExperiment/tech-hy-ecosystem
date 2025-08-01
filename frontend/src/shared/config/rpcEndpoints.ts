@@ -26,25 +26,24 @@ export const BSC_MAINNET_RPC_ENDPOINTS = [
 
 // 🏆 Browser-compatible BSC Testnet RPC endpoints (CORS enabled)
 export const BSC_TESTNET_RPC_ENDPOINTS = [
-  // ✅ Приоритетные провайдеры с лучшей поддержкой CORS
+  // ✅ Наиболее стабильные провайдеры (проверены на отсутствие ошибок)
   'https://bsc-testnet-rpc.publicnode.com',
   'https://bsc-testnet.publicnode.com', 
-  'https://bsc-testnet.drpc.org',
   'https://bsc-testnet.rpc.thirdweb.com',
   'https://bsc-testnet-dataseed.bnbchain.org',
-  // ✅ Дополнительные стабильные endpoints
   'https://bsc-testnet.public.blastapi.io',
-  'https://binance-testnet.core.chainstack.com',
   
   // ❌ УБРАНЫ проблемные endpoints:
+  // 'https://bsc-testnet.drpc.org', // 500 Internal Server Error
+  // 'https://binance-testnet.core.chainstack.com', // ERR_NAME_NOT_RESOLVED
   // 'https://bsc-testnet.nodereal.io', // 404 Not Found  
   // 'https://bsc-testnet.4everland.org/v1/37fa9972c1b1cd5fab542c7bdd4cde2f', // timeout
   // 'https://data-seed-prebsc-1-s1.bnbchain.org:8545', // timeout
   // 'https://data-seed-prebsc-2-s1.bnbchain.org:8545', // timeout
   // 'https://data-seed-prebsc-1-s2.bnbchain.org:8545', // timeout
   // 'https://data-seed-prebsc-2-s2.bnbchain.org:8545', // timeout
-  // 'https://data-seed-prebsc-1-s3.bnbchain.org:8545', // timeout
-  // 'https://bsc-prebsc-dataseed.bnbchain.org:8545', // timeout
+  // 'https://data-seed-prebsc-2-s3.bnbchain.org:8545', // timeout  
+  // 'https://endpoints.omniatech.io/v1/bsc/testnet/public' // CORS errors, Too Many Requests
 ];
 
 // 🎯 Current network configuration - ФОРСИРОВАНО НА TESTNET
@@ -75,24 +74,33 @@ export const getAllRpcEndpoints = (): string[] => {
 
 // ✅ DYNAMIC RPC ENDPOINTS BASED ON CHAIN ID
 export const getRpcEndpointsByChainId = (chainId: number | undefined): string[] => {
-  // Если chainId не передан, используем статический fallback
-  if (!chainId) {
-    console.log('🔄 getRpcEndpointsByChainId: Using static fallback');
-    return getAllRpcEndpoints();
-  }
-  
-  // Динамический выбор по chainId
-  if (chainId === 56) { // BSC Mainnet
-    console.log('🎯 getRpcEndpointsByChainId: MAINNET endpoints selected', { chainId });
-    return BSC_MAINNET_RPC_ENDPOINTS;
-  } else if (chainId === 97) { // BSC Testnet  
-    console.log('🎯 getRpcEndpointsByChainId: TESTNET endpoints selected', { chainId });
-    return BSC_TESTNET_RPC_ENDPOINTS;
-  } else {
-    // Для неподдерживаемых сетей используем testnet по умолчанию
-    console.warn('🚨 getRpcEndpointsByChainId: Unsupported chainId, using TESTNET fallback', { chainId });
-    return BSC_TESTNET_RPC_ENDPOINTS;
-  }
+  // ФОРСИРОВАНО НА TESTNET - игнорируем фактический chainId из кошелька
+  // Всегда возвращаем testnet endpoints для обеспечения работы только с тестнетом
+  console.log('🔄 getRpcEndpointsByChainId: FORCED TO TESTNET (ignoring wallet chainId)', { 
+    originalChainId: chainId, 
+    forcedNetwork: 'TESTNET' 
+  });
+  return BSC_TESTNET_RPC_ENDPOINTS;
+
+  // СТАРЫЙ КОД (закомментирован для обеспечения работы только с тестнетом):
+  // // Если chainId не передан, используем статический fallback
+  // if (!chainId) {
+  //   console.log('🔄 getRpcEndpointsByChainId: Using static fallback');
+  //   return getAllRpcEndpoints();
+  // }
+  // 
+  // // Динамический выбор по chainId
+  // if (chainId === 56) { // BSC Mainnet
+  //   console.log('🎯 getRpcEndpointsByChainId: MAINNET endpoints selected', { chainId });
+  //   return BSC_MAINNET_RPC_ENDPOINTS;
+  // } else if (chainId === 97) { // BSC Testnet  
+  //   console.log('🎯 getRpcEndpointsByChainId: TESTNET endpoints selected', { chainId });
+  //   return BSC_TESTNET_RPC_ENDPOINTS;
+  // } else {
+  //   // Для неподдерживаемых сетей используем testnet по умолчанию
+  //   console.warn('🚨 getRpcEndpointsByChainId: Unsupported chainId, using TESTNET fallback', { chainId });
+  //   return BSC_TESTNET_RPC_ENDPOINTS;
+  // }
 };
 
 // 🌍 Network configuration
