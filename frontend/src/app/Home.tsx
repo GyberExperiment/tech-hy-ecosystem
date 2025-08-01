@@ -250,7 +250,7 @@ const Home: React.FC = () => {
       purpose: 'Ecosystem utility',
       supply: '5,000,000,000',
       contract: '0x1ea36ffe7e81fa21c18477741d2a75da3881e78e',
-      utilities: ['Service Payments', 'NFT Boosters Mint']
+      utilities: ['Service Payments', 'NFT Boosters Mint', 'LP permanent lock for VG mint', 'Loyalty Program']
     },
     vgToken: {
       name: 'VG (Venture Gift Token)',
