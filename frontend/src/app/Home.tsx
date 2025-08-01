@@ -117,9 +117,9 @@ const Home: React.FC = () => {
       status: 'Live'
     },
     {
-      component: '$VC Token Economy',
-      description: 'Utility token powering the ecosystem with real business revenue',
-      features: ['Service Payments', 'Staking Rewards', 'Governance Rights', 'Bitcoin Buybacks'],
+      component: 'Techhy Ecosystem',
+      description: 'Complete token economy with VC utility token and VG governance token',
+      features: ['Service Payments', 'NFT Boosters Mint', 'LP permanent lock for VG mint', 'Loyalty Program'],
       icon: Coins,
       status: 'Launching'
     },
@@ -229,10 +229,11 @@ const Home: React.FC = () => {
       title: 'AI-Powered Startup Scoring',
       description: 'GPT-4 based comprehensive evaluation system for startup viability and investment potential',
       features: ['Market Analysis', 'Team Assessment', 'Financial Modeling', 'Risk Evaluation'],
-      price: 'From $299',
+      price: 'Coming Soon',
       icon: Cpu,
-      status: 'Beta',
-      clients: '150+'
+      status: 'Coming Soon',
+      clients: '',
+      disabled: true
     },
     {
       title: 'Investor Network Access',
@@ -463,26 +464,33 @@ const Home: React.FC = () => {
     window.open('https://techhy.me/whitepaper.pdf', '_blank');
   };
 
-  const handleGetStarted = (service: string) => {
+  const handleGetStarted = (service: string, isDisabled: boolean = false) => {
+    // Если сервис отключен, перенаправляем на Telegram для консультации
+    if (isDisabled) {
+      window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
+      return;
+    }
+    
     // В зависимости от сервиса перенаправляем на разные страницы
     switch(service) {
       case '24/7customerservicebot':
         window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
         break;
-      case 'kyc':
-        window.open('https://app.techhy.me/kyc', '_blank');
+      case 'kyc&verificationcertificates':
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
         break;
-      case 'scoring':
-        window.open('https://app.techhy.me/scoring', '_blank');
+      case 'ai-poweredstartupscoring':
+        // Пока что перенаправляем на Telegram для консультации
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
         break;
-      case 'network':
-        navigate('/dashboard');
+      case 'investornetworkaccess':
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
         break;
-      case 'marketplace':
-        window.open('https://services.techhy.me', '_blank');
+      case 'servicemarketplace':
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
         break;
       default:
-        navigate('/dashboard');
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
     }
   };
 
@@ -922,13 +930,16 @@ const Home: React.FC = () => {
                     <div className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm ${
                       service.status === 'Live' ? 'bg-green-500/30 text-green-200 border border-green-400/40' :
                       service.status === 'Beta' ? 'bg-blue-500/30 text-blue-200 border border-blue-400/40' :
+                      service.status === 'Coming Soon' ? 'bg-orange-500/30 text-orange-200 border border-orange-400/40' :
                       'bg-orange-500/30 text-orange-200 border border-orange-400/40'
                     }`}>
                       {service.status}
                     </div>
-                    <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/30 text-purple-200 border border-purple-400/40 backdrop-blur-sm">
-                      {service.clients} clients
-                    </div>
+                    {service.clients && service.clients.trim() !== '' && (
+                      <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/30 text-purple-200 border border-purple-400/40 backdrop-blur-sm">
+                        {service.clients} clients
+                      </div>
+                    )}
                   </div>
                   
                   {/* Card content with proper spacing */}
@@ -967,13 +978,17 @@ const Home: React.FC = () => {
 
                     {/* Button */}
                     <motion.button
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 group flex items-center justify-center gap-3"
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''))}
+                      className={`w-full font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl group flex items-center justify-center gap-3 ${
+                        service.disabled 
+                          ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed border border-gray-500/30' 
+                          : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white hover:shadow-blue-500/25'
+                      }`}
+                      whileHover={service.disabled ? {} : { scale: 1.02, y: -2 }}
+                      whileTap={service.disabled ? {} : { scale: 0.98 }}
+                      onClick={() => handleGetStarted(service.title.toLowerCase().replace(/\s+/g, ''), service.disabled)}
                     >
-                      <span>Get Started</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <span>{service.disabled ? 'Coming Soon - Contact Us' : 'Get Started'}</span>
+                      <ArrowRight className={`w-5 h-5 transition-transform ${service.disabled ? '' : 'group-hover:translate-x-1'}`} />
                     </motion.button>
                   </div>
                 </motion.div>
