@@ -207,6 +207,16 @@ const Home: React.FC = () => {
   // Новые данные для недостающих секций
   const detailedServices = [
     {
+      title: '24/7 Customer Service Bot',
+      description: 'Instant support and assistance through our intelligent Telegram customer service bot available around the clock',
+      features: ['Instant Support', 'Service Inquiries', 'Technical Help', 'Partnership Guidance'],
+      price: 'Free',
+      icon: Send,
+      status: 'Live',
+      clients: 'Unlimited',
+      action: () => handleCustomerService()
+    },
+    {
       title: 'KYC & Verification Certificates',
       description: 'Free comprehensive identity verification and project authenticity certificates powered by Sumsub integration',
       features: ['Identity Verification', 'Document Authentication', 'AML Screening', 'Fraud Detection'],
@@ -456,6 +466,9 @@ const Home: React.FC = () => {
   const handleGetStarted = (service: string) => {
     // В зависимости от сервиса перенаправляем на разные страницы
     switch(service) {
+      case '24/7customerservicebot':
+        window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
+        break;
       case 'kyc':
         window.open('https://app.techhy.me/kyc', '_blank');
         break;
@@ -478,11 +491,15 @@ const Home: React.FC = () => {
   };
 
   const handleStartJourney = () => {
-    navigate('/tokens');
+    window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
   };
 
   const handleScheduleCall = () => {
     window.open('https://calendly.com/techhy/consultation', '_blank');
+  };
+
+  const handleCustomerService = () => {
+    window.open('https://t.me/TECH_HY_Customer_Service_bot', '_blank');
   };
 
   return (
@@ -1145,6 +1162,25 @@ const Home: React.FC = () => {
                   
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
+                        <Send className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">Customer Service</p>
+                        <motion.a 
+                          href="https://t.me/TECH_HY_Customer_Service_bot"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          @TECH_HY_Customer_Service_bot
+                        </motion.a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center">
                         <Mail className="w-6 h-6 text-blue-400" />
                       </div>
@@ -1247,8 +1283,8 @@ const Home: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                   onClick={handleStartJourney}
               >
-                  <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                  Start Your Journey
+                  <Send className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Get Support Now
                   <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </motion.button>
               <motion.button
