@@ -632,7 +632,7 @@ const Home: React.FC = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 0.6 }}
               >
-                The first crypto venture platform combining <span className="text-green-400 font-semibold">KYC</span>, <span className="text-blue-400 font-semibold">AI-powered scoring</span>, and <span className="text-purple-400 font-semibold">community-driven due diligence</span> 
+                The first crypto venture platform combining <span className="text-green-400 font-semibold">KYC</span>, <span className="text-blue-400 font-semibold">AI-powered scoring</span>, and <span className="text-purple-400 font-semibold">community-driven due diligence</span>{' '}
                 to create a safer, more transparent investment ecosystem.
               </motion.p>
               
